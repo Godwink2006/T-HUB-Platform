@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="preconnect" href="https://fontsgoogleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+
+<aside class="sidebar">
+    <div class="logo">
+        <img src="images/logo.png" alt="">
+        <h2>HSMS</h2>
+    </div>
+
+    <ul class="menu">
+        <li class="active">
+            <a href="#">
+                <i class="fa-solid fa-house"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+          <li>
+            <a href="students.html">
+                <i class="fa-solid fa-user-graduate"></i>
+                <span>Students</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="teachers.html">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                <span>Teachers</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="academics.html">
+                <i class="fa-solid fa-book"></i>
+                <span>Academics</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="finance.html">
+                <i class="fa-solid fa-money-bill-wave"></i>
+                <span>Finance</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="library.html">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Library</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="reports.html">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Reports</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="settings.html">
+                <i class="fa-solid fa-gear"></i>
+                <span>Settings</span>
+            </a>
+        </li>
+    </ul>
+</aside>
+
+
+
+<main class="dashboard-main-content">
+
+<header class="topbar">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Welcome back, Administrator</p>
+    </div>
+
+    <div class="top-right">
+        <i class="fa-solid fa-bell"></i>
+        <img src="images/profile.png" alt="">
+    </div>
+</header>
+
+
+<section class="announcement-cards">
+    <div class="card-header">
+        <h3>Announcements</h3>
+        
+         <button class="save-btn" id="openAnnouncementModal">New Announcement
+    <i class="fa-solid fa-plus"></i>
+ </button>
+    </div>
+
+    <div class="announcement-preview">
+
+        <div class="announcement-item">
+<h4>No announcements yet</h4>
+<p>Published announcements will appear here.</p>
+</div>
+    </div>
+</section>
+
+
+<section class="dashboard-cards">
+    <div class="dashboard-card">
+        <h4>Total Students</h4>
+        <h2>1,245</h2>
+        <p>+24 This Month</p>
+    </div>
+
+     <div class="dashboard-card">
+        <h4>Total Teachers</h4>
+        <h2>65</h2>
+        <p>+3 New Teachers</p>
+    </div>
+
+     <div class="dashboard-card">
+        <h4>Classes</h4>
+        <h2>18</h2>
+        <p>Senior 1 - Senior 6</p>
+    </div>
+
+     <div class="dashboard-card">
+        <h4>Attendance Today</h4>
+        <h2>96%</h2>
+        <p>Excellent</p>
+    </div>
+</section>
+
+
+
+<section class="dashboard-grid">
+    <div class="dashboard-chart-card">
+        <div class="dashboard-card-header">
+            <h3>Student Enrollment</h3>
+
+            <div class="filter-dropdown">
+ <button class="filter-btn">This Year
+    <i class="fa-solid fa-chevron-down"></i>
+ </button>
+
+ <div class="filter-menu">
+
+<a href="#">Today</a>
+<a href="#">This Week</a>
+<a href="#">This Month</a>
+<a href="#">This Term</a>
+<a href="#">This Year</a>
+<a href="#" class="custom-date">Custom Date Range</a>
+
+ </div>
+            </div>
+           
+        </div>
+
+        <div class="dashboard-chart-placeholder">
+            Chart Area
+        </div>
+    </div>
+
+    <div class="dashboard-activity-card">
+        <div class="dashboard-card-header">
+            <h3>Recent Activities</h3>
+        </div>
+
+        <ul class="dashboard-activity-list">
+            <li>
+                <span class="dashboard-dot green"></span>
+                John Doe admitted to senior 2
+            </li>
+
+             <li>
+                <span class="dashboard-dot blue"></span>
+                Mathematics exam created
+            </li>
+
+             <li>
+                <span class="dashboard-dot orange"></span>
+                Fee payment received
+            </li>
+
+             <li>
+                <span class="dashboard-dot red"></span>
+                Attendance submitted
+            </li>
+
+             <li>
+                <span class="dashboard-dot green"></span>
+                New teacher registered
+            </li>
+        </ul>
+    </div>
+
+</section>
+
+</main>
+
+    </div>
+    
+
+
+
+    <div id="dateRangeModal" class="date-modal">
+
+<div class="date-modal-content">
+
+<div class="date-modal-header">
+    <h2>Custom Date Range</h2>
+
+    <button id="closeDateModal">&times;</button>
+</div>
+
+<div class="date-modal-body">
+    <div class="form-group">
+        <label>From</label>
+        <input type="date">
+    </div>
+
+    <div class="form-group">
+        <label>To</label>
+        <input type="date">
+    </div>
+
+    <div class="date-modal-footer">
+
+<button id="cancelDateModal" class="cancel-btn">
+    Cancel
+</button>
+
+<button class="save-btn">Apply Filter</button>
+
+    </div>
+</div>
+
+</div>
+
+    </div>
+
+
+
+     <div id="announcementModal" class="announcement-modal">
+
+<div class="announcement-modal-content">
+
+<div class="announcement-modal-header">
+    <h2>Create Announcement</h2>
+
+    <button id="closeAnnouncementModal">&times;</button>
+</div>
+
+<div class="announcement-modal-body">
+    <div class="form-row">
+    <div class="form-group">
+        <label>Title *</label>
+        <input type="text" placeholder="Enter announcement title" required>
+    </div>
+
+     <div class="form-group">
+        <label>Audience *</label>
+        
+        <select>
+            <option>All Staff</option>
+            <option>Teachers</option>
+            <option>Receptionists</option>
+            <option>Accountants</option>
+            <option>Librarians</option>
+        </select>
+    </div>
+
+      <div class="form-group">
+        <label>Priority *</label>
+        
+        <select>
+            <option>Normal</option>
+            <option>Important</option>
+            <option>Urgent</option>
+        </select>
+    </div>
+
+     <div class="form-group">
+        <label>Expiry Date (Optional)</label>
+        <input type="date">
+    </div>
+
+    </div>
+
+    <div class="form-group">
+        <label>Message *</label>
+        <textarea rows="6" placeholder="Write your announcement........"></textarea>
+    </div>
+
+    
+
+    <div class="announcement-modal-footer">
+
+<button id="cancelAnnouncementModal" class="cancel-btn">
+    Cancel
+</button>
+
+<button class="save-btn">Publish Announcements</button>
+
+    </div>
+</div>
+
+</div>
+
+    </div>
+    <script src="/js/utils.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

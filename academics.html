@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/academics.css">
+    <link rel="preconnect" href="https://fontsgoogleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="academics-container">
+
+<aside class="sidebar">
+    <div class="logo">
+        <img src="images/logo.png" alt="">
+        <h2>HSMS</h2>
+    </div>
+
+    <ul class="menu">
+        <li>
+            <a href="dashboard.html">
+                <i class="fa-solid fa-house"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+          <li>
+            <a href="students.html">
+                <i class="fa-solid fa-user-graduate"></i>
+                <span>Students</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="teachers.html">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                <span>Teachers</span>
+            </a>
+        </li>
+
+           <li class="active">
+            <a href="#">
+                <i class="fa-solid fa-book"></i>
+                <span>Academics</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="finance.html">
+                <i class="fa-solid fa-money-bill-wave"></i>
+                <span>Finance</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="library.html">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Library</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="reports.html">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Reports</span>
+            </a>
+        </li>
+
+           <li>
+            <a href="settings.html">
+                <i class="fa-solid fa-gear"></i>
+                <span>Settings</span>
+            </a>
+        </li>
+    </ul>
+</aside>
+
+<main class="academics-main-content">
+<header class="topbar">
+    <div>
+        <h1>Academics</h1>
+        <p>Confiqure the school's academic structure.</p>
+    </div>
+
+    </header>
+
+    <section class="academic-cards">
+    <div class="academic-card">
+        <h4>Subjects</h4>
+        <p>Create and manage all school subjects.</p>
+            <button onclick="window.location.href='subjects.html'" class="manage-btn">Manage Subjects
+    <i class="fa-solid fa-chevron-right"></i>
+ </button>
+    </div>
+
+     <div class="academic-card">
+        <h4>Classes</h4>
+        <p>Create and manage all school classes.</p>
+            <button onclick="window.location.href='classes.html'" class="manage-btn">Manage Classes
+    <i class="fa-solid fa-chevron-right"></i>
+ </button>
+    </div>
+
+     <div class="academic-card">
+        <h4>Teacher Assignment</h4>
+        <p>Assign teachers to classes and subjects. </p>
+            <button onclick="window.location.href='teacher-assignment.html'" class="manage-btn">Assign Teachers
+    <i class="fa-solid fa-chevron-right"></i>
+ </button>
+    </div>
+
+     <div class="academic-card">
+        <h4>Timetable</h4>
+        <p>Create and manage school timetables.</p>
+        <button onclick="window.location.href='timetable.html'" class="manage-btn">Manage Timetable
+    <i class="fa-solid fa-chevron-right"></i>
+ </button>
+
+    </div>
+
+     <div class="academic-card">
+        <h4>Attendance</h4>
+        <p>Take and manage Attendance.</p>
+        <button onclick="window.location.href='attendance.html'" class="manage-btn">Manage Attendance
+    <i class="fa-solid fa-chevron-right"></i>
+ </button>
+
+    </div>
+
+       <div class="academic-card">
+        <h4>Grades</h4>
+        <p>Add and manage grades.</p>
+        <button onclick="window.location.href='grades.html'" class="manage-btn">Manage grades
+    <i class="fa-solid fa-chevron-right"></i>
+ </button>
+
+    </div>
+</section>
+   
+</main>
+
+    </div>
+
+
+<script src="/js/utils.js"></script>
+    <script src="/js/academics.js"></script>
+</body>
+</html>

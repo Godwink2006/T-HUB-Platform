@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/school-informations.css">
+    <link rel="preconnect" href="https://fontsgoogleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+<section class="settings-page" id="schoolInformationPage">
+
+    <div class="page-header">
+        <h2>School Information</h2>
+        <p>Manage your school's general information and identity.</p>
+    </div>
+
+       <button onclick="window.location.href='settings.html'"   class="back-school-informations-btn">
+        <i class="fa-solid fa-chevron-left"></i>
+        Back
+    </button>
+
+    <form id="schoolInformationForm" class="settings-form">
+
+<div class="form-section">
+
+<h3>School Logo (Optional)</h3>
+
+<div class="logo-upload">
+   
+   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="24" fill="#F3F4F6"/>
+  <path d="M32 96L64 32L96 96H80L64 64L48 96Z" fill="#6B7280"/>
+</svg>
+
+    <input type="file" id="schoolLogo" accept="image/*">
+</div>
+
+</div>
+
+<div class="form-section">
+    <h3>General Information</h3>
+
+    <div class="form-grid">
+
+<div class="form-group">
+    <label for="schoolName">School Name *</label>
+
+    <input type="text" id="schoolName" placeholder="Enter School Name" required>
+</div>
+
+<div class="form-group">
+    <label for="schoolMotto">School Motto (Optional)</label>
+
+    <input type="text" id="schoolMotto" placeholder="Enter School Motto">
+</div>
+
+<div class="form-group">
+    <label for="schoolEmail">Email *</label>
+
+    <input type="email" id="schoolEmail" placeholder="Enter School Email" required>
+</div>
+
+<div class="form-group">
+    <label for="alternativePhone">Alternative Phone (Optional)</label>
+
+    <input type="tel" id="alternativePhone" placeholder="Optional">
+</div>
+
+<div class="form-group">
+    <label for="schoolWebsite">Website (Optional)</label>
+
+    <input type="url" id="schoolWebsite" placeholder="https://example.com">
+</div>
+
+<div class="form-group full-width">
+    <label for="schoolAddress">Address *</label>
+
+    <textarea rows="3" id="schoolAddress" placeholder="Enter school address" required></textarea>
+</div>
+
+<div class="form-group">
+    <label for="schoolCity">City *</label>
+
+    <input type="text" id="schoolCity" placeholder="Enter city" required>
+</div>
+
+<div class="form-group">
+    <label for="schoolCountry">Country *</label>
+
+    <input type="text" id="schoolCountry" placeholder="Enter country" required>
+</div>
+
+    </div>
+</div>
+
+<div class="form-section">
+
+<h3>Principal / Head Teacher</h3>
+
+<div class="form-grid">
+
+<div class="form-group">
+<label for="principalName">Full Name *</label>
+<input type="text" id="principalName" placeholder="Principal's name">
+</div>
+
+<div class="form-group">
+<label for="principalEmail">Email *</label>
+<input type="email" id="principalEmail" placeholder="Principal's email">
+</div>
+
+<div class="form-group">
+<label for="principalPhone">Phone Number *</label>
+<input type="tel" id="principalPhone" placeholder="Principal's phone">
+</div>
+
+</div>
+
+</div>
+
+<div class="form-section">
+
+    <h3>School Details</h3>
+
+    <div class="form-grid">
+
+<div class="form-group">
+    <label for="schoolType">School type *</label>
+    <select id="schoolType" required>
+        <option value="">Select School Type</option>
+        <option>Public</option>
+        <option>Private</option>
+        <option>International</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="educationLevel">Education Level *</label>
+    <select id="educationLevel" required>
+        <option value="">Select Education Level</option>
+        <option>Nursery</option>
+        <option>Primary</option>
+        <option>Junior Secondary</option>
+        <option>Senior Secondary</option>
+        <option>Primary & Secondary</option>
+    </select>
+</div>
+
+    </div>
+
+</div>
+
+<div class="form-actions">
+
+<button type="reset" class="cancel-btn">
+Reset
+</button>
+
+<button type="submit" class="save-btn">
+Save Changes
+</button>
+
+</div>
+
+    </form>
+
+</section>
+
+<script src="/js/utils.js"></script>
+</body>
+</html>
