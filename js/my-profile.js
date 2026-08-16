@@ -5,7 +5,7 @@ function togglePassword(id) {
 
 async function loadMyProfile() {
   // 1. Get current logged-in user session
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
   if (authError || !user) return;
 
   // 2. Fetch profile row for this specific user
