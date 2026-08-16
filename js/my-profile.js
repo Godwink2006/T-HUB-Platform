@@ -26,7 +26,7 @@ async function loadMyProfile() {
   document.getElementById('phoneNumber').value = profile.phone_number || '';
   
   if (profile.photo_url) {
-    document.getElementById('myProfilePhoto').src = profile.photo_url;
+    document.getElementById('profileAvatar').src = profile.photo_url;
   }
 }
 
