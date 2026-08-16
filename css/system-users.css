@@ -353,7 +353,6 @@ body {
 .top-right {
     display: flex !important;
     flex-direction: row !important;
-    justify-content: flex-start;
     align-items: center;
     gap: 10px;
     width: 100%;
@@ -592,6 +591,7 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
     outline: none;
     font-size: 13px;
+    border-radius: none !important;
 }
 
 .form-group textarea {
