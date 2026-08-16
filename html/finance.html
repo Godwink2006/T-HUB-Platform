@@ -1,118 +1,139 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>High School Management System</title>
-    <link rel="stylesheet" href="/css/finance.css">
-    <link rel="preconnect" href="https://fontsgoogleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-</head>
-<body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/finance.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
     <div class="finances-container">
+      <!-- Mobile Toggle Button -->
+      <button
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Toggle Navigation"
+      >
+        <i class="fa-solid fa-bars"></i>
+        <!-- Or use "☰" text if not using FontAwesome -->
+      </button>
 
-<aside class="sidebar">
-    <div class="logo">
-        <img src="images/logo.png" alt="">
-        <h2>HSMS</h2>
-    </div>
+      <!-- Overlay background to tap outside and close -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <ul class="menu">
-        <li>
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="images/logo.png" alt="" />
+          <h2>HSMS</h2>
+        </div>
+
+        <ul class="menu">
+          <li>
             <a href="dashboard.html">
-                <i class="fa-solid fa-house"></i>
-                <span>Dashboard</span>
+              <i class="fa-solid fa-house"></i>
+              <span>Dashboard</span>
             </a>
-        </li>
+          </li>
 
           <li>
             <a href="students.html">
-                <i class="fa-solid fa-user-graduate"></i>
-                <span>Students</span>
+              <i class="fa-solid fa-user-graduate"></i>
+              <span>Students</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="teachers.html">
-                <i class="fa-solid fa-chalkboard-user"></i>
-                <span>Teachers</span>
+              <i class="fa-solid fa-chalkboard-user"></i>
+              <span>Teachers</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="academics.html">
-                <i class="fa-solid fa-book"></i>
-                <span>Academics</span>
+              <i class="fa-solid fa-book"></i>
+              <span>Academics</span>
             </a>
-        </li>
+          </li>
 
-           <li class="active">
+          <li class="active">
             <a>
-                <i class="fa-solid fa-money-bill-wave"></i>
-                <span>Finance</span>
+              <i class="fa-solid fa-money-bill-wave"></i>
+              <span>Finance</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="library.html">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Library</span>
+              <i class="fa-solid fa-book-open"></i>
+              <span>Library</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="reports.html">
-                <i class="fa-solid fa-chart-line"></i>
-                <span>Reports</span>
+              <i class="fa-solid fa-chart-line"></i>
+              <span>Reports</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="settings.html">
-                <i class="fa-solid fa-gear"></i>
-                <span>Settings</span>
+              <i class="fa-solid fa-gear"></i>
+              <span>Settings</span>
             </a>
-        </li>
-    </ul>
-</aside>
+          </li>
+        </ul>
+      </aside>
 
-<main class="finances-main-content">
-<header class="topbar">
-    <div>
-        <h1>Finance</h1>
-        <p>Confiqure the school's finance structure.</p>
+      <main class="finances-main-content">
+        <header class="topbar">
+          <div>
+            <h1>Finance</h1>
+            <p>Confiqure the school's finance structure.</p>
+          </div>
+        </header>
+
+        <section class="finance-cards">
+          <div class="finance-card">
+            <h4>Fee Structures</h4>
+            <p>Create and manage fee structures.</p>
+            <button
+              onclick="window.location.href = 'structures.html'"
+              class="manage-btn"
+            >
+              Manage Structures
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="finance-card">
+            <h4>Payment</h4>
+            <p>Manage all payment in the school.</p>
+            <button
+              onclick="window.location.href = 'payment.html'"
+              class="manage-btn"
+            >
+              Manage Payment
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </section>
+      </main>
     </div>
 
-    </header>
-
-    <section class="finance-cards">
-    <div class="finance-card">
-        <h4>Fee Structures</h4>
-        <p>Create and manage fee structures.</p>
-            <button onclick="window.location.href='structures.html'" class="manage-btn">Manage Structures
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-    </div>
-
-     <div class="finance-card">
-        <h4>Payment</h4>
-        <p>Manage all payment in the school. </p>
-            <button onclick="window.location.href='payment.html'" class="manage-btn">Manage Payment
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-    </div>
-</section>
-
-   
-</main>
-
-    </div>
-
-
-<script src="/js/utils.js"></script>
+    <script src="/js/utils.js"></script>
     <script src="/js/finance.js"></script>
-</body>
+  </body>
 </html>
