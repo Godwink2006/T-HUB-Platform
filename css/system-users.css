@@ -332,10 +332,7 @@ body {
 /* --- Topbar & Header --- */
 
 .topbar {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 15px;
+    align-items: flex-start;
 }
 
 .topbar h1 {
@@ -351,16 +348,18 @@ body {
 
 /* Back and Add User Buttons on the Same Line */
 .top-right {
-    display: flex;
-    flex-direction: row;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start;
     align-items: center;
     gap: 10px;
     width: 100%;
 }
 
 .back-systemUsers-btn {
-    height: 42px;
-    padding: 0 14px;
+    width: auto !important;
+    height: 44px;
+    padding: 0 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -376,8 +375,8 @@ body {
     background: #15803D;
     color: #ffffff;
     flex: 1;
-    height: 42px;
-    padding: 0 14px;
+    height: 44px;
+    padding: 0 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -417,11 +416,13 @@ body {
     background: #ffffff;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    width: 100%;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 500px; /* Ensures table doesn't shrink too much on small screens */
 }
 
 thead {
@@ -437,6 +438,11 @@ th {
     color: #6b7280;
     border: 1.5px solid rgb(219, 215, 215);
     white-space: nowrap;
+}
+
+th, td {
+    padding: 12px 14px !important;
+    font-size: 14px !important;
 }
 
 td {
