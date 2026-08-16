@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/grades.css">
+    <link rel="preconnect" href="https://fontsgoogleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="grades-container">
+
+<main class="grades-main-content">
+<header class="topbar">
+    <div>
+        <h1>Grades</h1>
+        <p>Manage grades.</p>
+
+         <button onclick="window.location.href='academics.html'"   class="back-grades-btn">
+        <i class="fa-solid fa-chevron-left"></i>
+        Back
+    </button>
+    </div>
+
+    <button id="addGrade" class="add-grades-btn">
+        <i class="fa-solid fa-plus"></i>
+        Enter Grades
+    </button>
+
+</header>
+
+<section class="toolbar">
+    <input type="text" placeholder="Search grades...">
+
+   <select>
+        <option>Class</option>
+    </select>
+
+    <select>
+        <option>Academic Year</option>
+    </select>
+
+    <select>
+        <option>Subject</option>
+    </select>
+
+    <select>
+        <option>Assessment</option>
+    </select>
+
+    <select>
+        <option>Term</option>
+    </select>
+</section>
+
+<section class="grade-table-card">
+   <table>
+    <thead>
+        <tr>
+            <th>Assessment</th>
+            <th>Class</th>
+             <th>Subject</th>
+              <th>Date</th>
+              <th>Status</th>
+                    <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>Cat 1</td>
+            <td>Grade 8A</td>
+            <td>Mathematics</td>
+            <td>12 Aug</td>
+            <td>Submitted</td>
+
+             <td>
+                <button class="grades-actions-btn view">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </td>
+        </tr>
+
+         <tr>
+            <td>Cat 2</td>
+            <td>Grade 8A</td>
+            <td>Mathematics</td>
+            <td>12 Sept</td>
+            <td>Drafted</td>
+
+             <td>
+                <button class="grades-actions-btn view">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+
+                 <button class="grades-actions-btn edit">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Exam</td>
+            <td>Grade 8A</td>
+            <td>English</td>
+            <td>20 November</td>
+            <td>Submitted</td>
+
+             <td>
+                <button class="grades-actions-btn view">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </td>
+        </tr>
+
+    </tbody>
+   </table>
+</section>
+</main>
+
+    </div>
+
+
+
+
+
+    <div id="gradeModal" class="modal-grade">
+       <div class="grade-modal-content">
+        <div class="grade-modal-header">
+            <h2>Enter Grades</h2>
+
+            <button id="closeGradeModal">&times;</button>
+        </div>
+
+        <div class="grade-modal-body">
+
+          <form id="gradeForm">
+            <div class="form-grid">
+                 <div class="form-group">
+                    <label>Class *</label>
+
+                    <select>
+                        <option>Grade 8A</option>
+                        <option>Grade 9B</option>
+                    </select>
+                </div>
+
+                  <div class="form-group">
+                    <label>Subject *</label>
+
+                    <select>
+                        <option>Mathematics</option>
+                        <option>English</option>
+                    </select>
+                </div>
+
+                   <div class="form-group">
+                    <label>Assessment *</label>
+
+                    <input type="text" placeholder="Enter assessment name">
+                </div>
+
+            </div>
+
+
+            <div class="grade-modal-footer">
+
+<button type="button" class="cancel-btn" id="cancelGradeModal">
+    Cancel
+</button>
+
+<button type="button" class="save-btn" id="loadEnterGrade">
+    Load Students
+</button>
+
+            </div>
+          </form>
+
+        </div>
+       </div>
+    </div>
+    
+
+
+
+    <div id="viewGradeModal" class="view-grade-modal">
+
+<div class="view-grade-modal-content">
+
+<div class="view-grade-modal-header">
+    <h2>View Grades</h2>
+
+    <button id="closeViewGradeModal">&times;</button>
+</div>
+
+<div class="view-grade-body">
+
+    <div class="details-grid">
+
+<div class="details-item">
+    <label>Class</label>
+    <p>Grade 8A</p>
+</div>
+
+<div class="details-item">
+    <label>Subject</label>
+    <p>Mathematics</p>
+</div>
+
+<div class="details-item">
+    <label>Assessment</label>
+    <p>Cat 1</p>
+</div>
+
+<div class="details-item">
+    <label>Date</label>
+    <p>12 Aug 2026</p>
+</div>
+
+    </div>
+
+
+  <section class="grade-table-card">
+   <table>
+    <thead>
+        <tr>
+              <th>Student</th>
+                   <th>Score</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>John Doe</td>
+            <td>
+              <P>90</P>
+            </td>
+
+        </tr>
+
+         <tr>
+            <td>Sarah Johnson</td>
+            <td>
+            <p>70</p>
+            </td>
+
+        </tr>
+
+          <tr>
+            <td>Peter Doe</td>
+            <td>
+            <p>50</p>
+            </td>
+
+        </tr>
+
+    </tbody>
+   </table>
+</section>
+
+
+
+    <div class="view-modal-footer">
+
+<button id="closeViewBtn" class="cancel-btn">
+    Close
+</button>
+
+    </div>
+</div>
+
+</div>
+
+    </div>
+
+
+
+  <div id="enterGradeModal" class="modal-enterGrade">
+       <div class="enterGrade-modal-content">
+        <div class="enterGrade-modal-header">
+            <h2>Enter Grades</h2>
+
+            <button id="closeEnterGradeModal">&times;</button>
+        </div>
+
+        <div class="enterGrade-modal-body">
+
+            <div class="details-grid">
+            <div class="details-item">
+    <label>Class</label>
+    <p>Grade 8A</p>
+</div>
+
+<div class="details-item">
+    <label>Subject</label>
+    <p>Mathematics</p>
+</div>
+
+<div class="details-item">
+    <label>Assessment</label>
+    <p>Cat 1</p>
+</div>
+
+<div class="details-item">
+    <label>Date</label>
+    <p>12 Aug 2026</p>
+</div>
+
+            </div>
+
+
+                    <div class="form-grid">
+                   <div class="form-group" style="margin-bottom: 5px;">
+                    <label>Status *</label>
+
+                    <select>
+                        <option>Drafted</option>
+                        <option>Submitted</option>
+                    </select>
+                </div>
+                </div>
+
+          <form id="enterGradeForm">
+
+            <section class="enterGrade-table-card">
+   <table>
+    <thead>
+        <tr>
+              <th>Student</th>
+                   <th>Score</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>John Doe</td>
+            <td class="form-group">
+               
+                <input type="number" placeholder="Enter student grade">
+            </td>
+
+        </tr>
+
+               <tr>
+            <td>Mary Smith</td>
+            <td class="form-group">
+               
+                <input type="number" placeholder="Enter student grade">
+            </td>
+
+        </tr>
+
+               <tr>
+            <td>Peter Doe</td>
+            <td class="form-group">
+               
+                <input type="number" placeholder="Enter student grade">
+            </td>
+
+        </tr>
+
+    </tbody>
+   </table>
+</section>
+
+            <div class="enterGrade-modal-footer">
+
+<button type="button" class="cancel-btn" id="cancelEnterGradeModal">
+    Cancel
+</button>
+
+<button type="submit" class="save-btn">
+    Save Grades
+</button>
+
+            </div>
+          </form>
+
+        </div>
+       </div>
+    </div>
+
+
+
+
+
+    <div id="editGradeModal" class="modal-editGrade">
+       <div class="editGrade-modal-content">
+        <div class="editGrade-modal-header">
+            <h2>Edit Grades</h2>
+
+            <button id="closeEditGradeModal">&times;</button>
+        </div>
+
+        <div class="editGrade-modal-body">
+
+                        <div class="details-grid">
+            <div class="details-item">
+    <label>Class</label>
+    <p>Grade 8A</p>
+</div>
+
+<div class="details-item">
+    <label>Subject</label>
+    <p>Mathematics</p>
+</div>
+
+<div class="details-item">
+    <label>Assessment</label>
+    <p>Cat 1</p>
+</div>
+
+<div class="details-item">
+    <label>Date</label>
+    <p>12 Aug 2026</p>
+</div>
+
+            </div>
+
+            <div class="form-grid">
+                   <div class="form-group" style="margin-bottom: 5px;">
+                    <label>Status *</label>
+
+                    <select>
+                        <option>Drafted</option>
+                        <option>Submitted</option>
+                    </select>
+                </div>
+                </div>
+
+          <form id="editGradeForm">
+
+            <section class="editGrade-table-card">
+        
+   <table>
+    <thead>
+        <tr>
+              <th>Student</th>
+                   <th>Score</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>John Doe</td>
+            <td class="form-group">
+               
+                <input type="number" placeholder="Enter student grade">
+            </td>
+
+        </tr>
+
+               <tr>
+            <td>Mary Smith</td>
+            <td class="form-group">
+               
+                <input type="number" placeholder="Enter student grade">
+            </td>
+
+        </tr>
+
+               <tr>
+            <td>Peter Doe</td>
+            <td class="form-group">
+               
+                <input type="number" placeholder="Enter student grade">
+            </td>
+
+        </tr>
+
+    </tbody>
+   </table>
+</section>
+
+            <div class="editGrade-modal-footer">
+
+<button type="button" class="cancel-btn" id="cancelEditGradeModal">
+    Cancel
+</button>
+
+<button type="submit" class="save-btn">
+    Update Grades
+</button>
+
+            </div>
+          </form>
+
+        </div>
+       </div>
+    </div>
+
+
+
+<script src="/js/utils.js"></script>
+    <script src="/js/grades.js"></script>
+</body>
+</html>

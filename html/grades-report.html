@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/grades-report.css">
+    <link rel="preconnect" href="https://fontsgoogleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+<body>
+
+    <div class="grades-report-container">
+
+<main class="grades-report-main-content">
+<header class="topbar">
+    <div>
+        <h1>Grade Reports</h1>
+        <p>View grade reports.</p>
+
+         <button onclick="window.location.href='reports.html'"   class="back-grades-report-btn">
+        <i class="fa-solid fa-chevron-left"></i>
+        Back
+    </button>
+    </div>
+
+</header>
+
+<section class="toolbar">
+
+   <select>
+        <option>Academic Year</option>
+    </select>
+
+    <select>
+        <option>Term</option>
+    </select>
+
+    <select>
+        <option>Class</option>
+    </select>
+
+    </section>
+
+<section class="grades-report-table-card">
+   <table>
+    <thead>
+        <tr>
+            <th>Total Assessments</th>
+             <th>Highest Score</th>
+              <th>Lowest Score</th>
+              <th>Average Score</th>
+              <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>4</td>
+            <td>98</td>
+            <td>35</td>
+            <td>74.6</td>
+
+             <td>
+                <button class="grades-report-actions-btn save-btn">
+                    Print Report
+                </button>
+
+               <button class="grades-report-actions-btn save-btn">
+                    Export PDF
+                </button>
+
+                 <button class="grades-report-actions-btn save-btn">
+                    Export Excel
+                </button>
+
+            </td>
+        </tr>
+
+
+    </tbody>
+   </table>
+</section>
+</main>
+
+    </div>
+
+
+<script src="/js/utils.js"></script>
+</body>
+</html>
