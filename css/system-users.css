@@ -313,7 +313,8 @@ body {
 
 .topbar h1,
 .topbar p {
-    width: 100% !important;
+    grid-column: 1 / -1;
+    margin: 0;
 }
 
 .systemUser-container {
@@ -337,10 +338,10 @@ body {
 /* --- Topbar & Header --- */
 
 .topbar {
-    align-items: start !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 12px !important;
+    align-items: center !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px 12px !important;
 }
 
 .topbar h1 {
@@ -364,6 +365,7 @@ body {
 }
 
 .back-systemUsers-btn {
+    grid-column: 1;
     width: auto !important;
     height: 40px !important;
     padding: 0 16px;
@@ -379,6 +381,7 @@ body {
 }
 
 .add-systemUsers-btn {
+    grid-column: 2;
     background: #15803D;
     color: #ffffff;
     flex: 1 !important;
