@@ -49,6 +49,7 @@ saveButton.textContent = "Creating...";
 
 }
 
+ await loadSystemUsers();
 alert(data.message);
 
 form.reset();
@@ -78,6 +79,8 @@ form.reset();
     saveButton.disabled = false;
     saveButton.textContent = "Save";
 }
+
+  loadSystemUsers();
 });
 
 const systemUserModal = document.getElementById("systemUserModal");
