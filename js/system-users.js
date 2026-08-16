@@ -34,6 +34,20 @@ saveButton.textContent = "Creating...";
         },
     });
 
+    if (error) {
+
+    throw error;
+
+}
+
+alert(data.message);
+
+form.reset();
+
+systemUserModal.style.display = "none";
+
+unlockBodyScroll();
+
  } catch (err) {
     console.error("FULL ERROR:", err);
 
