@@ -9,7 +9,7 @@ async function loadMyProfile() {
   if (authError || !user) return;
 
   // 2. Fetch profile row for this specific user
-  const { data: profile, error } = await supabase
+  const { data: profile, error } = await supabaseClient
     .from('profiles')
     .select('*')
     .eq('id', user.id)
