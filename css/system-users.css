@@ -311,6 +311,11 @@ body {
     background: rgb(231, 226, 226);
 }
 
+.topbar h1,
+.topbar p {
+    width: 100% !important;
+}
+
 .systemUser-container {
     display: flex;
     flex-direction: column;
@@ -332,10 +337,10 @@ body {
 /* --- Topbar & Header --- */
 
 .topbar {
-    align-items: flex-start;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    align-items: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
 }
 
 .topbar h1 {
@@ -360,7 +365,7 @@ body {
 
 .back-systemUsers-btn {
     width: auto !important;
-    height: 44px;
+    height: 40px !important;
     padding: 0 16px;
     display: inline-flex;
     align-items: center;
@@ -376,8 +381,8 @@ body {
 .add-systemUsers-btn {
     background: #15803D;
     color: #ffffff;
-    flex: 1;
-    height: 44px;
+    flex: 1 !important;
+    height: 40px !important;
     padding: 0 16px;
     display: inline-flex;
     align-items: center;
