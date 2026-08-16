@@ -29,3 +29,7 @@ async function loadMyProfile() {
     document.getElementById('myProfilePhoto').src = profile.photo_url;
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadMyProfile();
+});
