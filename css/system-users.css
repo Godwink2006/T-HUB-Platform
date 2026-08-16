@@ -417,7 +417,6 @@ body {
     background: #ffffff;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    border-radius: 4px;
 }
 
 table {
@@ -509,8 +508,8 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 550px;
-    height: 520px; /* Fixed height requirement */
+    max-width: 650px;
+    height: 650px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 6px;
@@ -613,7 +612,7 @@ tr {
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    text-align: center;
+    justify-content: space-between;
 }
 
 .cancel-btn {
