@@ -193,6 +193,13 @@ body {
     flex-direction: column;
   }
 
+  /* 3. Expand Main Content Area */
+  .settings-main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 15px;
+  }
+
   /* 4. Fix Topbar & Prevents Heading/Button Overflow */
   .topbar {
     display: flex;
