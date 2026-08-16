@@ -418,6 +418,7 @@ body {
     font-size: 12px;
     flex: 1;
     min-width: 0; /* Prevents overflow inside flex containers */
+    border-radius: 0 !important;
 }
 
 /* --- Compact Table Section --- */
@@ -528,7 +529,7 @@ tr {
     height: 650px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
-    border-radius: 6px;
+    border-radius: 0 !important;
     animation: modalShow .25s ease;
     overflow: hidden;
 }
@@ -599,7 +600,7 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
     outline: none;
     font-size: 13px;
-    border-radius: none !important;
+    border-radius: 0 !important;
 }
 
 .form-group textarea {
