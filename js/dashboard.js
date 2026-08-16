@@ -89,3 +89,29 @@ announcementModal.style.display="none";
 unLockBodyScroll();
 }
 });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const avatarImg = document.getElementById('profileAvatar');
+  if (!avatarImg) return;
+
+  // 1. Get current logged-in user
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  if (authError || !user) return;
+
+  // 2. Fetch avatar URL directly from profiles table
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('photo_url')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching dashboard avatar:', error);
+    return;
+  }
+
+  // 3. Set photo if available
+  if (profile && profile.photo_url) {
+    avatarImg.src = profile.photo_url;
+  }
+});
