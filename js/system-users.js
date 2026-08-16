@@ -217,7 +217,7 @@ async function loadSystemUsers() {
       (user) => `
     <tr>
            <td>
-          <img src="${user.photo_url ? user.photo_url : DEFAULT_AVATAR}" class="student-photo" alt="Profile" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" />
+          <img src="${user.photo_url ? user.photo_url : DEFAULT_AVATAR}" class="systemUser-photo" alt="Profile" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" />
         </td>
       <td>${user.full_name || "N/A"}</td>
       <td>${user.email || "N/A"}</td>

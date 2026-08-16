@@ -13,10 +13,10 @@ body{
     display: flex;
     flex-direction: column;
     gap: 30px;
-    padding: 20px;
+    padding: 10px;
 }
 
-.student-photo{
+.systemUser-photo{
     width: 42px;
     height: 42px;
     border-radius: 50%;
@@ -24,8 +24,7 @@ body{
 }
 
 .systemUser-main-content{
-    border-radius: 10px;
-    padding: 20px;
+    padding: 10px;
 }
 
 /* Topbar */
@@ -54,6 +53,8 @@ body{
 }
 
 .add-systemUsers-btn{
+    background: #15803D;
+    color: #ffffff;
     width: auto;
     height: 48px;
     padding: 0 20px;
@@ -61,7 +62,7 @@ body{
     align-items: center;
     gap: 10px;
     cursor: pointer;
-    border: 2px solid rgb(219, 215, 215);
+    border: 2px solid #14532D;
 }
 
 .back-systemUsers-btn{
@@ -70,10 +71,12 @@ body{
     display: flex;
     align-items: center;
     cursor: pointer;
-    margin-top: 5px;
-    border: 2px solid rgb(219, 215, 215);
+    margin-top: 10px;
+    border: 1px solid rgb(219, 215, 215);
     width: 70px;
     justify-content: space-between;
+    background: #1F2937;
+    color: #F9FAFB;
 }
 
 .toolbar{
@@ -86,7 +89,6 @@ body{
 .toolbar select{
     height: 48px;
     border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
     padding: 0 15px;
     outline: none;
     background: #ffff;
@@ -127,9 +129,9 @@ tr{
     border: 2px solid rgb(219, 215, 215);
 }
 
-.status{
+.systemUsers-status-inactive,
+.systemUsers-status-active{
     padding: 6px 14px;
-    border-radius: 30px;
     font-size: 13px;
     font-weight: 500;
 }
@@ -148,7 +150,6 @@ tr{
     width: 38px;
     height: 38px;
     border: none;
-    border-radius: 10px;
     cursor: pointer;
     margin-right: 6px;
 }
@@ -185,7 +186,6 @@ tr{
     width: 800px;
     max-width: 95%;
     background: #ffff;
-    border-radius: 18px;
     animation: modalShow .25s ease;
     height: 590px;
 }
@@ -217,13 +217,13 @@ tr{
 
 .systemUser-modal-header button{
     cursor: pointer;
-    color: #374151;
-    background: #f3f4f6;
-    border-radius: 8px;
+    color: #F9FAFB;
     border: none;
     height: 40px;
     width: 40px;
     font-size: 22px;
+    background: #1F2937;
+    border: 1px solid rgb(219, 215, 215);
 }
 
 .systemUser-modal-body{
@@ -254,7 +254,6 @@ tr{
     width: 100%;
     padding: 12px 15px;
     border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
     outline: none;
     font-size: 15px;
 }
@@ -277,19 +276,90 @@ tr{
 .cancel-btn{
     padding: 12px 22px;
     border: none;
-    border-radius: 10px;
-    background: #e5e7eb;
+ background: #1F2937;
+    border: 1px solid rgb(219, 215, 215);
     cursor: pointer;
+      color: #F9FAFB;
 }
 
 .save-btn{
     padding: 12px 22px;
     border: none;
-    border-radius: 10px;
     background: #2563eb;
     color: #ffff;
     cursor: pointer;
 }
+
+
+
+
+
+
+
+
+
+
+@media screen and (max-width: 768px) {
+    .systemUser-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 12px;
+    }
+
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .add-systemUsers-btn {
+        width: 100%;
+    }
+
+    .toolbar {
+        flex-direction: column;
+    }
+
+    .toolbar input {
+        width: 100%;
+    }
+
+    .systemUsers-table-card {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .systemUser-modal-content {
+        width: 100%;
+        height: auto;
+        max-height: 90vh;
+    }
+
+    .systemUser-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .cancel-btn,
+    .save-btn {
+        width: 100%;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 .edit-modal-systemUser{
     position: fixed;
