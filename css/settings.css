@@ -193,30 +193,6 @@ body {
     flex-direction: column;
   }
 
-  /* 2. Convert Sidebar to Top Navigation */
-  .sidebar {
-    position: relative;
-    width: 100%;
-    height: auto;
-    overflow: visible;
-    padding: 15px 20px;
-  }
-
-  .logo {
-    margin-bottom: 15px;
-  }
-
-  .menu li a {
-    padding: 10px 12px;
-  }
-
-  /* 3. Expand Main Content Area */
-  .settings-main-content {
-    margin-left: 0;
-    width: 100%;
-    padding: 15px;
-  }
-
   /* 4. Fix Topbar & Prevents Heading/Button Overflow */
   .topbar {
     display: flex;
