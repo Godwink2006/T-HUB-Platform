@@ -34,19 +34,27 @@ saveButton.textContent = "Creating...";
         },
     });
 
-      if (error) {
-        throw error;
+ } catch (err) {
+    console.error("FULL ERROR:", err);
+
+    let message = err.message;
+
+    if (err.context) {
+        try {
+            const errorBody = await err.context.json();
+
+            console.error("EDGE FUNCTION RESPONSE:", errorBody);
+
+            if (errorBody?.message) {
+                message = errorBody.message;
+            }
+        } catch (parseError) {
+            console.error("Could not read Edge Function response:", parseError);
+        }
     }
 
-    alert(data.message);
+    alert(message);
 
-    form.reset();
-    systemUserModal.style.display = "none";
-    unLockBodyScroll();
-
-} catch (err) {
-    alert(err.message);
-    console.error(err);
 } finally {
     saveButton.disabled = false;
     saveButton.textContent = "Save";
