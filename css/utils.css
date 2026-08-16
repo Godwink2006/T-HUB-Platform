@@ -65,7 +65,14 @@
   }
 
   /* Ensure content fills full screen and doesn't shift */
-  .settings-main-content {
+  .settings-main-content,
+  .academics-main-content,
+  .dashboard-main-content,
+  .finances-main-content,
+  .books-main-content,
+  .reports-main-content,
+  .students-main-content,
+  .teachers-main-content {
     margin-left: 0 !important;
     width: 100% !important;
     padding-top: 70px; /* Space for the hamburger button */
