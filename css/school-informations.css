@@ -1,0 +1,147 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins',sans-serif;
+}
+
+.settings-page{
+    width: 100%;
+    padding: 25px;
+}
+
+.page-header{
+    margin-bottom: 25px;
+}
+
+.page-header h2{
+    font-size: 28px;
+    color: black;
+    margin-bottom: 6px;
+}
+
+.page-header p{
+    color: rgb(72, 69, 69);
+    font-size: 15px;
+}
+
+.settings-form{
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form-section{
+    background: white;
+   border: 2px solid rgb(219, 215, 215);
+   border-radius: 12px;
+   padding: 25px;
+}
+
+body{
+    background: rgb(231, 226, 226);
+}
+
+.form-section h3{
+    font-size: 18px;
+    color: rgb(90, 88, 88);
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    border: 2px solid rgb(219, 215, 215);
+}
+
+.logo-upload{
+    display: flex;
+    align-items: center;
+    gap: 25px;
+flex-wrap: wrap;
+}
+
+.school-logo-preview{
+    width: 130px;
+    height: 130px;
+    border-radius: 12px;
+    border: 2px solid rgb(219, 215, 215);
+    object-fit: cover;
+    background: #f4f4f4;
+}
+
+.logo-upload input[type=file]{
+    padding: 10px;
+}
+
+.form-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+    gap: 20px;
+}
+
+.form-group{
+    display: flex;
+    flex-direction: column;
+}
+
+.full-width{
+    grid-column: 1 / -1;
+}
+
+.form-group label{
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6d6c6c;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid rgb(219, 215, 215);
+    border-radius: 10px;
+    outline: none;
+    font-size: 15px;
+}
+
+.form-group textarea{
+    resize: none;
+    min-height: 100px;
+}
+
+.form-actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.cancel-btn{
+    padding: 12px 22px;
+    border: none;
+    border-radius: 10px;
+    background: #e5e7eb;
+    cursor: pointer;
+}
+
+.save-btn{
+    padding: 12px 22px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffff;
+    cursor: pointer;
+}
+
+.back-school-informations-btn{
+    height: 30px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-top: 5px;
+    margin-bottom: 12px;
+    border: 2px solid rgb(219, 215, 215);
+    width: 70px;
+    justify-content: space-between;
+}
