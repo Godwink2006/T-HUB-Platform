@@ -349,15 +349,6 @@ body {
     font-size: 13px;
 }
 
-/* Back and Add User Buttons on the Same Line */
-.top-right {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-}
-
 .back-systemUsers-btn {
     width: auto !important;
     height: 44px;
