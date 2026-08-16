@@ -266,3 +266,78 @@ body{
         border-radius: 0;
     }
 }
+
+
+/* Hide toggle button on desktop */
+.menu-toggle {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+@media screen and (max-width: 768px) {
+    /* Fixed Hamburger Button */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 1100;
+        background: #1d4ed8;
+        color: #ffffff;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Off-screen Drawer Sidebar */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px; /* Hide completely off-screen */
+        width: 260px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease-in-out;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Slide-in class */
+    .sidebar.active {
+        left: 0;
+    }
+
+    /* Dim background when menu is open */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Ensure content fills full screen and doesn't shift */
+    .settings-main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding-top: 70px; /* Space for the hamburger button */
+    }
+}
