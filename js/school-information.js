@@ -81,7 +81,15 @@ async function loadSchoolProfile() {
       existingRecordId = data.id;
 
       // Populate form fields matching your HTML element IDs
-      setValue('schoolLogo', data.logo_url);
+      // Replace line 84:
+// setValue('schoolLogo', data.logo_url);
+
+// With this:
+const logoImg = document.getElementById('schoolLogo');
+if (logoImg && data.logo_url) {
+  logoImg.src = data.logo_url;
+}
+
       setValue('schoolName', data.school_name);
       setValue('schoolMotto', data.school_motto);
       setValue('schoolEmail', data.email);
