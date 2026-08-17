@@ -13,7 +13,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    position: fixed;
+    position: static !important;
     top: 15px;
     left: 15px;
     z-index: 1100;
@@ -26,16 +26,8 @@
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: left 0.3s ease;
+    margin-left: auto;
   }
-
-/* Position inside the sidebar top header */
-.sidebar .logo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding-right: 10px;
-}
 
   /* Off-screen Drawer Sidebar */
   .sidebar {
