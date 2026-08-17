@@ -27,19 +27,6 @@
     transition: left 0.3s ease;
   }
 
-  .top-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 50px;
-  background-color: #1d4ed8;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  z-index: 1050;
-}
-
   /* Off-screen Drawer Sidebar */
   .sidebar {
     position: fixed;
