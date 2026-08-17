@@ -37,12 +37,6 @@
   padding-right: 10px;
 }
 
-.sidebar .menu-toggle {
-  position: static !important; /* Forces button to align inside the logo flex container */
-  margin-left: auto;
-}
-
-
   /* Off-screen Drawer Sidebar */
   .sidebar {
     position: fixed;
