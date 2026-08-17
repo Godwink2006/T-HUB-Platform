@@ -7,7 +7,7 @@
 
 .settings-page{
     width: 100%;
-    padding: 25px;
+    padding: 10px;
 }
 
 .page-header{
@@ -34,7 +34,6 @@
 .form-section{
     background: white;
    border: 2px solid rgb(219, 215, 215);
-   border-radius: 12px;
    padding: 25px;
 }
 
@@ -99,7 +98,6 @@ flex-wrap: wrap;
     width: 100%;
     padding: 12px 15px;
     border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
     outline: none;
     font-size: 15px;
 }
@@ -119,7 +117,6 @@ flex-wrap: wrap;
 .cancel-btn{
     padding: 12px 22px;
     border: none;
-    border-radius: 10px;
     background: #e5e7eb;
     cursor: pointer;
 }
@@ -127,7 +124,6 @@ flex-wrap: wrap;
 .save-btn{
     padding: 12px 22px;
     border: none;
-    border-radius: 10px;
     background: #2563eb;
     color: #ffff;
     cursor: pointer;
@@ -144,4 +140,6 @@ flex-wrap: wrap;
     border: 2px solid rgb(219, 215, 215);
     width: 70px;
     justify-content: space-between;
+    background: #1F2937;
+    color: #F9FAFB;
 }
