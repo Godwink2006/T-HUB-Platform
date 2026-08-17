@@ -29,6 +29,25 @@
     margin-left: auto;
   }
 
+  /* Update .menu-toggle styles in utils.css */
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.menu-toggle {
+  position: static !important; /* Removes fixed position overlapping the logo */
+  margin-left: auto;          /* Pushes the toggle button to the far right */
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+
   /* Off-screen Drawer Sidebar */
   .sidebar {
     position: fixed;
