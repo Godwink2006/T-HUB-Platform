@@ -28,11 +28,11 @@
     transition: left 0.3s ease;
   }
 
-  .sidebar.active .menu-toggle {
+  /* Update line 31 in utils.css */
+.sidebar.active ~ .menu-toggle {
+  left: 200px;
+}
 
-     left: 200px;
-
-  }
 
   /* Off-screen Drawer Sidebar */
   .sidebar {
