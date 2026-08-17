@@ -11,7 +11,7 @@ async function loadMyProfile() {
   // 2. Fetch profile row for this specific user
   const { data: profile, error } = await supabaseClient
     .from('profiles')
-    .select('*')
+    .select('photo_url, full_name, email, phone_number')
     .eq('id', user.id)
     .single();
 
