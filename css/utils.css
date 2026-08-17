@@ -13,8 +13,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    left: 100px;
-    z-index: 1100;
+    left: 15px;
     position: fixed;
     background: #1d4ed8;
     color: #ffffff;
