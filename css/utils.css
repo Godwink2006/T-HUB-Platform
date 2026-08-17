@@ -28,13 +28,19 @@
     transition: left 0.3s ease;
   }
 
-  /* Update line 31 in utils.css */
-/* If JS toggles class on <body> or parent wrapper */
-body.sidebar-active .menu-toggle,
-.active .menu-toggle {
-  left: 200px !important;
+/* Position inside the sidebar top header */
+.sidebar .logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-right: 10px;
 }
 
+.sidebar .menu-toggle {
+  position: static !important; /* Forces button to align inside the logo flex container */
+  margin-left: auto;
+}
 
 
   /* Off-screen Drawer Sidebar */
