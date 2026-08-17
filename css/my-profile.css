@@ -11,7 +11,7 @@
 }
 
 .page-header{
-    margin-bottom: 25px;
+    margin-bottom: 10px;
 }
 
 .page-header h2{
@@ -22,7 +22,7 @@
 
 .page-header p{
     color: rgb(72, 69, 69);
-    font-size: 15px;
+    font-size: 15 US px;
 }
 
 .my-profiles-form{
