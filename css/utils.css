@@ -30,7 +30,7 @@
 
   /* Update line 31 in utils.css */
 .sidebar.active ~ .menu-toggle {
-  left: 200px;
+  left: 200px !important;
 }
 
 
