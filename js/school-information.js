@@ -60,7 +60,7 @@ function disableFormInputs(form) {
   // Hide the save button completely
 const saveBtn = form.querySelector('.save-btn, button[type="submit"]');
 if (saveBtn) {
-  saveBtn.style.display = 'none';
+  saveBtn.style.display = 'flex';
 }
 
 // Disable and hide the reset button
