@@ -16,7 +16,7 @@
 
     <div class="page-header">
         <h2>School Information</h2>
-        <p>Manage your school's general information and identity.</p>
+        <p>view or manage your school's general information and identity.</p>
     </div>
 
        <button onclick="window.location.href='settings.html'"   class="back-school-informations-btn">
@@ -28,14 +28,17 @@
 
 <div class="form-section">
 
-<h3>School Logo (Optional)</h3>
+<h3>School Logo</h3>
 
 <div class="logo-upload">
    
-   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <rect width="128" height="128" rx="24" fill="#F3F4F6"/>
-  <path d="M32 96L64 32L96 96H80L64 64L48 96Z" fill="#6B7280"/>
-</svg>
+<img 
+  id="schoolLogo" 
+  src="https://api.dicebear.com/7.x/initials/svg?seed=School" 
+  alt="School Logo" 
+  class="logo-preview-img"
+  style="width: 128px; height: 128px; border-radius: 24px; object-fit: cover;"
+/>
 
     <input type="file" id="schoolLogo" accept="image/*">
 </div>
@@ -48,49 +51,49 @@
     <div class="form-grid">
 
 <div class="form-group">
-    <label for="schoolName">School Name *</label>
+    <label for="schoolName">School Name</label>
 
     <input type="text" id="schoolName" placeholder="Enter School Name" required>
 </div>
 
 <div class="form-group">
-    <label for="schoolMotto">School Motto (Optional)</label>
+    <label for="schoolMotto">School Motto</label>
 
     <input type="text" id="schoolMotto" placeholder="Enter School Motto">
 </div>
 
 <div class="form-group">
-    <label for="schoolEmail">Email *</label>
+    <label for="schoolEmail">Email</label>
 
     <input type="email" id="schoolEmail" placeholder="Enter School Email" required>
 </div>
 
 <div class="form-group">
-    <label for="alternativePhone">Alternative Phone (Optional)</label>
+    <label for="alternativePhone">Alternative Phone</label>
 
     <input type="tel" id="alternativePhone" placeholder="Optional">
 </div>
 
 <div class="form-group">
-    <label for="schoolWebsite">Website (Optional)</label>
+    <label for="schoolWebsite">Website</label>
 
     <input type="url" id="schoolWebsite" placeholder="https://example.com">
 </div>
 
 <div class="form-group full-width">
-    <label for="schoolAddress">Address *</label>
+    <label for="schoolAddress">Address</label>
 
     <textarea rows="3" id="schoolAddress" placeholder="Enter school address" required></textarea>
 </div>
 
 <div class="form-group">
-    <label for="schoolCity">City *</label>
+    <label for="schoolCity">City</label>
 
     <input type="text" id="schoolCity" placeholder="Enter city" required>
 </div>
 
 <div class="form-group">
-    <label for="schoolCountry">Country *</label>
+    <label for="schoolCountry">Country</label>
 
     <input type="text" id="schoolCountry" placeholder="Enter country" required>
 </div>
@@ -105,17 +108,17 @@
 <div class="form-grid">
 
 <div class="form-group">
-<label for="principalName">Full Name *</label>
+<label for="principalName">Full Name</label>
 <input type="text" id="principalName" placeholder="Principal's name">
 </div>
 
 <div class="form-group">
-<label for="principalEmail">Email *</label>
+<label for="principalEmail">Email</label>
 <input type="email" id="principalEmail" placeholder="Principal's email">
 </div>
 
 <div class="form-group">
-<label for="principalPhone">Phone Number *</label>
+<label for="principalPhone">Phone Number</label>
 <input type="tel" id="principalPhone" placeholder="Principal's phone">
 </div>
 
@@ -130,7 +133,7 @@
     <div class="form-grid">
 
 <div class="form-group">
-    <label for="schoolType">School type *</label>
+    <label for="schoolType">School type</label>
     <select id="schoolType" required>
         <option value="">Select School Type</option>
         <option>Public</option>
@@ -140,7 +143,7 @@
 </div>
 
 <div class="form-group">
-    <label for="educationLevel">Education Level *</label>
+    <label for="educationLevel">Education Level</label>
     <select id="educationLevel" required>
         <option value="">Select Education Level</option>
         <option>Nursery</option>
