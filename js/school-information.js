@@ -54,7 +54,7 @@ async function checkAdminAuth() {
 function disableFormInputs(form) {
   const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"]');
   inputs.forEach((input) => {
-    input.disabled = false;
+    input.disabled = true;
   });
 
   const saveBtn = form.querySelector('.save-btn');
