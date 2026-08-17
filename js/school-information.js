@@ -54,13 +54,13 @@ async function checkAdminAuth() {
 function disableFormInputs(form) {
   const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"]');
   inputs.forEach((input) => {
-    input.disabled = false;
+    input.disabled = true;
   });
 
   // Hide the save button completely
 const saveBtn = form.querySelector('.save-btn, button[type="submit"]');
 if (saveBtn) {
-  saveBtn.style.display = 'flex';
+  saveBtn.style.display = 'none';
 }
 
 // Disable and hide the reset button
