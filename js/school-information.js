@@ -52,14 +52,13 @@ async function checkAdminAuth() {
  * Disables form submission and input fields if user is not an admin.
  */
 function disableFormInputs(form) {
-  const inputs = form.querySelectorAll('input, select, textarea, button[type="submit"]');
+  const inputs = form.querySelectorAll('input, select, textarea, button[type="submit", "reset"]');
   inputs.forEach((input) => {
-    input.disabled = true;
+    input.disabled = false;
   });
 
   const saveBtn = form.querySelector('.save-btn');
   if (saveBtn) {
-    saveBtn.innerText = 'View Only (Admin Required)';
     saveBtn.classList.add('disabled');
   }
 }
