@@ -11,7 +11,7 @@
 }
 
 .page-header{
-    margin-bottom: 25px;
+    margin-bottom: 10px;
 }
 
 .page-header h2{
@@ -130,12 +130,11 @@ flex-wrap: wrap;
 }
 
 .back-school-informations-btn{
-    height: 30px;
+    height: 40px;
     padding: 10px;
     display: flex;
     align-items: center;
     cursor: pointer;
-    margin-top: 5px;
     margin-bottom: 12px;
     border: 2px solid rgb(219, 215, 215);
     width: 70px;
