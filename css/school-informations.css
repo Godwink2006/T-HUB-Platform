@@ -149,7 +149,7 @@ input:disabled,
 select:disabled,
 textarea:disabled {
   color: #111827 !important; /* Dark, crisp text */
-  background-color: transparent !important; /* Transparent background */
+  background-color: #fffbeb !important; /* Transparent background */
   border: none !important; /* Removes input border */
   outline: none !important;
   box-shadow: none !important;
