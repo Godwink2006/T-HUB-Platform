@@ -13,9 +13,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    position: fixed;
     top: 15px;
-    right: 15px;
+    left: 15px;
     z-index: 1100;
     background: #1d4ed8;
     color: #ffffff;
@@ -25,6 +25,14 @@
     font-size: 20px;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.active .menu-toggle,
+  .sidebar.open .menu-toggle {
+
+     left: 200px;
+
   }
 
   /* Off-screen Drawer Sidebar */
