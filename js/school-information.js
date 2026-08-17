@@ -93,7 +93,7 @@ async function loadSchoolProfile() {
 // setValue('schoolLogo', data.logo_url);
 
 // With this:
-const logoImg = document.getElementById('schoolLogo');
+const logoImg = document.getElementById('schoolLogoPreview');
 if (logoImg && data.logo_url) {
   logoImg.src = data.logo_url;
 }
