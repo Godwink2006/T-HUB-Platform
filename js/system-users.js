@@ -211,6 +211,7 @@ async function loadSystemUsers() {
   const { data: users, error } = await supabaseClient
     .from("profiles")
     .select("id, full_name, email, phone_number, role, status, photo_url")
+    .not("role", "in", '("admin")')
     .order("created_at", { ascending: false });
 
   if (error) {
