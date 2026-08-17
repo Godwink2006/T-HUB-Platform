@@ -1,4 +1,4 @@
-import { supabaseClient } from './supabase-client.js';
+
 
 let existingRecordId = null;
 
@@ -146,14 +146,14 @@ async function handleFormSubmit(userId) {
 
       const { error: uploadError } = await supabaseClient
         .storage
-        .from('school-assets')
+        .from('avatars')
         .upload(filePath, logoFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabaseClient
         .storage
-        .from('school-assets')
+        .from('avatars')
         .getPublicUrl(filePath);
 
       formData.logo_url = publicUrlData.publicUrl;
