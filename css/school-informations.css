@@ -149,13 +149,15 @@ input:disabled,
 select:disabled,
 textarea:disabled {
   color: #111827 !important; /* Dark, crisp text */
-  background-color: #fffbeb !important; /* Transparent background */
+  background-color: #f0fdf4 !important; /* Transparent background */
   border: none !important; /* Removes input border */
+  border-radius: 8px;
+
   outline: none !important;
   box-shadow: none !important;
   -webkit-text-fill-color: #111827 !important; /* Prevents iOS graying */
   opacity: 1 !important;
-  padding-left: 0 !important; /* Aligns text cleanly with labels */
+  padding-left: 10px !important; /* Aligns text cleanly with labels */
   font-weight: 500; /* Makes text slightly bolder for better legibility */
   cursor: default;
 }
