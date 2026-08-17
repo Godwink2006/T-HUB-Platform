@@ -189,6 +189,15 @@ function togglePassword(id) {
     input.type = input.type === "password" ? "text" : "password";
 }
 
+document.querySelector('.edit-SystemUser')?.addEventListener('click', () => {
+  document.getElementById('editModal').style.display = 'block'; // or 'flex'
+});
+
+document.querySelector('.archive-SystemUser')?.addEventListener('click', () => {
+  document.getElementById('archiveModal').style.display = 'block';
+});
+
+
 // system-users.js
 async function loadSystemUsers() {
   // Select tbody inside table#usersTable
