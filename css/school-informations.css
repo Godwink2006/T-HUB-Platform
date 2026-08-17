@@ -144,13 +144,26 @@ flex-wrap: wrap;
     color: #F9FAFB;
 }
 
-/* Force bright text and clear backgrounds on disabled form elements */
+/* Styling disabled inputs for clean read-only viewing */
 input:disabled,
 select:disabled,
 textarea:disabled {
-  color: #1f2937 !important; /* Dark text color */
-  background-color: #f9fafb !important; /* Light background */
-  -webkit-text-fill-color: #1f2937 !important; /* Required for Safari / iOS */
-  opacity: 1 !important; /* Overrides default browser dimming */
-  cursor: not-allowed;
+  color: #111827 !important; /* Dark, crisp text */
+  background-color: transparent !important; /* Transparent background */
+  border: none !important; /* Removes input border */
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-text-fill-color: #111827 !important; /* Prevents iOS graying */
+  opacity: 1 !important;
+  padding-left: 0 !important; /* Aligns text cleanly with labels */
+  font-weight: 500; /* Makes text slightly bolder for better legibility */
+  cursor: default;
 }
+
+/* Optional: Hides dropdown arrows for select elements when disabled */
+select:disabled {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
