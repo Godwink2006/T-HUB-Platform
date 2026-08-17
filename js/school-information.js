@@ -57,10 +57,19 @@ function disableFormInputs(form) {
     input.disabled = true;
   });
 
-  const saveBtn = form.querySelector('.save-btn');
-  if (saveBtn) {
-    saveBtn.classList.add('disabled');
-  }
+  // Hide the save button completely
+const saveBtn = form.querySelector('.save-btn, button[type="submit"]');
+if (saveBtn) {
+  saveBtn.style.display = 'none';
+}
+
+// Disable and hide the reset button
+const resetBtn = form.querySelector('.reset-btn, button[type="reset"]');
+if (resetBtn) {
+  resetBtn.disabled = true;
+  resetBtn.style.display = 'none';
+}
+
 }
 
 /**
