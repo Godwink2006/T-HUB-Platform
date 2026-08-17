@@ -28,8 +28,7 @@
     transition: left 0.3s ease;
   }
 
-  .sidebar.active .menu-toggle,
-  .sidebar.open .menu-toggle {
+  .sidebar.active .menu-toggle {
 
      left: 200px;
 
