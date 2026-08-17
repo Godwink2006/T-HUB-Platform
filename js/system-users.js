@@ -190,11 +190,11 @@ function togglePassword(id) {
 }
 
 document.querySelector('.edit-SystemUser')?.addEventListener('click', () => {
-  document.getElementById('editModal').style.display = 'block'; // or 'flex'
+  document.getElementById('editModal').style.display = 'flex'; // or 'flex'
 });
 
 document.querySelector('.archive-SystemUser')?.addEventListener('click', () => {
-  document.getElementById('archiveModal').style.display = 'block';
+  document.getElementById('archiveModal').style.display = 'flex';
 });
 
 
