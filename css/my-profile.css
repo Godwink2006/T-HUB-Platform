@@ -161,7 +161,6 @@ flex-wrap: wrap;
     display: flex;
     align-items: center;
     cursor: pointer;
-    margin-top: 5px;
     margin-bottom: 12px;
     border: 2px solid rgb(219, 215, 215);
     width: 70px;
