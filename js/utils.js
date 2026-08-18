@@ -144,6 +144,36 @@ function renderNavigation(userRole) {
   }
 }
 
+function showToast(message, type = "success", duration = 3000) {
+  let container = document.getElementById("toastContainer");
+
+  // Fallback if container doesn't exist in HTML
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+
+  // Create toast element
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  // Trigger smooth fade-in animation
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  // Automatically remove after duration
+  setTimeout(() => {
+    toast.classList.remove("show");
+    toast.addEventListener("transitionend", () => toast.remove());
+  }, duration);
+}
+
 // Auto-run on DOM load
 document.addEventListener("DOMContentLoaded", loadHeaderSchoolLogo);
 

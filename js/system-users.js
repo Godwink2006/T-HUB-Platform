@@ -31,7 +31,7 @@ form.addEventListener("submit", async (e) => {
   }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+      showToast("Passwords do not match.", "error");
       return;
     }
 
