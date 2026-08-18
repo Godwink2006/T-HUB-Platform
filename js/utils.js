@@ -83,6 +83,11 @@ function renderNavigation(userRole) {
   }
 }
 
+
+
 // Auto-run on DOM load
 document.addEventListener('DOMContentLoaded', loadHeaderSchoolLogo);
+
+// Auto-run on DOM load
+document.addEventListener('DOMContentLoaded', renderNavigation);
 
