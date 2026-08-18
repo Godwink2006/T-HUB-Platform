@@ -42,20 +42,24 @@ document.addEventListener("DOMContentLoaded", () => {
  * Falls back to a DiceBear initial avatar if no custom logo is found.
  */
 async function loadHeaderSchoolLogo() {
-  const logoImg = document.getElementById('appHeaderLogo');
+  const logoImg = document.getElementById("appHeaderLogo");
   if (!logoImg) return;
 
-  const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/initials/svg?seed=School';
+  const DEFAULT_AVATAR =
+    "https://api.dicebear.com/7.x/initials/svg?seed=School";
 
   try {
     // 1. Verify user session
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseClient.auth.getSession();
     if (sessionError || !session) return;
 
     // 2. Fetch school profile logo_url
     const { data, error } = await supabaseClient
-      .from('school_profile')
-      .select('logo_url')
+      .from("school_profile")
+      .select("logo_url")
       .limit(1)
       .maybeSingle();
 
@@ -66,28 +70,47 @@ async function loadHeaderSchoolLogo() {
 
     // 3. Set logo source or fallback
     logoImg.src = data?.logo_url ? data.logo_url : DEFAULT_AVATAR;
-
   } catch (err) {
-    console.error('Unexpected error loading header logo:', err);
+    console.error("Unexpected error loading header logo:", err);
     logoImg.src = DEFAULT_AVATAR;
   }
 }
 
-function renderNavigation(userRole) {
-  const systemUsersLink = document.getElementById('nav-system-users');
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadHeaderSchoolLogo();
 
-  if (userRole == 'admin') {
-    systemUsersLink.style.display = 'block';
-  }   else {
-   systemUsersLink.style.display = 'none';
+  const {
+    data: { user },
+    error: authError,
+  } = await supabaseClient.auth.getUser();
+
+  if (authError || !user) {
+    renderNavigation(null);
+    return;
+  }
+
+  const { data: profile, error: profileError } = await supabaseClient
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const userRole = profile?.role;
+  renderNavigation(userRole);
+});
+
+function renderNavigation(userRole) {
+  const systemUsersLink = document.getElementById("nav-system-users");
+
+  if (userRole == "admin") {
+    systemUsersLink.style.display = "block";
+  } else {
+    systemUsersLink.style.display = "none";
   }
 }
 
-
+// Auto-run on DOM load
+document.addEventListener("DOMContentLoaded", loadHeaderSchoolLogo);
 
 // Auto-run on DOM load
-document.addEventListener('DOMContentLoaded', loadHeaderSchoolLogo);
-
-// Auto-run on DOM load
-document.addEventListener('DOMContentLoaded', renderNavigation);
-
+document.addEventListener("DOMContentLoaded", renderNavigation);
