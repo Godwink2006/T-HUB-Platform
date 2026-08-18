@@ -104,7 +104,7 @@ function renderNavigation(userRole) {
   const academicSettingsLink = document.getElementById("nav-academic-settings");
   const departmentsLink = document.getElementById("nav-departments");
   const roomsLink = document.getElementById("nav-rooms");
-  const periodsLink = document.getElementById("nav-periodss");
+  const periodsLink = document.getElementById("nav-periods");
   const auditLogsLink = document.getElementById("nav-audit-logs");
 
   if (userRole == "admin") {
