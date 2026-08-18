@@ -101,11 +101,46 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function renderNavigation(userRole) {
   const systemUsersLink = document.getElementById("nav-system-users");
+  const academicSettingsLink = document.getElementById("nav-academic-settings");
+  const departmentsLink = document.getElementById("nav-departments");
+  const roomsLink = document.getElementById("nav-rooms");
+  const periodsLink = document.getElementById("nav-periodss");
+  const auditLogsLink = document.getElementById("nav-audit-logs");
 
   if (userRole == "admin") {
     systemUsersLink.style.display = "block";
   } else {
     systemUsersLink.style.display = "none";
+  }
+
+   if (userRole == "admin") {
+    academicSettingsLink.style.display = "block";
+  } else {
+    academicSettingsLink.style.display = "none";
+  }
+
+   if (userRole == "admin") {
+    departmentsLink.style.display = "block";
+  } else {
+    departmentsLink.style.display = "none";
+  }
+
+   if (userRole == "admin") {
+    roomsLink.style.display = "block";
+  } else {
+    roomsLink.style.display = "none";
+  }
+
+   if (userRole == "admin") {
+    periodsLink.style.display = "block";
+  } else {
+    periodsLink.style.display = "none";
+  }
+
+   if (userRole == "admin") {
+    auditLogsLink.style.display = "block";
+  } else {
+    auditLogsLink.style.display = "none";
   }
 }
 
