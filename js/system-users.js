@@ -1,3 +1,5 @@
+
+
 const form = document.getElementById("systemUserForm");
 
 form.addEventListener("submit", async (e) => {
@@ -21,14 +23,14 @@ form.addEventListener("submit", async (e) => {
     const photoInput = document.getElementById("photo");
     let photoBase64 = null;
 
-      if (photoInput && photoInput.files[0]) {
-    // 'await' works here because the outer function is 'async'
-    photoBase64 = await compressAndConvertToBase64(
-      photoInput.files[0],
-      800,
-      0.7,
-    );
-  }
+    if (photoInput && photoInput.files[0]) {
+      // 'await' works here because the outer function is 'async'
+      photoBase64 = await compressAndConvertToBase64(
+        photoInput.files[0],
+        800,
+        0.7,
+      );
+    }
 
     if (password !== confirmPassword) {
       showToast("Passwords do not match.", "error");
@@ -55,29 +57,23 @@ form.addEventListener("submit", async (e) => {
     }
 
     await loadSystemUsers();
-    alert(data.message);
+    showToast(data?.message || "User created successfully!", "success");
 
     form.reset();
   } catch (err) {
-    console.error("FULL ERROR:", err);
-
     let message = err.message;
 
     if (err.context) {
       try {
         const errorBody = await err.context.json();
 
-        console.error("EDGE FUNCTION RESPONSE:", errorBody);
-
         if (errorBody?.message) {
           message = errorBody.message;
         }
-      } catch (parseError) {
-        console.error("Could not read Edge Function response:", parseError);
-      }
+      } catch (parseError) {}
     }
 
-    alert(message);
+    showToast(message, "error");
   } finally {
     saveButton.disabled = false;
     saveButton.textContent = "Save";
