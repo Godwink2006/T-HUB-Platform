@@ -188,7 +188,7 @@ window.forceLogout = async function () {
   }
   localStorage.clear();
   sessionStorage.clear();
-  window.location.href = "/html/index.html";
+  window.location.href = "index.html";
 };
 
 // 2. Attach Inactivity Tracker to window
@@ -214,7 +214,7 @@ window.initInactivityTracker();
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT" || !session) {
-    window.location.href = "/html/index.html";
+    window.location.href = "index.html";
   }
 });
 
