@@ -60,7 +60,6 @@ async function loadHeaderSchoolLogo() {
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching school logo:', error);
       logoImg.src = DEFAULT_AVATAR;
       return;
     }
@@ -71,6 +70,16 @@ async function loadHeaderSchoolLogo() {
   } catch (err) {
     console.error('Unexpected error loading header logo:', err);
     logoImg.src = DEFAULT_AVATAR;
+  }
+}
+
+function renderNavigation(userRole) {
+  const systemUsersLink = document.getElementById('nav-system-users');
+
+  if (userRole == 'admin') {
+    systemUsersLink.style.display = 'block';
+  }   else {
+   systemUsersLink.style.display = 'none';
   }
 }
 
