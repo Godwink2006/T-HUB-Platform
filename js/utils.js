@@ -174,6 +174,50 @@ function showToast(message, type = "success", duration = 3000) {
   }, duration);
 }
 
+// ==========================================
+// CENTRALIZED SESSION & API UTILITIES
+// ==========================================
+
+const INACTIVITY_LIMIT = 30 * 1000; // 30 SECONDS FOR TESTING
+let inactivityTimer;
+
+// 1. Attach forceLogout to window
+window.forceLogout = async function () {
+  if (window.supabaseClient) {
+    await window.supabaseClient.auth.signOut();
+  }
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = "/html/index.html";
+};
+
+// 2. Attach Inactivity Tracker to window
+window.initInactivityTracker = function () {
+  function resetTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(async () => {
+      alert("Test: Logged out due to 30 seconds of inactivity.");
+      await window.forceLogout();
+    }, INACTIVITY_LIMIT);
+  }
+
+  // Listen for activity
+  ["mousemove", "keydown", "click", "scroll"].forEach((event) => {
+    window.addEventListener(event, resetTimer, { passive: true });
+  });
+
+  resetTimer();
+};
+
+// Auto-run inactivity tracker as soon as utils.js loads
+window.initInactivityTracker();
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT" || !session) {
+    window.location.href = "/html/index.html";
+  }
+});
+
 // Auto-run on DOM load
 document.addEventListener("DOMContentLoaded", loadHeaderSchoolLogo);
 
