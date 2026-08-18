@@ -1,15 +1,14 @@
 const form = document.getElementById("systemUserForm");
 
 form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    e.preventDefault();
+  const saveButton = form.querySelector(".save-btn");
 
-     const saveButton = form.querySelector(".save-btn");
+  saveButton.disabled = true;
+  saveButton.textContent = "Creating...";
 
-saveButton.disabled = true;
-saveButton.textContent = "Creating...";
-
-    try {
+  try {
     const full_name = document.getElementById("fullName").value.trim();
     const email = document.getElementById("email").value.trim();
     const phone_number = document.getElementById("phoneNumber").value.trim();
@@ -22,63 +21,67 @@ saveButton.textContent = "Creating...";
     const photoInput = document.getElementById("photo");
     let photoBase64 = null;
 
-    if (photoInput && photoInput.files[0]) {
-      photoBase64 = await fileToBase64(photoInput.files[0]);
-    }
+      if (photoInput && photoInput.files[0]) {
+    // 'await' works here because the outer function is 'async'
+    photoBase64 = await compressAndConvertToBase64(
+      photoInput.files[0],
+      800,
+      0.7,
+    );
+  }
 
     if (password !== confirmPassword) {
-        alert("Passwords do not match.");
-        return;
+      alert("Passwords do not match.");
+      return;
     }
 
-  const { data, error } = await window.supabaseClient.functions.invoke("create-user", {
+    const { data, error } = await window.supabaseClient.functions.invoke(
+      "create-user",
+      {
         body: {
-            full_name,
-            email,
-            phone_number,
-            password,
-            role,
-            status,
-            photo: photoBase64,
+          full_name,
+          email,
+          phone_number,
+          password,
+          role,
+          status,
+          photo: photoBase64,
         },
-    });
+      },
+    );
 
     if (error) {
+      throw error;
+    }
 
-    throw error;
+    await loadSystemUsers();
+    alert(data.message);
 
-}
-
- await loadSystemUsers();
-alert(data.message);
-
-form.reset();
-
- } catch (err) {
+    form.reset();
+  } catch (err) {
     console.error("FULL ERROR:", err);
 
     let message = err.message;
 
     if (err.context) {
-        try {
-            const errorBody = await err.context.json();
+      try {
+        const errorBody = await err.context.json();
 
-            console.error("EDGE FUNCTION RESPONSE:", errorBody);
+        console.error("EDGE FUNCTION RESPONSE:", errorBody);
 
-            if (errorBody?.message) {
-                message = errorBody.message;
-            }
-        } catch (parseError) {
-            console.error("Could not read Edge Function response:", parseError);
+        if (errorBody?.message) {
+          message = errorBody.message;
         }
+      } catch (parseError) {
+        console.error("Could not read Edge Function response:", parseError);
+      }
     }
 
     alert(message);
-
-} finally {
+  } finally {
     saveButton.disabled = false;
     saveButton.textContent = "Save";
-}
+  }
 
   loadSystemUsers();
 });
@@ -91,112 +94,111 @@ const openSystemUserModal = document.getElementById("addSystemUser");
 
 const closeSystemUserModal = document.getElementById("closeSystemUserModal");
 
-openSystemUserModal.addEventListener("click", ()=> {
-systemUserModal.style.display="flex";
+openSystemUserModal.addEventListener("click", () => {
+  systemUserModal.style.display = "flex";
 
-lockBodyScroll();
+  lockBodyScroll();
 });
 
-closeSystemUserModal.addEventListener("click", ()=> {
-systemUserModal.style.display="none";
+closeSystemUserModal.addEventListener("click", () => {
+  systemUserModal.style.display = "none";
 
-unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-cancelSystemUserModal.addEventListener("click", ()=> {
-systemUserModal.style.display="none";
+cancelSystemUserModal.addEventListener("click", () => {
+  systemUserModal.style.display = "none";
 
-unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-window.addEventListener("click",(e)=> {
-if(e.target===systemUserModal){
-systemUserModal.style.display="none";
+window.addEventListener("click", (e) => {
+  if (e.target === systemUserModal) {
+    systemUserModal.style.display = "none";
 
-unLockBodyScroll();
-}
+    unLockBodyScroll();
+  }
 });
 
-
-const closeEditSystemUserModal = document.getElementById("closeEditSystemUserModal");
-const cancelEditSystemUserModal = document.getElementById("cancelEditSystemUserModal");
+const closeEditSystemUserModal = document.getElementById(
+  "closeEditSystemUserModal",
+);
+const cancelEditSystemUserModal = document.getElementById(
+  "cancelEditSystemUserModal",
+);
 const editSystemUserModal = document.getElementById("editSystemUserModal");
 const editSystemUserButtons = document.querySelectorAll(".edit-SystemUser");
 
-editSystemUserButtons.forEach(button=>{
+editSystemUserButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    editSystemUserModal.style.display = "flex";
 
-button.addEventListener("click", ()=> {
-editSystemUserModal.style.display="flex";
-
-lockBodyScroll();
+    lockBodyScroll();
+  });
 });
 
-})
+closeEditSystemUserModal.addEventListener("click", () => {
+  editSystemUserModal.style.display = "none";
 
-closeEditSystemUserModal.addEventListener("click", ()=> {
-editSystemUserModal.style.display="none";
-
-unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-cancelEditSystemUserModal.addEventListener("click", ()=> {
-editSystemUserModal.style.display="none";
+cancelEditSystemUserModal.addEventListener("click", () => {
+  editSystemUserModal.style.display = "none";
 
-unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-window.addEventListener("click",(e)=> {
-if(e.target===editSystemUserModal){
-editSystemUserModal.style.display="none";
+window.addEventListener("click", (e) => {
+  if (e.target === editSystemUserModal) {
+    editSystemUserModal.style.display = "none";
 
-unLockBodyScroll();
-}
+    unLockBodyScroll();
+  }
 });
 
-const archiveSystemUserModal = document.getElementById("archiveSystemUserModal");
+const archiveSystemUserModal = document.getElementById(
+  "archiveSystemUserModal",
+);
 
 const archiveButtons = document.querySelectorAll(".archive-SystemUser");
 
 const cancelArchive = document.getElementById("cancelArchive");
 
-archiveButtons.forEach(button=>{
+archiveButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    archiveSystemUserModal.style.display = "flex";
 
-button.addEventListener("click", ()=> {
-archiveSystemUserModal.style.display="flex";
-
-lockBodyScroll();
+    lockBodyScroll();
+  });
 });
 
-})
+cancelArchive.addEventListener("click", () => {
+  archiveSystemUserModal.style.display = "none";
 
-cancelArchive.addEventListener("click", ()=> {
-archiveSystemUserModal.style.display="none";
-
-unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-window.addEventListener("click",(e)=> {
+window.addEventListener("click", (e) => {
+  if (e.target === archiveSystemUserModal) {
+    archiveSystemUserModal.style.display = "none";
 
-if(e.target===archiveSystemUserModal){
-archiveSystemUserModal.style.display="none";
-
-unLockBodyScroll();
-}
+    unLockBodyScroll();
+  }
 });
 
 function togglePassword(id) {
-    const input = document.getElementById(id);
-    input.type = input.type === "password" ? "text" : "password";
+  const input = document.getElementById(id);
+  input.type = input.type === "password" ? "text" : "password";
 }
 
-document.querySelector('.edit-SystemUser')?.addEventListener('click', () => {
-  document.getElementById('editModal').style.display = 'flex'; // or 'flex'
+document.querySelector(".edit-SystemUser")?.addEventListener("click", () => {
+  document.getElementById("editModal").style.display = "flex"; // or 'flex'
 });
 
-document.querySelector('.archive-SystemUser')?.addEventListener('click', () => {
-  document.getElementById('archiveModal').style.display = 'flex';
+document.querySelector(".archive-SystemUser")?.addEventListener("click", () => {
+  document.getElementById("archiveModal").style.display = "flex";
 });
-
 
 // system-users.js
 async function loadSystemUsers() {
@@ -237,7 +239,7 @@ async function loadSystemUsers() {
       <td>${user.phone_number || "N/A"}</td>
       <td>${user.role || "N/A"}</td>
       <td>
-        <span class="systemUsers-status-${(user.status || 'inactive').toLowerCase()}">
+        <span class="systemUsers-status-${(user.status || "inactive").toLowerCase()}">
           ${user.status || "Inactive"}
         </span>
       </td>
@@ -250,49 +252,45 @@ async function loadSystemUsers() {
         </button>
       </td>
     </tr>
-  `
+  `,
     )
     .join("");
 }
 
-const DEFAULT_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
+const DEFAULT_AVATAR =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
 // Helper to convert File to Base64
-function fileToBase64(file) {
+function compressAndConvertToBase64(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
   });
 }
-
-
-
-// Example: Add 'async' to your submit event handler function
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const photoInput = document.querySelector("#photo");
-  let photoBase64 = null;
-
-  if (photoInput && photoInput.files[0]) {
-    // 'await' works here because the outer function is 'async'
-    photoBase64 = await fileToBase64(photoInput.files[0]);
-  }
-
-  const payload = {
-    full_name: "John Doe",
-    email: "john@school.com",
-    phone_number: "+1234567890",
-    password: "Password123!@",
-    role: "receptionist",
-    status: "active",
-    photo: photoBase64
-  };
-
-  // Now send payload to your Edge Function using fetch...
-});
 
 // Call on initial load
 document.addEventListener("DOMContentLoaded", loadSystemUsers);
