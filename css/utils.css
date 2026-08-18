@@ -81,10 +81,12 @@
 
 .toast-container {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 9999;
+  align-items: center;
+  justify-content: center;
   display: flex;
+  left: 40%;
+  bottom: 500px;
+  z-index: 9999;
   flex-direction: column;
   gap: 10px;
 }
