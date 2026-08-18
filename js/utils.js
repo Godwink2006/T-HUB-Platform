@@ -140,7 +140,7 @@ function renderNavigation(userRole) {
   if (userRole == "admin") {
     auditLogsLink.style.display = "block";
   } else {
-    systemUsersLink.style.display = "none";
+    auditLogsLink.style.display = "none";
   }
 }
 
