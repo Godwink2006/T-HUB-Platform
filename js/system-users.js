@@ -76,7 +76,6 @@ form.addEventListener("submit", async (e) => {
     saveButton.disabled = false;
     saveButton.textContent = "Save";
   }
-
   loadSystemUsers();
 });
 
@@ -503,8 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (updateSystemUserBtn) {
     updateSystemUserBtn.addEventListener("click", async () => {
       if (targetUserToEdit) {
-        await handleUpdateUser(targetUserToEdit);
-        targetUserToEdit = null; // Reset after archiving
+        await handleUpdateUser();
       }
     });
   }
@@ -512,18 +510,12 @@ document.addEventListener("DOMContentLoaded", () => {
 let targetUserToEdit = null;
 
 async function handleUpdateUser(event) {
-  if (event && typeof event.preventDefault === "function") {
-    event.preventDefault();
-  }
+  const editSystemButton = document.getElementById("updateSystemUserBtn");
 
-  const editButton = document.getElementById("updateSystemUserBtn");
+  editSystemButton.disabled = true;
+  editSystemButton.textContent = "Updating...";
 
   try {
-    if (editButton) {
-      editButton.disabled = true;
-      editButton.textContent = "Updating...";
-    }
-
     const userId = targetUserToEdit;
     const fullName = document.getElementById("editFullName").value.trim();
     const phone = document.getElementById("editPhone").value.trim();
@@ -531,7 +523,7 @@ async function handleUpdateUser(event) {
     const fileInput = document.getElementById("editAvatarInput");
     const avatarFile = fileInput ? fileInput.files[0] : null;
 
-let photoUrl = null; 
+    let photoUrl;
 
     // 1. Upload photo to storage IF selected
     if (avatarFile) {
@@ -557,11 +549,11 @@ let photoUrl = null;
       "admin-update-user",
       {
         body: {
-          userId: userId,
-          fullName: fullName,
-          phone: phone,
-          status: status,
-          photoUrl: photoUrl,
+          userId,
+          fullName,
+          phone,
+          status,
+          photoUrl,
         },
       },
     );
@@ -576,15 +568,14 @@ let photoUrl = null;
     const modal = document.getElementById("editSystemUserModal");
     if (modal) modal.style.display = "none";
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-    if (typeof loadSystemUsers === "function") loadSystemUsers();
+    await loadSystemUsers();
+
+    targetUserToEdit = null;
   } catch (err) {
-    console.error("Update Error:", err.message);
     showToast("Failed to update user: " + err.message, "error");
   } finally {
-    if (editButton) {
-      editButton.disabled = false;
-      editButton.textContent = "Update User";
-    }
+    editSystemButton.disabled = false;
+    editSystemButton.textContent = "Update User";
   }
 }
 
