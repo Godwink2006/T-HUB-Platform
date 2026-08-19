@@ -405,6 +405,59 @@ async function archiveUser(targetUserId) {
   }
 }
 
+// Function to populate edit modal with user profile data
+async function editUser(userId) {
+  targetUserToEdit = userId;
+
+  const { data: user, error } = await supabaseClient
+    .from("profiles")
+    .select("full_name, email, phone_number, role, status, photo_url")
+    .eq("id", userId)
+    .single();
+
+  if (error || !user) return;
+
+  // Set avatar preview safely
+  const previewImg = document.getElementById("editAvatarPreview");
+  if (previewImg) {
+    previewImg.src = user.photo_url || "assets/default-avatar.png";
+  }
+
+  // Clear hidden file input and reset file label
+  const fileInput = document.getElementById("editAvatarInput");
+  const fileNameText = document.getElementById("fileNameDisplay");
+  if (fileInput) fileInput.value = "";
+  if (fileNameText) fileNameText.textContent = "No new file chosen";
+
+  // Display Modal
+  const modal = document.getElementById("editSystemUserModal");
+  if (modal) modal.style.display = "flex";
+}
+
+// Live preview handler when a new file is selected
+document.addEventListener("DOMContentLoaded", () => {
+  const fileInput = document.getElementById("editAvatarInput");
+  const fileNameText = document.getElementById("fileNameDisplay");
+  const previewImg = document.getElementById("editAvatarPreview");
+
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        // Update label with file name
+        if (fileNameText) fileNameText.textContent = file.name;
+
+        // Render live preview locally without uploading yet
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (previewImg) previewImg.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+});
+
 let targetUserToEdit = null;
 
 async function editUser(userId) {

@@ -525,6 +525,19 @@ tr {
     overflow: hidden;
   }
 
+  .editSystemUser-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 650px;
+    height: 650px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 0 !important;
+    animation: modalShow 0.25s ease;
+    overflow: hidden;
+  }
+
   @keyframes modalShow {
     from {
       opacity: 0;
@@ -560,6 +573,35 @@ tr {
   }
 
   .systemUser-modal-body {
+    padding: 20px;
+    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    flex: 1;
+  }
+
+  .editSystemUser-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .editSystemUser-modal-header h2 {
+    font-size: 18px;
+  }
+
+  .editSystemUser-modal-header button {
+    cursor: pointer;
+    color: #f9fafb;
+    border: none;
+    height: 34px;
+    width: 34px;
+    font-size: 16px;
+    background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+  }
+
+  .editSystemUser-modal-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
@@ -809,50 +851,81 @@ tr {
   color: #333;
 }
 
-/* Container for the avatar preview & file input */
-.avatar-preview-container {
+/* Avatar Section Wrapper */
+.avatar-upload-group {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background-color: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-/* Rounded Profile Image Preview */
-.avatar-img {
-  width: 64px;
-  height: 64px;
+.avatar-upload-group .form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Flex Row for Preview + Actions */
+.avatar-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+/* Circular Avatar Frame */
+.avatar-preview-wrapper {
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 2px solid #cbd5e1;
+  background-color: #ffffff;
   flex-shrink: 0;
 }
 
-/* Styled File Input Button */
-.avatar-preview-container input[type="file"] {
-  font-size: 0.85rem;
-  color: #475569;
-  cursor: pointer;
+.avatar-preview-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.avatar-preview-container input[type="file"]::file-selector-button {
-  padding: 0.4rem 0.8rem;
+/* Column for Upload Button + File Name */
+.avatar-upload-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+/* Custom Upload Button Styling */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #1e293b;
-  background-color: #ffffff;
+  background: #15803d;
+  color: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-right: 0.5rem;
 }
 
-.avatar-preview-container input[type="file"]::file-selector-button:hover {
-  background-color: #f1f5f9;
+.upload-btn:hover {
+  background-color: #5b8646;
   border-color: #94a3b8;
+}
+
+.upload-btn i {
+  font-size: 1.1rem;
+}
+
+/* Selected File Name Text */
+.file-name-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  word-break: break-all;
 }
