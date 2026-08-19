@@ -530,7 +530,7 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 650px;
-    height: 550px !important; /* Fixed height requirement */
+    height: 650px !important; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 0 !important;
@@ -599,6 +599,12 @@ tr {
     font-size: 16px;
     background: #1f2937;
     border: 1px solid rgb(219, 215, 215);
+  }
+
+  .edit-systemUser-modal-body {
+    padding: 20px;
+    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    flex: 1;
   }
 
   .form-grid {
