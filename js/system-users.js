@@ -581,12 +581,16 @@ async function editUser(userId) {
     roleInput.value = roleValue;
   }
 
+  // Inside editUser():
+const photoUrlValue = user.photo_url || null;
+
   // AFTER:
   originalUserData = {
     fullName: fullNameValue,
     phone: phoneValue,
     role: roleValue, // <-- ADD THIS
     status: statusValue,
+    photoUrl: photoUrlValue, // <-- Add this property
   };
 
   // Open the modal
@@ -658,7 +662,9 @@ async function handleUpdateUser(event) {
   }
 
   try {
-    let photoUrl = originalUserData?.photoUrl ?? null; // Preserve existing photo if no new file is uploaded
+    // Line 53 fix:
+    let photoUrl =
+      originalUserData?.photoUrl || originalUserData?.photo_url || null;
 
     if (hasNewFile) {
       if (editSystemButton)
