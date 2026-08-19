@@ -520,10 +520,10 @@ async function handleUpdateUser(event) {
   const editButton = document.getElementById("updateSystemUserBtn");
 
   try {
-
-
-  editButton.disabled = true;
-  editButton.textContent = "Updating...";
+    if (editButton) {
+      editButton.disabled = true;
+      editButton.textContent = "Updating...";
+    }
 
     const userId = targetUserToEdit;
     const fullName = document.getElementById("editFullName").value.trim();
