@@ -1,5 +1,3 @@
-
-
 const form = document.getElementById("systemUserForm");
 
 form.addEventListener("submit", async (e) => {
@@ -188,12 +186,46 @@ function togglePassword(id) {
   input.type = input.type === "password" ? "text" : "password";
 }
 
-document.querySelector(".edit-SystemUser")?.addEventListener("click", () => {
-  document.getElementById("editModal").style.display = "flex"; // or 'flex'
-});
+// Global function called by onclick="editUser('${user.id}')"
+function editUser(userId) {
+  const modal = document.getElementById("editSystemUserModal"); // Match your HTML modal ID
+  if (modal) {
+    modal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+    // Option to fetch/populate user data using userId
+  }
+}
 
-document.querySelector(".archive-SystemUser")?.addEventListener("click", () => {
-  document.getElementById("archiveModal").style.display = "flex";
+// Global function called by onclick="deleteUser('${user.id}')"
+function deleteUser(userId) {
+  const modal = document.getElementById("archiveSystemUserModal"); // Match your HTML modal ID
+  if (modal) {
+    modal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+    // Option to pass userId to archive form
+  }
+}
+
+// Close listeners for static buttons (Cancel/X icons inside modals)
+document.addEventListener("DOMContentLoaded", () => {
+  const closeEditBtn = document.getElementById("closeEditSystemUserModal");
+  const cancelEditBtn = document.getElementById("cancelEditSystemUserModal");
+  const editModal = document.getElementById("editSystemUserModal");
+
+  const cancelArchiveBtn = document.getElementById("cancelArchive");
+  const archiveModal = document.getElementById("archiveSystemUserModal");
+
+  const closeModal = (modal) => {
+    if (modal) modal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  };
+
+  if (closeEditBtn)
+    closeEditBtn.addEventListener("click", () => closeModal(editModal));
+  if (cancelEditBtn)
+    cancelEditBtn.addEventListener("click", () => closeModal(editModal));
+  if (cancelArchiveBtn)
+    cancelArchiveBtn.addEventListener("click", () => closeModal(archiveModal));
 });
 
 // system-users.js

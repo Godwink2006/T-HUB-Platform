@@ -178,7 +178,7 @@ function showToast(message, type = "success", duration = 3000) {
 // CENTRALIZED SESSION & API UTILITIES
 // ==========================================
 
-const INACTIVITY_LIMIT = 30 * 1000; // 30 seconds testing
+const INACTIVITY_LIMIT = 60 * 15 * 1000; // 30 seconds testing
 let inactivityTimer;
 
 // Helper function: Check if current page is the login page
@@ -221,7 +221,7 @@ window.initInactivityTracker = function () {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(async () => {
       if (typeof showToast === "function") {
-        showToast("Logged out due to 30 seconds of inactivity.", "error");
+        showToast("Logged out due to 15 minutes of inactivity.", "error");
       }
       await window.forceLogout();
     }, INACTIVITY_LIMIT);
