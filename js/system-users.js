@@ -196,15 +196,29 @@ function editUser(userId) {
   }
 }
 
-// Global function called by onclick="deleteUser('${user.id}')"
+let targetUserToArchive = null;
+
 function deleteUser(userId) {
-  const modal = document.getElementById("archiveSystemUserModal"); // Match your HTML modal ID
+  targetUserToArchive = userId; // Store the ID globally for the confirmation button
+  const modal = document.getElementById("archiveSystemUserModal");
   if (modal) {
     modal.style.display = "flex";
     if (typeof lockBodyScroll === "function") lockBodyScroll();
-    // Option to pass userId to archive form
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const confirmArchiveBtn = document.getElementById("confirmArchiveBtn");
+
+  if (confirmArchiveBtn) {
+    confirmArchiveBtn.addEventListener("click", async () => {
+      if (targetUserToArchive) {
+        await archiveUser(targetUserToArchive);
+        targetUserToArchive = null; // Reset after archiving
+      }
+    });
+  }
+});
 
 // Close listeners for static buttons (Cancel/X icons inside modals)
 document.addEventListener("DOMContentLoaded", () => {
@@ -240,7 +254,10 @@ async function loadSystemUsers() {
   // 2. Fetch profiles from Supabase
   const { data: users, error } = await supabaseClient
     .from("profiles")
-    .select("id, full_name, email, phone_number, role, status, photo_url")
+    .select(
+      "id, full_name, email, phone_number, role, status, photo_url, is_archived",
+    )
+    .eq("is_archived", false)
     .not("role", "in", '("admin")')
     .order("created_at", { ascending: false });
 
@@ -318,6 +335,115 @@ function compressAndConvertToBase64(file, maxWidth = 800, quality = 0.7) {
     };
     reader.onerror = (err) => reject(err);
   });
+}
+
+async function archiveUser(targetUserId) {
+  try {
+    // 1. Verify Active Session
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseClient.auth.getSession();
+
+    if (sessionError || !session) {
+      showToast("Your session has expired. Please log in again.", "error");
+      window.location.href = "index.html";
+      return;
+    }
+
+    // 2. Prevent Self-Archiving
+    if (session.user.id === targetUserId) {
+      showToast("You cannot archive your own admin account.", "error");
+      return;
+    }
+
+    // 3. Verify Admin Role & Account Status
+    const { data: adminProfile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role, is_archived, status")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileError || !adminProfile) {
+      showToast("Unable to verify user permissions.", "error");
+      return;
+    }
+
+    if (
+      adminProfile.role !== "admin" ||
+      adminProfile.is_archived ||
+      adminProfile.status !== "active"
+    ) {
+      showToast(
+        "Access denied: You do not have permission to perform this action.",
+        "error",
+      );
+      return;
+    }
+
+    // 4. Perform Soft Delete / Archive
+    const { error: updateError } = await supabaseClient
+      .from("profiles")
+      .update({ is_archived: true, status: "inactive" })
+      .eq("id", targetUserId);
+
+    if (updateError) {
+      console.error("Archive error:", updateError.message);
+      showToast("Failed to archive user. Check database policies.", "error");
+      return;
+    }
+
+    // 5. Success UI Handling
+    showToast("User successfully archived.", "success");
+    document.getElementById("archiveSystemUserModal").style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+
+    // Refresh user list table
+    if (typeof loadSystemUsers === "function") loadSystemUsers();
+  } catch (err) {
+    console.error("Unexpected error during archive operation:", err);
+  }
+}
+
+let targetUserToEdit = null;
+
+async function editUser(userId) {
+  targetUserToEdit = userId;
+
+  // Fetch the latest user profile data from Supabase
+  const { data: user, error } = await supabaseClient
+    .from("profiles")
+    .select("full_name, phone_number, status, photo_url")
+    .eq("id", userId)
+    .single();
+
+  if (error || !user) {
+    showToast("Could not load user details.", "error");
+    return;
+  }
+
+  // Populate the edit modal form fields
+  document.getElementById("editFullName").value = user.full_name || "";
+  document.getElementById("editPhone").value = user.phone_number || "";
+   // ✅ CORRECT: Update an <img> preview element instead of the file input
+const avatarPreview = document.getElementById("editAvatarPreview");
+if (avatarPreview) {
+  avatarPreview.src = user.photo_url || "default-avatar.png"; // Fallback image
+}
+
+// Clear the file input so it is ready for a new file upload if selected
+const fileInput = document.getElementById("editPhoto");
+if (fileInput) {
+  fileInput.value = ""; 
+}
+  document.getElementById("editStatus").value = user.status || "";
+
+  // Open the modal
+  const modal = document.getElementById("editSystemUserModal");
+  if (modal) {
+    modal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+  }
 }
 
 // Call on initial load
