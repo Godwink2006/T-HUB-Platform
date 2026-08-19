@@ -519,10 +519,12 @@ async function handleUpdateUser(event) {
 
   const editButton = document.getElementById("updateSystemUserBtn");
 
+  try {
+
+
   editButton.disabled = true;
   editButton.textContent = "Updating...";
 
-  try {
     const userId = targetUserToEdit;
     const fullName = document.getElementById("editFullName").value.trim();
     const phone = document.getElementById("editPhone").value.trim();
