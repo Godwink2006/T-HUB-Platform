@@ -1,9 +1,67 @@
 const form = document.getElementById("systemUserForm");
 
+// Updated helper: returns a compressed Blob ready for Supabase Storage
+function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Maintain aspect ratio while resizing
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert canvas directly to a binary Blob (image/jpeg)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Canvas encoding failed."));
+            }
+          },
+          "image/jpeg", // Convert all uploads to compressed JPEG
+          quality, // 0.7 = 70% quality (great compression ratio)
+        );
+      };
+
+      img.onerror = (err) => reject(err);
+    };
+
+    reader.onerror = (err) => reject(err);
+  });
+}
+
+// Form Submit Handler
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const saveButton = form.querySelector(".save-btn");
+
+  // FIX 1: Validate passwords BEFORE starting loading state or try block
+  const password = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (password !== confirmPassword) {
+    showToast("Passwords do not match.", "error");
+    return; // Safely stops without locking the button
+  }
 
   saveButton.disabled = true;
   saveButton.textContent = "Creating...";
@@ -12,29 +70,31 @@ form.addEventListener("submit", async (e) => {
     const full_name = document.getElementById("fullName").value.trim();
     const email = document.getElementById("email").value.trim();
     const phone_number = document.getElementById("phoneNumber").value.trim();
-    const password = document.getElementById("newPassword").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
     const role = document.getElementById("role").value.toLowerCase();
     const status = document.getElementById("status").value.toLowerCase();
 
-    // GET THE PHOTO FILE INPUT HERE
     const photoInput = document.getElementById("photo");
+
+    // FIX 2: Properly declare photoBase64 variable
     let photoBase64 = null;
 
     if (photoInput && photoInput.files[0]) {
-      // 'await' works here because the outer function is 'async'
-      photoBase64 = await compressAndConvertToBase64(
+      saveButton.textContent = "Compressing photo...";
+
+      // Compress to Blob
+      const compressedBlob = await compressImageToBlob(
         photoInput.files[0],
         800,
         0.7,
       );
+
+      // FIX 3: Convert Blob to Base64 using the defined helper
+      photoBase64 = await blobToBase64(compressedBlob);
     }
 
-    if (password !== confirmPassword) {
-      showToast("Passwords do not match.", "error");
-      return;
-    }
+    saveButton.textContent = "Creating user...";
 
+    // Invoke Deno Edge Function
     const { data, error } = await window.supabaseClient.functions.invoke(
       "create-user",
       {
@@ -50,21 +110,18 @@ form.addEventListener("submit", async (e) => {
       },
     );
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    await loadSystemUsers();
     showToast(data?.message || "User created successfully!", "success");
 
     form.reset();
+    await loadSystemUsers();
   } catch (err) {
     let message = err.message;
 
     if (err.context) {
       try {
         const errorBody = await err.context.json();
-
         if (errorBody?.message) {
           message = errorBody.message;
         }
@@ -76,8 +133,16 @@ form.addEventListener("submit", async (e) => {
     saveButton.disabled = false;
     saveButton.textContent = "Save";
   }
-  loadSystemUsers();
 });
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result); // Returns full "data:image/jpeg;base64,..."
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 const systemUserModal = document.getElementById("systemUserModal");
 
@@ -348,38 +413,6 @@ document.addEventListener("DOMContentLoaded", () => {
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
-// Helper to convert File to Base64
-function compressAndConvertToBase64(file, maxWidth = 800, quality = 0.7) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-
-        resolve(canvas.toDataURL("image/jpeg", quality));
-      };
-
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-}
-
 let targetUserToArchive = null;
 
 async function archiveUser(targetUserId) {
@@ -503,13 +536,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// Global variable to store the snapshot
+let originalUserData = null;
+
 async function editUser(userId) {
   targetUserToEdit = userId;
 
   // Fetch the latest user profile data from Supabase
   const { data: user, error } = await supabaseClient
     .from("profiles")
-    .select("full_name, phone_number, status, photo_url")
+    .select("full_name, phone_number, role, status, photo_url")
     .eq("id", userId)
     .single();
 
@@ -518,9 +554,14 @@ async function editUser(userId) {
     return;
   }
 
+  const fullNameValue = user.full_name || "";
+  const phoneValue = user.phone_number || "";
+  const statusValue = user.status || "";
+  const roleValue = user.role || "";
+
   // Populate the edit modal form fields
-  document.getElementById("editFullName").value = user.full_name || "";
-  document.getElementById("editPhone").value = user.phone_number || "";
+  document.getElementById("editFullName").value = fullNameValue;
+  document.getElementById("editPhone").value = phoneValue;
   // ✅ CORRECT: Update an <img> preview element instead of the file input
   const avatarPreview = document.getElementById("editAvatarPreview");
   if (avatarPreview) {
@@ -532,7 +573,21 @@ async function editUser(userId) {
   if (fileInput) {
     fileInput.value = "";
   }
-  document.getElementById("editStatus").value = user.status || "";
+
+  document.getElementById("editStatus").value = statusValue;
+
+  const roleInput = document.getElementById("editRole");
+  if (roleInput) {
+    roleInput.value = roleValue;
+  }
+
+  // AFTER:
+  originalUserData = {
+    fullName: fullNameValue,
+    phone: phoneValue,
+    role: roleValue, // <-- ADD THIS
+    status: statusValue,
+  };
 
   // Open the modal
   const modal = document.getElementById("editSystemUserModal");
@@ -553,33 +608,73 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-let targetUserToEdit = null;
 
 async function handleUpdateUser(event) {
-  const editSystemButton = document.getElementById("updateSystemUserBtn");
+  if (event && event.preventDefault) event.preventDefault();
 
-  editSystemButton.disabled = true;
-  editSystemButton.textContent = "Updating...";
+  const userId = targetUserToEdit;
+  if (!userId) return;
+
+  const fullNameInput = document.getElementById("editFullName");
+  const phoneInput = document.getElementById("editPhone");
+  const statusInput = document.getElementById("editStatus");
+  const roleInput = document.getElementById("editRole"); // Added Role field
+  const fileInput = document.getElementById("editAvatarInput");
+
+  // 2. Extract and format values (Force Lowercase for Role & Status)
+  const fullName = fullNameInput ? fullNameInput.value.trim() : "";
+  const phone = phoneInput ? phoneInput.value.trim() : "";
+  const status = statusInput ? statusInput.value.trim().toLowerCase() : "";
+
+  // Fallback to original role if role input doesn't exist on the form
+  const rawRole = roleInput ? roleInput.value : (originalUserData?.role ?? "");
+  const role = rawRole.trim().toLowerCase();
+
+  const avatarFile = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  const origName = originalUserData?.fullName ?? "";
+  const origPhone = originalUserData?.phone ?? "";
+  const origStatus = originalUserData?.status ?? "";
+  const origRole = originalUserData?.role ?? "";
+
+  // Check for changes
+  const hasTextChanged =
+    fullName !== origName ||
+    phone !== origPhone ||
+    status !== origStatus ||
+    role !== origRole;
+
+  const hasNewFile = avatarFile !== null && avatarFile !== undefined;
+
+  if (!hasTextChanged && !hasNewFile) {
+    showToast("No changes detected.", "info");
+    return;
+  }
+
+  const editSystemButton = document.getElementById("updateSystemUserBtn");
+  if (editSystemButton) {
+    editSystemButton.disabled = true;
+    editSystemButton.textContent = "Updating...";
+  }
 
   try {
-    const userId = targetUserToEdit;
-    const fullName = document.getElementById("editFullName").value.trim();
-    const phone = document.getElementById("editPhone").value.trim();
-    const status = document.getElementById("editStatus").value;
-    const fileInput = document.getElementById("editAvatarInput");
-    const avatarFile = fileInput ? fileInput.files[0] : null;
+    let photoUrl = originalUserData?.photoUrl ?? null; // Preserve existing photo if no new file is uploaded
 
-    let photoUrl;
+    if (hasNewFile) {
+      if (editSystemButton)
+        editSystemButton.textContent = "Compressing photo...";
 
-    // 1. Upload photo to storage IF selected
-    if (avatarFile) {
-      // Extract file extension first
-      const fileExt = avatarFile.name.split(".").pop();
-      const filePath = `${userId}/${Date.now()}.${fileExt}`;
+      const compressedBlob = await compressImageToBlob(avatarFile, 800, 0.7);
+      const filePath = `${userId}/${Date.now()}.jpg`;
+
+      if (editSystemButton) editSystemButton.textContent = "Uploading photo...";
 
       const { error: uploadError } = await supabaseClient.storage
         .from("avatars")
-        .upload(filePath, avatarFile, { upsert: true });
+        .upload(filePath, compressedBlob, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
 
       if (uploadError) throw uploadError;
 
@@ -590,40 +685,69 @@ async function handleUpdateUser(event) {
       photoUrl = urlData.publicUrl;
     }
 
-    // 2. Invoke Deno Edge Function with full_name included
+    if (editSystemButton) editSystemButton.textContent = "Updating profile...";
+
+    // Invoke Deno Edge Function with aligned key names
     const { data, error } = await supabaseClient.functions.invoke(
       "admin-update-user",
       {
         body: {
           userId,
-          fullName,
-          phone,
-          status,
-          photoUrl,
+          full_name: fullName,
+          phone_number: phone,
+          role: role, // <-- Sending lowercase role ("admin", "teacher", etc.)
+          status: status, // <-- Sending lowercase status ("active", "inactive")
+          photoUrl: photoUrl,
         },
       },
     );
 
-    if (error || data?.error) {
-      throw new Error(error?.message || data?.error);
+    // 2. Check for Edge Function errors (HTTP 400/500)
+    if (error) {
+      let errorMessage = "Failed to update user.";
+
+      // Extract custom JSON message from Edge Function
+      if (error.context) {
+        try {
+          const errorBody = await error.context.json();
+          if (errorBody?.message) {
+            errorMessage = errorBody.message; // e.g., "Invalid role or status provided."
+          }
+        } catch (e) {
+          /* Fallback if body parsing fails */
+        }
+      }
+
+      // Throwing here sends execution straight to catch(err)
+      throw new Error(errorMessage);
     }
 
-    showToast("User updated successfully!", "success");
+    // 3. Handle explicit success = false responses (HTTP 200 edge cases)
+    if (data && data.success === false) {
+      throw new Error(data.message || "Failed to update user.");
+    }
 
-    // Close modal & reload user table
+    // 4. Success Toast
+    showToast(data.message || "User updated successfully!", "success");
+
+    // Close modal & reload UI
     const modal = document.getElementById("editSystemUserModal");
     if (modal) modal.style.display = "none";
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
     await loadSystemUsers();
 
     targetUserToEdit = null;
+    originalUserData = null;
   } catch (err) {
-    showToast("Failed to update user: " + err.message, "error");
+    // 5. HERE IS YOUR SHOWTOAST FOR ERRORS!
+    // It receives the exact error message thrown from above.
+    showToast(err.message, "error");
   } finally {
-    editSystemButton.disabled = false;
-    editSystemButton.textContent = "Update User";
+    if (editSystemButton) {
+      editSystemButton.disabled = false;
+      editSystemButton.textContent = "Update User";
+    }
   }
 }
-
 // Call on initial load
 document.addEventListener("DOMContentLoaded", loadSystemUsers);
