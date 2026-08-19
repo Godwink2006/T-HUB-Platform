@@ -578,7 +578,7 @@ tr {
     flex: 1;
   }
 
-  .editSystemUser-modal-header {
+  .edit-systemUser-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -586,11 +586,11 @@ tr {
     border-bottom: 1.5px solid rgb(219, 215, 215);
   }
 
-  .editSystemUser-modal-header h2 {
+  .edit-systemUser-modal-header h2 {
     font-size: 18px;
   }
 
-  .editSystemUser-modal-header button {
+  .edit-systemUser-modal-header button {
     cursor: pointer;
     color: #f9fafb;
     border: none;
@@ -601,7 +601,7 @@ tr {
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .editSystemUser-modal-body {
+  .edit-systemUser-modal-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
