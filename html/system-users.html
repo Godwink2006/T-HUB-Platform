@@ -145,7 +145,7 @@
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="example@school.com"
+                  placeholder="example@gmail.com"
                   required
                 />
               </div>
@@ -240,15 +240,37 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label>Profile photo (Optional)</label>
+               <div class="avatar-upload-group">
+                <label class="form-label">Profile photo (Optional)</label>
+                <div class="avatar-edit-container">
+                  <!-- Current Avatar Preview -->
+                  <div class="avatar-preview-wrapper">
+                    <img
+                      id="addAvatarPreview"
+                      src="assets/default-avatar.png"
+                      alt="Profile Preview"
+                    />
+                  </div>
 
-                <input
-                  id="photo"
-                  name="photo_url"
-                  type="file"
-                  accept="image/*"
-                />
+                  <!-- Upload Controls -->
+                  <div class="avatar-upload-actions">
+                    <label
+                      for="addAvatarInput"
+                      class="btn-secondary upload-btn"
+                    >
+                      <i class="bx bx-upload"></i> Add Photo
+                    </label>
+                    <input
+                      type="file"
+                      id="addAvatarInput"
+                      accept="image/*"
+                      hidden
+                    />
+                    <span id="addFileNameDisplay" class="file-name-text"
+                      >No new file chosen</span
+                    >
+                  </div>
+                </div>
               </div>
 
               <div class="form-group">

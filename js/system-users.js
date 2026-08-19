@@ -48,6 +48,37 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   });
 }
 
+// Live preview handler for ADD USER photo input
+const addFileInput = document.getElementById("addAvatarInput");
+const addFileNameText = document.getElementById("addFileNameDisplay");
+const addPreviewImg = document.getElementById("addAvatarPreview");
+
+if (addFileInput) {
+  addFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 1. Update filename text label
+      if (addFileNameText) addFileNameText.textContent = file.name;
+
+      // 2. Render live preview locally without uploading yet
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (addPreviewImg) addPreviewImg.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+// Call this whenever you open or reset your Add User form
+function resetAddUserPreview() {
+  const addPreviewImg = document.getElementById("addAvatarPreview");
+  const addFileNameText = document.getElementById("addFileNameDisplay");
+
+  if (addPreviewImg) addPreviewImg.src = "assets/default-avatar.png";
+  if (addFileNameText) addFileNameText.textContent = "No file chosen";
+}
+
 // Form Submit Handler
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -73,7 +104,7 @@ form.addEventListener("submit", async (e) => {
     const role = document.getElementById("role").value.toLowerCase();
     const status = document.getElementById("status").value.toLowerCase();
 
-    const photoInput = document.getElementById("photo");
+    const photoInput = document.getElementById("addAvatarInput");
 
     // FIX 2: Properly declare photoBase64 variable
     let photoBase64 = null;
@@ -115,6 +146,16 @@ form.addEventListener("submit", async (e) => {
     showToast(data?.message || "User created successfully!", "success");
 
     form.reset();
+
+    const avatarPreview = document.getElementById("addAvatarPreview");
+    if (avatarPreview) {
+      avatarPreview.src = DEFAULT_AVATAR; // or DEFAULT_AVATAR
+    }
+    const fileNameText = document.getElementById("addFileNameDisplay");
+    if (fileNameText) {
+      fileNameText.textContent = "No file chosen";
+    }
+
     await loadSystemUsers();
   } catch (err) {
     let message = err.message;
@@ -154,6 +195,18 @@ const closeSystemUserModal = document.getElementById("closeSystemUserModal");
 
 openSystemUserModal.addEventListener("click", () => {
   systemUserModal.style.display = "flex";
+
+  // Ensure default picture shows when opening
+  const avatarPreview = document.getElementById("addAvatarPreview");
+  if (avatarPreview) {
+    avatarPreview.src = DEFAULT_AVATAR;
+  }
+
+  // Reset file name text label
+  const fileNameText = document.getElementById("addFileNameDisplay");
+  if (fileNameText) {
+    fileNameText.textContent = "No file chosen";
+  }
 
   lockBodyScroll();
 });
@@ -582,7 +635,7 @@ async function editUser(userId) {
   }
 
   // Inside editUser():
-const photoUrlValue = user.photo_url || null;
+  const photoUrlValue = user.photo_url || null;
 
   // AFTER:
   originalUserData = {
