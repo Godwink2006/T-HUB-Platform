@@ -530,56 +530,54 @@ async function handleUpdateUser(event) {
     const fileInput = document.getElementById("editAvatarInput");
     const avatarFile = fileInput ? fileInput.files[0] : null;
 
-    try {
-      let photoUrl = null;
-      // 1. Upload photo to storage IF selected
-      if (avatarFile) {
-        // Extract file extension first
-        const fileExt = avatarFile.name.split(".").pop();
-        const filePath = `${userId}/${Date.now()}.${fileExt}`;
+    let photoUrl = null;
+    // 1. Upload photo to storage IF selected
+    if (avatarFile) {
+      // Extract file extension first
+      const fileExt = avatarFile.name.split(".").pop();
+      const filePath = `${userId}/${Date.now()}.${fileExt}`;
 
-        const { error: uploadError } = await supabaseClient.storage
-          .from("avatars")
-          .upload(filePath, avatarFile, { upsert: true });
+      const { error: uploadError } = await supabaseClient.storage
+        .from("avatars")
+        .upload(filePath, avatarFile, { upsert: true });
 
-        if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabaseClient.storage
-          .from("avatars")
-          .getPublicUrl(filePath);
+      const { data: urlData } = supabaseClient.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
 
-        photoUrl = urlData.publicUrl;
-      }
-
-      // 2. Invoke Deno Edge Function with full_name included
-      const { data, error } = await supabaseClient.functions.invoke(
-        "admin-update-user",
-        {
-          body: {
-            userId: userId,
-            fullName: fullName,
-            phone: phone,
-            status: status,
-            photoUrl: photoUrl,
-          },
-        },
-      );
-
-      if (error || data?.error) {
-        throw new Error(error?.message || data?.error);
-      }
-
-      showToast("User updated successfully!", "success");
-
-      // Close modal & reload user table
-      const modal = document.getElementById("editSystemUserModal");
-      if (modal) modal.style.display = "none";
-      if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-      if (typeof loadSystemUsers === "function") loadSystemUsers();
-    } catch (err) {
-      console.error("Update Error:", err.message);
-      showToast("Failed to update user: " + err.message, "error");
+      photoUrl = urlData.publicUrl;
     }
+
+    // 2. Invoke Deno Edge Function with full_name included
+    const { data, error } = await supabaseClient.functions.invoke(
+      "admin-update-user",
+      {
+        body: {
+          userId: userId,
+          fullName: fullName,
+          phone: phone,
+          status: status,
+          photoUrl: photoUrl,
+        },
+      },
+    );
+
+    if (error || data?.error) {
+      throw new Error(error?.message || data?.error);
+    }
+
+    showToast("User updated successfully!", "success");
+
+    // Close modal & reload user table
+    const modal = document.getElementById("editSystemUserModal");
+    if (modal) modal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+    if (typeof loadSystemUsers === "function") loadSystemUsers();
+  } catch (err) {
+    console.error("Update Error:", err.message);
+    showToast("Failed to update user: " + err.message, "error");
   } finally {
     editButton.disabled = false;
     editButton.textContent = "Update User";
