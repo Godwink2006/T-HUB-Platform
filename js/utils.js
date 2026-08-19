@@ -178,30 +178,52 @@ function showToast(message, type = "success", duration = 3000) {
 // CENTRALIZED SESSION & API UTILITIES
 // ==========================================
 
-const INACTIVITY_LIMIT = 30 * 1000; // 30 SECONDS FOR TESTING
+const INACTIVITY_LIMIT = 30 * 1000; // 30 seconds testing
 let inactivityTimer;
 
-// 1. Attach forceLogout to window
+// Helper function: Check if current page is already login.html
+function isLoginPage() {
+  return (
+    window.location.pathname.endsWith("index.html") ||
+    window.location.pathname === "/"
+  );
+}
+
+// 1. Safe forceLogout
 window.forceLogout = async function () {
+  // Clear timer so it doesn't fire twice
+  clearTimeout(inactivityTimer);
+
   if (window.supabaseClient) {
-    await window.supabaseClient.auth.signOut();
+    try {
+      await window.supabaseClient.auth.signOut();
+    } catch (e) {
+      console.warn("SignOut error ignored:", e);
+    }
   }
+
   localStorage.clear();
   sessionStorage.clear();
-  window.location.href = "index.html";
+
+  // ONLY redirect if NOT already on login page
+  if (!isLoginPage()) {
+    window.location.href = "index.html";
+  }
 };
 
-// 2. Attach Inactivity Tracker to window
+// 2. Safe Inactivity Tracker
 window.initInactivityTracker = function () {
+  // DO NOT run inactivity tracking if we are already on the login page!
+  if (isLoginPage()) return;
+
   function resetTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(async () => {
-      alert("Test: Logged out due to 30 seconds of inactivity.");
+      showToast("Test: Logged out due to 30 seconds of inactivity.", "error");
       await window.forceLogout();
     }, INACTIVITY_LIMIT);
   }
 
-  // Listen for activity
   ["mousemove", "keydown", "click", "scroll"].forEach((event) => {
     window.addEventListener(event, resetTimer, { passive: true });
   });
@@ -209,7 +231,19 @@ window.initInactivityTracker = function () {
   resetTimer();
 };
 
-// Auto-run inactivity tracker as soon as utils.js loads
+// 3. Safe Auth State Listener
+window.initAuthListener = function (supabase) {
+  if (!supabase) return;
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    // ONLY redirect if signed out AND user is trying to view a protected page
+    if ((event === "SIGNED_OUT" || !session) && !isLoginPage()) {
+      window.location.href = "index.html";
+    }
+  });
+};
+
+// Auto-start tracker
 window.initInactivityTracker();
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
