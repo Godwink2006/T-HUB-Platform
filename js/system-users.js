@@ -1,5 +1,3 @@
-let targetUserToEdit = null;
-
 const form = document.getElementById("systemUserForm");
 
 form.addEventListener("submit", async (e) => {
@@ -198,8 +196,6 @@ function editUser(userId) {
   }
 }
 
-let targetUserToArchive = null;
-
 function deleteUser(userId) {
   targetUserToArchive = userId; // Store the ID globally for the confirmation button
   const modal = document.getElementById("archiveSystemUserModal");
@@ -338,6 +334,8 @@ function compressAndConvertToBase64(file, maxWidth = 800, quality = 0.7) {
     reader.onerror = (err) => reject(err);
   });
 }
+
+let targetUserToArchive = null;
 
 async function archiveUser(targetUserId) {
   try {
@@ -511,6 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+let targetUserToEdit = null;
 
 async function handleUpdateUser(event) {
   if (event && typeof event.preventDefault === "function") {
@@ -532,7 +531,8 @@ async function handleUpdateUser(event) {
     const fileInput = document.getElementById("editAvatarInput");
     const avatarFile = fileInput ? fileInput.files[0] : null;
 
-    let photoUrl = null;
+let photoUrl = null; 
+
     // 1. Upload photo to storage IF selected
     if (avatarFile) {
       // Extract file extension first
@@ -581,8 +581,10 @@ async function handleUpdateUser(event) {
     console.error("Update Error:", err.message);
     showToast("Failed to update user: " + err.message, "error");
   } finally {
-    editButton.disabled = false;
-    editButton.textContent = "Update User";
+    if (editButton) {
+      editButton.disabled = false;
+      editButton.textContent = "Update User";
+    }
   }
 }
 
