@@ -525,7 +525,7 @@ tr {
     overflow: hidden;
   }
 
-  .editSystemUser-modal-content {
+  .edit-systemUser-modal-content {
     display: flex;
     flex-direction: column;
     width: 100%;
