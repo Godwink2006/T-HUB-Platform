@@ -601,12 +601,6 @@ tr {
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .edit-systemUser-modal-body {
-    padding: 20px;
-    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
-    flex: 1;
-  }
-
   .form-grid {
     display: grid;
     grid-template-columns: 1fr;
