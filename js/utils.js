@@ -181,17 +181,19 @@ function showToast(message, type = "success", duration = 3000) {
 const INACTIVITY_LIMIT = 30 * 1000; // 30 seconds testing
 let inactivityTimer;
 
-// Helper function: Check if current page is already login.html
+// Helper function: Check if current page is the login page
 function isLoginPage() {
+  const path = window.location.pathname.toLowerCase();
   return (
-    window.location.pathname.endsWith("index.html") ||
-    window.location.pathname === "/"
+    path.endsWith("/index.html") ||
+    path === "/index.html" ||
+    path === "/" ||
+    path === ""
   );
 }
 
 // 1. Safe forceLogout
 window.forceLogout = async function () {
-  // Clear timer so it doesn't fire twice
   clearTimeout(inactivityTimer);
 
   if (window.supabaseClient) {
@@ -205,21 +207,22 @@ window.forceLogout = async function () {
   localStorage.clear();
   sessionStorage.clear();
 
-  // ONLY redirect if NOT already on login page
+  // Redirect to absolute root /index.html
   if (!isLoginPage()) {
-    window.location.href = "index.html";
+    window.location.href = "/index.html"; // <-- Absolute path fixes /html/index.html error
   }
 };
 
 // 2. Safe Inactivity Tracker
 window.initInactivityTracker = function () {
-  // DO NOT run inactivity tracking if we are already on the login page!
   if (isLoginPage()) return;
 
   function resetTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(async () => {
-      showToast("Test: Logged out due to 30 seconds of inactivity.", "error");
+      if (typeof showToast === "function") {
+        showToast("Logged out due to 30 seconds of inactivity.", "error");
+      }
       await window.forceLogout();
     }, INACTIVITY_LIMIT);
   }
@@ -236,21 +239,14 @@ window.initAuthListener = function (supabase) {
   if (!supabase) return;
 
   supabase.auth.onAuthStateChange((event, session) => {
-    // ONLY redirect if signed out AND user is trying to view a protected page
     if ((event === "SIGNED_OUT" || !session) && !isLoginPage()) {
-      window.location.href = "index.html";
+      window.location.href = "/index.html"; // <-- Absolute path
     }
   });
 };
 
-// Auto-start tracker
+// Auto-start inactivity tracker safely
 window.initInactivityTracker();
-
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  if (event === "SIGNED_OUT" || !session) {
-    window.location.href = "index.html";
-  }
-});
 
 // Auto-run on DOM load
 document.addEventListener("DOMContentLoaded", loadHeaderSchoolLogo);
