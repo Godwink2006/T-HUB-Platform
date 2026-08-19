@@ -530,7 +530,7 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 650px;
-    height: 650px; /* Fixed height requirement */
+    height: 850px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 0 !important;
