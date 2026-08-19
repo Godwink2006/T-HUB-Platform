@@ -45,22 +45,21 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search users..." />
+          <input type="text" id="searchInput" placeholder="Search users..." />
 
-          <select>
-            <option>Role</option>
-            <option>Admin</option>
-            <option>Librarian</option>
-            <option>Receptionist</option>
-            <option>Accountant</option>
-          </select>
+         <select id="roleFilter">
+    <option value="">Role</option>
+    <option value="Librarian">Librarian</option>
+    <option value="Receptionist">Receptionist</option>
+    <option value="Accountant">Accountant</option>
+  </select>
 
-          <select>
-            <option>Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
-          </select>
-        </section>
+         <select id="statusFilter">
+    <option value="">Status</option>
+    <option value="active">Active</option>
+    <option value="inactive">Inactive</option>
+  </select>
+</section>
 
         <section class="systemUsers-table-card">
           <table id="usersTable">

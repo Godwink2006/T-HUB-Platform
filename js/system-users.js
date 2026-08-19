@@ -245,11 +245,20 @@ async function loadSystemUsers() {
   const tableBody = document.querySelector("#usersTable tbody");
   if (!tableBody) return;
 
+  // 1. Get current filter & search values from DOM
+  const searchInput = document.getElementById("searchInput");
+  const roleFilter = document.getElementById("roleFilter");
+  const statusFilter = document.getElementById("statusFilter");
+
+  const searchTerm = searchInput ? searchInput.value.trim() : "";
+  const roleValue = roleFilter ? roleFilter.value.toLowerCase() : "";
+  const statusValue = statusFilter ? statusFilter.value.toLowerCase() : "";
+
   // 1. Show loading state across all 7 columns
   tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading users...</td></tr>`;
 
-  // 2. Fetch profiles from Supabase
-  const { data: users, error } = await supabaseClient
+  // 3. Build dynamic Supabase query
+  let query = supabaseClient
     .from("profiles")
     .select(
       "id, full_name, email, phone_number, role, status, photo_url, is_archived",
@@ -257,6 +266,29 @@ async function loadSystemUsers() {
     .eq("is_archived", false)
     .not("role", "in", '("admin")')
     .order("created_at", { ascending: false });
+
+  // Apply search across full_name, email, or phone_number
+  if (searchTerm) {
+    query = query.or(
+      `full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone_number.ilike.%${searchTerm}%`,
+    );
+  }
+
+  // Apply role filter (ignore default placeholder option)
+  if (roleValue && roleValue !== "role") {
+    query = query.ilike("role", roleValue);
+  }
+
+  // Apply status filter (ignore default placeholder option)
+  if (statusValue && statusValue !== "status") {
+    query = query.ilike("status", statusValue);
+  }
+
+  // Order results
+  query = query.order("created_at", { ascending: false });
+
+  // Execute query
+  const { data: users, error } = await query;
 
   if (error) {
     tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Failed to load users.</td></tr>`;
@@ -298,6 +330,20 @@ async function loadSystemUsers() {
     )
     .join("");
 }
+
+// 5. Initialize listeners on page load
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("searchInput");
+  const roleFilter = document.getElementById("roleFilter");
+  const statusFilter = document.getElementById("statusFilter");
+
+  if (searchInput) searchInput.addEventListener("input", loadSystemUsers);
+  if (roleFilter) roleFilter.addEventListener("change", loadSystemUsers);
+  if (statusFilter) statusFilter.addEventListener("change", loadSystemUsers);
+
+  // Initial load
+  loadSystemUsers();
+});
 
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
