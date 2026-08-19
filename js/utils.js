@@ -100,48 +100,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function renderNavigation(userRole) {
-  const systemUsersLink = document.getElementById("nav-system-users");
-  const academicSettingsLink = document.getElementById("nav-academic-settings");
-  const departmentsLink = document.getElementById("nav-departments");
-  const roomsLink = document.getElementById("nav-rooms");
-  const periodsLink = document.getElementById("nav-periods");
-  const auditLogsLink = document.getElementById("nav-audit-logs");
+  const adminOnlyLinks = [
+    "nav-system-users",
+    "nav-academic-settings",
+    "nav-departments",
+    "nav-rooms",
+    "nav-periods",
+    "nav-audit-logs"
+  ];
 
-  if (userRole == "admin") {
-    systemUsersLink.style.display = "block";
-  } else {
-    systemUsersLink.style.display = "none";
-  }
+  const isAdmin = userRole === "admin";
 
-  if (userRole == "admin") {
-    academicSettingsLink.style.display = "block";
-  } else {
-    academicSettingsLink.style.display = "none";
-  }
-
-  if (userRole == "admin") {
-    departmentsLink.style.display = "block";
-  } else {
-    departmentsLink.style.display = "none";
-  }
-
-  if (userRole == "admin") {
-    roomsLink.style.display = "block";
-  } else {
-    roomsLink.style.display = "none";
-  }
-
-  if (userRole == "admin") {
-    periodsLink.style.display = "block";
-  } else {
-    periodsLink.style.display = "none";
-  }
-
-  if (userRole == "admin") {
-    auditLogsLink.style.display = "block";
-  } else {
-    auditLogsLink.style.display = "none";
-  }
+  adminOnlyLinks.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = isAdmin ? "block" : "none";
+    }
+  });
 }
 
 function showToast(message, type = "success", duration = 3000) {

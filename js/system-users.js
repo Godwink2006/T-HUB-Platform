@@ -499,5 +499,80 @@ if (fileInput) {
   }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const updateSystemUserBtn = document.getElementById("updateSystemUserBtn");
+
+  if (updateSystemUserBtn) {
+    updateSystemUserBtn.addEventListener("click", async () => {
+      if (targetUserToEdit) {
+        await handleUpdateUser(targetUserToEdit);
+        targetUserToEdit = null; // Reset after archiving
+      }
+    });
+  }
+});
+
+async function handleUpdateUser(event) {
+  event.preventDefault();
+
+  const userId = targetUserToEdit;
+  const fullName = document.getElementById("editFullName").value.trim();
+  const phone = document.getElementById("editPhone").value.trim();
+  const status = document.getElementById("editStatus").value;
+  const fileInput = document.getElementById("editPhoto");
+  const avatarFile = fileInput ? fileInput.files[0] : null;
+
+  try {
+    let photoUrl = null;
+
+    // 1. Upload photo to storage if selected
+    if (avatarFile) {
+      const fileExt = avatarFile.name.split('.').pop();
+      const filePath = `avatars/${userId}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabaseClient
+        .storage
+        .from('avatars')
+        .upload(filePath, avatarFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabaseClient
+        .storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      photoUrl = urlData.publicUrl;
+    }
+
+    // 2. Invoke Deno Edge Function with full_name included
+    const { data, error } = await supabaseClient.functions.invoke('admin-update-user', {
+      body: {
+        targetUserId: userId,
+        fullName: fullName,
+        phone: phone,
+        status: status,
+        photoUrl: photoUrl
+      }
+    });
+
+    if (error || data?.error) {
+      throw new Error(error?.message || data?.error);
+    }
+
+    alert('User updated successfully!');
+
+    // Close modal & reload user table
+    const modal = document.getElementById("editSystemUserModal");
+    if (modal) modal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+    if (typeof loadSystemUsers === 'function') loadSystemUsers();
+
+  } catch (err) {
+    console.error('Update Error:', err.message);
+    alert('Failed to update user: ' + err.message);
+  }
+}
+
 // Call on initial load
 document.addEventListener("DOMContentLoaded", loadSystemUsers);
