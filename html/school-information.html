@@ -8,6 +8,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/school-informations.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -39,21 +40,37 @@
         <div class="form-section">
           <h3>School Logo</h3>
 
-          <div class="logo-upload">
-            <img
-              id="schoolLogoPreview"
-              src="https://api.dicebear.com/7.x/initials/svg?seed=School"
-              alt="School Logo"
-              class="logo-preview-img"
-              style="
-                width: 128px;
-                height: 128px;
-                border-radius: 24px;
-                object-fit: cover;
-              "
-            />
+          <div class="avatar-upload-group">
+            <div class="avatar-edit-container">
+              <div class="my-profile-upload">
+                <img
+                  id="schoolLogoPreview"
+                  src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  alt="Profile Picture"
+                  style="
+                    width: 150px;
+                    height: 150px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
+                  "
+                  onerror="
+                    this.onerror = null;
+                    this.src =
+                      'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                  "
+                />
 
-            <input type="file" id="schoolLogo" accept="image/*" />
+                <!-- Upload Controls -->
+                <div class="avatar-upload-actions">
+                  <label for="schoolLogo" class="btn-secondary upload-btn">
+                    <i class="bx bx-upload"></i> Change Logo
+                  </label>
+
+                  <input type="file" id="schoolLogo" accept="image/*" hidden />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

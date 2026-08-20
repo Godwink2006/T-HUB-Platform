@@ -38,6 +38,9 @@ async function loadMyProfile() {
   };
 
   populateProfileForm(currentProfileData);
+
+  // Add as the last line inside loadMyProfile():
+  checkProfileChanges();
 }
 
 function populateProfileForm(data) {
@@ -88,6 +91,12 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
     reader.onerror = (err) => reject(err);
   });
 }
+
+// Add inside DOMContentLoaded:
+  document.getElementById("fullName")?.addEventListener("input", checkProfileChanges);
+  document.getElementById("emailAddress")?.addEventListener("input", checkProfileChanges);
+  document.getElementById("phoneNumber")?.addEventListener("input", checkProfileChanges);
+  document.getElementById("myProfilePhoto")?.addEventListener("change", checkProfileChanges);
 
 async function handleUpdateProfile(event) {
   if (event) event.preventDefault();
@@ -192,6 +201,11 @@ async function handleUpdateProfile(event) {
     }
 
     await loadMyProfile();
+
+    // Add these lines right after: await loadMyProfile();
+    if (fileInput) fileInput.value = "";
+    checkProfileChanges();
+
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -200,6 +214,14 @@ async function handleUpdateProfile(event) {
       saveBtn.textContent = "Save Changes";
     }
   }
+}
+
+function checkProfileChanges() {
+  const saveBtn = document.getElementById("saveProfileInfo");
+  if (!saveBtn) return;
+
+  // Always keep button clickable so form submit can trigger the toast
+  saveBtn.disabled = false; 
 }
 
 function validateProfileInputs(fullName, email, phone) {

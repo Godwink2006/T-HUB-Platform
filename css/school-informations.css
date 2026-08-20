@@ -1,146 +1,146 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins',sans-serif;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
 }
 
-.settings-page{
-    width: 100%;
-    padding: 15px;
+.settings-page {
+  width: 100%;
+  padding: 15px;
 }
 
-.page-header{
-    margin-bottom: 10px;
+.page-header {
+  margin-bottom: 10px;
 }
 
-.page-header h2{
-    font-size: 28px;
-    color: black;
-    margin-bottom: 6px;
+.page-header h2 {
+  font-size: 28px;
+  color: black;
+  margin-bottom: 6px;
 }
 
-.page-header p{
-    color: rgb(72, 69, 69);
-    font-size: 15px;
+.page-header p {
+  color: rgb(72, 69, 69);
+  font-size: 15px;
 }
 
-.settings-form{
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
-.form-section{
-    background: white;
-   border: 2px solid rgb(219, 215, 215);
-   padding: 25px;
+.form-section {
+  background: white;
+  border: 2px solid rgb(219, 215, 215);
+  padding: 25px;
 }
 
-body{
-    background: rgb(231, 226, 226);
+body {
+  background: rgb(231, 226, 226);
 }
 
-.form-section h3{
-    font-size: 18px;
-    color: rgb(90, 88, 88);
-    margin-bottom: 20px;
-    padding-bottom: 5px;
-    padding-left: 10px;
-    border: 2px solid rgb(219, 215, 215);
+.form-section h3 {
+  font-size: 18px;
+  color: rgb(90, 88, 88);
+  margin-bottom: 20px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-.logo-upload{
-    display: flex;
-    align-items: center;
-    gap: 25px;
-flex-wrap: wrap;
+.logo-upload {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  flex-wrap: wrap;
 }
 
-.school-logo-preview{
-    width: 130px;
-    height: 130px;
-    border-radius: 12px;
-    border: 2px solid rgb(219, 215, 215);
-    object-fit: cover;
-    background: #f4f4f4;
+.school-logo-preview {
+  width: 130px;
+  height: 130px;
+  border-radius: 12px;
+  border: 2px solid rgb(219, 215, 215);
+  object-fit: cover;
+  background: #f4f4f4;
 }
 
-.logo-upload input[type=file]{
-    padding: 10px;
+.logo-upload input[type="file"] {
+  padding: 10px;
 }
 
-.form-grid{
-    display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
-    gap: 20px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
 }
 
-.form-group{
-    display: flex;
-    flex-direction: column;
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 
-.full-width{
-    grid-column: 1 / -1;
+.full-width {
+  grid-column: 1 / -1;
 }
 
-.form-group label{
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #6d6c6c;
+.form-group label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6d6c6c;
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea{
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid rgb(219, 215, 215);
-    outline: none;
-    font-size: 15px;
+.form-group textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid rgb(219, 215, 215);
+  outline: none;
+  font-size: 15px;
 }
 
-.form-group textarea{
-    resize: none;
-    min-height: 100px;
+.form-group textarea {
+  resize: none;
+  min-height: 100px;
 }
 
-.form-actions{
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 10px;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 10px;
 }
 
-.cancel-btn{
-    padding: 12px 22px;
-    border: none;
-    background: #e5e7eb;
-    cursor: pointer;
+.cancel-btn {
+  padding: 12px 22px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
 }
 
-.save-btn{
-    padding: 12px 22px;
-    border: none;
-    background: #2563eb;
-    color: #ffff;
-    cursor: pointer;
+.save-btn {
+  padding: 12px 22px;
+  border: none;
+  background: #2563eb;
+  color: #ffff;
+  cursor: pointer;
 }
 
-.back-school-informations-btn{
-    height: 40px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    margin-bottom: 12px;
-    border: 2px solid rgb(219, 215, 215);
-    width: 70px;
-    justify-content: space-between;
-    background: #1F2937;
-    color: #F9FAFB;
+.back-school-informations-btn {
+  height: 40px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 12px;
+  border: 2px solid rgb(219, 215, 215);
+  width: 70px;
+  justify-content: space-between;
+  background: #1f2937;
+  color: #f9fafb;
 }
 
 /* Styling disabled inputs for clean read-only viewing */
@@ -168,3 +168,88 @@ select:disabled {
   -moz-appearance: none;
 }
 
+.my-profile-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Aligns both image and button to the left */
+  gap: 1rem;
+}
+
+/* Column for Upload Button + File Name */
+.avatar-upload-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+/* Custom Upload Button Styling */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #15803d;
+  color: #ffffff;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-btn:hover {
+  background-color: #5b8646;
+  border-color: #94a3b8;
+}
+
+.upload-btn i {
+  font-size: 1.1rem;
+}
+
+/* Selected File Name Text */
+.file-name-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  word-break: break-all;
+}
+
+/* Avatar Section Wrapper */
+.avatar-upload-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.avatar-upload-group .form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Flex Row for Preview + Actions */
+.avatar-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+/* Circular Avatar Frame */
+.avatar-preview-wrapper {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #cbd5e1;
+  background-color: #ffffff;
+  flex-shrink: 0;
+}
+
+.avatar-preview-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
