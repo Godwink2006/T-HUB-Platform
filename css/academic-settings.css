@@ -783,13 +783,25 @@ tr {
     padding: 16px;
   }
 
-  .academic-year-modal-content,
+  .academic-year-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 350px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 0 !important;
+    animation: modalShow 0.25s ease;
+    overflow: hidden;
+  }
+
   .terms-modal-content {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 650px;
-    height: 650px; /* Fixed height requirement */
+    max-width: 550px;
+    height: 550px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 0 !important;
