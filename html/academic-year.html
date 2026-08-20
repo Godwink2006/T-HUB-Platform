@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/academic-settings.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="academic-settings-container">
+      <main class="academic-settings-main-content">
+        <header class="topbar">
+          <div>
+            <button
+              onclick="window.location.href = 'settings.html'"
+              class="back-academic-settings-btn"
+            >
+              <i class="fa-solid fa-chevron-left"></i>
+              Back
+            </button>
+
+            <p>Academic Years.</p>
+          </div>
+
+          <button id="addAcademicYear" class="add-academic-years-btn">
+            <i class="fa-solid fa-plus"></i>
+            Add Academic Year
+          </button>
+        </header>
+
+        <section class="academic-years-table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Academic Year</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>2026-2027</td>
+                <td>
+                  <span class="academic-years-status-active">Active</span>
+                </td>
+
+                <td>
+                  <button class="academic-years-actions-btn edit-academicYear">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+
+                  <button
+                    class="academic-years-actions-btn archive-AcademicYear"
+                  >
+                    <i class="fa-solid fa-box-archive"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>2026-2027</td>
+                <td>
+                  <span class="academic-years-status-inactive">Active</span>
+                </td>
+
+                <td>
+                  <button class="academic-years-actions-btn edit-academicYear">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+
+                  <button
+                    class="academic-years-actions-btn archive-AcademicYear"
+                  >
+                    <i class="fa-solid fa-box-archive"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <div id="academicYearModal" class="modal-academic-year">
+      <div class="academic-year-modal-content">
+        <div class="academic-year-modal-header">
+          <h2>Add Academic Year</h2>
+
+          <button id="closeAcademicYearModal">&times;</button>
+        </div>
+
+        <div class="academic-year-modal-body">
+          <form id="academicYearForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Academic Year *</label>
+
+                <select>
+                  <option>2027/2028</option>
+                  <option>2026/2027</option>
+                  <option>2025/2026</option>
+                  <option>2024/2025</option>
+                  <option>2023/2024</option>
+                  <option>2022/2023</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Status *</label>
+
+                <select>
+                  <option>Active</option>
+                  <option>Archive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="academic-year-modal-footer">
+              <button
+                type="button"
+                class="cancel-btn"
+                id="cancelAcademicYearModal"
+              >
+                Cancel
+              </button>
+
+              <button type="submit" class="save-btn">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!---Edit class modal-->
+
+    <div id="editAcademicYearModal" class="edit-modal-academic-year">
+      <div class="edit-academic-year-modal-content">
+        <div class="edit-academic-year-modal-header">
+          <h2>Edit Academic Year</h2>
+
+          <button id="closeEditAcademicYearModal">&times;</button>
+        </div>
+
+        <div class="edit-academic-year-modal-body">
+          <form id="academicYearForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Academic Year *</label>
+
+                <select>
+                  <option>2027/2028</option>
+                  <option>2026/2027</option>
+                  <option>2025/2026</option>
+                  <option>2024/2025</option>
+                  <option>2023/2024</option>
+                  <option>2022/2023</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Status *</label>
+
+                <select>
+                  <option>Active</option>
+                  <option>Archive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="edit-academic-year-modal-footer">
+              <button
+                type="button"
+                class="cancel-btn"
+                id="cancelEditAcademicYearModal"
+              >
+                Cancel
+              </button>
+
+              <button type="submit" class="edit-btn">
+                Update Academic Year
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="archiveAcademicYearModal" class="archive-modal">
+      <div class="confirm-modal">
+        <div confirm-icon>
+          <i class="fa-solid fa-box-archive"></i>
+        </div>
+
+        <h2>Archive Academic Year</h2>
+
+        <p>
+          Are you sure you want to archive this Academic Year? It will no longer
+          be available for new records.
+        </p>
+
+        <div class="archive-modal-footer">
+          <button id="cancelArchive" class="cancel-btn">Cancel</button>
+
+          <button id="confirmArchive" class="archive-confirm-btn">
+            Archive
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/academic-year.js"></script>
+  </body>
+</html>
