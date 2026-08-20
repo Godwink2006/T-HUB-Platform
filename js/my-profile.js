@@ -103,19 +103,44 @@ async function handleUpdateProfile(event) {
   const phoneInput = document.getElementById("phoneNumber").value.trim();
   const saveBtn = document.getElementById("saveProfileInfo");
 
+  const avatarFile = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  // 1. Change detection
+  const origName = currentProfileData?.fullName ?? "";
+  const origEmail = currentProfileData?.email ?? "";
+  const origPhone = currentProfileData?.phone ?? "";
+
+  const hasTextChanged =
+    fullName !== origName || email !== origEmail || phoneInput !== origPhone;
+
+  const hasNewFile = Boolean(avatarFile);
+
+  if (!hasTextChanged && !hasNewFile) {
+    showToast("No changes detected.", "info");
+    return;
+  }
+
+      // Place this right above "try {"
+  const validationError = validateProfileInputs(fullName, email, phoneInput);
+  if (validationError) {
+    showToast(validationError, "error");
+    return;
+  }
+
   if (saveBtn) {
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving...";
   }
 
-  try {
+  
+try {
     let photoUrl = currentProfileData?.photoUrl;
 
     // 1. Handle Photo (Use fixed file name so it overwrites, and ONLY run if a new file was chosen)
     if (fileInput && fileInput.files[0]) {
       const file = fileInput.files[0];
       const compressedBlob = await compressImageToBlob(file, 800, 0.7);
-      
+
       // Fixed path per user: Always overwrites 'avatar.jpg' instead of adding Date.now()
       const filePath = `${user.id}/avatar.jpg`;
 
@@ -176,6 +201,30 @@ async function handleUpdateProfile(event) {
       saveBtn.textContent = "Save Changes";
     }
   }
+}
+
+function validateProfileInputs(fullName, email, phone) {
+  // 1. Full Name Validation (2-4 words, 3-100 characters)
+  if (!fullName || fullName.length < 3 || fullName.length > 100) {
+    return "Invalid full name length (must be 3-100 characters).";
+  }
+  const words = fullName.split(/\s+/);
+  if (words.length < 2 || words.length > 4) {
+    return "Full name must contain between 2 and 4 words.";
+  }
+
+  // 2. Email Validation (Must end with @gmail.com)
+  const emailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+  if (!email || !emailRegex.test(email)) {
+    return "Email must be a valid @gmail.com address.";
+  }
+
+  // 3. Phone Validation (Must start with 077 or 088 and be 10 digits)
+  if (!phone || !/^(077|088)\d{7}$/.test(phone)) {
+    return "Invalid phone number. Must start with 077 or 088 and contain 10 digits.";
+  }
+
+  return null; // Passes validation
 }
 
 // 4. Single DOM Initialization Block

@@ -40,27 +40,42 @@
         <div class="form-section">
           <h3>Update Profile Information</h3>
 
-          <div class="my-profile-upload">
-            <img
-              id="profileAvatar"
-              src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-              alt="Profile Picture"
-              style="
-                width: 150px;
-                height: 150px;
-                border-radius: 50%;
-                object-fit: cover;
-                display: block;
-                margin: 0 auto;
-              "
-              onerror="
-                this.onerror = null;
-                this.src =
-                  'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-              "
-            />
+          <div class="avatar-upload-group">
+            <div class="avatar-edit-container">
+              <div class="my-profile-upload">
+                <img
+                  id="profileAvatar"
+                  src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  alt="Profile Picture"
+                  style="
+                    width: 150px;
+                    height: 150px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
+                    margin: 0 auto;
+                  "
+                  onerror="
+                    this.onerror = null;
+                    this.src =
+                      'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                  "
+                />
 
-            <input type="file" id="myProfilePhoto" accept="image/*" />
+                <!-- Upload Controls -->
+                <div class="avatar-upload-actions">
+                  <label for="myProfilePhoto" class="btn-secondary upload-btn">
+                    <i class="bx bx-upload"></i> Change Photo
+                  </label>
+                  <input
+                    type="file"
+                    id="myProfilePhoto"
+                    accept="image/*"
+                    hidden
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="form-grid">
