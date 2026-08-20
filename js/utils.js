@@ -109,6 +109,7 @@ function renderNavigation(userRole) {
     "nav-audit-logs",
     "nav-semesters",
     "nav-academic-years",
+    "changeSchoolLogo",
   ];
 
   const isAdmin = userRole === "admin";
