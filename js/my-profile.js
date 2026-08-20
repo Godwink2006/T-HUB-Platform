@@ -120,7 +120,7 @@ async function handleUpdateProfile(event) {
     return;
   }
 
-      // Place this right above "try {"
+  // Place this right above "try {"
   const validationError = validateProfileInputs(fullName, email, phoneInput);
   if (validationError) {
     showToast(validationError, "error");
@@ -132,8 +132,7 @@ async function handleUpdateProfile(event) {
     saveBtn.textContent = "Saving...";
   }
 
-  
-try {
+  try {
     let photoUrl = currentProfileData?.photoUrl;
 
     // 1. Handle Photo (Use fixed file name so it overwrites, and ONLY run if a new file was chosen)
@@ -260,14 +259,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const passwordForm = document.getElementById("changeMyPassword");
+  if (passwordForm) {
+    passwordForm.addEventListener("submit", handleChangePassword);
+  }
+});
+
 async function handleChangePassword(event) {
   if (event) event.preventDefault();
 
+  const currentPassword = document.getElementById("currentPassword").value;
   const newPassword = document.getElementById("newPassword").value;
   const confirmPassword = document.getElementById("confirmPassword").value;
+  const saveBtn = document.querySelector("#changeMyPassword .save-btn");
+
+  if (!currentPassword) {
+    showToast("Please enter your current password.", "error");
+    return;
+  }
 
   if (newPassword !== confirmPassword) {
-    showToast("Passwords do not match.", "error");
+    showToast("New passwords do not match.", "error");
     return;
   }
 
@@ -276,21 +289,79 @@ async function handleChangePassword(event) {
     return;
   }
 
+  // Execute password complexity validation
+  const validation = validatePasswordRequirements(newPassword);
+  if (!validation.isValid) {
+    showToast(validation.message, "error");
+    return;
+  }
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Updating...";
+  }
+
   try {
-    // Direct Supabase Auth password update
+    // ✅ CORRECT (Combine into one single object):
     const { error } = await supabaseClient.auth.updateUser({
       password: newPassword,
+      current_password: currentPassword,
     });
-
     if (error) throw error;
 
     showToast("Password updated successfully!", "success");
-
-    // Clear password inputs
-    document.getElementById("currentPassword").value = "";
-    document.getElementById("newPassword").value = "";
-    document.getElementById("confirmPassword").value = "";
+    document.getElementById("changeMyPassword").reset();
   } catch (err) {
     showToast(err.message, "error");
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save Changes";
+    }
   }
+}
+
+function validatePasswordRequirements(password) {
+  if (!password) {
+    return { isValid: false, message: "Password is required." };
+  }
+
+  // Length must be between 12 and 20 characters
+  if (password.length < 12 || password.length > 20) {
+    return {
+      isValid: false,
+      message: "Password must be between 12 and 20 characters long.",
+    };
+  }
+
+  // Must not contain whitespace
+  if (/\s/.test(password)) {
+    return { isValid: false, message: "Password must not contain spaces." };
+  }
+
+  // Must contain at least one uppercase letter
+  if (!/[A-Z]/.test(password)) {
+    return {
+      isValid: false,
+      message: "Password must include at least one uppercase letter.",
+    };
+  }
+
+  // Must contain at least one lowercase letter
+  if (!/[a-z]/.test(password)) {
+    return {
+      isValid: false,
+      message: "Password must include at least one lowercase letter.",
+    };
+  }
+
+  // Must contain at least one special character
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return {
+      isValid: false,
+      message: "Password must include at least one special character.",
+    };
+  }
+
+  return { isValid: true, message: "" };
 }

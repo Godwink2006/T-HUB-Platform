@@ -470,7 +470,6 @@ const DEFAULT_AVATAR =
 let targetUserToArchive = null;
 
 async function archiveUser(targetUserId, confirmBtn) {
-
   if (confirmBtn) {
     confirmBtn.disabled = true;
     confirmBtn.textContent = "Archiving...";
@@ -765,6 +764,8 @@ async function handleUpdateUser(event) {
       {
         body: {
           userId,
+          full_name: fullName, // <-- ADD THIS BACK
+          phone_number: phone, // <-- ADD THIS BACK
           role: role, // <-- Sending lowercase role ("admin", "teacher", etc.)
           status: status, // <-- Sending lowercase status ("active", "inactive")
           photoUrl: photoUrl,
