@@ -117,8 +117,9 @@ body {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  background: #e5e7eb;
   cursor: pointer;
+  background: #1f2937;
+  color: #f9fafb;
 }
 
 .save-btn {
