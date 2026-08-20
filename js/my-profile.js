@@ -160,8 +160,9 @@ async function handleUpdateProfile(event) {
       photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     }
 
-    // 2. Update Supabase Auth ONLY if email changed
-    if (email !== user.email) {
+    // 2. Request Email Change in Supabase Auth (Sends Confirmation Link)
+    const isEmailChanging = email !== user.email;
+    if (isEmailChanging) {
       const { error: authError } = await supabaseClient.auth.updateUser({
         email,
       });
@@ -174,18 +175,17 @@ async function handleUpdateProfile(event) {
       .update({
         full_name: fullName,
         phone_number: phoneInput,
-        email: email,
         photo_url: photoUrl,
       })
       .eq("id", user.id);
 
-    if (updateError) throw updateError;
+   if (updateError) throw updateError;
 
     // 4. Feedback
-    if (email !== user.email) {
+    if (isEmailChanging) {
       showToast(
-        "Profile saved! Check your new email for a verification link.",
-        "info",
+        "Profile saved! Check your new email address to confirm the change.",
+        "info"
       );
     } else {
       showToast("Profile updated successfully!", "success");
