@@ -151,7 +151,6 @@ textarea:disabled {
   color: #14532d !important; /* Dark, crisp text */
   background-color: #f0fdf4 !important; /* Transparent background */
   border: none !important; /* Removes input border */
-  border-radius: 15px;
 
   outline: none !important;
   box-shadow: none !important;
