@@ -39,38 +39,39 @@ body {
   gap: 25px;
 }
 
-.add-academic-years-btn {
-  width: auto;
-  height: 48px;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
-}
-
-.add-terms-btn {
-  width: auto;
-  height: 48px;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
-}
-
 .back-academic-settings-btn {
-  height: 30px;
-  padding: 10px;
-  display: flex;
+  grid-column: 1;
+  width: auto !important;
+  height: 40px !important;
+  padding: 0 16px;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
-  margin-top: 5px;
-  border: 2px solid rgb(219, 215, 215);
-  width: 70px;
-  justify-content: space-between;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.add-academic-years-btn,
+.add-terms-btn {
+  grid-column: 2;
+  background: #15803d;
+  color: #ffffff;
+  flex: 1 !important;
+  height: 40px !important;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border: 2px solid #14532d;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .toolbar {
