@@ -40,38 +40,31 @@ body {
 }
 
 .back-academic-settings-btn {
-  grid-column: 1;
-  width: auto !important;
-  height: 40px !important;
-  padding: 0 16px;
-  display: inline-flex;
+  height: 30px;
+  padding: 10px;
+  display: flex;
   align-items: center;
-  justify-content: center;
   cursor: pointer;
+  margin-top: 10px;
   border: 1px solid rgb(219, 215, 215);
+  width: 70px;
+  justify-content: space-between;
   background: #1f2937;
   color: #f9fafb;
-  font-size: 13px;
-  white-space: nowrap;
 }
 
 .add-academic-years-btn,
 .add-terms-btn {
-  grid-column: 2;
   background: #15803d;
   color: #ffffff;
-  flex: 1 !important;
-  height: 40px !important;
-  padding: 0 16px;
-  display: inline-flex;
+  width: auto;
+  height: 48px;
+  padding: 0 20px;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 10px;
   cursor: pointer;
   border: 2px solid #14532d;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
 }
 
 .toolbar {
@@ -670,7 +663,7 @@ tr {
     width: 100% !important;
   }
 
-  .back-systemUsers-btn {
+  .back-academic-settings-btn {
     grid-column: 1;
     width: auto !important;
     height: 40px !important;
@@ -686,7 +679,8 @@ tr {
     white-space: nowrap;
   }
 
-  .add-systemUsers-btn {
+  .add-academic-years-btn,
+  .add-terms-btn {
     grid-column: 2;
     background: #15803d;
     color: #ffffff;
@@ -727,9 +721,8 @@ tr {
     border-radius: 0 !important;
   }
 
-  /* --- Compact Table Section --- */
-
-  .systemUsers-table-card {
+  .terms-table-card,
+  .academic-years-table-card {
     background: #ffffff;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
