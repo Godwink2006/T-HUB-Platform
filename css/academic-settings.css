@@ -591,7 +591,7 @@ tr {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 390px; /* Fixed height requirement */
+    height: 315px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 0 !important;
@@ -616,22 +616,11 @@ tr {
     margin: 0;
   }
 
-  .systemUser-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 12px;
-  }
-
   .systemUser-photo {
     width: 34px;
     height: 34px;
     border-radius: 50%;
     object-fit: cover;
-  }
-
-  .systemUser-main-content {
-    padding: 0;
   }
 
   /* --- Topbar & Header --- */
@@ -767,20 +756,30 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
   }
 
-  /* --- Fixed Height Modal & Horizontal Footer --- */
-
-  .modal-systemUser {
-    position: fixed;
-    top: 0;
-    left: 0;
+  .edit-academic-year-modal-content {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.45);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 16px;
+    max-width: 350px;
+    height: 350px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 0 !important;
+    animation: modalShow 0.25s ease;
+    overflow: hidden;
+  }
+
+  .edit-terms-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 590px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 0 !important;
+    animation: modalShow 0.25s ease;
+    overflow: hidden;
   }
 
   .academic-year-modal-content {
@@ -800,21 +799,8 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 550px;
-    height: 550px; /* Fixed height requirement */
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 0 !important;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
-  }
-
-  .edit-systemUser-modal-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 650px;
-    height: 590px !important; /* Fixed height requirement */
+    max-width: 350px;
+    height: 590px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 0 !important;
@@ -833,7 +819,8 @@ tr {
     }
   }
 
-  .systemUser-modal-header {
+  .academic-year-modal-header,
+  .terms-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -841,28 +828,33 @@ tr {
     border-bottom: 1.5px solid rgb(219, 215, 215);
   }
 
-  .systemUser-modal-header h2 {
+  .academic-year-modal-header h2,
+  .terms-modal-header h2 {
     font-size: 18px;
   }
 
-  .systemUser-modal-header button {
+  .academic-year-modal-header button,
+  .terms-modal-header button {
     cursor: pointer;
     color: #f9fafb;
     border: none;
     height: 34px;
+    border-radius: 0;
     width: 34px;
     font-size: 16px;
     background: #1f2937;
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .systemUser-modal-body {
+  .academic-year-modal-body,
+  .terms-modal-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
   }
 
-  .edit-systemUser-modal-header {
+  .edit-academic-year-modal-header,
+  .edit-terms-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -870,29 +862,34 @@ tr {
     border-bottom: 1.5px solid rgb(219, 215, 215);
   }
 
-  .edit-systemUser-modal-header h2 {
+  .edit-academic-year-modal-header h2,
+  .edit-terms-modal-header h2 {
     font-size: 18px;
   }
 
-  .edit-systemUser-modal-header button {
+  .edit-academic-year-modal-header button,
+  .edit-terms-modal-header button {
     cursor: pointer;
     color: #f9fafb;
     border: none;
     height: 34px;
+    border-radius: 0;
     width: 34px;
     font-size: 16px;
     background: #1f2937;
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .edit-systemUser-modal-body {
+  .edit-academic-year-modal-body,
+  .edit-terms-modal-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
   }
 
   /* Horizontal Modal Action Buttons with Space Between */
-  .edit-systemUser-modal-footer {
+  .edit-academic-year-modal-footer,
+  .edit-terms-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -940,7 +937,8 @@ tr {
   }
 
   /* Horizontal Modal Action Buttons with Space Between */
-  .systemUser-modal-footer {
+  .academic-year-modal-footer,
+  .terms-modal-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -956,6 +954,18 @@ tr {
     padding: 10px 16px;
     border: none;
     cursor: pointer;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 500;
+    justify-content: space-between;
+  }
+
+  .edit-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 0;
     font-size: 13px;
     font-weight: 500;
     justify-content: space-between;
