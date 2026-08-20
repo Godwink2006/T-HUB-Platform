@@ -328,7 +328,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (confirmArchiveBtn) {
     confirmArchiveBtn.addEventListener("click", async () => {
       if (targetUserToArchive) {
-        await archiveUser(targetUserToArchive);
+        // Pass confirmArchiveBtn into the function
+        await archiveUser(targetUserToArchive, confirmArchiveBtn);
         targetUserToArchive = null; // Reset after archiving
       }
     });
@@ -468,7 +469,13 @@ const DEFAULT_AVATAR =
 
 let targetUserToArchive = null;
 
-async function archiveUser(targetUserId) {
+async function archiveUser(targetUserId, confirmBtn) {
+
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Archiving...";
+  }
+
   try {
     // 1. Verify Active Session
     const {
@@ -533,6 +540,12 @@ async function archiveUser(targetUserId) {
     if (typeof loadSystemUsers === "function") loadSystemUsers();
   } catch (err) {
     console.error("Unexpected error during archive operation:", err);
+  } finally {
+    // Always restore button state
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Archive";
+    }
   }
 }
 
@@ -728,7 +741,7 @@ async function handleUpdateUser(event) {
 
       if (editSystemButton) editSystemButton.textContent = "Uploading photo...";
 
-    const { error: uploadError } = await supabaseClient.storage
+      const { error: uploadError } = await supabaseClient.storage
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
@@ -752,8 +765,6 @@ async function handleUpdateUser(event) {
       {
         body: {
           userId,
-          full_name: fullName,
-          phone_number: phone,
           role: role, // <-- Sending lowercase role ("admin", "teacher", etc.)
           status: status, // <-- Sending lowercase status ("active", "inactive")
           photoUrl: photoUrl,

@@ -247,8 +247,13 @@
                   <div class="avatar-preview-wrapper">
                     <img
                       id="addAvatarPreview"
-                      src="assets/default-avatar.png"
+                      src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
                       alt="Profile Preview"
+                       onerror="
+                    this.onerror = null;
+                    this.src =
+                      'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                  "
                     />
                   </div>
 
@@ -337,11 +342,16 @@
                 <div class="avatar-edit-container">
                   <!-- Current Avatar Preview -->
                   <div class="avatar-preview-wrapper">
-                    <img
-                      id="editAvatarPreview"
-                      src="assets/default-avatar.png"
-                      alt="Profile Preview"
-                    />
+                   <img
+  id="editAvatarPreview"
+   src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+    alt="Profile Preview"
+                  onerror="
+                    this.onerror = null;
+                    this.src =
+                      'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                  "
+/>
                   </div>
 
                   <!-- Upload Controls -->
