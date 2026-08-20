@@ -24,7 +24,8 @@ async function loadMyProfile() {
     .single();
 
   if (error) {
-    if (typeof showToast === "function") showToast("Error fetching profile", "error");
+    if (typeof showToast === "function")
+      showToast("Error fetching profile", "error");
     return;
   }
 
@@ -77,7 +78,7 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
             blob ? resolve(blob) : reject(new Error("Canvas encoding failed."));
           },
           "image/jpeg",
-          quality
+          quality,
         );
       };
 
@@ -88,7 +89,6 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   });
 }
 
-// 3. Form Submission Handler
 async function handleUpdateProfile(event) {
   if (event) event.preventDefault();
 
@@ -99,8 +99,8 @@ async function handleUpdateProfile(event) {
 
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("emailAddress").value.trim();
-  const phone = document.getElementById("phoneNumber").value.trim();
   const fileInput = document.getElementById("myProfilePhoto");
+  const phoneInput = document.getElementById("phoneNumber").value.trim();
   const saveBtn = document.getElementById("saveProfileInfo");
 
   if (saveBtn) {
@@ -111,34 +111,45 @@ async function handleUpdateProfile(event) {
   try {
     let photoUrl = currentProfileData?.photoUrl;
 
-    // A. Handle Image Upload
+    // 1. Handle Photo (Use fixed file name so it overwrites, and ONLY run if a new file was chosen)
     if (fileInput && fileInput.files[0]) {
       const file = fileInput.files[0];
       const compressedBlob = await compressImageToBlob(file, 800, 0.7);
-      const filePath = `${user.id}/${Date.now()}.jpg`;
+      
+      // Fixed path per user: Always overwrites 'avatar.jpg' instead of adding Date.now()
+      const filePath = `${user.id}/avatar.jpg`;
 
       const { error: uploadError } = await supabaseClient.storage
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
-          upsert: true,
+          upsert: true, // Overwrites existing file with the same name
         });
 
       if (uploadError) throw uploadError;
 
+      // Add a timestamp query parameter to bypass browser caching when updated
       const { data: urlData } = supabaseClient.storage
         .from("avatars")
         .getPublicUrl(filePath);
 
-      photoUrl = urlData.publicUrl;
+      photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     }
 
-    // B. Update Custom Profiles Table
+    // 2. Update Supabase Auth ONLY if email changed
+    if (email !== user.email) {
+      const { error: authError } = await supabaseClient.auth.updateUser({
+        email,
+      });
+      if (authError) throw authError;
+    }
+
+    // 3. Update Your Database Table ('profiles')
     const { error: updateError } = await supabaseClient
       .from("profiles")
       .update({
         full_name: fullName,
-        phone_number: phone,
+        phone_number: phoneInput,
         email: email,
         photo_url: photoUrl,
       })
@@ -146,26 +157,19 @@ async function handleUpdateProfile(event) {
 
     if (updateError) throw updateError;
 
-    // C. Trigger Auth Email Update if changed
+    // 4. Feedback
     if (email !== user.email) {
-      const { error: emailError } = await supabaseClient.auth.updateUser({ email });
-      if (emailError) throw emailError;
-
-      if (typeof showToast === "function") {
-        showToast(
-          "Confirmation link sent! Please verify your new email address to complete the update.",
-          "info"
-        );
-      }
+      showToast(
+        "Profile saved! Check your new email for a verification link.",
+        "info",
+      );
     } else {
-      if (typeof showToast === "function") {
-        showToast("Profile updated successfully!", "success");
-      }
+      showToast("Profile updated successfully!", "success");
     }
 
     await loadMyProfile();
   } catch (err) {
-    if (typeof showToast === "function") showToast(err.message, "error");
+    showToast(err.message, "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;

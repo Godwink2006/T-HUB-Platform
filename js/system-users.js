@@ -724,15 +724,15 @@ async function handleUpdateUser(event) {
         editSystemButton.textContent = "Compressing photo...";
 
       const compressedBlob = await compressImageToBlob(avatarFile, 800, 0.7);
-      const filePath = `${userId}/${Date.now()}.jpg`;
+      const filePath = `${userId}/avatar.jpg`; // Fixed path overwrites old file
 
       if (editSystemButton) editSystemButton.textContent = "Uploading photo...";
 
-      const { error: uploadError } = await supabaseClient.storage
+    const { error: uploadError } = await supabaseClient.storage
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
-          upsert: true,
+          upsert: true, // Overwrites existing avatar
         });
 
       if (uploadError) throw uploadError;
@@ -741,7 +741,7 @@ async function handleUpdateUser(event) {
         .from("avatars")
         .getPublicUrl(filePath);
 
-      photoUrl = urlData.publicUrl;
+      photoUrl = `${urlData.publicUrl}?t=${Date.now()}`; // Bypass cache
     }
 
     if (editSystemButton) editSystemButton.textContent = "Updating profile...";
