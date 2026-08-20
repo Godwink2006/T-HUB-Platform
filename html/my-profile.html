@@ -1,171 +1,237 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>High School Management System</title>
-    <link rel="stylesheet" href="/css/my-profile.css">
-    <link rel="preconnect" href="https://fontsgoogleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-</head>
-<body>
-
-<section class="my-profiles-page" id="myProfile">
-
-    <div class="page-header">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/my-profile.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <section class="my-profiles-page" id="myProfile">
+      <div class="page-header">
         <h2>My Profile</h2>
         <p>Manage profile information.</p>
-    </div>
+      </div>
 
-       <button onclick="window.location.href='settings.html'"   class="back-my-profiles-btn">
+      <button
+        onclick="window.location.href = 'settings.html'"
+        class="back-my-profiles-btn"
+      >
         <i class="fa-solid fa-chevron-left"></i>
         Back
-    </button>
+      </button>
 
-    <form id="myProfileForm" class="my-profiles-form">
+      <form id="myProfileForm" class="my-profiles-form">
+        <div class="form-section">
+          <h3>Update Profile Information</h3>
 
-<div class="form-section">
+          <div class="my-profile-upload">
+            <img
+              id="profileAvatar"
+              src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+              alt="Profile Picture"
+              style="
+                width: 150px;
+                height: 150px;
+                border-radius: 50%;
+                object-fit: cover;
+                display: block;
+                margin: 0 auto;
+              "
+              onerror="
+                this.onerror = null;
+                this.src =
+                  'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+              "
+            />
 
-<h3>Update Profile Information</h3>
+            <input type="file" id="myProfilePhoto" accept="image/*" />
+          </div>
 
-<div class="my-profile-upload">
-   <img id="profileAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile Picture" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto;" onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
 
-  
+              <input
+                type="text"
+                id="fullName"
+                placeholder="Enter Full Name"
+                required
+              />
+            </div>
 
+            <div class="form-group">
+              <label for="emailAddress">Email Address</label>
 
-    <input type="file" id="myProfilePhoto" accept="image/*">
-</div>
+              <input
+                type="email"
+                id="emailAddress"
+                placeholder="Enter Email Address"
+                required
+              />
+            </div>
 
-<div class="form-grid">
+            <div class="form-group">
+              <label for="phoneNumber">Phone Number</label>
 
-<div class="form-group">
-    <label for="fullName">Full Name</label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                placeholder="Enter Phone Number"
+                required
+              />
+            </div>
+          </div>
 
-    <input type="text" id="fullName" placeholder="Enter Full Name" required>
-</div>
+          <div class="form-actions">
+            <button type="reset" class="cancel-btn">Reset</button>
 
-<div class="form-group">
-    <label for="emailAddress">Email Address</label>
+            <!-- TO THIS: -->
+            <button type="submit" id="saveProfileInfo" class="save-btn">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </form>
 
-    <input type="email" id="emailAddress" placeholder="Enter Email Address" required>
-</div>
+      <form>
+        <div class="form-section">
+          <h3>Change Password</h3>
 
-<div class="form-group">
-    <label for="phoneNumber">Phone Number</label>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
 
-    <input type="tel" id="phoneNumber" placeholder="Enter Phone Number" required>
-</div>
+              <div class="password-field">
+                <input
+                  type="password"
+                  id="currentPassword"
+                  placeholder="Enter Current Password"
+                  required
+                />
 
-</div>
+                <button
+                  type="button"
+                  class="toggle-password"
+                  onclick="togglePassword('currentPassword', this)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
 
-<div class="form-actions">
+              <div class="password-field">
+                <input
+                  type="password"
+                  id="newPassword"
+                  placeholder="Enter New Password"
+                  required
+                />
 
-<button type="reset" class="cancel-btn">
-Reset
-</button>
+                <button
+                  type="button"
+                  class="toggle-password"
+                  onclick="togglePassword('newPassword', this)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-<button type="submit" class="save-btn">
-Save Changes
-</button>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
 
-</div>
+              <div class="password-field">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  placeholder="Confirm Password"
+                  required
+                />
 
-</div>
+                <button
+                  type="button"
+                  class="toggle-password"
+                  onclick="togglePassword('confirmPassword', this)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
 
+          <div class="form-actions">
+            <button type="reset" class="cancel-btn">Reset</button>
 
+            <button type="submit" class="save-btn">Save Changes</button>
+          </div>
+        </div>
+      </form>
+    </section>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
-
-
-
-
-
-
-
-
-<div class="form-section">
-    <h3>Change Password</h3>
-
-    <div class="form-grid">
-
-<div class="form-group">
-    <label for="currentPassword">Current Password</label>
-
-    <div class="password-field">
-        <input type="password" id="currentPassword" placeholder="Enter Current Password" required>
-
-        <button type="button" class="toggle-password" onclick="togglePassword('currentPassword', this)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-        </button>
-    </div>
-</div>
-
-<div class="form-group">
-    <label for="newPassword">New Password</label>
-
-    <div class="password-field">
-        <input type="password" id="newPassword" placeholder="Enter New Password" required>
-
-        <button type="button" class="toggle-password" onclick="togglePassword('newPassword', this)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-        </button>
-    </div>
-</div>
-
-<div class="form-group">
-    <label for="confirmPassword">Confirm Password</label>
-
-    <div class="password-field">
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
-
-        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-                <circle cx="12" cy="12" r="3"/>
-            </svg>
-        </button>
-    </div>
-</div>
-    </div>
-
-
-    <div class="form-actions">
-
-<button type="reset" class="cancel-btn">
-Reset
-</button>
-
-<button type="submit" class="save-btn">
-Save Changes
-</button>
-
-</div>
-</div>
-
-    </form>
-
-</section>
-
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/supabase.js"></script>
-<script src="/js/utils.js"></script>
-<script src="/js/my-profile.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/my-profile.js"></script>
+  </body>
 </html>
