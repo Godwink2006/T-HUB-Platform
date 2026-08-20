@@ -106,12 +106,14 @@ function renderNavigation(userRole) {
     "nav-departments",
     "nav-rooms",
     "nav-periods",
-    "nav-audit-logs"
+    "nav-audit-logs",
+    "nav-semesters",
+    "nav-academic-years",
   ];
 
   const isAdmin = userRole === "admin";
 
-  adminOnlyLinks.forEach(id => {
+  adminOnlyLinks.forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
       el.style.display = isAdmin ? "block" : "none";
