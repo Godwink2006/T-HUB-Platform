@@ -1,33 +1,5 @@
 const academicYearModal = document.getElementById("academicYearModal");
 
-const cancelAcademicYearModal = document.getElementById(
-  "cancelAcademicYearModal",
-);
-
-const openAcademicYearModal = document.getElementById("addAcademicYear");
-
-const closeAcademicYearModal = document.getElementById(
-  "closeAcademicYearModal",
-);
-
-openAcademicYearModal.addEventListener("click", () => {
-  academicYearModal.style.display = "flex";
-
-  lockBodyScroll();
-});
-
-closeAcademicYearModal.addEventListener("click", () => {
-  academicYearModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-cancelAcademicYearModal.addEventListener("click", () => {
-  academicYearModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
 window.addEventListener("click", (e) => {
   if (e.target === academicYearModal) {
     academicYearModal.style.display = "none";
@@ -36,34 +8,7 @@ window.addEventListener("click", (e) => {
   }
 });
 
-const closeEditAcademicYearModal = document.getElementById(
-  "closeEditAcademicYearModal",
-);
-const cancelEditAcademicYearModal = document.getElementById(
-  "cancelEditAcademicYearModal",
-);
 const editAcademicYearModal = document.getElementById("editAcademicYearModal");
-const editAcademicYearButtons = document.querySelectorAll(".edit-academicYear");
-
-editAcademicYearButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    editAcademicYearModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
-
-closeEditAcademicYearModal.addEventListener("click", () => {
-  editAcademicYearModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-cancelEditAcademicYearModal.addEventListener("click", () => {
-  editAcademicYearModal.style.display = "none";
-
-  unLockBodyScroll();
-});
 
 window.addEventListener("click", (e) => {
   if (e.target === editAcademicYearModal) {
@@ -76,24 +21,6 @@ window.addEventListener("click", (e) => {
 const archiveAcademicYearModal = document.getElementById(
   "archiveAcademicYearModal",
 );
-
-const archiveButtons = document.querySelectorAll(".archive-AcademicYear");
-
-const cancelArchive = document.getElementById("cancelArchive");
-
-archiveButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    archiveAcademicYearModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
-
-cancelArchive.addEventListener("click", () => {
-  archiveAcademicYearModal.style.display = "none";
-
-  unLockBodyScroll();
-});
 
 window.addEventListener("click", (e) => {
   if (e.target === archiveAcademicYearModal) {
@@ -114,6 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- 1. FETCH & RENDER ---
 async function loadAcademicYears() {
+  // Show the loading indicator immediately
+  renderTableLoading();
+
   const { data, error } = await supabaseClient
     .from("academic_years")
     .select("*")
@@ -127,6 +57,20 @@ async function loadAcademicYears() {
 
   academicYears = data || [];
   renderAcademicYearsTable();
+}
+
+function renderTableLoading() {
+  const tbody = document.querySelector(".academic-years-table-card tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading academic years...
+      </td>
+    </tr>
+  `;
 }
 
 function renderAcademicYearsTable() {

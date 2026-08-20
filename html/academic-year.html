@@ -49,45 +49,7 @@
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>2026-2027</td>
-                <td>
-                  <span class="academic-years-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="academic-years-actions-btn edit-academicYear">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button
-                    class="academic-years-actions-btn archive-AcademicYear"
-                  >
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>2026-2027</td>
-                <td>
-                  <span class="academic-years-status-inactive">Active</span>
-                </td>
-
-                <td>
-                  <button class="academic-years-actions-btn edit-academicYear">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button
-                    class="academic-years-actions-btn archive-AcademicYear"
-                  >
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </section>
       </main>
@@ -102,27 +64,27 @@
         </div>
 
         <div class="academic-year-modal-body">
-         <form id="academicYearForm">
-  <div class="form-grid">
-    <div class="form-group">
-      <label>Academic Year *</label>
-      <select id="addYearSelect" name="year_label" required>
-        <option value="">Select Year</option>
-        <option value="2027/2028">2027/2028</option>
-        <option value="2026/2027">2026/2027</option>
-        <option value="2025/2026">2025/2026</option>
-        <option value="2024/2025">2024/2025</option>
-      </select>
-    </div>
+          <form id="academicYearForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Academic Year *</label>
+                <select id="addYearSelect" name="year_label" required>
+                  <option value="">Select Year</option>
+                  <option value="2027/2028">2027/2028</option>
+                  <option value="2026/2027">2026/2027</option>
+                  <option value="2025/2026">2025/2026</option>
+                  <option value="2024/2025">2024/2025</option>
+                </select>
+              </div>
 
-    <div class="form-group">
-      <label>Status *</label>
-      <select id="addStatusSelect" name="status" required>
-        <option value="Active">Active</option>
-        <option value="Archive">Inactive</option>
-      </select>
-    </div>
-  </div>
+              <div class="form-group">
+                <label>Status *</label>
+                <select id="addStatusSelect" name="status" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
 
             <div class="academic-year-modal-footer">
               <button
@@ -151,26 +113,26 @@
         </div>
 
         <div class="edit-academic-year-modal-body">
-         <form id="editAcademicYearForm">
-  <div class="form-grid">
-    <div class="form-group">
-      <label>Academic Year *</label>
-      <select id="editYearSelect" name="year_label" required>
-        <option value="2027/2028">2027/2028</option>
-        <option value="2026/2027">2026/2027</option>
-        <option value="2025/2026">2025/2026</option>
-        <option value="2024/2025">2024/2025</option>
-      </select>
-    </div>
+          <form id="editAcademicYearForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Academic Year *</label>
+                <select id="editYearSelect" name="year_label" required>
+                  <option value="2027/2028">2027/2028</option>
+                  <option value="2026/2027">2026/2027</option>
+                  <option value="2025/2026">2025/2026</option>
+                  <option value="2024/2025">2024/2025</option>
+                </select>
+              </div>
 
-    <div class="form-group">
-      <label>Status *</label>
-      <select id="editStatusSelect" name="status" required>
-        <option value="Active">Active</option>
-        <option value="Archive">Inactive</option>
-      </select>
-    </div>
-  </div>
+              <div class="form-group">
+                <label>Status *</label>
+                <select id="editStatusSelect" name="status" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
 
             <div class="edit-academic-year-modal-footer">
               <button
