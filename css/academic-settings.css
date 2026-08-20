@@ -558,7 +558,6 @@ tr {
 .archive-confirm-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
@@ -591,7 +590,7 @@ tr {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 315px; /* Fixed height requirement */
+    height: 350px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 0 !important;
