@@ -65,39 +65,11 @@ window.addEventListener("click", (e) => {
   }
 });
 
-const viewClassModal = document.getElementById("viewClassModal");
-
 const archiveClassModal = document.getElementById("archiveClassModal");
-
-const viewButtons = document.querySelectorAll(".view");
 
 const archiveButtons = document.querySelectorAll(".archive");
 
-const closeViewClassModal = document.getElementById("closeViewClassModal");
-
-const closeViewBtn = document.getElementById("closeViewBtn");
-
 const cancelArchive = document.getElementById("cancelArchive");
-
-viewButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    viewClassModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
-
-closeViewClassModal.addEventListener("click", () => {
-  viewClassModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-closeViewBtn.addEventListener("click", () => {
-  viewClassModal.style.display = "none";
-
-  unLockBodyScroll();
-});
 
 archiveButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -114,18 +86,88 @@ cancelArchive.addEventListener("click", () => {
 });
 
 window.addEventListener("click", (e) => {
-  if (e.target === viewClassModal) {
-    viewClassModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-
   if (e.target === archiveClassModal) {
     archiveClassModal.style.display = "none";
 
     unLockBodyScroll();
   }
 });
+
+let classToArchiveId = null;
+
+// 1. Open Archive Confirmation Modal
+function openArchiveModal(classId) {
+  classToArchiveId = classId;
+  openModal("archiveClassModal");
+}
+
+async function handleConfirmArchive() {
+  if (!classToArchiveId) return;
+
+  const confirmBtn = document.getElementById("confirmArchive");
+
+  try {
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Archiving...";
+    }
+
+    // Archiving is an UPDATE operation in Supabase
+    const { error } = await supabaseClient
+      .from("classes")
+      .update({
+        is_archived: true,
+        status: "inactive",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", classToArchiveId);
+
+    if (error) {
+      if (error.code === "42501") {
+        showToast(
+          "Permission denied: Only active admins can archive classes.",
+          "error",
+        );
+      } else {
+        showToast(error.message, "error");
+      }
+      return;
+    }
+
+    showToast("Class archived successfully!", "success");
+    closeModal("archiveClassModal");
+    classToArchiveId = null;
+    await loadClasses(); // Reload active classes table
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Archive";
+    }
+  }
+}
+
+// Attach Confirm Event Listener
+document
+  .getElementById("confirmArchive")
+  ?.addEventListener("click", handleConfirmArchive);
+
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+  }
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  }
+}
 
 let currentClassesData = [];
 
@@ -192,9 +234,6 @@ function renderClassesTable(classes) {
       </td>
       <td>${descriptionText}</td>
       <td>
-        <button class="classes-actions-btn view" onclick="openViewModal('${item.id}')">
-          <i class="fa-solid fa-eye"></i>
-        </button>
         <button class="classes-actions-btn edit" onclick="openEditModal('${item.id}')">
           <i class="fa-solid fa-pen"></i>
         </button>
@@ -207,6 +246,129 @@ function renderClassesTable(classes) {
     tbody.appendChild(tr);
   });
 }
+
+let originalClassData = null;
+
+// 1. Open Edit Modal & Populate Form Data
+async function openEditModal(classId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("classes")
+      .select("*")
+      .eq("id", classId)
+      .single();
+
+    if (error || !data) {
+      showToast("Failed to fetch class details.", "error");
+      return;
+    }
+
+    // Cache original values to detect changes later
+    originalClassData = { ...data };
+
+    // Fill form fields
+    document.getElementById("editClassId").value = data.id;
+    document.getElementById("editClassName").value = data.name;
+    document.getElementById("editSchoolLevel").value = data.school_level;
+    document.getElementById("editCapacity").value = data.capacity;
+    document.getElementById("editStatus").value = data.status;
+    document.getElementById("editDescription").value = data.description || "";
+
+    openModal("editClassModal");
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+// 2. Form Submit Handler for Updating
+async function handleEditClass(event) {
+  event.preventDefault();
+
+  const classId = document.getElementById("editClassId").value;
+  const name = document.getElementById("editClassName").value.trim();
+  const schoolLevel = document.getElementById("editSchoolLevel").value;
+  const capacity = parseInt(document.getElementById("editCapacity").value, 10);
+  const status = document.getElementById("editStatus").value;
+  const description = document.getElementById("editDescription").value.trim();
+
+  // Basic validation
+  if (!name || !schoolLevel || isNaN(capacity) || !status) {
+    showToast("Please fill in all required fields.", "error");
+    return;
+  }
+
+  if (capacity <= 0) {
+    showToast("Capacity must be greater than 0.", "error");
+    return;
+  }
+
+  // Check if any value changed
+  const isUnchanged =
+    originalClassData &&
+    originalClassData.name === name &&
+    originalClassData.school_level === schoolLevel &&
+    originalClassData.capacity === capacity &&
+    originalClassData.status === status &&
+    (originalClassData.description || "") === description;
+
+  if (isUnchanged) {
+    showToast("No changes detected.", "info");
+    return;
+  }
+
+  const form = event.target;
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Updating...";
+    }
+
+    const { error } = await supabaseClient
+      .from("classes")
+      .update({
+        name,
+        school_level: schoolLevel,
+        capacity,
+        status,
+        description: description || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", classId);
+
+    if (error) {
+      if (error.code === "23505") {
+        showToast("This class name already exists.", "error");
+        return;
+      }
+      showToast(error.message, "error");
+      return;
+    }
+
+    showToast("Class updated successfully!", "success");
+    closeModal("editClassModal");
+    await loadClasses(); // Refresh main table
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Update Class";
+    }
+  }
+}
+
+// Attach Event Listeners
+document
+  .getElementById("editClassForm")
+  .addEventListener("submit", handleEditClass);
+document
+  .getElementById("closeEditClassModal")
+  .addEventListener("click", () => closeModal("editClassModal"));
+document
+  .getElementById("cancelEditClassModal")
+  .addEventListener("click", () => closeModal("editClassModal"));
 
 // 3. Client-Side Search & Filter Handler
 function filterClasses() {

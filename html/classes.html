@@ -161,21 +161,24 @@
         </div>
 
         <div class="edit-class-modal-body">
-          <form id="classForm">
+          <form id="editClassForm">
+            <!-- Hidden input to track class ID -->
+            <input type="hidden" id="editClassId" />
+
             <div class="form-grid">
               <div class="form-group">
-                <label for="className">Class Name *</label>
+                <label for="editClassName">Class Name *</label>
                 <input
                   type="text"
-                  id="className"
+                  id="editClassName"
                   placeholder="e.g. Grade 10A"
                   required
                 />
               </div>
 
               <div class="form-group">
-                <label for="schoolLevel">School Level *</label>
-                <select id="schoolLevel" required>
+                <label for="editSchoolLevel">School Level *</label>
+                <select id="editSchoolLevel" required>
                   <option value="">Select School Level</option>
                   <option value="nursery">Nursery</option>
                   <option value="junior_primary">Junior Primary</option>
@@ -186,27 +189,27 @@
               </div>
 
               <div class="form-group">
-                <label for="capacity">Capacity *</label>
+                <label for="editCapacity">Capacity *</label>
                 <input
                   type="number"
-                  id="capacity"
+                  id="editCapacity"
                   placeholder="Enter capacity"
                   required
                 />
               </div>
 
               <div class="form-group">
-                <label for="status">Status *</label>
-                <select id="status" required>
-                  <option value="inactive" selected>Inactive</option>
+                <label for="editStatus">Status *</label>
+                <select id="editStatus" required>
+                  <option value="inactive">Inactive</option>
                   <option value="active">Active</option>
                 </select>
               </div>
 
               <div class="form-group full-width">
-                <label for="description">Description (Optional)</label>
+                <label for="editDescription">Description (Optional)</label>
                 <textarea
-                  id="description"
+                  id="editDescription"
                   rows="4"
                   placeholder="Write description"
                 ></textarea>
@@ -225,50 +228,6 @@
               <button type="submit" class="edit-btn">Update Class</button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
-
-    <div id="viewClassModal" class="view-class-modal">
-      <div class="view-class-modal-content">
-        <div class="view-class-modal-header">
-          <h2>Class Details</h2>
-
-          <button id="closeViewClassModal">&times;</button>
-        </div>
-
-        <div class="view-class-body">
-          <div class="profile-section">
-            <h3 id="viewClassName">Grade 7B</h3>
-
-            <span class="view-class-status active">Active</span>
-          </div>
-
-          <div class="details-grid">
-            <div class="details-item">
-              <label>Capacity</label>
-              <p>40</p>
-            </div>
-
-            <div class="details-item">
-              <label>Room</label>
-              <p>Room 8</p>
-            </div>
-
-            <div class="details-item">
-              <label>Academic Year</label>
-              <p>2026-2027</p>
-            </div>
-
-            <div class="details-item">
-              <label>Description</label>
-              <p>This class is the most important class in the school</p>
-            </div>
-          </div>
-
-          <div class="view-modal-footer">
-            <button id="closeViewBtn" class="cancel-btn">Close</button>
-          </div>
         </div>
       </div>
     </div>
