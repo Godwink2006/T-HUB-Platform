@@ -1,100 +1,103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>High School Management System</title>
-    <link rel="stylesheet" href="/css/teacher-reports.css">
-    <link rel="preconnect" href="https://fontsgoogleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-</head>
-<body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/teacher-reports.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
     <div class="teachers-report-container">
+      <main class="teachers-report-main-content">
+        <header class="topbar">
+          <div>
+            <h1>Teacher Reports</h1>
+            <p>View teacher reports.</p>
 
-<main class="teachers-report-main-content">
-<header class="topbar">
-    <div>
-        <h1>Teacher Reports</h1>
-        <p>View teacher reports.</p>
+            <button
+              onclick="window.location.href = 'reports.html'"
+              class="back-teachers-report-btn"
+            >
+              <i class="fa-solid fa-chevron-left"></i>
+              Back
+            </button>
+          </div>
+        </header>
 
-         <button onclick="window.location.href='reports.html'"   class="back-teachers-report-btn">
-        <i class="fa-solid fa-chevron-left"></i>
-        Back
-    </button>
-    </div>
+        <section class="toolbar">
+          <select>
+            <option>Department</option>
+          </select>
 
-</header>
+          <select>
+            <option>Status</option>
+          </select>
 
-<section class="toolbar">
+          <select>
+            <option>Academic Year</option>
+            <option>2026-2027</option>
+            <option>2025-2026</option>
+            <option>2024-2025</option>
+          </select>
+        </section>
 
-   <select>
-        <option>Department</option>
-    </select>
+        <section class="teachers-report-table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Total Teachers</th>
+                <th>Active Teachers</th>
+                <th>Inactive Teachers</th>
+                <th>Total Subjects Assigned</th>
+                <th>Total Classes Assigned</th>
+                <th>Total Timetable Periods</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
 
-     <select>
-        <option>Status</option>
-    </select>
+            <tbody>
+              <tr>
+                <td>10</td>
+                <td>8</td>
+                <td>2</td>
+                <td>5</td>
+                <td>7</td>
+                <td>7</td>
 
-   <select>
-        <option>Academic Year</option>
-        <option>2026-2027</option>
-        <option>2025-2026</option>
-        <option>2024-2025</option>
-    </select>
-
-    </section>
-
-<section class="teachers-report-table-card">
-   <table>
-    <thead>
-        <tr>
-            <th>Total Teachers</th>
-             <th>Active Teachers</th>
-              <th>Inactive Teachers</th>
-              <th>Total Subjects Assigned</th>
-              <th>Total Classes Assigned</th>
-              <th>Total Timetable Periods</th>
-              <th>Actions</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        <tr>
-            <td>10</td>
-            <td>8</td>
-            <td>2</td>
-            <td>5</td>
-            <td>7</td>
-            <td>7</td>
-
-             <td>
-                <button class="teachers-report-actions-btn save-btn">
+                <td>
+                  <button class="teachers-report-actions-btn save-btn">
                     Print Report
-                </button>
+                  </button>
 
-               <button class="teachers-report-actions-btn save-btn">
+                  <button class="teachers-report-actions-btn save-btn">
                     Export PDF
-                </button>
+                  </button>
 
-                 <button class="teachers-report-actions-btn save-btn">
+                  <button class="teachers-report-actions-btn save-btn">
                     Export Excel
-                </button>
-
-            </td>
-        </tr>
-
-
-    </tbody>
-   </table>
-</section>
-</main>
-
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
     </div>
 
-
-<script src="/js/utils.js"></script>
-</body>
+    <script src="/js/utils.js"></script>
+  </body>
 </html>

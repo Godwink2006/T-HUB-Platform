@@ -1,352 +1,324 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>High School Management System</title>
-    <link rel="stylesheet" href="/css/attendance.css">
-    <link rel="preconnect" href="https://fontsgoogleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-</head>
-<body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/attendance.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
     <div class="attendances-container">
+      <main class="attendances-main-content">
+        <header class="topbar">
+          <div>
+            <h1>Attendance</h1>
+            <p>Manage attendance.</p>
 
-<main class="attendances-main-content">
-<header class="topbar">
-    <div>
-        <h1>Attendance</h1>
-        <p>Manage attendance.</p>
+            <button
+              onclick="window.location.href = 'academics.html'"
+              class="back-academics-btn"
+            >
+              <i class="fa-solid fa-chevron-left"></i>
+              Back
+            </button>
+          </div>
 
-         <button onclick="window.location.href='academics.html'"   class="back-academics-btn">
-        <i class="fa-solid fa-chevron-left"></i>
-        Back
-    </button>
+          <button id="addAttendance" class="add-attendances-btn">
+            <i class="fa-solid fa-plus"></i>
+            Take Attendance
+          </button>
+        </header>
+
+        <section class="toolbar">
+          <input type="text" placeholder="Search attendance..." />
+
+          <select>
+            <option>Class</option>
+          </select>
+
+          <select>
+            <option>Date</option>
+          </select>
+        </section>
+
+        <section class="studentAttendance-table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Students</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Grade 8A</td>
+                <td>Mathematics</td>
+                <td>12 Aug</td>
+                <td>32</td>
+
+                <td>
+                  <button class="attendances-actions-btn view">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Grade 9A</td>
+                <td>Physics</td>
+                <td>13 Aug</td>
+                <td>28</td>
+
+                <td>
+                  <button class="attendances-actions-btn view">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Grade 7B</td>
+                <td>English</td>
+                <td>12 Aug</td>
+                <td>30</td>
+
+                <td>
+                  <button class="attendances-actions-btn view">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
     </div>
-
-    <button id="addAttendance" class="add-attendances-btn">
-        <i class="fa-solid fa-plus"></i>
-        Take Attendance
-    </button>
-
-</header>
-
-<section class="toolbar">
-    <input type="text" placeholder="Search attendance...">
-
-   <select>
-        <option>Class</option>
-    </select>
-
-    <select>
-        <option>Date</option>
-    </select>
-</section>
-
-<section class="studentAttendance-table-card">
-   <table>
-    <thead>
-        <tr>
-            <th>Class</th>
-             <th>Subject</th>
-              <th>Date</th>
-                   <th>Students</th>
-                    <th>Actions</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        <tr>
-            <td>Grade 8A</td>
-            <td>Mathematics</td>
-            <td>12 Aug</td>
-            <td>32</td>
-
-             <td>
-                <button class="attendances-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-
-        <tr>
-            <td>Grade 9A</td>
-            <td>Physics</td>
-            <td>13 Aug</td>
-            <td>28</td>
-
-             <td>
-                <button class="attendances-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-
-        <tr>
-            <td>Grade 7B</td>
-            <td>English</td>
-            <td>12 Aug</td>
-            <td>30</td>
-
-             <td>
-                <button class="attendances-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-
-    </tbody>
-   </table>
-</section>
-</main>
-
-    </div>
-
-
-
-
 
     <div id="attendanceModal" class="modal-attendance">
-       <div class="attendance-modal-content">
+      <div class="attendance-modal-content">
         <div class="attendance-modal-header">
-            <h2>Take Attendance</h2>
+          <h2>Take Attendance</h2>
 
-            <button id="closeAttendanceModal">&times;</button>
+          <button id="closeAttendanceModal">&times;</button>
         </div>
 
         <div class="attendance-modal-body">
-
           <form id="attendanceForm">
             <div class="form-grid">
-                 <div class="form-group">
-                    <label>Class *</label>
+              <div class="form-group">
+                <label>Class *</label>
 
-                    <select>
-                        <option>Grade 8A</option>
-                        <option>Grade 9B</option>
-                    </select>
-                </div>
+                <select>
+                  <option>Grade 8A</option>
+                  <option>Grade 9B</option>
+                </select>
+              </div>
 
-                  <div class="form-group">
-                    <label>Period *</label>
+              <div class="form-group">
+                <label>Period *</label>
 
-                    <select>
-                        <option>Period 1</option>
-                        <option>Period 2</option>
-                    </select>
-                </div>
-
+                <select>
+                  <option>Period 1</option>
+                  <option>Period 2</option>
+                </select>
+              </div>
             </div>
-
 
             <div class="attendance-modal-footer">
+              <button
+                type="button"
+                class="cancel-btn"
+                id="cancelAttendanceModal"
+              >
+                Cancel
+              </button>
 
-<button type="button" class="cancel-btn" id="cancelAttendanceModal">
-    Cancel
-</button>
-
-<button type="button" class="save-btn" id="loadStudentAttendance">
-    Load Students
-</button>
-
+              <button type="button" class="save-btn" id="loadStudentAttendance">
+                Load Students
+              </button>
             </div>
           </form>
-
         </div>
-       </div>
+      </div>
     </div>
-    
-
-
 
     <div id="viewAttendanceModal" class="view-attendance-modal">
+      <div class="view-attendance-modal-content">
+        <div class="view-attendance-modal-header">
+          <h2>Attendance Details</h2>
 
-<div class="view-attendance-modal-content">
+          <button id="closeViewAttendanceModal">&times;</button>
+        </div>
 
-<div class="view-attendance-modal-header">
-    <h2>Attendance Details</h2>
+        <div class="view-attendance-body">
+          <div class="details-grid">
+            <div class="details-item">
+              <label>Class</label>
+              <p>Grade 8A</p>
+            </div>
 
-    <button id="closeViewAttendanceModal">&times;</button>
-</div>
+            <div class="details-item">
+              <label>Subject</label>
+              <p>Mathematics</p>
+            </div>
 
-<div class="view-attendance-body">
+            <div class="details-item">
+              <label>Teacher</label>
+              <p>John Doe</p>
+            </div>
 
-    <div class="details-grid">
+            <div class="details-item">
+              <label>Date</label>
+              <p>12 Aug 2026</p>
+            </div>
+          </div>
 
-<div class="details-item">
-    <label>Class</label>
-    <p>Grade 8A</p>
-</div>
+          <section class="studentAttendance-table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
 
-<div class="details-item">
-    <label>Subject</label>
-    <p>Mathematics</p>
-</div>
+              <tbody>
+                <tr>
+                  <td>John Doe</td>
+                  <td>
+                    <p>Present</p>
+                  </td>
+                </tr>
 
-<div class="details-item">
-    <label>Teacher</label>
-    <p>John Doe</p>
-</div>
+                <tr>
+                  <td>Sarah Johnson</td>
+                  <td>
+                    <p>Absent</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
 
-<div class="details-item">
-    <label>Date</label>
-    <p>12 Aug 2026</p>
-</div>
-
+          <div class="view-modal-footer">
+            <button id="closeViewBtn" class="cancel-btn">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-
-  <section class="studentAttendance-table-card">
-   <table>
-    <thead>
-        <tr>
-              <th>Student</th>
-                   <th>Status</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        <tr>
-            <td>John Doe</td>
-            <td>
-              <P>Present</P>
-            </td>
-
-        </tr>
-
-         <tr>
-            <td>Sarah Johnson</td>
-            <td>
-            <p>Absent</p>
-            </td>
-
-        </tr>
-
-    </tbody>
-   </table>
-</section>
-
-
-
-    <div class="view-modal-footer">
-
-<button id="closeViewBtn" class="cancel-btn">
-    Close
-</button>
-
-    </div>
-</div>
-
-</div>
-
-    </div>
-
-
-
-  <div id="studentAttendanceModal" class="modal-studentAttendance">
-       <div class="studentAttendance-modal-content">
+    <div id="studentAttendanceModal" class="modal-studentAttendance">
+      <div class="studentAttendance-modal-content">
         <div class="studentAttendance-modal-header">
-            <h2>Take Attendance</h2>
+          <h2>Take Attendance</h2>
 
-            <button id="closeStudentAttendanceModal">&times;</button>
+          <button id="closeStudentAttendanceModal">&times;</button>
         </div>
 
         <div class="studentAttendance-modal-body">
-
           <form id="studentAttendanceForm">
             <div class="details-grid">
-                 <div class="details-item">
-                    <label>Class</label>
+              <div class="details-item">
+                <label>Class</label>
 
-                    <p>Grade 8A</p>
-                </div>
+                <p>Grade 8A</p>
+              </div>
 
-                  <div class="details-item">
-                    <label>Subject</label>
+              <div class="details-item">
+                <label>Subject</label>
 
-                    <p>Mathematics</p>
-                </div>
+                <p>Mathematics</p>
+              </div>
 
-                 <div class="details-item">
-                    <label>Date</label>
+              <div class="details-item">
+                <label>Date</label>
 
-                    <p>Today</p>
-                </div>
+                <p>Today</p>
+              </div>
 
-                 <div class="details-item">
-                    <label>Period</label>
+              <div class="details-item">
+                <label>Period</label>
 
-                    <p>Period 1</p>
-                </div>
+                <p>Period 1</p>
+              </div>
 
-                 <div class="details-item">
-                    <label>Teacher</label>
+              <div class="details-item">
+                <label>Teacher</label>
 
-                    <p>John Doe</p>
-                </div>
-
-
+                <p>John Doe</p>
+              </div>
             </div>
 
             <section class="studentAttendance-table-card">
-   <table>
-    <thead>
-        <tr>
-              <th>Student</th>
-                   <th>Status</th>
-        </tr>
-    </thead>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
 
-    <tbody>
-        <tr>
-            <td>John Doe</td>
-            <td class="form-group">
-                <select>
-                    <option>Present</option>
-                    <option>Absent</option>
-                </select>
-            </td>
+                <tbody>
+                  <tr>
+                    <td>John Doe</td>
+                    <td class="form-group">
+                      <select>
+                        <option>Present</option>
+                        <option>Absent</option>
+                      </select>
+                    </td>
+                  </tr>
 
-        </tr>
-
-         <tr>
-            <td>Sarah Johnson</td>
-            <td class="form-group">
-                <select>
-                    <option>Present</option>
-                    <option>Absent</option>
-                </select>
-            </td>
-
-        </tr>
-
-    </tbody>
-   </table>
-</section>
+                  <tr>
+                    <td>Sarah Johnson</td>
+                    <td class="form-group">
+                      <select>
+                        <option>Present</option>
+                        <option>Absent</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
 
             <div class="studentAttendance-modal-footer">
+              <button
+                type="button"
+                class="cancel-btn"
+                id="cancelStudentAttendanceModal"
+              >
+                Cancel
+              </button>
 
-<button type="button" class="cancel-btn" id="cancelStudentAttendanceModal">
-    Cancel
-</button>
-
-<button type="submit" class="save-btn">
-    Save Attendance
-</button>
-
+              <button type="submit" class="save-btn">Save Attendance</button>
             </div>
           </form>
-
         </div>
-       </div>
+      </div>
     </div>
 
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/supabase.js"></script>
-<script src="/js/utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
     <script src="/js/attendance.js"></script>
-</body>
+  </body>
 </html>
