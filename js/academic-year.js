@@ -6,22 +6,16 @@ const archiveAcademicYearModal = document.getElementById(
   "archiveAcademicYearModal",
 );
 
-// Single event listener for all outer modal clicks/taps
-["pointerdown", "click"].forEach((eventType) => {
-  window.addEventListener(eventType, (e) => {
-    // Prevent duplicate triggers if pointerdown handles it first
-    if (eventType === "click" && e.detail > 0 && e.pointerType === "touch")
-      return;
-
-    if (
-      e.target === academicYearModal ||
-      e.target === editAcademicYearModal ||
-      e.target === archiveAcademicYearModal
-    ) {
-      e.target.style.display = "none";
-      unLockBodyScroll();
-    }
-  });
+// Listener that waits for a full tap/click instead of immediate touch down
+window.addEventListener("click", (e) => {
+  if (
+    e.target === academicYearModal ||
+    e.target === editAcademicYearModal ||
+    e.target === archiveAcademicYearModal
+  ) {
+    e.target.style.display = "none";
+    unLockBodyScroll();
+  }
 });
 
 let academicYears = [];
