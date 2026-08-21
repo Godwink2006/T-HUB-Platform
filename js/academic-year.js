@@ -191,6 +191,23 @@ async function handleEditAcademicYear(event) {
       .update({ year_label: yearLabel, status })
       .eq("id", selectedYearId);
 
+       if (updateError) {
+      // Code 23505 is PostgreSQL's Unique Constraint Violation
+      if (updateError.code === "23505") {
+        // Check if the error message/details mention the phone field
+        if (
+          updateError.message?.includes("year_label") ||
+          updateError.details?.includes("year_label")
+        ) {
+          showToast(
+            "This Academic Year is already been created.",
+            "error",
+          );
+          return;
+        }
+      }
+    }
+
     if (error) throw error;
 
     showToast("Academic Year updated successfully!", "success");
