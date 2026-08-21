@@ -77,7 +77,6 @@ body {
 .toolbar select {
   height: 48px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -418,7 +417,7 @@ tr {
 #closeEditAcademicYearModal {
   cursor: pointer;
   background: #1f2937;
-    color: #f9fafb;
+  color: #f9fafb;
   border: none !important;
   height: 40px;
   width: 40px;
@@ -475,8 +474,8 @@ tr {
 
 .edit-terms-modal-header button {
   cursor: pointer;
-  color: #374151 ;
-  background: #f3f4f6 ;
+  color: #374151;
+  background: #f3f4f6;
   border: none;
   height: 40px;
   width: 40px;
