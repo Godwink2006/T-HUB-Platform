@@ -381,7 +381,7 @@ async function loadSystemUsers() {
       "id, full_name, email, phone_number, role, status, photo_url, is_archived, created_at",
     )
     .eq("is_archived", false)
-    .not("role", "in", '("admin")')
+    .not("role", "in", '("admin")');
 
   // Apply search across full_name, email, or phone_number
   if (searchTerm) {
@@ -433,6 +433,8 @@ async function loadSystemUsers() {
           ${user.status || "Inactive"}
         </span>
       </td>
+      <td>${formatDateTime(user.created_at)}</td>
+      <td>${formatDateTime(user.updated_at)}</td>
       <td>
         <button class="systemUsers-actions-btn edit-SystemUser" onclick="editUser('${user.id}')">
           <i class="fa-solid fa-pen"></i>
@@ -445,6 +447,19 @@ async function loadSystemUsers() {
   `,
     )
     .join("");
+}
+
+// 2. For ISO timestamps (created_at, updated_at)
+function formatDateTime(isoString) {
+  if (!isoString) return "N/A";
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return "N/A";
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function renderTableLoading() {

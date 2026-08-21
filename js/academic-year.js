@@ -85,6 +85,8 @@ function renderAcademicYearsTable() {
         <tr>
           <td>${item.year_label}</td>
           <td><span class="${statusClass}">${item.status}</span></td>
+          <td>${formatDateTime(item.created_at)}</td>
+          <td>${formatDateTime(item.updated_at)}</td>
           <td>
             <button class="academic-years-actions-btn edit-academicYear" onclick="openEditModal('${item.id}')">
               <i class="fa-solid fa-pen"></i>
@@ -97,6 +99,19 @@ function renderAcademicYearsTable() {
       `;
     })
     .join("");
+}
+
+// 2. For ISO timestamps (created_at, updated_at)
+function formatDateTime(isoString) {
+  if (!isoString) return "N/A";
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return "N/A";
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 // --- 2. SINGLE ACTIVE YEAR ENFORCEMENT ---
