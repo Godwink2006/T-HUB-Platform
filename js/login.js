@@ -40,12 +40,18 @@ const { data: profile, error: profileError } = await window.supabaseClient
   .from("profiles")
   .select("*")
   .eq("id", data.user.id)
-  .single();
+  .maybeSingle();
 
 // 1. Let the catch block handle the toast when profileError exists
 if (profileError) {
   console.error(profileError);
   throw new Error(profileError.message || "Failed to fetch user profile.");
+}
+
+// 2. Throw the error directly—the catch block will render the single toast!
+if (!profile) {
+  await window.supabaseClient.auth.signOut();
+  throw new Error("Your account has been deactivated. Contact the system administrator.");
 }
 
 // 2. Throw the error directly—the catch block will render the single toast!
