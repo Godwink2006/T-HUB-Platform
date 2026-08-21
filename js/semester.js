@@ -247,15 +247,29 @@ async function handleAddTerm(event) {
   }
 }
 
-// --- 4. UPDATE (EDIT) ---
-function openEditModal(id) {
+async function openEditModal(id) {
   selectedTermId = id;
   const item = terms.find((t) => t.id === id);
   if (!item) return;
 
-  document.getElementById("editAcademicYearSelect").value =
-    item.academic_year_id || "";
-  document.getElementById("editSemesterNameSelect").value = item.name || "";
+  const editSelect = document.getElementById("editAcademicYearSelect");
+  const nameSelect = document.getElementById("editSemesterNameSelect");
+
+  // 1. Populate only the item's original Academic Year option
+  if (editSelect) {
+    const yearLabel = item.academic_years?.year_label || "N/A";
+    editSelect.innerHTML = `<option value="${item.academic_year_id}">${yearLabel}</option>`;
+    editSelect.value = item.academic_year_id || "";
+    editSelect.disabled = true; // Lock dropdown
+  }
+
+  // 2. Set and lock Semester Name
+  if (nameSelect) {
+    nameSelect.value = item.name || "";
+    nameSelect.disabled = true; // Lock dropdown
+  }
+
+  // 3. Populate editable fields
   document.getElementById("editStartDate").value = item.start_date || "";
   document.getElementById("editEndDate").value = item.end_date || "";
   document.getElementById("editStatusSelect").value = item.status || "Inactive";
@@ -294,6 +308,11 @@ async function handleEditTerm(event) {
     return;
   }
 
+  if (!startDate || !endDate || !status) {
+    showToast("Please fill in all required fields.", "error");
+    return;
+  }
+
   const form = event.target;
   const updateBtn = form.querySelector('button[type="submit"]');
 
@@ -305,11 +324,36 @@ async function handleEditTerm(event) {
 
     await handleSingleActiveStatus(status, selectedTermId);
 
+    // Ensure end date is strictly after start date
+    if (new Date(startDate) >= new Date(endDate)) {
+      showToast("End date must be after start date.", "error");
+      return;
+    }
+
+    const currentTerm = terms.find((t) => t.id === selectedTermId);
+
+    if (currentTerm && currentTerm.name === "2nd Semester") {
+      // Find 1st Semester for the same academic year
+      const firstSemester = terms.find(
+        (t) =>
+          t.academic_year_id === currentTerm.academic_year_id &&
+          t.name === "1st Semester",
+      );
+
+      if (firstSemester && firstSemester.end_date) {
+        if (new Date(startDate) <= new Date(firstSemester.end_date)) {
+          showToast(
+            `2nd Semester start date must be after 1st Semester end date (${formatDate(firstSemester.end_date)}).`,
+            "error",
+          );
+          return;
+        }
+      }
+    }
+
     const { data, error } = await supabaseClient
       .from("terms")
       .update({
-        academic_year_id: academicYearId,
-        name,
         start_date: startDate,
         end_date: endDate,
         status,
@@ -443,11 +487,10 @@ function setupModalListeners() {
 }
 
 async function populateAcademicYearDropdowns() {
-  // Fetch active and non-archived academic years from Supabase
+  // 1. Include 'status' in select so addSelect filtering works
   const { data, error } = await supabaseClient
     .from("academic_years")
-    .select("id, year_label")
-    .eq("status", "Active")
+    .select("id, year_label, status")
     .eq("is_archived", false)
     .order("year_label", { ascending: false });
 
@@ -463,17 +506,30 @@ async function populateAcademicYearDropdowns() {
   const editSelect = document.getElementById("editAcademicYearSelect");
 
   if (!data || data.length === 0) {
-    const emptyOption = `<option value="">No Active Academic Years Available</option>`;
+    const emptyOption = `<option value="">No Academic Years Available</option>`;
     if (addSelect) addSelect.innerHTML = emptyOption;
     if (editSelect) editSelect.innerHTML = emptyOption;
     return;
   }
 
-  // Map active options using item.id for value and item.year_label for display
-  const optionsHTML = data
-    .map((item) => `<option value="${item.id}">${item.year_label}</option>`)
-    .join("");
+  // 2. ADD MODAL: Filter for ACTIVE years only
+  if (addSelect) {
+    const activeYears = data.filter((item) => item.status === "Active");
+    addSelect.innerHTML = activeYears.length
+      ? activeYears
+          .map(
+            (item) => `<option value="${item.id}">${item.year_label}</option>`,
+          )
+          .join("")
+      : `<option value="">No Active Academic Years Available</option>`;
+  }
 
-  if (addSelect) addSelect.innerHTML = optionsHTML;
-  if (editSelect) editSelect.innerHTML = optionsHTML;
+  // 3. EDIT MODAL: Load ALL years so the selected term's year can render
+  if (editSelect) {
+    editSelect.innerHTML = data
+      .map((item) => `<option value="${item.id}">${item.year_label}</option>`)
+      .join("");
+  }
+
+  // NOTE: REMOVED the optionsHTML block from the bottom because it was overwriting addSelect!
 }
