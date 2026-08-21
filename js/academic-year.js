@@ -7,7 +7,11 @@ const archiveAcademicYearModal = document.getElementById(
 );
 
 window.addEventListener("click", (e) => {
-  const modals = [academicYearModal, editAcademicYearModal, archiveAcademicYearModal];
+  const modals = [
+    academicYearModal,
+    editAcademicYearModal,
+    archiveAcademicYearModal,
+  ];
 
   modals.forEach((modal) => {
     // Check if the modal is currently open AND the click was on the dark backdrop itself
@@ -145,18 +149,13 @@ async function handleAddAcademicYear(event) {
       .from("academic_years")
       .insert([{ year_label: yearLabel, status, is_archived: false }]);
 
+    // Inside handleAddAcademicYear:
     if (error) {
-      // Code 23505 is PostgreSQL's Unique Constraint Violation
       if (error.code === "23505") {
-        // Check if the error message/details mention the phone field
-        if (
-          error.message?.includes("year_label") ||
-          error.details?.includes("year_label")
-        ) {
-          showToast("This Academic Year has already been created.", "error");
-          return;
-        }
+        showToast("This Academic Year has already been created.", "error");
+        return; // Exits early safely
       }
+      throw error; // Prevents "success" toast from firing on other database errors
     }
 
     showToast("Academic Year added successfully!", "success");
@@ -234,21 +233,16 @@ async function handleEditAcademicYear(event) {
 
     const { error } = await supabaseClient
       .from("academic_years")
-      .update({ year_label: yearLabel, status })
+      .update({ status })
       .eq("id", selectedYearId);
 
+    // Inside handleEditAcademicYear:
     if (error) {
-      // Code 23505 is PostgreSQL's Unique Constraint Violation
       if (error.code === "23505") {
-        // Check if the error message/details mention the phone field
-        if (
-          error.message?.includes("year_label") ||
-          error.details?.includes("year_label")
-        ) {
-          showToast("This Academic Year has already been created.", "error");
-          return;
-        }
+        showToast("This Academic Year has already been created.", "error");
+        return;
       }
+      throw error; // Catch-all for other update errors
     }
 
     if (error) throw error;
