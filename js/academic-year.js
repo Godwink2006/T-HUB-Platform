@@ -140,7 +140,7 @@ async function handleAddAcademicYear(event) {
     return;
   }
 
- // 2. Select submit button scoped to THIS form/modal
+  // 2. Select submit button scoped to THIS form/modal
   const form = event.target;
   const saveBtn = form.querySelector('button[type="submit"]');
 
@@ -323,11 +323,15 @@ async function handleConfirmArchive() {
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "flex";
+
+  lockBodyScroll();
 }
 
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "none";
+
+  unLockBodyScroll();
 }
 
 function setupModalListeners() {

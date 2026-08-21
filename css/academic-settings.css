@@ -334,7 +334,6 @@ tr {
   width: 100%;
   padding: 12px 15px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   outline: none;
   font-size: 15px;
 }
@@ -397,7 +396,6 @@ tr {
   width: 500px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 290px;
 }
@@ -414,12 +412,11 @@ tr {
   font-size: 22px;
 }
 
-.edit-academic-year-modal-header button {
+#closeEditAcademicYearModal {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
-  border: none;
+  background: #1f2937;
+    color: #f9fafb;
+  border: none !important;
   height: 40px;
   width: 40px;
   font-size: 22px;
@@ -456,7 +453,6 @@ tr {
   width: 600px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 490px;
 }
@@ -475,9 +471,8 @@ tr {
 
 .edit-terms-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  color: #374151 ;
+  background: #f3f4f6 ;
   border: none;
   height: 40px;
   width: 40px;
@@ -498,7 +493,6 @@ tr {
 .edit-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -529,7 +523,6 @@ tr {
 .confirm-modal {
   width: 430px;
   background: #ffff;
-  border-radius: 18px;
   padding: 35px;
   text-align: center;
   animation: modalShow 0.25s ease;
@@ -617,15 +610,6 @@ tr {
     grid-column: 1 / -1;
     margin: 0;
   }
-
-  .systemUser-photo {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  /* --- Topbar & Header --- */
 
   .topbar {
     align-items: center !important;
