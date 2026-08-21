@@ -186,12 +186,12 @@ async function handleEditAcademicYear(event) {
     // Rule: Ensure only one Active year
     await handleSingleActiveStatus(status, selectedYearId);
 
-    const { error } = await supabaseClient
+    const { error, updateError } = await supabaseClient
       .from("academic_years")
       .update({ year_label: yearLabel, status })
       .eq("id", selectedYearId);
 
-       if (updateError) {
+    if (updateError) {
       // Code 23505 is PostgreSQL's Unique Constraint Violation
       if (updateError.code === "23505") {
         // Check if the error message/details mention the phone field
@@ -199,10 +199,7 @@ async function handleEditAcademicYear(event) {
           updateError.message?.includes("year_label") ||
           updateError.details?.includes("year_label")
         ) {
-          showToast(
-            "This Academic Year is already been created.",
-            "error",
-          );
+          showToast("This Academic Year is already been created.", "error");
           return;
         }
       }
