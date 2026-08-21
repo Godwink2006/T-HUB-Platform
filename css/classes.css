@@ -57,6 +57,7 @@ body {
   border: 2px solid rgb(219, 215, 215);
   background: #15803d;
   color: #ffffff;
+  border: 2px solid #14532d;
 }
 
 .back-academics-btn {
@@ -72,7 +73,6 @@ body {
   justify-content: space-between;
   background: #1f2937;
   color: #f9fafb;
-  border: 2px solid #14532d;
 }
 
 .toolbar {
@@ -556,7 +556,7 @@ tr {
     width: 100% !important;
   }
 
-  .back-academic-settings-btn {
+  .back-academics-btn {
     grid-column: 1;
     width: auto !important;
     height: 40px !important;
@@ -572,8 +572,7 @@ tr {
     white-space: nowrap;
   }
 
-  .add-academic-years-btn,
-  .add-terms-btn {
+  .add-classes-btn {
     grid-column: 2;
     background: #15803d;
     color: #ffffff;
