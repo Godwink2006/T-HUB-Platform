@@ -148,7 +148,19 @@ async function handleAddAcademicYear(event) {
       .from("academic_years")
       .insert([{ year_label: yearLabel, status, is_archived: false }]);
 
-    if (error) throw error;
+    if (error) {
+      // Code 23505 is PostgreSQL's Unique Constraint Violation
+      if (error.code === "23505") {
+        // Check if the error message/details mention the phone field
+        if (
+          error.message?.includes("year_label") ||
+          error.details?.includes("year_label")
+        ) {
+          showToast("This Academic Year is already been created.", "error");
+          return;
+        }
+      }
+    }
 
     showToast("Academic Year added successfully!", "success");
     closeModal("academicYearModal");
@@ -159,14 +171,27 @@ async function handleAddAcademicYear(event) {
   }
 }
 
+// Variable to store original values for comparison
+let originalYearData = {};
+
 // --- 4. UPDATE (EDIT) ---
 function openEditModal(id) {
   selectedYearId = id;
   const item = academicYears.find((y) => y.id === id);
   if (!item) return;
 
-  document.getElementById("editYearSelect").value = item.year_label;
-  document.getElementById("editStatusSelect").value = item.status;
+  const yearSelect = document.getElementById("editYearSelect");
+  yearSelect.value = item.year_label;
+  yearSelect.disabled = true;
+
+  const statusSelect = document.getElementById("editStatusSelect");
+  statusSelect.value = item.status;
+
+  // Store current state for change detection
+  originalYearData = {
+    year_label: item.year_label,
+    status: item.status,
+  };
 
   openModal("editAcademicYearModal");
 }
@@ -177,16 +202,34 @@ async function handleEditAcademicYear(event) {
   const yearLabel = document.getElementById("editYearSelect").value;
   const status = document.getElementById("editStatusSelect").value;
 
+  // --- 1. CHANGE DETECTION VALIDATION ---
+  const hasChanges = status !== originalYearData.status; // Since year is disabled, only status can change
+
+  if (!hasChanges) {
+    showToast("No changes detected.", "info");
+    return;
+  }
+
   if (!selectedYearId || !yearLabel || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
   }
 
+  // 2. Select submit button scoped to THIS form/modal
+  const form = event.target;
+  const updateBtn = form.querySelector('button[type="submit"]');
+
   try {
+    // 3. Set loading state
+    if (updateBtn) {
+      updateBtn.disabled = true;
+      updateBtn.textContent = "Updating...";
+    }
+
     // Rule: Ensure only one Active year
     await handleSingleActiveStatus(status, selectedYearId);
 
-    const { error, } = await supabaseClient
+    const { error } = await supabaseClient
       .from("academic_years")
       .update({ year_label: yearLabel, status })
       .eq("id", selectedYearId);
@@ -212,6 +255,12 @@ async function handleEditAcademicYear(event) {
     await loadAcademicYears();
   } catch (err) {
     showToast(err.message, "error");
+  } finally {
+    // 5. Always restore button state
+    if (updateBtn) {
+      updateBtn.disabled = false;
+      updateBtn.textContent = "Update"; // Replace with your original text
+    }
   }
 }
 
@@ -224,7 +273,16 @@ function openArchiveModal(id) {
 async function handleConfirmArchive() {
   if (!selectedYearId) return;
 
+  // 2. Select submit button scoped to THIS form/modal
+  const archiveBtn = document.getElementById("confirmArchive");
+
   try {
+    // 3. Set loading state
+    if (archiveBtn) {
+      archiveBtn.disabled = true;
+      archiveBtn.textContent = "Archiving...";
+    }
+
     const { error } = await supabaseClient
       .from("academic_years")
       .update({ is_archived: true, status: "Inactive" }) // Soft delete flag
@@ -237,6 +295,12 @@ async function handleConfirmArchive() {
     await loadAcademicYears();
   } catch (err) {
     showToast(err.message, "error");
+  } finally {
+    // 5. Always restore button state
+    if (archiveBtn) {
+      archiveBtn.disabled = false;
+      archiveBtn.textContent = "Archive"; // Replace with your original text
+    }
   }
 }
 

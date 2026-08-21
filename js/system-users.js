@@ -360,6 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // system-users.js
 async function loadSystemUsers() {
+  renderTableLoading(); // Show spinner before fetching
   // Select tbody inside table#usersTable
   const tableBody = document.querySelector("#usersTable tbody");
   if (!tableBody) return;
@@ -373,18 +374,14 @@ async function loadSystemUsers() {
   const roleValue = roleFilter ? roleFilter.value.toLowerCase() : "";
   const statusValue = statusFilter ? statusFilter.value.toLowerCase() : "";
 
-  // 1. Show loading state across all 7 columns
-  tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Loading users...</td></tr>`;
-
   // 3. Build dynamic Supabase query
   let query = supabaseClient
     .from("profiles")
     .select(
-      "id, full_name, email, phone_number, role, status, photo_url, is_archived",
+      "id, full_name, email, phone_number, role, status, photo_url, is_archived, created_at",
     )
     .eq("is_archived", false)
     .not("role", "in", '("admin")')
-    .order("created_at", { ascending: false });
 
   // Apply search across full_name, email, or phone_number
   if (searchTerm) {
@@ -448,6 +445,21 @@ async function loadSystemUsers() {
   `,
     )
     .join("");
+}
+
+function renderTableLoading() {
+  // Select tbody inside table#usersTable
+  const tableBody = document.querySelector("#usersTable tbody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading system users...
+      </td>
+    </tr>
+  `;
 }
 
 // 5. Initialize listeners on page load
