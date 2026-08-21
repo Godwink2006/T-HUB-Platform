@@ -140,7 +140,16 @@ async function handleAddAcademicYear(event) {
     return;
   }
 
+ // 2. Select submit button scoped to THIS form/modal
+  const form = event.target;
+  const saveBtn = form.querySelector('button[type="submit"]');
+
   try {
+    // 3. Set loading state
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+    }
     // Rule: Ensure only one Active year
     await handleSingleActiveStatus(status);
 
@@ -156,7 +165,7 @@ async function handleAddAcademicYear(event) {
           error.message?.includes("year_label") ||
           error.details?.includes("year_label")
         ) {
-          showToast("This Academic Year is already been created.", "error");
+          showToast("This Academic Year has already been created.", "error");
           return;
         }
       }
@@ -168,6 +177,12 @@ async function handleAddAcademicYear(event) {
     await loadAcademicYears();
   } catch (err) {
     showToast(err.message, "error");
+  } finally {
+    // 5. Always restore button state
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save"; // Replace with your original text
+    }
   }
 }
 
@@ -242,7 +257,7 @@ async function handleEditAcademicYear(event) {
           error.message?.includes("year_label") ||
           error.details?.includes("year_label")
         ) {
-          showToast("This Academic Year is already been created.", "error");
+          showToast("This Academic Year has already been created.", "error");
           return;
         }
       }
