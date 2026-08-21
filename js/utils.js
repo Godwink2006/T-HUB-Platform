@@ -106,7 +106,7 @@ function renderNavigation(userRole) {
     "nav-rooms",
     "nav-periods",
     "nav-audit-logs",
-    "nav-semesters",
+    //"nav-semesters",
     "nav-academic-years",
     "changeSchoolLogo",
   ];
