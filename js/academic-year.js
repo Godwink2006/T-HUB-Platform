@@ -16,7 +16,7 @@ window.addEventListener("click", (e) => {
       unLockBodyScroll();
     }
   });
-});s
+});
 
 let academicYears = [];
 let selectedYearId = null;
