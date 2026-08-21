@@ -676,12 +676,12 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 450px; /* Fixed height requirement */
+    height: 650px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 0 !important;
     animation: modalShow 0.25s ease;
-    overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
   }
 
   @keyframes modalShow {
@@ -719,7 +719,7 @@ tr {
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .class-modal-content-body {
+  .class-modal-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
@@ -801,17 +801,6 @@ tr {
 
   .full-width {
     grid-column: 1 / -1;
-  }
-
-  /* Horizontal Modal Action Buttons with Space Between */
-  .edit-class-modal-footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
   }
 
   .cancel-btn,
