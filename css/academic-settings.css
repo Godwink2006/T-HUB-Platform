@@ -211,6 +211,7 @@ tr {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  cursor: pointer;
 }
 
 .academic-year-modal-content {
@@ -235,6 +236,7 @@ tr {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  cursor: pointer;
 }
 
 .terms-modal-content {
@@ -389,6 +391,7 @@ tr {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  cursor: pointer;
 }
 
 .edit-academic-year-modal-content {
@@ -446,6 +449,7 @@ tr {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  cursor: pointer;
 }
 
 .edit-terms-modal-content {
@@ -572,6 +576,7 @@ tr {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  cursor: pointer;
 }
 
 .archive-modal-footer {
