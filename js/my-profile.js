@@ -93,10 +93,18 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
 }
 
 // Add inside DOMContentLoaded:
-  document.getElementById("fullName")?.addEventListener("input", checkProfileChanges);
-  document.getElementById("emailAddress")?.addEventListener("input", checkProfileChanges);
-  document.getElementById("phoneNumber")?.addEventListener("input", checkProfileChanges);
-  document.getElementById("myProfilePhoto")?.addEventListener("change", checkProfileChanges);
+document
+  .getElementById("fullName")
+  ?.addEventListener("input", checkProfileChanges);
+document
+  .getElementById("emailAddress")
+  ?.addEventListener("input", checkProfileChanges);
+document
+  .getElementById("phoneNumber")
+  ?.addEventListener("input", checkProfileChanges);
+document
+  .getElementById("myProfilePhoto")
+  ?.addEventListener("change", checkProfileChanges);
 
 async function handleUpdateProfile(event) {
   if (event) event.preventDefault();
@@ -188,13 +196,34 @@ async function handleUpdateProfile(event) {
       })
       .eq("id", user.id);
 
-   if (updateError) throw updateError;
+    if (updateError) {
+      // Code 23505 is PostgreSQL's Unique Constraint Violation
+      if (updateError.code === "23505") {
+        // Check if the error message/details mention the phone field
+        if (
+          updateError.message?.includes("phone_number") ||
+          updateError.details?.includes("phone_number")
+        ) {
+          showToast(
+            "That phone number is already registered to another account.",
+            "error",
+          );
+          return;
+        }
+
+        // Fallback for email or other unique field collisions
+        showToast("An account with these details already exists.", "error");
+        return;
+      }
+
+      throw updateError;
+    }
 
     // 4. Feedback
     if (isEmailChanging) {
       showToast(
         "Profile saved! Check your new email address to confirm the change.",
-        "info"
+        "info",
       );
     } else {
       showToast("Profile updated successfully!", "success");
@@ -205,7 +234,6 @@ async function handleUpdateProfile(event) {
     // Add these lines right after: await loadMyProfile();
     if (fileInput) fileInput.value = "";
     checkProfileChanges();
-
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -221,7 +249,7 @@ function checkProfileChanges() {
   if (!saveBtn) return;
 
   // Always keep button clickable so form submit can trigger the toast
-  saveBtn.disabled = false; 
+  saveBtn.disabled = false;
 }
 
 function validateProfileInputs(fullName, email, phone) {
