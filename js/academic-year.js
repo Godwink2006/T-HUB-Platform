@@ -1,33 +1,27 @@
 const academicYearModal = document.getElementById("academicYearModal");
 
-window.addEventListener("click", (e) => {
-  if (e.target === academicYearModal) {
-    academicYearModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-});
-
 const editAcademicYearModal = document.getElementById("editAcademicYearModal");
-
-window.addEventListener("click", (e) => {
-  if (e.target === editAcademicYearModal) {
-    editAcademicYearModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-});
 
 const archiveAcademicYearModal = document.getElementById(
   "archiveAcademicYearModal",
 );
 
-window.addEventListener("click", (e) => {
-  if (e.target === archiveAcademicYearModal) {
-    archiveAcademicYearModal.style.display = "none";
+// Single event listener for all outer modal clicks/taps
+["pointerdown", "click"].forEach((eventType) => {
+  window.addEventListener(eventType, (e) => {
+    // Prevent duplicate triggers if pointerdown handles it first
+    if (eventType === "click" && e.detail > 0 && e.pointerType === "touch")
+      return;
 
-    unLockBodyScroll();
-  }
+    if (
+      e.target === academicYearModal ||
+      e.target === editAcademicYearModal ||
+      e.target === archiveAcademicYearModal
+    ) {
+      e.target.style.display = "none";
+      unLockBodyScroll();
+    }
+  });
 });
 
 let academicYears = [];
