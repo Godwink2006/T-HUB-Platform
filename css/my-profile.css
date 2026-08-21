@@ -170,6 +170,18 @@ body {
   color: #f9fafb;
 }
 
+.my-profile-upload {
+  display: flex;
+  flex-direction: row; /* Arranges the preview image and actions side-by-side */
+  align-items: center; /* Centers the button vertically alongside the image */
+  gap: 1.5rem; /* Adds spacing between the image and the button */
+}
+
+/* Optional: If you want the button on the left and image on the right */
+.avatar-upload-actions {
+  order: 1; /* Moves the upload button box to the left side of the image */
+}
+
 /* Column for Upload Button + File Name */
 .avatar-upload-actions {
   display: flex;
