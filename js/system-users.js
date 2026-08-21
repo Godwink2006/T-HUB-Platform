@@ -378,7 +378,7 @@ async function loadSystemUsers() {
   let query = supabaseClient
     .from("profiles")
     .select(
-      "id, full_name, email, phone_number, role, status, photo_url, is_archived, created_at",
+      "id, full_name, email, phone_number, role, status, photo_url, is_archived, created_at, updated_at",
     )
     .eq("is_archived", false)
     .not("role", "in", '("admin")');
