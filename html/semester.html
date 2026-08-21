@@ -23,7 +23,7 @@
       <main class="academic-main-content">
         <header class="topbar">
           <div>
-             <h2>Terms.</h2>
+            <h2>Semesters.</h2>
             <button
               onclick="window.location.href = 'settings.html'"
               class="back-academic-settings-btn"
@@ -31,19 +31,18 @@
               <i class="fa-solid fa-chevron-left"></i>
               Back
             </button>
-
           </div>
 
           <button id="addTerm" class="add-terms-btn">
             <i class="fa-solid fa-plus"></i>
-            Add Term
+            Add Semester
           </button>
         </header>
         <section class="terms-table-card">
           <table>
             <thead>
               <tr>
-                <th>Term</th>
+                <th>Semester</th>
                 <th>Academic Year</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -52,7 +51,7 @@
 
             <tbody>
               <tr>
-                <td>Term 1</td>
+                <td>1st Semester</td>
                 <td>2026-2027</td>
                 <td>
                   <span class="terms-status-active">Active</span>
@@ -70,7 +69,7 @@
               </tr>
 
               <tr>
-                <td>Term 2</td>
+                <td>2nd Semester</td>
                 <td>2026-2027</td>
                 <td>
                   <span class="terms-status-inactive">Active</span>
@@ -95,7 +94,7 @@
     <div id="termModal" class="modal-terms">
       <div class="terms-modal-content">
         <div class="terms-modal-header">
-          <h2>Add Term</h2>
+          <h2>Add Semester</h2>
 
           <button id="closeTermModal">&times;</button>
         </div>
@@ -112,9 +111,12 @@
               </div>
 
               <div class="form-group">
-                <label>Term Name *</label>
+                <label>Semester Name *</label>
 
-                <input type="text" placeholder="Enter term name" />
+                <select>
+                  <option>1st Semester</option>
+                  <option>2nd Semester</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -134,7 +136,7 @@
 
                 <select>
                   <option>Active</option>
-                  <option>Archive</option>
+                  <option>Inactive</option>
                 </select>
               </div>
             </div>
@@ -144,7 +146,7 @@
                 Cancel
               </button>
 
-              <button type="submit" class="save-btn">Save Term</button>
+              <button type="submit" class="save-btn">Save Semester</button>
             </div>
           </form>
         </div>
@@ -156,7 +158,7 @@
     <div id="editTermModal" class="edit-modal-terms">
       <div class="edit-terms-modal-content">
         <div class="edit-terms-modal-header">
-          <h2>Edit Term</h2>
+          <h2>Edit Semester</h2>
 
           <button id="closeEditTermModal">&times;</button>
         </div>
@@ -173,9 +175,12 @@
               </div>
 
               <div class="form-group">
-                <label>Term Name *</label>
+                <label>Semester Name *</label>
 
-                <input type="text" placeholder="Enter term name" />
+                <select>
+                  <option>1st Semester</option>
+                  <option>2nd Semester</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -195,7 +200,7 @@
 
                 <select>
                   <option>Active</option>
-                  <option>Archived</option>
+                  <option>Inactive</option>
                 </select>
               </div>
             </div>
@@ -205,7 +210,7 @@
                 Cancel
               </button>
 
-              <button type="submit" class="edit-btn">Update Term</button>
+              <button type="submit" class="edit-btn">Update</button>
             </div>
           </form>
         </div>
@@ -218,11 +223,11 @@
           <i class="fa-solid fa-box-archive"></i>
         </div>
 
-        <h2>Archive Term</h2>
+        <h2>Archive Semester</h2>
 
         <p>
-          Are you sure you want to archive this Term? Archived terms cannot be
-          used for new academic records.
+          Are you sure you want to archive this Semester? Archived semesters
+          cannot be used for new academic records.
         </p>
 
         <div class="archive-modal-footer">
