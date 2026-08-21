@@ -6,17 +6,17 @@ const archiveAcademicYearModal = document.getElementById(
   "archiveAcademicYearModal",
 );
 
-// Listener that waits for a full tap/click instead of immediate touch down
 window.addEventListener("click", (e) => {
-  if (
-    e.target === academicYearModal ||
-    e.target === editAcademicYearModal ||
-    e.target === archiveAcademicYearModal
-  ) {
-    e.target.style.display = "none";
-    unLockBodyScroll();
-  }
-});
+  const modals = [academicYearModal, editAcademicYearModal, archiveAcademicYearModal];
+
+  modals.forEach((modal) => {
+    // Check if the modal is currently open AND the click was on the dark backdrop itself
+    if (modal && modal.style.display === "flex" && e.target === modal) {
+      modal.style.display = "none";
+      unLockBodyScroll();
+    }
+  });
+});s
 
 let academicYears = [];
 let selectedYearId = null;
