@@ -249,8 +249,8 @@ async function handleEditAcademicYear(event) {
     // Inside handleEditAcademicYear:
     if (error) {
       toast.error("Error updating academic year: " + error.message);
-    } else if (!data || data.length === 0) {
-      toast.error("No academic year found to update.");
+    } else if (!error || error.length === 0) {
+      toast.error("Permission denied.");
     } else {
       showToast("Academic Year updated successfully!", "success");
       closeModal("editAcademicYearModal");
