@@ -231,31 +231,32 @@ async function handleEditAcademicYear(event) {
     // Rule: Ensure only one Active year
     await handleSingleActiveStatus(status, selectedYearId);
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("academic_years")
       .update({ status })
       .eq("id", selectedYearId)
       .select(); // Optional: Fetch updated record if needed
 
-    // Inside handleEditAcademicYear:
+    // Handle Supabase Database Errors
     if (error) {
       if (error.code === "23505") {
         showToast("This Academic Year has already been created.", "error");
         return;
       }
-      throw error; // Catch-all for other update errors
+      showToast("Error updating academic year: " + error.message, "error");
+      return;
     }
 
-    // Inside handleEditAcademicYear:
-    if (error) {
-      toast.error("Error updating academic year: " + error.message);
-    } else if (!error || error.length === 0) {
-      toast.error("Permission denied.");
-    } else {
-      showToast("Academic Year updated successfully!", "success");
-      closeModal("editAcademicYearModal");
-      await loadAcademicYears();
+    // Handle RLS / Permission Denied (No rows updated)
+    if (!data || data.length === 0) {
+      showToast("Permission denied.", "error");
+      return;
     }
+
+    // Success Case
+    showToast("Academic Year updated successfully!", "success");
+    closeModal("editAcademicYearModal");
+    await loadAcademicYears();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
