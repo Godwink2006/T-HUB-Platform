@@ -102,14 +102,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 function renderNavigation(userRole) {
   const adminOnlyLinks = [
     "nav-system-users",
-    "nav-academic-settings",
     "nav-departments",
     "nav-rooms",
     "nav-periods",
     "nav-audit-logs",
     "nav-semesters",
     "nav-academic-years",
-    //"changeSchoolLogo",
+    "changeSchoolLogo",
   ];
 
   const isAdmin = userRole === "admin";

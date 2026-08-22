@@ -69,26 +69,26 @@ function disableFormInputs(form) {
     'input, select, textarea, button[type="submit"]',
   );
   inputs.forEach((input) => {
-    input.disabled = false;
+    input.disabled = true;
   });
 
   // Hide the save button completely
   const saveBtn = form.querySelector('.save-btn, button[type="submit"]');
   if (saveBtn) {
-    saveBtn.style.display = "flex";
+    saveBtn.style.display = "none";
   }
 
   // Disable and hide the reset button
   const resetBtn = form.querySelector('.reset-btn, button[type="reset"]');
   if (resetBtn) {
-    resetBtn.disabled = false;
-    resetBtn.style.display = "flex";
+    resetBtn.disabled = true;
+    resetBtn.style.display = "none";
   }
 
   // Hide the logo file input for non-admins
   const logoInput = document.getElementById("schoolLogo"); // or the ID of your file input
   if (logoInput) {
-    logoInput.style.display = "flex";
+    logoInput.style.display = "none";
   }
 }
 
@@ -406,22 +406,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const logoInput = document.getElementById("schoolLogo");
-const logoPreview = document.getElementById("schoolLogoPreview");
+  const logoPreview = document.getElementById("schoolLogoPreview");
 
-if (logoInput && logoPreview) {
-  logoInput.addEventListener("change", (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      
-      // When the reader finishes reading the file, update the image src
-      reader.onload = (e) => {
-        logoPreview.src = e.target.result;
-      };
-      
-      // Read the image file as a Data URL
-      reader.readAsDataURL(file);
-    }
-  });
-}
+  if (logoInput && logoPreview) {
+    logoInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+
+        // When the reader finishes reading the file, update the image src
+        reader.onload = (e) => {
+          logoPreview.src = e.target.result;
+        };
+
+        // Read the image file as a Data URL
+        reader.readAsDataURL(file);
+      }
+    });
+  }
 });
