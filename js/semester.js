@@ -132,7 +132,7 @@ function formatDate(dateString) {
   });
 }
 
-// --- 2. SINGLE ACTIVE SEMESTER ENFORCEMENT ---
+// --- GLOBAL SINGLE ACTIVE SEMESTER ENFORCEMENT ---
 async function handleSingleActiveStatus(
   requestedStatus,
   currentRecordId = null,
@@ -141,14 +141,17 @@ async function handleSingleActiveStatus(
     let query = supabaseClient
       .from("terms")
       .update({ status: "Inactive" })
-      .eq("status", "Active");
+      .eq("status", "Active"); // Deactivates ANY active semester globally
 
     if (currentRecordId) {
       query = query.neq("id", currentRecordId);
     }
 
     const { error } = await query;
-    if (error) throw error;
+    if (error) {
+      console.error("Failed to deactivate active semesters:", error);
+      throw error;
+    }
   }
 }
 
@@ -218,18 +221,52 @@ async function handleAddTerm(event) {
       .select();
 
     if (error) {
-      if (error.code === "23505") {
-        showToast(
-          "This semester already exists for the selected year.",
-          "error",
-        );
+      // 1. Custom Trigger & Check Constraint Violations (Database Exception / Code 23514)
+      if (error.code === "P0001" || error.code === "23514") {
+        // Strip technical prefix if present, otherwise display clean message
+        const cleanMessage = error.message
+          .replace(/^.*EXCEPTION:\s*/i, "")
+          .replace(/^.*chk_\w+:\s*/i, "");
+        showToast(cleanMessage, "error");
         return;
       }
+      // 1. Check Constraint Violations (Code 23514)
+      if (error.code === "23514" || error.message.includes("chk_date_order")) {
+        showToast("End Date must be after the Start Date.", "error");
+        return;
+      }
+
+      if (error.code === "23505") {
+        // Check which unique constraint was violated
+        if (error.message.includes("idx_global_single_active_term")) {
+          showToast(
+            "Another semester is already marked as Active. Deactivate it first.",
+            "error",
+          );
+        } else {
+          // Add inside handleAddTerm before supabaseClient.from("terms").insert(...)
+          const isDuplicate = terms.some(
+            (t) => t.academic_year_id === academicYearId && t.name === name,
+          );
+
+          if (isDuplicate) {
+            showToast(
+              `"${name}" already exists for the selected academic year.`,
+              "error",
+            );
+            return;
+          }
+        }
+        return;
+      }
+
       if (error.code === "42501") {
         showToast("You do not have permission to add a semester.", "error");
         return;
       }
-      showToast(error.message, "error");
+
+      // Fallback: Display raw Postgres error detail/message directly
+      showToast(error.details || error.message, "error");
       return;
     }
 
@@ -302,7 +339,6 @@ async function handleEditTerm(event) {
       updateBtn.disabled = true;
       updateBtn.textContent = "Updating...";
     }
-
     await handleSingleActiveStatus(status, selectedTermId);
 
     const { data, error } = await supabaseClient
