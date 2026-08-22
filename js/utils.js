@@ -108,7 +108,6 @@ function renderNavigation(userRole) {
     "nav-periods",
     "nav-audit-logs",
     "nav-semesters",
-    "nav-academic-years",
     "changeSchoolLogo",
   ];
 
