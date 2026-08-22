@@ -45,47 +45,15 @@
                 <th>Semester</th>
                 <th>Academic Year</th>
                 <th>Status</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th>Actions</th>
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>1st Semester</td>
-                <td>2026-2027</td>
-                <td>
-                  <span class="terms-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="terms-actions-btn edit-term">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="terms-actions-btn archive-term">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>2nd Semester</td>
-                <td>2026-2027</td>
-                <td>
-                  <span class="terms-status-inactive">Active</span>
-                </td>
-
-                <td>
-                  <button class="terms-actions-btn edit-term">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="terms-actions-btn archive-term">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </section>
       </main>
@@ -105,15 +73,15 @@
               <div class="form-group">
                 <label>Academic Year *</label>
 
-                <select>
-                  <option>2026/2027</option>
+                <select id="addAcademicYearSelect">
+                  <option value="">Loading active years...</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Semester Name *</label>
 
-                <select>
+                <select id="addSemesterNameSelect">
                   <option>1st Semester</option>
                   <option>2nd Semester</option>
                 </select>
@@ -122,21 +90,21 @@
               <div class="form-group">
                 <label>Start Date *</label>
 
-                <input type="date" />
+                <input type="date" id="addStartDate" />
               </div>
 
               <div class="form-group">
                 <label>End Date *</label>
 
-                <input type="date" />
+                <input type="date" id="addEndDate" />
               </div>
 
               <div class="form-group">
                 <label>Status *</label>
 
-                <select>
-                  <option>Active</option>
-                  <option>Inactive</option>
+                <select id="addStatusSelect">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
@@ -164,20 +132,20 @@
         </div>
 
         <div class="edit-terms-modal-body">
-          <form id="termForm">
+          <form id="editTermForm">
             <div class="form-grid">
               <div class="form-group">
                 <label>Academic Year *</label>
 
-                <select>
-                  <option>2026/2027</option>
+                <select id="editAcademicYearSelect">
+                  <option value="">Loading active years...</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Semester Name *</label>
 
-                <select>
+                <select id="editSemesterNameSelect">
                   <option>1st Semester</option>
                   <option>2nd Semester</option>
                 </select>
@@ -186,21 +154,21 @@
               <div class="form-group">
                 <label>Start Date *</label>
 
-                <input type="date" />
+                <input type="date" id="editStartDate" />
               </div>
 
               <div class="form-group">
                 <label>End Date *</label>
 
-                <input type="date" />
+                <input type="date" id="editEndDate" />
               </div>
 
               <div class="form-group">
                 <label>Status *</label>
 
-                <select>
-                  <option>Active</option>
-                  <option>Inactive</option>
+                <select id="editStatusSelect">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
