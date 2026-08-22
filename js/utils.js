@@ -108,7 +108,8 @@ function renderNavigation(userRole) {
     "nav-periods",
     "nav-audit-logs",
     "nav-semesters",
-    "changeSchoolLogo",
+    "nav-academic-years",
+    //"changeSchoolLogo",
   ];
 
   const isAdmin = userRole === "admin";
@@ -155,7 +156,7 @@ function showToast(message, type = "success", duration = 3000) {
 // CENTRALIZED SESSION & API UTILITIES
 // ==========================================
 
-const INACTIVITY_LIMIT = 60 * 15 * 1000; // 30 seconds testing
+const INACTIVITY_LIMIT = 60 * 30 * 1000; // 30 seconds testing
 let inactivityTimer;
 
 // Helper function: Check if current page is the login page

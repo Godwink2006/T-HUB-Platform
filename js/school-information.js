@@ -69,26 +69,26 @@ function disableFormInputs(form) {
     'input, select, textarea, button[type="submit"]',
   );
   inputs.forEach((input) => {
-    input.disabled = true;
+    input.disabled = false;
   });
 
   // Hide the save button completely
   const saveBtn = form.querySelector('.save-btn, button[type="submit"]');
   if (saveBtn) {
-    saveBtn.style.display = "none";
+    saveBtn.style.display = "flex";
   }
 
   // Disable and hide the reset button
   const resetBtn = form.querySelector('.reset-btn, button[type="reset"]');
   if (resetBtn) {
-    resetBtn.disabled = true;
-    resetBtn.style.display = "none";
+    resetBtn.disabled = false;
+    resetBtn.style.display = "flex";
   }
 
   // Hide the logo file input for non-admins
   const logoInput = document.getElementById("schoolLogo"); // or the ID of your file input
   if (logoInput) {
-    logoInput.style.display = "none";
+    logoInput.style.display = "flex";
   }
 }
 

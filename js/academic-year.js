@@ -145,19 +145,32 @@ async function handleAddAcademicYear(event) {
     // Rule: Ensure only one Active year
     await handleSingleActiveStatus(status);
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("academic_years")
-      .insert([{ year_label: yearLabel, status, is_archived: false }]);
+      .insert([{ year_label: yearLabel, status, is_archived: false }])
+      .select();
 
-    // Inside handleAddAcademicYear:
+    // 1. Handle Database Execution Errors
     if (error) {
       if (error.code === "23505") {
         showToast("This Academic Year has already been created.", "error");
-        return; // Exits early safely
+        return;
       }
-      throw error; // Prevents "success" toast from firing on other database errors
+      // Handle Row-Level Security / Permission Violation
+      if (error.code === "42501") {
+        showToast(
+          "You do not have permission to add an academic year.",
+          "error",
+        );
+        return;
+      }
+
+      // Fallback for other errors
+      showToast(error.message, "error");
+      return;
     }
 
+    // 3. Success Flow
     showToast("Academic Year added successfully!", "success");
     closeModal("academicYearModal");
     document.getElementById("academicYearForm").reset();
@@ -287,13 +300,25 @@ async function handleConfirmArchive() {
       archiveBtn.textContent = "Archiving...";
     }
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("academic_years")
       .update({ is_archived: true, status: "Inactive" }) // Soft delete flag
-      .eq("id", selectedYearId);
+      .eq("id", selectedYearId)
+      .select();
 
-    if (error) throw error;
+    // 2. Handle database execution errors
+    if (error) {
+      showToast("Error archiving academic year: " + error.message, "error");
+      return;
+    }
 
+    // 3. Handle RLS / Permission issues (query succeeds, but 0 rows are modified)
+    if (!data || data.length === 0) {
+      showToast("Permission denied.", "error");
+      return;
+    }
+
+    // 4. Success flow
     showToast("Academic year archived successfully!", "success");
     closeModal("archiveAcademicYearModal");
     await loadAcademicYears();
