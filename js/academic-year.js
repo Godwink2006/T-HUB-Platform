@@ -234,7 +234,8 @@ async function handleEditAcademicYear(event) {
     const { error } = await supabaseClient
       .from("academic_years")
       .update({ status })
-      .eq("id", selectedYearId);
+      .eq("id", selectedYearId)
+      .select(); // Optional: Fetch updated record if needed
 
     // Inside handleEditAcademicYear:
     if (error) {
@@ -245,11 +246,16 @@ async function handleEditAcademicYear(event) {
       throw error; // Catch-all for other update errors
     }
 
-    if (error) throw error;
-
-    showToast("Academic Year updated successfully!", "success");
-    closeModal("editAcademicYearModal");
-    await loadAcademicYears();
+    // Inside handleEditAcademicYear:
+    if (error) {
+      toast.error("Error updating academic year: " + error.message);
+    } else if (!data || data.length === 0) {
+      toast.error("No academic year found to update.");
+    } else {
+      showToast("Academic Year updated successfully!", "success");
+      closeModal("editAcademicYearModal");
+      await loadAcademicYears();
+    }
   } catch (err) {
     showToast(err.message, "error");
   } finally {
