@@ -268,6 +268,212 @@ document
   .getElementById("departmentForm")
   .addEventListener("submit", handleAddClass);
 
+// Rename this function to avoid overwriting async function openEditModal
+function showModalById(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "flex";
+    lockBodyScroll();
+  }
+}
+
+let originalDepartmentData = null;
+
+// 1. Open Edit Modal & Populate Form Data
+async function openEditModal(departmentId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("departments")
+      .select("*")
+      .eq("id", departmentId)
+      .single();
+
+    if (error || !data) {
+      showToast("Failed to fetch department details.", "error");
+      return;
+    }
+
+    // Cache original values to detect changes later
+    originalDepartmentData = { ...data };
+
+    // Fill form fields
+    document.getElementById("editDepartmentId").value = data.id;
+    document.getElementById("editDepartmentName").value = data.name;
+    document.getElementById("editStatus").value = data.status;
+    document.getElementById("editDescription").value = data.description || "";
+
+    showModalById("editDepartmentModal");
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+// 2. Form Submit Handler for Updating
+async function handleEditDepartment(event) {
+  event.preventDefault();
+
+  const departmentId = document.getElementById("editDepartmentId").value;
+  const name = document.getElementById("editDepartmentName").value.trim();
+  const status = document.getElementById("editStatus").value;
+  const description = document.getElementById("editDescription").value.trim();
+
+  // Basic validation
+  if (!name || !status) {
+    showToast("Please fill in all required fields.", "error");
+    return;
+  }
+
+  // Check if any value changed
+  const isUnchanged =
+    originalDepartmentData &&
+    originalDepartmentData.name === name &&
+    originalDepartmentData.status === status &&
+    (originalDepartmentData.description || "") === description;
+
+  if (isUnchanged) {
+    showToast("No changes detected.", "info");
+    return;
+  }
+
+  const form = event.target;
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Updating...";
+    }
+
+    const { data, error } = await supabaseClient
+      .from("departments")
+      .update({
+        name,
+        status,
+        description: description || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", departmentId)
+      .select(); // <--- ADD .select() to return the updated row
+
+    if (error) {
+      if (error.code === "23505") {
+        showToast("This department name already exists.", "error");
+        return;
+      }
+
+      // 2. Handle RLS silent block (0 rows modified)
+      if (!data || data.length === 0) {
+        showToast(
+          "Permission denied: Only active admins can archive departments.",
+          "error",
+        );
+        return;
+      }
+
+      showToast(error.message, "error");
+      return;
+    }
+
+    showToast("Department updated successfully!", "success");
+    // Close modal
+    editDepartmentModal.style.display = "none";
+    unLockBodyScroll();
+    await loadDepartments(); // Refresh main table
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Update";
+    }
+  }
+}
+
+// Attach Event Listeners
+document
+  .getElementById("editDepartmentForm")
+  .addEventListener("submit", handleEditDepartment);
+
+let departmentToArchiveId = null;
+
+// 1. Open Archive Confirmation Modal
+function openArchiveModal(departmentId) {
+  departmentToArchiveId = departmentId;
+
+  const archiveModal = document.getElementById("archiveDepartmentModal");
+  if (archiveModal) {
+    archiveModal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+  }
+}
+
+async function handleConfirmArchive() {
+  if (!departmentToArchiveId) return;
+
+  const confirmBtn = document.getElementById("confirmArchive");
+  const archiveModal = document.getElementById("archiveDepartmentModal");
+
+  try {
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Archiving...";
+    }
+
+    // Archiving is an UPDATE operation in Supabase
+    const { data, error } = await supabaseClient
+      .from("departments")
+      .update({
+        is_archived: true,
+        status: "inactive",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", departmentToArchiveId)
+      .select(); // <--- ADD .select() to return the updated row
+
+    // 1. Handle hard database errors
+    if (error) {
+      showToast(
+        "Permission denied: Only active admins can archive departments.",
+        "error",
+      );
+      return;
+    }
+
+    // 2. Handle RLS silent block (0 rows modified)
+    if (!data || data.length === 0) {
+      showToast(
+        "Permission denied: Only active admins can archive departments.",
+        "error",
+      );
+      return;
+    }
+
+    // 3. True success
+    showToast("Department archived successfully!", "success");
+
+    // Close modal using direct DOM manipulation
+    if (archiveModal) {
+      archiveModal.style.display = "none";
+      if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+    }
+
+    departmentToArchiveId = null;
+    await loadDepartments(); // Reload active departments table
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Archive";
+    }
+  }
+}
+
+// Attach Confirm Event Listener
+document
+  .getElementById("confirmArchive")
+  ?.addEventListener("click", handleConfirmArchive);
+
 // Add this at the bottom of your file
 document.addEventListener("DOMContentLoaded", () => {
   loadDepartments();
