@@ -123,42 +123,10 @@ body {
   border-radius: 10px;
 }
 
-.setting-card h4 {
-  color: #6b7280;
-  font-size: 25px;
-  font-weight: 500;
-}
-
-.settings-card h4 {
-  color: #6b7280;
-  font-size: 25px;
-  font-weight: 500;
-}
-
 .setting-card h2 {
   margin-top: 15px;
   font-size: 25px;
   color: #1f2937;
-}
-
-.manage-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  border: none;
-  background: #2563eb;
-  color: #ffff;
-  cursor: pointer;
-  font-size: 14px;
-  width: 100%;
-  justify-content: space-between;
-  border-radius: 10px;
-}
-
-.settings-card {
-  background: #fff;
-  padding: 20px;
 }
 
 .button-group {
@@ -168,24 +136,44 @@ body {
   margin-top: 15px;
 }
 
-.manage-setting-btn {
-  width: 100%;
+.setting-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
   display: flex;
+  flex-direction: column; /* Stacks title, description, and button vertically */
   justify-content: space-between;
-  align-items: center;
-  padding: 10px 18px;
-  border: none;
-  background: #2563eb;
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 10px;
+  align-items: flex-start;
+  min-height: 160px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.setting-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  color: #333333;
 }
 
 .setting-card p {
-  margin-top: 8px;
-  color: #328154;
-  font-size: 14px;
+  margin: 0 0 20px 0;
+  color: #666666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.setting-card .manage-btn {
+  width: 100%; /* Spans full card width nicely at the bottom */
+  padding: 10px 16px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
 }
 
 /* ==========================================

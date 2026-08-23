@@ -9,6 +9,7 @@ function renderNavigation(userRole) {
     "nav-semesters",
     "nav-academic-years",
     "changeSchoolLogo",
+    ""
   ];
 
   const isAdmin = userRole === "admin";
@@ -119,7 +120,7 @@ async function initSettingsPage() {
             Manage Classes <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
-        
+
         <div id="nav-departments" class="setting-card">
           <h4>Department</h4>
           <p>Manage and create departments.</p>
