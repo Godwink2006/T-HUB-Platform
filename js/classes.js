@@ -120,24 +120,17 @@ async function handleConfirmArchive() {
         status: "inactive",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", classToArchiveId)
-      .select(); // <--- ADD .select() to return the updated row
+      .eq("id", classToArchiveId);
 
-    // 1. Handle hard database errors
     if (error) {
-      showToast(
-        "Permission denied: Only active admins can archive classes.",
-        "error",
-      );
-      return;
-    }
-
-    // 2. Handle RLS silent block (0 rows modified)
-    if (!data || data.length === 0) {
-      showToast(
-        "Permission denied: Only active admins can archive classes.",
-        "error",
-      );
+      if (error.code === "42501") {
+        showToast(
+          "Permission denied: Only active admins can archive classes.",
+          "error",
+        );
+      } else {
+        showToast(error.message, "error");
+      }
       return;
     }
 
@@ -155,7 +148,7 @@ async function handleConfirmArchive() {
       confirmBtn.textContent = "Archive";
     }
   }
-}
+  }
 
 // Attach Confirm Event Listener
 document

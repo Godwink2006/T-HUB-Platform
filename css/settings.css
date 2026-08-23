@@ -118,6 +118,7 @@ body {
   background: #ffff;
   padding: 20px;
   border: 2px solid rgb(219, 215, 215);
+  border-radius: 10px;
 }
 
 .setting-card h4 {
@@ -150,6 +151,7 @@ body {
   font-size: 14px;
   width: 100%;
   justify-content: space-between;
+  border-radius: 10px;
 }
 
 .settings-card {
@@ -175,6 +177,7 @@ body {
   color: #fff;
   cursor: pointer;
   font-size: 14px;
+  border-radius: 10px;
 }
 
 .setting-card p {
