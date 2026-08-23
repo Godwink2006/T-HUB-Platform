@@ -60,7 +60,7 @@ body {
   border: 2px solid #14532d;
 }
 
-.back-academics-btn {
+.back-academic-settings-btn {
   width: auto;
   height: 30px;
   padding: 10px;
@@ -505,7 +505,7 @@ tr {
     width: 100% !important;
   }
 
-  .back-academics-btn {
+  .back-academic-settings-btn {
     grid-column: 1;
     width: auto !important;
     height: 40px !important;

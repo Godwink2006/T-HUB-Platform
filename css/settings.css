@@ -68,11 +68,13 @@ body {
 
 .menu li a:hover {
   background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
 }
 
 .menu li.active a {
   background: #fff;
   color: #1d4ed8;
+  border-radius: 10px;
 }
 
 .menu li a i {

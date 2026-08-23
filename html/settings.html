@@ -1,194 +1,269 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-        <title>High School Management System</title>
-    <link rel="stylesheet" href="/css/settings.css">
-    <link rel="preconnect" href="https://fontsgoogleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/settings.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
     <link rel="stylesheet" href="/css/utils.css" />
-</head>
-<body>
-
+  </head>
+  <body>
     <div class="academics-container">
+      <!-- Mobile Toggle Button -->
+      <button
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Toggle Navigation"
+      >
+        <i class="fa-solid fa-bars"></i>
+        <!-- Or use "☰" text if not using FontAwesome -->
+      </button>
 
-        <!-- Mobile Toggle Button -->
-<button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
-  <i class="fa-solid fa-bars"></i> <!-- Or use "☰" text if not using FontAwesome -->
-</button>
+      <!-- Overlay background to tap outside and close -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- Overlay background to tap outside and close -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar">
+        <div class="logo">
+          <img
+            id="appHeaderLogo"
+            src="https://api.dicebear.com/7.x/initials/svg?seed=School"
+            alt="School Logo"
+          />
+          <h2>HSMS</h2>
+        </div>
 
-<aside class="sidebar">
-    <div class="logo">
-        <img id="appHeaderLogo" src="https://api.dicebear.com/7.x/initials/svg?seed=School" alt="School Logo" />
-        <h2>HSMS</h2>
-    </div>
-
-    <ul class="menu">
-        <li>
+        <ul class="menu">
+          <li>
             <a href="dashboard.html">
-                <i class="fa-solid fa-house"></i>
-                <span>Dashboard</span>
+              <i class="fa-solid fa-house"></i>
+              <span>Dashboard</span>
             </a>
-        </li>
+          </li>
 
           <li>
             <a href="students.html">
-                <i class="fa-solid fa-user-graduate"></i>
-                <span>Students</span>
+              <i class="fa-solid fa-user-graduate"></i>
+              <span>Students</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="teachers.html">
-                <i class="fa-solid fa-chalkboard-user"></i>
-                <span>Teachers</span>
+              <i class="fa-solid fa-chalkboard-user"></i>
+              <span>Teachers</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="academics.html">
-                <i class="fa-solid fa-book"></i>
-                <span>Academics</span>
+              <i class="fa-solid fa-book"></i>
+              <span>Academics</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="finance.html">
-                <i class="fa-solid fa-money-bill-wave"></i>
-                <span>Finance</span>
+              <i class="fa-solid fa-money-bill-wave"></i>
+              <span>Finance</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="library.html">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Library</span>
+              <i class="fa-solid fa-book-open"></i>
+              <span>Library</span>
             </a>
-        </li>
+          </li>
 
-           <li>
+          <li>
             <a href="reports.html">
-                <i class="fa-solid fa-chart-line"></i>
-                <span>Reports</span>
+              <i class="fa-solid fa-chart-line"></i>
+              <span>Reports</span>
             </a>
-        </li>
+          </li>
 
-           <li  class="active">
+          <li class="active">
             <a href="#">
-                <i class="fa-solid fa-gear"></i>
-                <span>Settings</span>
+              <i class="fa-solid fa-gear"></i>
+              <span>Settings</span>
             </a>
-        </li>
-    </ul>
-</aside>
+          </li>
+        </ul>
+      </aside>
 
-<main class="settings-main-content">
-<header class="topbar">
-    <div>
-        <h1>Settings</h1>
-        <p>Confiqure settings.</p>
+      <main class="settings-main-content">
+        <header class="topbar">
+          <div>
+            <h1>Settings</h1>
+            <p>Configure settings.</p>
+          </div>
+        </header>
+
+        <section class="setting-cards">
+          <div id="nav-semesters" class="setting-card">
+            <h4>Semester</h4>
+            <p>Create and manage Semesters.</p>
+            <button
+              onclick="window.location.href = 'semester.html'"
+              class="manage-btn"
+            >
+              Manage Semesters
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div id="nav-academic-years" class="setting-card">
+            <h4>Academic Year</h4>
+            <p>Create and manage Academic Year.</p>
+            <button
+              onclick="window.location.href = 'academic-year.html'"
+              class="manage-btn"
+            >
+              Manage Academic Year
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div id="nav-system-users" class="setting-card">
+            <h4>System Users</h4>
+            <p>Manage and create users.</p>
+            <button
+              onclick="window.location.href = 'system-users.html'"
+              class="manage-btn"
+            >
+              Manage Users
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="setting-card">
+            <h4>My Profile</h4>
+            <p>Manage profile.</p>
+            <button
+              onclick="window.location.href = 'my-profile.html'"
+              class="manage-btn"
+            >
+              Manage Profile
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="setting-card">
+            <h4>Fee Structures</h4>
+            <p>Create and manage fee structures.</p>
+            <button
+              onclick="window.location.href = 'structures.html'"
+              class="manage-btn"
+            >
+              Manage Structures
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="setting-card">
+            <h4>Subjects</h4>
+            <p>Create and manage all school subjects.</p>
+            <button
+              onclick="window.location.href = 'subjects.html'"
+              class="manage-btn"
+            >
+              Manage Subjects
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="setting-card">
+            <h4>Classes</h4>
+            <p>Create and manage all school classes.</p>
+            <button
+              onclick="window.location.href = 'classes.html'"
+              class="manage-btn"
+            >
+              Manage Classes
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div id="nav-departments" class="setting-card">
+            <h4>Department</h4>
+            <p>Manage and create departments.</p>
+            <button
+              onclick="window.location.href = 'department.html'"
+              class="manage-btn"
+            >
+              Manage Departments
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div id="nav-rooms" class="setting-card">
+            <h4>Room</h4>
+            <p>Create and manage rooms.</p>
+            <button
+              onclick="window.location.href = 'rooms.html'"
+              class="manage-btn"
+            >
+              Manage Rooms
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div id="nav-periods" class="setting-card">
+            <h4>Periods</h4>
+            <p>Manage and create periods.</p>
+            <button
+              onclick="window.location.href = 'periods.html'"
+              class="manage-btn"
+            >
+              Manage Periods
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="setting-card">
+            <h4>School Information</h4>
+            <p>Manage or view school information.</p>
+            <button
+              onclick="window.location.href = 'school-information.html'"
+              class="manage-btn"
+            >
+              View School Information
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div id="nav-audit-logs" class="setting-card">
+            <h4>Audit Logs</h4>
+            <p>View audit logs.</p>
+            <button
+              onclick="window.location.href = 'audit-logs.html'"
+              class="manage-btn"
+            >
+              View Audit Logs
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </section>
+      </main>
     </div>
 
-    </header>
-
-    <section class="setting-cards">
-    <div class="setting-card">
-        <h4>School Information</h4>
-        <p>Manage or view school information.</p>
-            <button onclick="window.location.href='school-information.html'" class="manage-btn">View School Information
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-    </div>
-
-     <div id="nav-academic-years" class="setting-card">
-        <h4>Academic Year</h4>
-        <p>Create and manage Academic Year.</p>
-            <button onclick="window.location.href='academic-year.html'" class="manage-btn">Manage Academic Year
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-    </div>
-
-     <div id="nav-semesters" class="setting-card">
-        <h4>Semester</h4>
-        <p>Create and manage Semesters.</p>
-            <button onclick="window.location.href='semester.html'" class="manage-btn">Manage Semesters
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-    </div>
-
-     <div id="nav-departments" class="setting-card">
-        <h4>Department</h4>
-        <p>Manage and create departments. </p>
-            <button onclick="window.location.href='department.html'" class="manage-btn">Manage Departments
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-    </div>
-
-     <div id="nav-rooms" class="setting-card">
-        <h4>Room</h4>
-        <p>Create and manage rooms.</p>
-        <button onclick="window.location.href='rooms.html'" class="manage-btn">Manage Rooms
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-
-    </div>
-
-     <div id="nav-periods" class="setting-card">
-        <h4>Periods</h4>
-        <p>Manage and create periods.</p>
-        <button onclick="window.location.href='periods.html'" class="manage-btn">Manage Periods
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-
-    </div>
-
-        <div  id="nav-system-users" class="setting-card">
-        <h4>System Users</h4>
-        <p>Manage and create users.</p>
-        <button onclick="window.location.href='system-users.html'" class="manage-btn">Manage Users
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-
-    </div>
-
-         <div class="setting-card">
-        <h4>My Profile</h4>
-        <p>Manage profile.</p>
-        <button onclick="window.location.href='my-profile.html'" class="manage-btn">Manage Profile
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-
-    </div>
-
-
-             <div id="nav-audit-logs" class="setting-card">
-        <h4>Audit Logs</h4>
-        <p>View audit logs.</p>
-        <button onclick="window.location.href='audit-logs.html'" class="manage-btn">View Audit Logs
-    <i class="fa-solid fa-chevron-right"></i>
- </button>
-
-    </div>
-
-    </div>
-</section>
-   
-</main>
-
-    </div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/supabase.js"></script>
-<script src="/js/utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
     <script src="/js/settings.js"></script>
-</body>
+  </body>
 </html>
