@@ -35,14 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editItemModal) editItemModal.style.display = "none";
   });
 
-  // 3. Delete Item Modal
-  const deleteItemModal = document.getElementById("deleteItemModal");
-  const cancelDelete = document.getElementById("cancelDelete");
-
-  cancelDelete?.addEventListener("click", () => {
-    if (deleteItemModal) deleteItemModal.style.display = "none";
-  });
-
   // 4. Structure Modal
   const structureModal = document.getElementById("structureModal");
   const cancelStructureModal = document.getElementById("cancelStructureModal");
@@ -353,4 +345,217 @@ document.addEventListener("DOMContentLoaded", () => {
   academicYearSelect?.addEventListener("change", (e) => {
     fetchSemestersForYear(e.target.value);
   });
+});
+
+// Function to handle database insertion
+async function saveFeeStructure(shouldPrint = false) {
+  const academicYearId = document.getElementById("academicYearSelect")?.value;
+  const termId = document.getElementById("semesterSelect")?.value;
+  const classId = document.getElementById("classSelect")?.value;
+  const status = document.getElementById("statusSelect")?.value || "Active";
+
+  // 1. Validation
+  if (!academicYearId || !termId || !classId) {
+    alert("Please select Academic Year, Semester, and Class.");
+    return;
+  }
+
+  if (tempFeeItems.length === 0) {
+    alert("Please add at least one fee item before saving.");
+    return;
+  }
+
+  // Calculate total amount from local items
+  const totalAmount = tempFeeItems.reduce(
+    (sum, item) => sum + Number(item.amount),
+    0,
+  );
+
+  // Disable save buttons to prevent duplicate submissions
+  const saveBtn = document.getElementById("saveStructureBtn");
+  const saveAndPrintBtn = document.getElementById("saveAndPrintBtn");
+  if (saveBtn) saveBtn.disabled = true;
+  if (saveAndPrintBtn) saveAndPrintBtn.disabled = true;
+
+  try {
+    // 2. Insert Parent Record into fee_structures
+    const { data: structureData, error: structureError } = await supabaseClient
+      .from("fee_structures")
+      .insert([
+        {
+          academic_year_id: academicYearId,
+          term_id: termId,
+          class_id: classId,
+          status: status,
+          total_amount: totalAmount,
+        },
+      ])
+      .select()
+      .single();
+
+    if (structureError) throw structureError;
+
+    // 3. Map temporary fee items with the returned parent ID
+    const itemsToInsert = tempFeeItems.map((item) => ({
+      fee_structure_id: structureData.id,
+      fee_name: item.name,
+      amount: item.amount,
+    }));
+
+    // 4. Batch insert Child Records into fee_structure_items
+    const { error: itemsError } = await supabaseClient
+      .from("fee_structure_items")
+      .insert(itemsToInsert);
+
+    if (itemsError) throw itemsError;
+
+    alert("Fee Structure saved successfully!");
+
+    // 5. Check if user clicked Save & Print
+    if (shouldPrint) {
+      window.print(); // Triggers print dialog (or replace with your specific PDF/Print utility)
+    }
+
+    loadFeeStructures();
+    // 6. Reset Form & Local Array State
+    tempFeeItems = [];
+    renderTempFeeItems();
+    document.getElementById("structureForm").reset();
+
+    // Reset dynamic semester dropdown to default state
+    const semesterSelect = document.getElementById("semesterSelect");
+    if (semesterSelect) {
+      semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
+    }
+
+    // Close Modal
+    const structureModal = document.getElementById("structureModal");
+    if (structureModal) structureModal.style.display = "none";
+  } catch (err) {
+    console.error("Error saving fee structure:", err);
+    alert(err.message || "Failed to save fee structure.");
+  } finally {
+    // Re-enable buttons
+    if (saveBtn) saveBtn.disabled = false;
+    if (saveAndPrintBtn) saveAndPrintBtn.disabled = false;
+  }
+}
+
+// Event Listener for Main Form Submit ("Save" button)
+const structureForm = document.getElementById("structureForm");
+if (structureForm) {
+  structureForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    saveFeeStructure(false);
+  });
+}
+
+// Event Listener for "Save & Print" button
+const saveAndPrintBtn = document.getElementById("saveAndPrintBtn");
+if (saveAndPrintBtn) {
+  saveAndPrintBtn.addEventListener("click", () => {
+    saveFeeStructure(true);
+  });
+}
+
+// Global variable to store loaded structures for client-side filtering
+let allFeeStructures = [];
+
+// Fetch and render fee structures
+async function loadFeeStructures() {
+  const tbody = document.getElementById("feeStructuresBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align: center; padding: 20px;">Loading fee structures...</td>
+    </tr>
+  `;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("fee_structures")
+      .select(
+        `
+        id,
+        total_amount,
+        status,
+        classes ( id, name ),
+        academic_years ( id, year_label ),
+        terms ( id, name )
+      `,
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    allFeeStructures = data || [];
+    renderFeeStructuresTable(allFeeStructures);
+  } catch (err) {
+    console.error("Error loading fee structures:", err.message);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; color: red; padding: 20px;">
+          Failed to load fee structures.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+// Render structures to HTML table
+function renderFeeStructuresTable(structures) {
+  const tbody = document.getElementById("feeStructuresBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (structures.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; color: #777; padding: 20px;">
+          No fee structures found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  structures.forEach((struct) => {
+    const className = struct.classes?.name || "N/A";
+    const academicYear = struct.academic_years?.year_label || "N/A";
+    const termName = struct.terms?.name || "N/A";
+    const statusClass =
+      struct.status === "Active"
+        ? "structures-status-active"
+        : "structures-status-inactive";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${className}</td>
+      <td>${academicYear}</td>
+      <td>${termName}</td>
+      <td>$${Number(struct.total_amount || 0).toFixed(2)}</td>
+      <td>
+        <span class="${statusClass}">${struct.status}</span>
+      </td>
+      <td>
+        <button class="structures-actions-btn view" data-id="${struct.id}" title="View">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+        <button class="structures-actions-btn edit" data-id="${struct.id}" title="Edit">
+          <i class="fa-solid fa-pen"></i>
+        </button>
+        <button class="structures-actions-btn archive" data-id="${struct.id}" title="Archive">
+          <i class="fa-solid fa-box-archive"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Call loadFeeStructures on page load
+document.addEventListener("DOMContentLoaded", () => {
+  loadFeeStructures();
 });
