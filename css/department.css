@@ -13,12 +13,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 30px;
-  padding: 20px;
+  padding: 10px;
 }
 
 .department-main-content {
   border-radius: 10px;
-  padding: 20px;
+  padding: 10px;
 }
 
 /* Topbar */
@@ -619,7 +619,7 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 550px; /* Fixed height requirement */
+    height: 350px; /* Fixed height requirement */
     max-height: 75vh;
     background: #ffffff;
     border-radius: 10px;
