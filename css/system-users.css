@@ -834,6 +834,7 @@ border-radius: 10px;
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 .archive-modal {
