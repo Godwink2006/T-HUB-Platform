@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 function renderNavigation(userRole) {
   const adminOnlyLinks = [
     "nav-system-users",
-    "nav-departments",
+    //"nav-departments",
     "nav-rooms",
     "nav-periods",
     "nav-audit-logs",
