@@ -13,7 +13,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 30px;
-  padding: 10px;
 }
 
 .department-main-content {
@@ -619,7 +618,7 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 350px; /* Fixed height requirement */
+    height: 390px; /* Fixed height requirement */
     max-height: 75vh;
     background: #ffffff;
     border-radius: 10px;
