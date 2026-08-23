@@ -250,3 +250,44 @@ body {
     border-radius: 0;
   }
 }
+
+/* Skeleton Card Styling */
+.setting-card.skeleton {
+  pointer-events: none;
+  user-select: none;
+}
+
+.skeleton-title,
+.skeleton-text,
+.skeleton-btn {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 50%;
+  margin-bottom: 12px;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 80%;
+  margin-bottom: 20px;
+}
+
+.skeleton-btn {
+  height: 36px;
+  width: 100%;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
