@@ -195,7 +195,19 @@ function formatSchoolLevel(level) {
 // 1. Fetch Classes from Supabase
 async function loadClasses() {
   const tbody = document.getElementById("classesTableBody");
-  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Loading classes...</td></tr>`;
+
+  // Guard clause: stop execution ONLY if the element is missing
+  if (!tbody) return;
+
+  // Loading indicator
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading classes...
+      </td>
+    </tr>
+  `;
 
   try {
     const { data, error } = await supabaseClient
@@ -242,6 +254,8 @@ function renderClassesTable(classes) {
         <span class="${statusClass}">${statusText}</span>
       </td>
       <td>${descriptionText}</td>
+       <td>${formatDateTime(item.created_at)}</td>
+          <td>${formatDateTime(item.updated_at)}</td>
       <td>
         <button class="classes-actions-btn edit" onclick="openEditModal('${item.id}')">
           <i class="fa-solid fa-pen"></i>
@@ -253,6 +267,19 @@ function renderClassesTable(classes) {
     `;
 
     tbody.appendChild(tr);
+  });
+}
+
+// 2. For ISO timestamps (created_at, updated_at)
+function formatDateTime(isoString) {
+  if (!isoString) return "N/A";
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return "N/A";
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -334,7 +361,7 @@ async function handleEditClass(event) {
       submitBtn.textContent = "Updating...";
     }
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("classes")
       .update({
         name,
@@ -344,7 +371,25 @@ async function handleEditClass(event) {
         description: description || null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", classId);
+      .eq("id", classId)
+      .select(); // <--- ADD .select() to return the updated row
+    // 1. Handle hard database errors
+    if (error) {
+      showToast(
+        "Permission denied: Only active admins can archive classes.",
+        "error",
+      );
+      return;
+    }
+
+    // 2. Handle RLS silent block (0 rows modified)
+    if (!data || data.length === 0) {
+      showToast(
+        "Permission denied: Only active admins can archive classes.",
+        "error",
+      );
+      return;
+    }
 
     if (error) {
       if (error.code === "23505") {

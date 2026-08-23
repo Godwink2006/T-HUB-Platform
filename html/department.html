@@ -8,6 +8,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/department.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -50,47 +51,13 @@
                 <th>Department Name</th>
                 <th>Description</th>
                 <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th>Actions</th>
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>Science</td>
-                <td>The department is in use.</td>
-                <td>
-                  <span class="departments-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="departments-actions-btn edit-Department">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="departments-actions-btn archive-Department">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Languages</td>
-                <td></td>
-                <td>
-                  <span class="departments-status-inactive">Inactive</span>
-                </td>
-
-                <td>
-                  <button class="departments-actions-btn edit-Department">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="departments-actions-btn archive-Department">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="departmentsTableBody"></tbody>
           </table>
         </section>
       </main>
@@ -110,21 +77,29 @@
               <div class="form-group">
                 <label>Department Name *</label>
 
-                <input type="text" placeholder="Enter department name" />
+                <input
+                  id="departmentName"
+                  type="text"
+                  placeholder="Enter department name"
+                />
               </div>
 
               <div class="form-group">
                 <label>Description (Optional)</label>
 
-                <input type="text" placeholder="Optional" />
+                <input
+                  id="departmentDescription"
+                  type="text"
+                  placeholder="Optional"
+                />
               </div>
 
               <div class="form-group">
                 <label>Status *</label>
 
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
+                <select id="departmentStatus">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
             </div>
@@ -145,7 +120,7 @@
       </div>
     </div>
 
-    <!---Edit class modal-->
+    <!---Edit department modal-->
 
     <div id="editDepartmentModal" class="edit-modal-department">
       <div class="edit-department-modal-content">
@@ -219,6 +194,11 @@
       </div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/department.js"></script>
   </body>
