@@ -224,6 +224,7 @@ tr {
   height: 40px;
   width: 40px;
   font-size: 22px;
+  border-radius: 10px;
 }
 
 .class-modal-body {
