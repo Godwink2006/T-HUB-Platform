@@ -529,6 +529,7 @@ tr {
   padding: 35px;
   text-align: center;
   animation: modalShow 0.25s ease;
+  border-radius: 10px;
 }
 
 .confirm-icon {
@@ -560,6 +561,7 @@ tr {
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 .archive-modal {
