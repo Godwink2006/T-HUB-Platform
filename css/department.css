@@ -618,8 +618,8 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 390px; /* Fixed height requirement */
-    max-height: 75vh;
+    height: 450px; /* Fixed height requirement */
+    max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
