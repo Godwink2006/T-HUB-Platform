@@ -605,7 +605,7 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 590px; /* Fixed height requirement */
+    height: 450px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
