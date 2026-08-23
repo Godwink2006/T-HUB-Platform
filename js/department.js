@@ -350,18 +350,23 @@ async function handleEditDepartment(event) {
       .eq("id", departmentId)
       .select(); // <--- ADD .select() to return the updated row
 
-    // 1. Handle explicit Postgres SQL errors
+    // 1. Check for database errors first
     if (error) {
+      if (error.code === "23505") {
+        showToast("This department name already exists.", "error");
+        return;
+      }
+      if (error.code === "42501") {
+        showToast("You do not have permission to add a department.", "error");
+        return;
+      }
       showToast(error.message, "error");
       return;
     }
 
-    // 2. Handle RLS block (is_admin() returned FALSE, so 0 rows modified)
+    // 2. Check for RLS silent block (no error thrown, but 0 rows inserted)
     if (!data || data.length === 0) {
-      showToast(
-        "Permission denied: You are not authorized as an active admin.",
-        "error",
-      );
+      showToast("You do not have permission to add a department.", "error");
       return;
     }
 
