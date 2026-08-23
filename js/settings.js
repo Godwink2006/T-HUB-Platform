@@ -120,24 +120,40 @@ async function loadSettingsCards() {
 
 document.addEventListener("DOMContentLoaded", loadSettingsCards);
 
+// 2. Main page initialization with Skeleton Toggle
 async function initSettingsPage() {
   const skeletonEl = document.getElementById("settingsSkeleton");
   const containerEl = document.getElementById("settingsContainer");
 
   try {
-    // Check user session safely using standard Supabase client
+    // Fetch active session user
     const {
       data: { user },
-      error,
+      error: userError,
     } = await supabaseClient.auth.getUser();
 
-    if (error || !user) {
-      console.warn("No active user found");
+    if (userError || !user) {
+      console.warn("No authenticated user found.");
+      return;
+    }
+
+    // Fetch user profile/role from your database table
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles") // Adjust table name if yours is 'users' or 'roles'
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching user role:", profileError);
+    } else {
+      // Apply visibility filters before showing cards
+      renderNavigation(profile?.role);
     }
   } catch (err) {
     console.error("Initialization error:", err);
   } finally {
-    // Hide skeletons and show actual cards container safely
+    // Hide skeleton container and reveal filtered cards
     if (skeletonEl) skeletonEl.style.display = "none";
     if (containerEl) containerEl.style.display = "grid";
   }
