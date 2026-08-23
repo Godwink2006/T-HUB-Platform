@@ -8,6 +8,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/structures.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -47,8 +48,8 @@
           <input type="text" placeholder="Search structures..." />
 
           <select>
-            <option>Term</option>
-            <option>Term 1</option>
+            <option>1st Semester</option>
+            <option>2nd Semester</option>
           </select>
 
           <select>
@@ -74,10 +75,9 @@
           <table>
             <thead>
               <tr>
-                <th>Structure Name</th>
                 <th>Class</th>
                 <th>Academic Year</th>
-                <th>Term</th>
+                <th>Semester</th>
                 <th>Total Fees</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -143,118 +143,71 @@
     <div id="structureModal" class="modal-structure">
       <div class="structure-modal-content">
         <div class="structure-modal-header">
-          <h2>Create Fee Structure</h2>
-
-          <button id="closeStructureModal">&times;</button>
+          <h2 id="modalTitle">Create Fee Structure</h2>
+          <button type="button" id="closeStructureModal">&times;</button>
         </div>
 
         <div class="structure-modal-body">
           <form id="structureForm">
+            <!-- Grid for dropdown controls -->
             <div class="form-grid">
               <div class="form-group">
-                <label>Academic Year *</label>
-
-                <select>
-                  <option>Select Academic Year</option>
+                <label for="academicYearSelect">Academic Year *</label>
+                <select id="academicYearSelect" name="academicYearId" required>
+                  <option value="">Select Academic Year</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Term *</label>
-
-                <select>
-                  <option>Select Term</option>
+                <label for="semesterSelect">Semester *</label>
+                <select id="semesterSelect" name="semesterId" required>
+                  <option value="">Select Semester</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Class *</label>
-
-                <select>
-                  <option>Select Class</option>
+                <label for="classSelect">Class *</label>
+                <select id="classSelect" name="classId" required>
+                  <option value="">Select Class</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
+                <label for="statusSelect">Status *</label>
+                <select id="statusSelect" name="status" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
-              </div>
-
-              <div class="form-group">
-                <label>Structure Name *</label>
-
-                <input type="text" placeholder="Enter structure name" />
               </div>
             </div>
+            <!-- Properly closed form-grid -->
 
+            <!-- Fee items table section -->
             <section class="structure-table-card">
               <label>Fee Items</label>
-              <table>
+              <table id="feeItemsTable">
                 <thead>
                   <tr>
                     <th>Fee Name</th>
                     <th>Amount</th>
+                    <th style="text-align: right">Actions</th>
+                    <!-- Fixed column count alignment -->
                   </tr>
                 </thead>
-
-                <tbody>
-                  <tr>
-                    <td>Tuition</td>
-                    <td>$400</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="structures-actions-btn edit-addItem"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="structures-actions-btn delete-addItem"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>Registration</td>
-                    <td>$400</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="structures-actions-btn edit-addItem"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="structures-actions-btn delete-addItem"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </td>
-                  </tr>
+                <tbody id="feeItemsBody">
+                  <!-- Dynamically populated by JS -->
                 </tbody>
               </table>
             </section>
 
-            <button type="button" id="addAddItem" class="add-structure-btn">
-              <i class="fa-solid fa-plus"></i>
-              Add Fee Item
+            <!-- Trigger Button inside Structure Modal -->
+            <button type="button" id="addFeeItemBtn" class="add-structure-btn">
+              <i class="fa-solid fa-plus"></i> Add Fee Item
             </button>
 
-            <div class="form-group">
-              <h4>Total</h4>
-              <p>$800</p>
+            <div class="form-group total-container">
+              <h4>Total Amount</h4>
+              <p id="totalFeeAmount">$0.00</p>
             </div>
 
             <div class="structure-modal-footer">
@@ -265,10 +218,16 @@
               >
                 Cancel
               </button>
-
-              <button type="button" class="save-btn">Save & Print</button>
-
-              <button type="submit" class="save-btn">Save</button>
+              <button
+                type="button"
+                id="saveAndPrintBtn"
+                class="save-btn alt-btn"
+              >
+                Save & Print
+              </button>
+              <button type="submit" id="saveStructureBtn" class="save-btn">
+                Save
+              </button>
             </div>
           </form>
         </div>
@@ -418,38 +377,46 @@
 
     <!-- Create Item -->
 
+    <!-- Add Item Modal -->
     <div id="addItemModal" class="addItem-modal">
       <div class="addItem-modal-content">
         <div class="addItem-modal-header">
           <h2>Add Fee Item</h2>
-
-          <button id="cancelAddItemModal">&times;</button>
+          <button id="closeAddItemModal">&times;</button>
+          <!-- Updated ID to close button -->
         </div>
 
         <div class="addItem-modal-body">
           <form id="addItemForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Fee Name *</label>
-
-                <input type="text" placeholder="Enter fee name" />
+                <label for="feeItemName">Fee Name *</label>
+                <input
+                  type="text"
+                  id="feeItemName"
+                  placeholder="Enter fee name"
+                  required
+                />
               </div>
 
               <div class="form-group">
-                <label>Amount *</label>
-
-                <input type="number" placeholder="Enter amount" />
+                <label for="feeItemAmount">Amount *</label>
+                <input
+                  type="number"
+                  id="feeItemAmount"
+                  step="0.01"
+                  placeholder="Enter amount"
+                  required
+                />
               </div>
             </div>
 
-            <!-- Lesson form goes here -->
-
             <div class="addItem-modal-footer">
-              <button type="button" class="cancel-btn" id="closeAddItemModal">
+              <button type="button" class="cancel-btn" id="cancelAddItemModal">
                 Cancel
               </button>
-
-              <button type="button" class="save-btn">Save Item</button>
+              <button type="submit" class="save-btn">Save Item</button>
+              <!-- Changed to type="submit" -->
             </div>
           </form>
         </div>
@@ -623,6 +590,11 @@
       </div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/structures.js"></script>
   </body>
