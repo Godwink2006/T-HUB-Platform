@@ -93,7 +93,10 @@ async function initSettingsPage() {
           </button>
         </div>
 
-        <div class="setting-card">
+        ${
+          isAdmin
+            ? `
+            <div class="setting-card">
           <h4>Fee Structures</h4>
           <p>Create and manage fee structures.</p>
           <button onclick="window.location.href = 'structures.html'" class="manage-btn">
@@ -116,10 +119,7 @@ async function initSettingsPage() {
             Manage Classes <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
-
-        ${
-          isAdmin
-            ? `
+        
         <div id="nav-departments" class="setting-card">
           <h4>Department</h4>
           <p>Manage and create departments.</p>
