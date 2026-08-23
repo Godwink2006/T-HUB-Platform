@@ -1,27 +1,3 @@
-// Function to hide admin-only elements (if cards are already in the DOM)
-function renderNavigation(userRole) {
-  const adminOnlyLinks = [
-    "nav-system-users",
-    "nav-departments",
-    "nav-rooms",
-    "nav-periods",
-    "nav-audit-logs",
-    "nav-semesters",
-    "nav-academic-years",
-    "changeSchoolLogo",
-    ""
-  ];
-
-  const isAdmin = userRole === "admin";
-
-  adminOnlyLinks.forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.display = isAdmin ? "flex" : "none";
-    }
-  });
-}
-
 // Single initialization function to handle fetching, rendering, and visibility swap
 async function initSettingsPage() {
   const skeletonEl = document.getElementById("settingsSkeleton");
