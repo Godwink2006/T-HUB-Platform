@@ -593,7 +593,7 @@ tr {
     height: 350px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
-    border-radius: 0 !important;
+    border-radius: 10px;
     animation: modalShow 0.25s ease;
     overflow: hidden;
   }
@@ -656,6 +656,7 @@ tr {
     color: #f9fafb;
     font-size: 13px;
     white-space: nowrap;
+    border-radius: 10px;
   }
 
   .add-academic-years-btn,
@@ -675,6 +676,7 @@ tr {
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
+    border-radius: 10px;
   }
 
   /* --- Toolbar Inputs in a Single Horizontal Row --- */
@@ -697,7 +699,7 @@ tr {
     font-size: 12px;
     flex: 1;
     min-width: 0; /* Prevents overflow inside flex containers */
-    border-radius: 0 !important;
+    border-radius: 10px;
   }
 
   .terms-table-card,
@@ -754,7 +756,7 @@ tr {
     height: 350px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
-    border-radius: 0 !important;
+    border-radius: 10px;
     animation: modalShow 0.25s ease;
     overflow: hidden;
   }
@@ -767,7 +769,7 @@ tr {
     height: 590px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
-    border-radius: 0 !important;
+    border-radius: 10px;
     animation: modalShow 0.25s ease;
     overflow: hidden;
   }
@@ -780,7 +782,7 @@ tr {
     height: 350px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
-    border-radius: 0 !important;
+    border-radius: 10px;
     animation: modalShow 0.25s ease;
     overflow: hidden;
   }
@@ -793,7 +795,7 @@ tr {
     height: 590px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
-    border-radius: 0 !important;
+    border-radius: 10px;
     animation: modalShow 0.25s ease;
     overflow: hidden;
   }
@@ -834,6 +836,7 @@ tr {
     font-size: 16px;
     background: #1f2937;
     border: 1px solid rgb(219, 215, 215);
+    border-radius: 10px;
   }
 
   .academic-year-modal-body,
@@ -863,7 +866,7 @@ tr {
     color: #f9fafb;
     border: none;
     height: 34px;
-    border-radius: 0;
+    border-radius: 10px;
     width: 34px;
     font-size: 16px;
     background: #1f2937;
@@ -915,7 +918,7 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
     outline: none;
     font-size: 13px;
-    border-radius: 0 !important;
+    border-radius: 10px;
   }
 
   .form-group textarea {
@@ -944,7 +947,7 @@ tr {
     padding: 10px 16px;
     border: none;
     cursor: pointer;
-    border-radius: 0;
+    border-radius: 10px;
     font-size: 13px;
     font-weight: 500;
     justify-content: space-between;
@@ -955,7 +958,7 @@ tr {
     padding: 10px 16px;
     border: none;
     cursor: pointer;
-    border-radius: 0;
+    border-radius: 10px;
     font-size: 13px;
     font-weight: 500;
     justify-content: space-between;
