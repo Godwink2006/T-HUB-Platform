@@ -233,14 +233,6 @@ async function handleAddClass(event) {
         );
         return;
       }
-      // Catch capacity or check constraint failures
-      if (error.code === "23514") {
-        showToast(
-          "Invalid data submitted. Check capacity and selected level.",
-          "error",
-        );
-        return;
-      }
 
       if (error.code === "42501") {
         showToast("You do not have permission to add a department.", "error");
@@ -357,16 +349,15 @@ async function handleEditDepartment(event) {
 
     if (error) {
       if (error.code === "23505") {
-        showToast("This department name already exists.", "error");
+        showToast(
+          "This department name already exists (including in archives). Please choose a different name.",
+          "error",
+        );
         return;
       }
 
-      // 2. Handle RLS silent block (0 rows modified)
-      if (!data || data.length === 0) {
-        showToast(
-          "Permission denied: Only active admins can archive departments.",
-          "error",
-        );
+      if (error.code === "42501") {
+        showToast("You do not have permission to add a department.", "error");
         return;
       }
 
