@@ -715,7 +715,7 @@ tr {
     color: #f9fafb;
     border: none;
     height: 34px;
-    border-radius: 10px;
+    border-radius: 10px !important;
     width: 34px;
     font-size: 16px;
     background: #1f2937;
