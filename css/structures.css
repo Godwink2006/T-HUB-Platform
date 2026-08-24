@@ -467,96 +467,6 @@ tr {
   font-size: 22px;
 }
 
-.editItem-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.editItem-modal-content {
-  overflow: auto;
-  width: 500px;
-  max-width: 95%;
-  background: #ffff;
-  border-radius: 18px;
-  animation: modalShow 0.25s ease;
-  height: 290px;
-}
-
-.editItem-modal-body {
-  padding: 25px;
-}
-
-.editItem-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-}
-
-.editItem-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
-}
-
-.editItem-modal-header h2 {
-  font-size: 22px;
-}
-
-.editItem-modal-header button {
-  cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
-  border: none;
-  height: 40px;
-  width: 40px;
-  font-size: 22px;
-}
-
-.delete-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 10px;
-  background: #dc2626;
-  color: #ffff;
-  cursor: pointer;
-}
-
-.delete-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.delete-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
 .confirm-modal {
   width: 430px;
   background: #ffff;
@@ -865,19 +775,6 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
   }
 
-  .edit-class-modal-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 590px; /* Fixed height requirement */
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
-  }
-
   .structure-modal-content,
   .editstructure-modal-content {
     display: flex;
@@ -885,6 +782,19 @@ tr {
     width: 100%;
     max-width: 350px;
     height: 650px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 10px;
+    animation: modalShow 0.25s ease;
+    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
+  }
+
+  .addItem-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 350px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
@@ -918,7 +828,8 @@ tr {
 
   .structure-modal-header,
   .view-structure-modal-header,
-  .editstructure-modal-header {
+  .editstructure-modal-header,
+  .addItem-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -928,12 +839,14 @@ tr {
 
   .structure-modal-header h2,
   .view-structure-modal-header h2,
-  .editstructure-modal-header h2 {
+  .editstructure-modal-header h2,
+  .addItem-modal-header h2 {
     font-size: 18px;
   }
 
   .structure-modal-header button,
   .editstructure-modal-header button,
+  .addItem-modal-header button,
   #closeViewStructureModal {
     cursor: pointer;
     color: #f9fafb;
@@ -948,37 +861,8 @@ tr {
 
   .structure-modal-body,
   .view-structure-body,
-  .editstructure-modal-body {
-    padding: 20px;
-    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
-    flex: 1;
-  }
-
-  .edit-class-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
-  }
-
-  .edit-class-modal-header h2 {
-    font-size: 18px;
-  }
-
-  .edit-class-modal-header button {
-    cursor: pointer;
-    color: #f9fafb;
-    border: none;
-    height: 34px;
-    border-radius: 10px;
-    width: 34px;
-    font-size: 16px;
-    background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-  }
-
-  .edit-class-modal-body {
+  .editstructure-modal-body,
+  .addItem-modal-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
@@ -986,7 +870,9 @@ tr {
 
   /* Horizontal Modal Action Buttons with Space Between */
   .view-structure-modal-footer,
-  .editstructure-modal-footer {
+  .editstructure-modal-footer,
+  .structure-modal-footer,
+  .addItem-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
