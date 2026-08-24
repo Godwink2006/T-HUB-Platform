@@ -187,55 +187,46 @@
     </div>
 
     <!-- Edit Structure modal -->
-
     <div id="editStructureModal" class="modal-editstructure">
       <div class="editstructure-modal-content">
         <div class="editstructure-modal-header">
           <h2>Edit Fee Structure</h2>
-
           <button id="closeEditStructureModal">&times;</button>
         </div>
 
         <div class="editstructure-modal-body">
           <form id="editstructureForm">
+            <!-- Hidden input to track current structure ID -->
+            <input type="hidden" id="editStructureId" />
+
             <div class="form-grid">
               <div class="form-group">
                 <label>Academic Year *</label>
-
-                <select>
-                  <option>Select Academic Year</option>
+                <select id="editAcademicYearSelect" required>
+                  <option value="">Select Academic Year</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Term *</label>
-
-                <select>
-                  <option>Select Term</option>
+                <select id="editSemesterSelect" required>
+                  <option value="">Select Term</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Class *</label>
-
-                <select>
-                  <option>Select Class</option>
+                <select id="editClassSelect" required>
+                  <option value="">Select Class</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
+                <select id="editStatusSelect" required>
+                  <option value="Active">Active</option>
+                  <option value="Archive">Archive</option>
                 </select>
-              </div>
-
-              <div class="form-group">
-                <label>Structure Name *</label>
-
-                <input type="text" placeholder="Enter structure name" />
               </div>
             </div>
 
@@ -246,58 +237,17 @@
                   <tr>
                     <th>Fee Name</th>
                     <th>Amount</th>
+                    <th style="text-align: right">Action</th>
                   </tr>
                 </thead>
-
-                <tbody>
-                  <tr>
-                    <td>Tuition</td>
-                    <td>$400</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="structures-actions-btn edit-addItem"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="structures-actions-btn delete-addItem"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>Registration</td>
-                    <td>$400</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="structures-actions-btn edit-addItem"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="structures-actions-btn delete-addItem"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
+                <!-- Target container for dynamic rendering -->
+                <tbody id="editFeeItemsBody"></tbody>
               </table>
             </section>
 
             <button
               type="button"
-              id="addEditStructure"
+              id="addEditStructureItemBtn"
               class="add-structure-btn"
             >
               <i class="fa-solid fa-plus"></i>
@@ -306,7 +256,8 @@
 
             <div class="form-group">
               <h4>Total</h4>
-              <p>$800</p>
+              <!-- Target element for dynamically updated sum -->
+              <p id="editTotalFeeAmount">$0.00</p>
             </div>
 
             <div class="editstructure-modal-footer">
@@ -317,16 +268,17 @@
               >
                 Cancel
               </button>
-
-              <button type="button" class="save-btn">Update & Print</button>
-
-              <button type="submit" class="save-btn">Update</button>
+              <button type="button" id="updateAndPrintBtn" class="save-btn">
+                Update & Print
+              </button>
+              <button type="submit" id="updateStructureBtn" class="save-btn">
+                Update
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
-
     <!-- Create Item -->
 
     <!-- Add Item Modal -->

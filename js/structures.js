@@ -4,17 +4,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const unLockBodyScroll = () => document.body.classList.remove("modal-open");
 
   // Elements
-  const addFeeItemBtn = document.getElementById("addFeeItemBtn"); // Corrected ID
+  const addFeeItemBtn = document.getElementById("addFeeItemBtn");
   const addItemModal = document.getElementById("addItemModal");
   const closeAddItemModal = document.getElementById("closeAddItemModal");
   const cancelAddItemModal = document.getElementById("cancelAddItemModal");
 
-  // Open Add Item Modal
+  // 1. Add Item Modal Handlers
   addFeeItemBtn?.addEventListener("click", () => {
     if (addItemModal) addItemModal.style.display = "flex";
   });
 
-  // Close Add Item Modal handlers
   closeAddItemModal?.addEventListener("click", () => {
     if (addItemModal) addItemModal.style.display = "none";
   });
@@ -35,19 +34,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editItemModal) editItemModal.style.display = "none";
   });
 
-  // 4. Structure Modal
+  // 3. Delete Item Modal (DECLARED HERE TO FIX REFERENCE ERROR)
+  const deleteItemModal = document.getElementById("deleteItemModal");
+
+  // 4. Structure Modal (Create)
   const structureModal = document.getElementById("structureModal");
-  const cancelStructureModal = document.getElementById("cancelStructureModal");
-  const openStructureModal = document.getElementById("addStructure");
+  const openStructureBtn = document.getElementById("addStructure");
   const closeStructureModal = document.getElementById("closeStructureModal");
-  const openEditStructureModal = document.getElementById("addEditStructure");
+  const cancelStructureModal = document.getElementById("cancelStructureModal");
 
-  openEditStructureModal?.addEventListener("click", () => {
-    if (addItemModal) addItemModal.style.display = "flex";
-    lockBodyScroll();
-  });
-
-  openStructureModal?.addEventListener("click", () => {
+  openStructureBtn?.addEventListener("click", () => {
     if (structureModal) structureModal.style.display = "flex";
     lockBodyScroll();
   });
@@ -64,18 +60,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 5. View Structure Modal
   const viewStructureModal = document.getElementById("viewStructureModal");
-  const viewButtons = document.querySelectorAll(".view");
   const closeViewStructureModal = document.getElementById(
     "closeViewStructureModal",
   );
   const closeViewBtn = document.getElementById("closeViewBtn");
-
-  viewButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      if (viewStructureModal) viewStructureModal.style.display = "flex";
-      lockBodyScroll();
-    });
-  });
 
   closeViewStructureModal?.addEventListener("click", () => {
     if (viewStructureModal) viewStructureModal.style.display = "none";
@@ -91,39 +79,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const archiveStructureModal = document.getElementById(
     "archiveStructureModal",
   );
-  const archiveButtons = document.querySelectorAll(".archive");
   const cancelArchiveStructure = document.getElementById(
     "cancelArchiveStructure",
   );
-
-  archiveButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      if (archiveStructureModal) archiveStructureModal.style.display = "flex";
-      lockBodyScroll();
-    });
-  });
 
   cancelArchiveStructure?.addEventListener("click", () => {
     if (archiveStructureModal) archiveStructureModal.style.display = "none";
     unLockBodyScroll();
   });
 
-  // 7. Edit Structure Modal
+  // 7. Edit Structure Modal Controls
+  const editStructureModal = document.getElementById("editStructureModal");
   const closeEditStructureModal = document.getElementById(
     "closeEditStructureModal",
   );
   const cancelEditStructureModal = document.getElementById(
     "cancelEditStructureModal",
   );
-  const editStructureModal = document.getElementById("editStructureModal");
-  const editButtons = document.querySelectorAll(".edit");
-
-  editButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      if (editStructureModal) editStructureModal.style.display = "flex";
-      lockBodyScroll();
-    });
-  });
 
   closeEditStructureModal?.addEventListener("click", () => {
     if (editStructureModal) editStructureModal.style.display = "none";
@@ -157,7 +129,98 @@ document.addEventListener("DOMContentLoaded", () => {
       unLockBodyScroll();
     }
   });
+
+  // Table Event Delegation (Triggers function calls outside DOMContentLoaded scope)
+  const feeStructuresBody = document.getElementById("feeStructuresBody");
+  if (feeStructuresBody) {
+    feeStructuresBody.addEventListener("click", (e) => {
+      // 1. View Button Handler
+      const viewBtn = e.target.closest(".view");
+      if (viewBtn) {
+        const id = viewBtn.getAttribute("data-id");
+        if (id) openViewStructureModal(id);
+        return;
+      }
+
+      // 2. Edit Button Handler
+      const editBtn = e.target.closest(".edit");
+      if (editBtn) {
+        const id = editBtn.getAttribute("data-id");
+        if (id) openEditStructureModal(id);
+        return;
+      }
+    });
+  }
 });
+
+// Populate Academic Year and Class dropdowns inside Edit Modal
+async function populateEditDropdowns() {
+  const yearSelect = document.getElementById("editAcademicYearSelect");
+  const classSelect = document.getElementById("editClassSelect");
+
+  try {
+    if (yearSelect && yearSelect.options.length <= 1) {
+      const { data: years } = await supabaseClient
+        .from("academic_years")
+        .select("id, year_label")
+        .eq("status", "Active")
+        .order("year_label", { ascending: false });
+
+      yearSelect.innerHTML = `<option value="">Select Academic Year</option>`;
+      years?.forEach((yr) => {
+        yearSelect.innerHTML += `<option value="${yr.id}">${yr.year_label}</option>`;
+      });
+    }
+
+    if (classSelect && classSelect.options.length <= 1) {
+      const { data: classes } = await supabaseClient
+        .from("classes")
+        .select("id, name")
+        .eq("status", "active")
+        .order("name", { ascending: true });
+
+      classSelect.innerHTML = `<option value="">Select Class</option>`;
+      classes?.forEach((cls) => {
+        classSelect.innerHTML += `<option value="${cls.id}">${cls.name}</option>`;
+      });
+    }
+  } catch (err) {
+    console.error("Error populating edit dropdowns:", err.message);
+  }
+}
+
+// Fetch terms dynamically when Academic Year changes in Edit Modal
+async function fetchEditSemestersForYear(
+  academicYearId,
+  selectedTermId = null,
+) {
+  const semesterSelect = document.getElementById("editSemesterSelect");
+  if (!semesterSelect) return;
+
+  if (!academicYearId) {
+    semesterSelect.innerHTML = `<option value="">Select Term</option>`;
+    return;
+  }
+
+  try {
+    const { data: terms } = await supabaseClient
+      .from("terms")
+      .select("id, name")
+      .eq("academic_year_id", academicYearId)
+      .order("name", { ascending: true });
+
+    semesterSelect.innerHTML = `<option value="">Select Term</option>`;
+    terms?.forEach((tm) => {
+      semesterSelect.innerHTML += `<option value="${tm.id}">${tm.name}</option>`;
+    });
+
+    if (selectedTermId) {
+      semesterSelect.value = selectedTermId;
+    }
+  } catch (err) {
+    console.error("Error fetching terms for edit:", err.message);
+  }
+}
 
 // Array to hold fee items locally before saving to the database
 let tempFeeItems = [];
@@ -686,3 +749,186 @@ if (printViewBtn) {
 document.addEventListener("DOMContentLoaded", () => {
   loadFeeStructures();
 });
+
+// Local array holding current edit items state
+let tempEditFeeItems = [];
+
+async function openEditStructureModal(structureId) {
+  const modal = document.getElementById("editStructureModal");
+  if (!modal) return;
+
+  await populateEditDropdowns();
+
+  try {
+    // 1. Load parent fee structure from database
+    const { data: struct, error: structErr } = await supabaseClient
+      .from("fee_structures")
+      .select("id, academic_year_id, term_id, class_id, status")
+      .eq("id", structureId)
+      .single();
+
+    if (structErr) throw structErr;
+
+    // Set structure values in modal inputs
+    document.getElementById("editStructureId").value = struct.id;
+    document.getElementById("editAcademicYearSelect").value =
+      struct.academic_year_id;
+    document.getElementById("editClassSelect").value = struct.class_id;
+    document.getElementById("editStatusSelect").value = struct.status;
+
+    await fetchEditSemestersForYear(struct.academic_year_id, struct.term_id);
+
+    // 2. Load existing fee structure items from database
+    const { data: items, error: itemsErr } = await supabaseClient
+      .from("fee_structure_items")
+      .select("id, fee_name, amount")
+      .eq("fee_structure_id", structureId);
+
+    if (itemsErr) throw itemsErr;
+
+    // Store fetched database items into local array
+    tempEditFeeItems = (items || []).map((i) => ({
+      id: i.id, // optional: tracks existing DB record ID
+      name: i.fee_name,
+      amount: i.amount,
+    }));
+
+    // Render items in modal
+    renderEditTempFeeItems();
+
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+    modal.style.display = "flex";
+  } catch (err) {
+    console.error("Error opening edit modal detailed:", err); // Print full error stack
+    if (typeof showToast === "function")
+      showToast(err.message || "Failed to load edit details.", "error");
+  }
+}
+
+// Render local fee items inside edit modal
+function renderEditTempFeeItems() {
+  const tbody = document.getElementById("editFeeItemsBody");
+  const totalEl = document.getElementById("editTotalFeeAmount");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (tempEditFeeItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888; padding: 12px;">No items added.</td></tr>`;
+    if (totalEl) totalEl.textContent = "$0.00";
+    return;
+  }
+
+  let grandTotal = 0;
+  tempEditFeeItems.forEach((item, index) => {
+    grandTotal += Number(item.amount);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${item.name}</td>
+      <td>$${Number(item.amount).toFixed(2)}</td>
+      <td style="text-align: right;">
+        <button type="button" class="structures-actions-btn delete-editItem" data-index="${index}" title="Remove Item">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (totalEl) totalEl.textContent = `$${grandTotal.toFixed(2)}`;
+}
+
+// Remove item locally when trash icon is clicked
+const editFeeItemsBody = document.getElementById("editFeeItemsBody");
+if (editFeeItemsBody) {
+  editFeeItemsBody.addEventListener("click", (e) => {
+    const deleteBtn = e.target.closest(".delete-editItem");
+    if (deleteBtn) {
+      const index = deleteBtn.getAttribute("data-index");
+      tempEditFeeItems.splice(index, 1); // Removes from memory array
+      renderEditTempFeeItems(); // Re-renders UI table & updates total
+    }
+  });
+}
+
+async function updateFeeStructure(shouldPrint = false) {
+  const structureId = document.getElementById("editStructureId")?.value;
+  const academicYearId = document.getElementById(
+    "editAcademicYearSelect",
+  )?.value;
+  const termId = document.getElementById("editSemesterSelect")?.value;
+  const classId = document.getElementById("editClassSelect")?.value;
+  const status = document.getElementById("editStatusSelect")?.value;
+
+  if (!structureId || !academicYearId || !termId || !classId) {
+    if (typeof showToast === "function")
+      showToast("Please select Academic Year, Term, and Class.", "error");
+    return;
+  }
+
+  if (tempEditFeeItems.length === 0) {
+    if (typeof showToast === "function")
+      showToast("Please add at least one fee item.", "error");
+    return;
+  }
+
+  const totalAmount = tempEditFeeItems.reduce(
+    (sum, item) => sum + Number(item.amount),
+    0,
+  );
+
+  try {
+    // 1. Update parent record in fee_structures
+    const { error: updateErr } = await supabaseClient
+      .from("fee_structures")
+      .update({
+        academic_year_id: academicYearId,
+        term_id: termId,
+        class_id: classId,
+        status: status,
+        total_amount: totalAmount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", structureId);
+
+    if (updateErr) throw updateErr;
+
+    // 2. Remove old child items from database
+    const { error: deleteErr } = await supabaseClient
+      .from("fee_structure_items")
+      .delete()
+      .eq("fee_structure_id", structureId);
+
+    if (deleteErr) throw deleteErr;
+
+    // 3. Insert remaining/updated items into database
+    const itemsToInsert = tempEditFeeItems.map((item) => ({
+      fee_structure_id: structureId,
+      fee_name: item.name,
+      amount: item.amount,
+    }));
+
+    const { error: insertErr } = await supabaseClient
+      .from("fee_structure_items")
+      .insert(itemsToInsert);
+
+    if (insertErr) throw insertErr;
+
+    if (typeof showToast === "function")
+      showToast("Fee Structure updated successfully!", "success");
+
+    if (shouldPrint) {
+      window.print();
+    }
+
+    // Refresh main table & close modal
+    loadFeeStructures();
+    const modal = document.getElementById("editStructureModal");
+    if (modal) modal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  } catch (err) {
+    console.error("Error updating structure:", err.message);
+    if (typeof showToast === "function")
+      showToast("Failed to update fee structure.", "error");
+  }
+}
