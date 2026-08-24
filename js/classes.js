@@ -121,6 +121,7 @@ async function handleConfirmArchive() {
         updated_at: new Date().toISOString(),
       })
       .eq("id", classToArchiveId);
+      select();
 
     if (error) {
       if (error.code === "42501") {
