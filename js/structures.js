@@ -1,8 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Helpers
-  const lockBodyScroll = () => document.body.classList.add("modal-open");
-  const unLockBodyScroll = () => document.body.classList.remove("modal-open");
-
   // Elements
   const addFeeItemBtn = document.getElementById("addFeeItemBtn");
   const addItemModal = document.getElementById("addItemModal");
@@ -34,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editItemModal) editItemModal.style.display = "none";
   });
 
-  // 3. Delete Item Modal (DECLARED HERE TO FIX REFERENCE ERROR)
+  // 3. Delete Item Modal
   const deleteItemModal = document.getElementById("deleteItemModal");
 
   // 4. Structure Modal (Create)
@@ -130,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Table Event Delegation (Triggers function calls outside DOMContentLoaded scope)
+  // Table Event Delegation
   const feeStructuresBody = document.getElementById("feeStructuresBody");
   if (feeStructuresBody) {
     feeStructuresBody.addEventListener("click", (e) => {
