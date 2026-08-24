@@ -70,16 +70,17 @@ async function initSettingsPage() {
           </button>
         </div>
 
-        ${
-          isAdmin
-            ? `
-            <div class="setting-card">
+        <div class="setting-card">
           <h4>Fee Structures</h4>
           <p>Create and manage fee structures.</p>
           <button onclick="window.location.href = 'structures.html'" class="manage-btn">
             Manage Structures <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
+
+        ${
+          isAdmin
+            ? `
 
         <div class="setting-card">
           <h4>Subjects</h4>
