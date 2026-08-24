@@ -123,23 +123,20 @@ async function handleConfirmArchive() {
       .eq("id", classToArchiveId)
       .select();
 
-    if (error) {
       if (error.code === "42501") {
         showToast(
           "Permission denied: Only active admins can archive classes.",
           "error",
         );
+        return;
+      }
 
 
         if (!data || data.length === 0) {
   showToast("Permission denied: Only active admins can archive classes.", "error");
   return;
 }
-      } else {
-        showToast(error.message, "error");
-      }
-      return;
-    }
+    
 
     showToast("Class archived successfully!", "success");
     closeModal("archiveClassModal");
@@ -153,7 +150,7 @@ async function handleConfirmArchive() {
       confirmBtn.textContent = "Archive";
     }
   }
-}
+  }
 
 // Attach Confirm Event Listener
 document
