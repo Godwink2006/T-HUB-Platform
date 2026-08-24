@@ -347,6 +347,22 @@ document.addEventListener("DOMContentLoaded", () => {
   academicYearSelect?.addEventListener("change", (e) => {
     fetchSemestersForYear(e.target.value);
   });
+
+  // Event delegation for table action buttons (View, Edit, Archive)
+  const feeStructuresBody = document.getElementById("feeStructuresBody");
+  if (feeStructuresBody) {
+    feeStructuresBody.addEventListener("click", (e) => {
+      // 1. View Button Handler
+      const viewBtn = e.target.closest(".view");
+      if (viewBtn) {
+        const id = viewBtn.getAttribute("data-id");
+        if (id) {
+          openViewStructureModal(id);
+        }
+        return;
+      }
+    });
+  }
 });
 
 // Function to handle database insertion
@@ -492,6 +508,8 @@ async function loadFeeStructures() {
         id,
         total_amount,
         status,
+        created_at,
+        updated_at,
         classes ( id, name ),
         academic_years ( id, year_label ),
         terms ( id, name )
@@ -513,6 +531,19 @@ async function loadFeeStructures() {
       </tr>
     `;
   }
+}
+
+// 2. For ISO timestamps (created_at, updated_at)
+function formatDateTime(isoString) {
+  if (!isoString) return "N/A";
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return "N/A";
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 // Render structures to HTML table
@@ -551,6 +582,8 @@ function renderFeeStructuresTable(structures) {
       <td>
         <span class="${statusClass}">${struct.status}</span>
       </td>
+      <td>${formatDateTime(struct.created_at)}</td>
+          <td>${formatDateTime(struct.updated_at)}</td>
       <td>
         <button class="structures-actions-btn view" data-id="${struct.id}" title="View">
           <i class="fa-solid fa-eye"></i>
@@ -564,6 +597,90 @@ function renderFeeStructuresTable(structures) {
       </td>
     `;
     tbody.appendChild(tr);
+  });
+}
+
+// Function to fetch fee structure details and open the View Modal
+async function openViewStructureModal(structureId) {
+  const viewModal = document.getElementById("viewStructureModal");
+  const itemsBody = document.getElementById("viewFeeItemsBody");
+  if (!viewModal || !itemsBody) return;
+
+  // Clear previous items and show loading state
+  itemsBody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 12px;">Loading details...</td></tr>`;
+  if (typeof lockBodyScroll === "function") lockBodyScroll();
+  viewModal.style.display = "flex";
+
+  try {
+    // 1. Fetch parent fee structure with join references
+    const { data: struct, error: structError } = await supabaseClient
+      .from("fee_structures")
+      .select(
+        `
+        id,
+        total_amount,
+        status,
+        classes ( name ),
+        academic_years ( year_label ),
+        terms ( name )
+      `,
+      )
+      .eq("id", structureId)
+      .single();
+
+    if (structError) throw structError;
+
+    // 2. Fetch child fee structure items
+    const { data: items, error: itemsError } = await supabaseClient
+      .from("fee_structure_items")
+      .select("fee_name, amount")
+      .eq("fee_structure_id", structureId);
+
+    if (itemsError) throw itemsError;
+
+    // 3. Populate Modal Information
+    const className = struct.classes?.name || "N/A";
+    const yearLabel = struct.academic_years?.year_label || "N/A";
+    const termName = struct.terms?.name || "N/A";
+
+    document.getElementById("viewStructureName").textContent =
+      `${className} - ${termName}`;
+    document.getElementById("viewAcademicYear").textContent = yearLabel;
+    document.getElementById("viewTerm").textContent = termName;
+    document.getElementById("viewClass").textContent = className;
+    document.getElementById("viewTotalAmount").textContent =
+      `$${Number(struct.total_amount || 0).toFixed(2)}`;
+    document.getElementById("viewStatus").textContent = struct.status;
+
+    // 4. Populate Items Table Body
+    itemsBody.innerHTML = "";
+    if (!items || items.length === 0) {
+      itemsBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888; padding: 12px;">No items found.</td></tr>`;
+    } else {
+      items.forEach((item) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.fee_name}</td>
+          <td>$${Number(item.amount).toFixed(2)}</td>
+        `;
+        itemsBody.appendChild(tr);
+      });
+    }
+  } catch (err) {
+    console.error("Error fetching view details:", err.message);
+    if (typeof showToast === "function") {
+      showToast("Failed to load fee structure details.", "error");
+    }
+    viewModal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  }
+}
+
+// Print Handler inside View Modal
+const printViewBtn = document.getElementById("printViewStructureBtn");
+if (printViewBtn) {
+  printViewBtn.addEventListener("click", () => {
+    window.print();
   });
 }
 

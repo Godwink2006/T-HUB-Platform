@@ -80,6 +80,8 @@
                 <th>Semester</th>
                 <th>Total Fees</th>
                 <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -394,50 +396,10 @@
     </div>
 
     <!-- Edit Item -->
-
-    <div id="editItemModal" class="editItem-modal">
-      <div class="editItem-modal-content">
-        <div class="editItem-modal-header">
-          <h2>Edit Fee Item</h2>
-
-          <button id="cancelEditItemModal">&times;</button>
-        </div>
-
-        <div class="editItem-modal-body">
-          <form id="editItemForm">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Fee Name *</label>
-
-                <input type="text" placeholder="Enter fee name" />
-              </div>
-
-              <div class="form-group">
-                <label>Amount *</label>
-
-                <input type="text" placeholder="Enter amount" />
-              </div>
-            </div>
-
-            <div class="editItem-modal-footer">
-              <button type="button" class="cancel-btn" id="closeEditItemModal">
-                Cancel
-              </button>
-
-              <button type="button" class="save-btn">Update Item</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!---View fee structure modal-->
-
     <div id="viewStructureModal" class="view-structure-modal">
       <div class="view-structure-modal-content">
         <div class="view-structure-modal-header">
           <h2>Fee Structure Details</h2>
-
           <button id="closeViewStructureModal">&times;</button>
         </div>
 
@@ -445,22 +407,22 @@
           <div class="details-grid">
             <div class="details-item">
               <label>Structure Name</label>
-              <p>Grade 8A Term 1</p>
+              <p id="viewStructureName">-</p>
             </div>
 
             <div class="details-item">
               <label>Academic Year</label>
-              <p>2026-2027</p>
+              <p id="viewAcademicYear">-</p>
             </div>
 
             <div class="details-item">
-              <label>Term</label>
-              <p>Term 1</p>
+              <label>Term / Semester</label>
+              <p id="viewTerm">-</p>
             </div>
 
             <div class="details-item">
               <label>Class</label>
-              <p>Grade 8A</p>
+              <p id="viewClass">-</p>
             </div>
           </div>
 
@@ -472,40 +434,27 @@
                   <th>Amount</th>
                 </tr>
               </thead>
-
-              <tbody>
-                <tr>
-                  <td>Tuition</td>
-                  <td>$400</td>
-                </tr>
-
-                <tr>
-                  <td>Registration</td>
-                  <td>$50</td>
-                </tr>
-
-                <tr>
-                  <td>Library</td>
-                  <td>$20</td>
-                </tr>
+              <tbody id="viewFeeItemsBody">
+                <!-- Dynamically populated -->
               </tbody>
             </table>
           </section>
 
           <div class="details-item">
             <h4>Total</h4>
-            <p>$470</p>
+            <p id="viewTotalAmount">$0.00</p>
           </div>
 
           <div class="details-item">
             <h4>Status</h4>
-            <p>Active</p>
+            <p id="viewStatus">-</p>
           </div>
 
           <div class="view-structure-modal-footer">
             <button id="closeViewBtn" class="cancel-btn">Close</button>
-
-            <button type="button" class="save-btn">Print</button>
+            <button type="button" id="printViewStructureBtn" class="save-btn">
+              Print
+            </button>
           </div>
         </div>
       </div>
