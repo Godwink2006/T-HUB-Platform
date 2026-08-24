@@ -643,8 +643,6 @@ async function openViewStructureModal(structureId) {
     const yearLabel = struct.academic_years?.year_label || "N/A";
     const termName = struct.terms?.name || "N/A";
 
-    document.getElementById("viewStructureName").textContent =
-      `${className} - ${termName}`;
     document.getElementById("viewAcademicYear").textContent = yearLabel;
     document.getElementById("viewTerm").textContent = termName;
     document.getElementById("viewClass").textContent = className;

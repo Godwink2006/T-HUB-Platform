@@ -878,7 +878,8 @@ tr {
     overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
   }
 
-  .structure-modal-content {
+  .structure-modal-content,
+  .view-structure-modal-content {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -902,7 +903,8 @@ tr {
     }
   }
 
-  .structure-modal-header {
+  .structure-modal-header,
+  .view-structure-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -910,11 +912,13 @@ tr {
     border-bottom: 1.5px solid rgb(219, 215, 215);
   }
 
-  .structure-modal-header h2 {
+  .structure-modal-header h2,
+  .view-structure-modal-header h2 {
     font-size: 18px;
   }
 
-  .structure-modal-header button {
+  .structure-modal-header button,
+  #closeViewStructureModal {
     cursor: pointer;
     color: #f9fafb;
     border: none;
@@ -926,7 +930,8 @@ tr {
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .structure-modal-body {
+  .structure-modal-body,
+  .view-structure-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
@@ -963,7 +968,8 @@ tr {
   }
 
   /* Horizontal Modal Action Buttons with Space Between */
-  .edit-class-modal-footer {
+  .edit-class-modal-footer,
+  .view-structure-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
