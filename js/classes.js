@@ -113,7 +113,7 @@ async function handleConfirmArchive() {
     }
 
     // Archiving is an UPDATE operation in Supabase
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("classes")
       .update({
         is_archived: true,
@@ -129,6 +129,12 @@ async function handleConfirmArchive() {
           "Permission denied: Only active admins can archive classes.",
           "error",
         );
+
+
+        if (!data || data.length === 0) {
+  showToast("Permission denied: Only active admins can archive classes.", "error");
+  return;
+}
       } else {
         showToast(error.message, "error");
       }
