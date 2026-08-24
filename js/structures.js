@@ -1,222 +1,119 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Elements
-  const addFeeItemBtn = document.getElementById("addFeeItemBtn");
-  const addItemModal = document.getElementById("addItemModal");
-  const closeAddItemModal = document.getElementById("closeAddItemModal");
-  const cancelAddItemModal = document.getElementById("cancelAddItemModal");
+async function updateFeeStructure(shouldPrint = false) {
+  const structureId = document.getElementById("editStructureId")?.value;
+  const status = document.getElementById("editStatusSelect")?.value;
 
-  // 1. Add Item Modal Handlers
-  addFeeItemBtn?.addEventListener("click", () => {
-    if (addItemModal) addItemModal.style.display = "flex";
-  });
-
-  closeAddItemModal?.addEventListener("click", () => {
-    if (addItemModal) addItemModal.style.display = "none";
-  });
-
-  cancelAddItemModal?.addEventListener("click", () => {
-    if (addItemModal) addItemModal.style.display = "none";
-  });
-
-  // 2. Edit Item Modal
-  const editItemModal = document.getElementById("editItemModal");
-  const closeEditItemModal = document.getElementById("closeEditItemModal");
-  const cancelEditItemModal = document.getElementById("cancelEditItemModal");
-
-  cancelEditItemModal?.addEventListener("click", () => {
-    if (editItemModal) editItemModal.style.display = "none";
-  });
-  closeEditItemModal?.addEventListener("click", () => {
-    if (editItemModal) editItemModal.style.display = "none";
-  });
-
-  // 3. Delete Item Modal
-  const deleteItemModal = document.getElementById("deleteItemModal");
-
-  // 4. Structure Modal (Create)
-  const structureModal = document.getElementById("structureModal");
-  const openStructureBtn = document.getElementById("addStructure");
-  const closeStructureModal = document.getElementById("closeStructureModal");
-  const cancelStructureModal = document.getElementById("cancelStructureModal");
-
-  openStructureBtn?.addEventListener("click", () => {
-    if (structureModal) structureModal.style.display = "flex";
-    lockBodyScroll();
-  });
-
-  closeStructureModal?.addEventListener("click", () => {
-    if (structureModal) structureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
-  cancelStructureModal?.addEventListener("click", () => {
-    if (structureModal) structureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
-  // 5. View Structure Modal
-  const viewStructureModal = document.getElementById("viewStructureModal");
-  const closeViewStructureModal = document.getElementById(
-    "closeViewStructureModal",
-  );
-  const closeViewBtn = document.getElementById("closeViewBtn");
-
-  closeViewStructureModal?.addEventListener("click", () => {
-    if (viewStructureModal) viewStructureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
-  closeViewBtn?.addEventListener("click", () => {
-    if (viewStructureModal) viewStructureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
-  // 6. Archive Structure Modal
-  const archiveStructureModal = document.getElementById(
-    "archiveStructureModal",
-  );
-  const cancelArchiveStructure = document.getElementById(
-    "cancelArchiveStructure",
-  );
-
-  cancelArchiveStructure?.addEventListener("click", () => {
-    if (archiveStructureModal) archiveStructureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
-  // 7. Edit Structure Modal Controls
-  const editStructureModal = document.getElementById("editStructureModal");
-  const closeEditStructureModal = document.getElementById(
-    "closeEditStructureModal",
-  );
-  const cancelEditStructureModal = document.getElementById(
-    "cancelEditStructureModal",
-  );
-
-  closeEditStructureModal?.addEventListener("click", () => {
-    if (editStructureModal) editStructureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
-  cancelEditStructureModal?.addEventListener("click", () => {
-    if (editStructureModal) editStructureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
-  // Global Outside Click Handler
-  window.addEventListener("click", (e) => {
-    if (e.target === addItemModal) addItemModal.style.display = "none";
-    if (e.target === editItemModal) editItemModal.style.display = "none";
-    if (e.target === deleteItemModal) deleteItemModal.style.display = "none";
-    if (e.target === structureModal) {
-      structureModal.style.display = "none";
-      unLockBodyScroll();
-    }
-    if (e.target === viewStructureModal) {
-      viewStructureModal.style.display = "none";
-      unLockBodyScroll();
-    }
-    if (e.target === archiveStructureModal) {
-      archiveStructureModal.style.display = "none";
-      unLockBodyScroll();
-    }
-    if (e.target === editStructureModal) {
-      editStructureModal.style.display = "none";
-      unLockBodyScroll();
-    }
-  });
-
-  // Table Event Delegation
-  const feeStructuresBody = document.getElementById("feeStructuresBody");
-  if (feeStructuresBody) {
-    feeStructuresBody.addEventListener("click", (e) => {
-      // 1. View Button Handler
-      const viewBtn = e.target.closest(".view");
-      if (viewBtn) {
-        const id = viewBtn.getAttribute("data-id");
-        if (id) openViewStructureModal(id);
-        return;
-      }
-
-      // 2. Edit Button Handler
-      const editBtn = e.target.closest(".edit");
-      if (editBtn) {
-        const id = editBtn.getAttribute("data-id");
-        if (id) openEditStructureModal(id);
-        return;
-      }
-    });
-  }
-});
-
-// Populate Academic Year and Class dropdowns inside Edit Modal
-async function populateEditDropdowns() {
-  const yearSelect = document.getElementById("editAcademicYearSelect");
-  const classSelect = document.getElementById("editClassSelect");
-
-  try {
-    if (yearSelect && yearSelect.options.length <= 1) {
-      const { data: years } = await supabaseClient
-        .from("academic_years")
-        .select("id, year_label")
-        .eq("status", "Active")
-        .order("year_label", { ascending: false });
-
-      yearSelect.innerHTML = `<option value="">Select Academic Year</option>`;
-      years?.forEach((yr) => {
-        yearSelect.innerHTML += `<option value="${yr.id}">${yr.year_label}</option>`;
-      });
-    }
-
-    if (classSelect && classSelect.options.length <= 1) {
-      const { data: classes } = await supabaseClient
-        .from("classes")
-        .select("id, name")
-        .eq("status", "active")
-        .order("name", { ascending: true });
-
-      classSelect.innerHTML = `<option value="">Select Class</option>`;
-      classes?.forEach((cls) => {
-        classSelect.innerHTML += `<option value="${cls.id}">${cls.name}</option>`;
-      });
-    }
-  } catch (err) {
-    console.error("Error populating edit dropdowns:", err.message);
-  }
-}
-
-// Fetch terms dynamically when Academic Year changes in Edit Modal
-async function fetchEditSemestersForYear(
-  academicYearId,
-  selectedTermId = null,
-) {
-  const semesterSelect = document.getElementById("editSemesterSelect");
-  if (!semesterSelect) return;
-
-  if (!academicYearId) {
-    semesterSelect.innerHTML = `<option value="">Select Term</option>`;
+  if (!structureId) {
+    if (typeof showToast === "function")
+      showToast("Invalid structure target.", "error");
     return;
   }
 
+  if (tempEditFeeItems.length === 0) {
+    if (typeof showToast === "function")
+      showToast("Please add at least one fee item.", "error");
+    return;
+  }
+
+  const totalAmount = tempEditFeeItems.reduce(
+    (sum, item) => sum + Number(item.amount),
+    0,
+  );
+
+  // Preserve button UI states
+  const btnUpdate = document.getElementById("btnUpdateStructure");
+  const btnUpdateAndPrint = document.getElementById(
+    "btnUpdateAndPrintStructure",
+  );
+
+  const originalUpdateText = btnUpdate ? btnUpdate.innerHTML : "";
+  const originalPrintText = btnUpdateAndPrint
+    ? btnUpdateAndPrint.innerHTML
+    : "";
+
+  // Set loading states
+  if (btnUpdate) {
+    btnUpdate.disabled = true;
+    if (!shouldPrint) btnUpdate.innerHTML = `Updating...`;
+  }
+  if (btnUpdateAndPrint) {
+    btnUpdateAndPrint.disabled = true;
+    if (shouldPrint) btnUpdateAndPrint.innerHTML = `Updating...`;
+  }
+
   try {
-    const { data: terms } = await supabaseClient
-      .from("terms")
-      .select("id, name")
-      .eq("academic_year_id", academicYearId)
-      .order("name", { ascending: true });
+    // --- ADD THIS CHANGE CHECK ---
+    const originalStatus =
+      document.getElementById("editStructureModal")?.dataset.originalStatus;
+    const originalItemsJson =
+      document.getElementById("editStructureModal")?.dataset.originalItems;
 
-    semesterSelect.innerHTML = `<option value="">Select Term</option>`;
-    terms?.forEach((tm) => {
-      semesterSelect.innerHTML += `<option value="${tm.id}">${tm.name}</option>`;
-    });
+    const currentItemsJson = JSON.stringify(
+      tempEditFeeItems.map((i) => ({
+        name: i.name.trim(),
+        amount: Number(i.amount),
+      })),
+    );
 
-    if (selectedTermId) {
-      semesterSelect.value = selectedTermId;
+    if (status === originalStatus && currentItemsJson === originalItemsJson) {
+      if (typeof showToast === "function")
+        showToast("No changes detected.", "info");
+      return;
+    }
+    // ------------------------------
+
+    // Single Atomic Call via RPC (Replaces manual update, delete, insert)
+    const { error: rpcErr } = await supabaseClient.rpc(
+      "update_fee_structure_atomic",
+      {
+        p_structure_id: structureId,
+        p_status: status,
+        p_total_amount: totalAmount,
+        p_items: tempEditFeeItems,
+      },
+    );
+
+    if (rpcErr) throw rpcErr;
+
+    if (typeof showToast === "function") {
+      showToast("Fee Structure updated successfully!", "success");
+    }
+
+    // Close Modal & Unlock UI scroll immediately
+    const modal = document.getElementById("editStructureModal");
+    if (modal) modal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+
+    // Refresh main data table
+    if (typeof loadFeeStructures === "function") {
+      await loadFeeStructures();
+    }
+
+    // Trigger Print asynchronously
+    if (shouldPrint) {
+      setTimeout(() => {
+        window.print();
+      }, 100);
     }
   } catch (err) {
-    console.error("Error fetching terms for edit:", err.message);
+    console.error("Error updating structure:", err.message || err);
+    if (typeof showToast === "function") {
+      showToast(err.message || "Failed to update fee structure.", "error");
+    }
+  } finally {
+    // Restore button states
+    if (btnUpdate) {
+      btnUpdate.disabled = false;
+      btnUpdate.innerHTML = originalUpdateText;
+    }
+    if (btnUpdateAndPrint) {
+      btnUpdateAndPrint.disabled = false;
+      btnUpdateAndPrint.innerHTML = originalPrintText;
+    }
   }
 }
+
+// Expose to window scope in case of inline HTML onclicks
+window.updateFeeStructure = updateFeeStructure;
 
 // Array to hold fee items locally before saving to the database
 let tempFeeItems = [];
@@ -296,8 +193,6 @@ if (addItemForm) {
     addItemModal.style.display = "none";
   });
 }
-
-renderTempFeeItems();
 
 // Event delegation for Edit and Delete buttons on table rows
 if (feeItemsBody) {
@@ -391,39 +286,6 @@ async function fetchSemestersForYear(academicYearId) {
 
 const academicYearSelect = document.getElementById("academicYearSelect");
 
-academicYearSelect?.addEventListener("change", (e) => {
-  const selectedYearId = e.target.value;
-  fetchSemestersForYear(selectedYearId);
-});
-
-// Event Listeners Initialization
-document.addEventListener("DOMContentLoaded", () => {
-  populateInitialDropdowns();
-
-  const academicYearSelect = document.getElementById("academicYearSelect");
-
-  // Trigger semester fetch whenever Academic Year changes
-  academicYearSelect?.addEventListener("change", (e) => {
-    fetchSemestersForYear(e.target.value);
-  });
-
-  // Event delegation for table action buttons (View, Edit, Archive)
-  const feeStructuresBody = document.getElementById("feeStructuresBody");
-  if (feeStructuresBody) {
-    feeStructuresBody.addEventListener("click", (e) => {
-      // 1. View Button Handler
-      const viewBtn = e.target.closest(".view");
-      if (viewBtn) {
-        const id = viewBtn.getAttribute("data-id");
-        if (id) {
-          openViewStructureModal(id);
-        }
-        return;
-      }
-    });
-  }
-});
-
 // Function to handle database insertion
 async function saveFeeStructure(shouldPrint = false) {
   const academicYearId = document.getElementById("academicYearSelect")?.value;
@@ -453,6 +315,14 @@ async function saveFeeStructure(shouldPrint = false) {
   const saveAndPrintBtn = document.getElementById("saveAndPrintBtn");
   if (saveBtn) saveBtn.disabled = true;
   if (saveAndPrintBtn) saveAndPrintBtn.disabled = true;
+
+  // Store original button labels
+  const originalSaveText = saveBtn ? saveBtn.innerHTML : "";
+  const originalPrintText = saveAndPrintBtn ? saveAndPrintBtn.innerHTML : "";
+
+  // Set active loading text based on which action was triggered
+  if (saveBtn && !shouldPrint) saveBtn.innerHTML = "Saving...";
+  if (saveAndPrintBtn && shouldPrint) saveAndPrintBtn.innerHTML = "Saving...";
 
   try {
     // 2. Insert Parent Record into fee_structures
@@ -514,17 +384,22 @@ async function saveFeeStructure(shouldPrint = false) {
     if (semesterSelect) {
       semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
     }
-
-    // Close Modal
-    const structureModal = document.getElementById("structureModal");
-    if (structureModal) structureModal.style.display = "none";
   } catch (err) {
     console.error("Error saving fee structure:", err);
-    alert(err.message || "Failed to save fee structure.");
+    showToast(err.message || "Failed to save fee structure.", "error");
   } finally {
     // Re-enable buttons
     if (saveBtn) saveBtn.disabled = false;
     if (saveAndPrintBtn) saveAndPrintBtn.disabled = false;
+
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalSaveText;
+    }
+    if (saveAndPrintBtn) {
+      saveAndPrintBtn.disabled = false;
+      saveAndPrintBtn.innerHTML = originalPrintText;
+    }
   }
 }
 
@@ -555,7 +430,10 @@ async function loadFeeStructures() {
 
   tbody.innerHTML = `
     <tr>
-      <td colspan="6" style="text-align: center; padding: 20px;">Loading fee structures...</td>
+        <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading Fee Structures.........
+      </td>
     </tr>
   `;
 
@@ -741,11 +619,6 @@ if (printViewBtn) {
   });
 }
 
-// Call loadFeeStructures on page load
-document.addEventListener("DOMContentLoaded", () => {
-  loadFeeStructures();
-});
-
 // Local array holding current edit items state
 let tempEditFeeItems = [];
 
@@ -753,26 +626,45 @@ async function openEditStructureModal(structureId) {
   const modal = document.getElementById("editStructureModal");
   if (!modal) return;
 
-  await populateEditDropdowns();
+  // Clear previous state before loading new items
+  tempEditFeeItems = [];
 
   try {
-    // 1. Load parent fee structure from database
+    // 1. Load parent fee structure & relation labels from database
     const { data: struct, error: structErr } = await supabaseClient
       .from("fee_structures")
-      .select("id, academic_year_id, term_id, class_id, status")
+      .select(
+        `
+        id, 
+        academic_year_id, 
+        term_id, 
+        class_id, 
+        status,
+        classes ( name ),
+        academic_years ( year_label ),
+        terms ( name )
+      `,
+      )
       .eq("id", structureId)
       .single();
 
     if (structErr) throw structErr;
 
-    // Set structure values in modal inputs
+    // Set hidden IDs for submit handler
     document.getElementById("editStructureId").value = struct.id;
     document.getElementById("editAcademicYearSelect").value =
       struct.academic_year_id;
+    document.getElementById("editSemesterSelect").value = struct.term_id;
     document.getElementById("editClassSelect").value = struct.class_id;
-    document.getElementById("editStatusSelect").value = struct.status;
 
-    await fetchEditSemestersForYear(struct.academic_year_id, struct.term_id);
+    // Populate Read-Only Display Inputs & Status
+    document.getElementById("editAcademicYearDisplay").value =
+      struct.academic_years?.year_label || "N/A";
+    document.getElementById("editSemesterDisplay").value =
+      struct.terms?.name || "N/A";
+    document.getElementById("editClassDisplay").value =
+      struct.classes?.name || "N/A";
+    document.getElementById("editStatusSelect").value = struct.status;
 
     // 2. Load existing fee structure items from database
     const { data: items, error: itemsErr } = await supabaseClient
@@ -784,10 +676,19 @@ async function openEditStructureModal(structureId) {
 
     // Store fetched database items into local array
     tempEditFeeItems = (items || []).map((i) => ({
-      id: i.id, // optional: tracks existing DB record ID
+      id: i.id,
       name: i.fee_name,
       amount: i.amount,
     }));
+
+    // Add these 2 lines inside openEditStructureModal after fetching `struct` and `items`:
+    modal.dataset.originalStatus = struct.status;
+    modal.dataset.originalItems = JSON.stringify(
+      (items || []).map((i) => ({
+        name: i.fee_name.trim(),
+        amount: Number(i.amount),
+      })),
+    );
 
     // Render items in modal
     renderEditTempFeeItems();
@@ -795,7 +696,7 @@ async function openEditStructureModal(structureId) {
     if (typeof lockBodyScroll === "function") lockBodyScroll();
     modal.style.display = "flex";
   } catch (err) {
-    console.error("Error opening edit modal detailed:", err); // Print full error stack
+    console.error("Error opening edit modal detailed:", err);
     if (typeof showToast === "function")
       showToast(err.message || "Failed to load edit details.", "error");
   }
@@ -847,101 +748,229 @@ if (editFeeItemsBody) {
   });
 }
 
-async function updateFeeStructure(shouldPrint = false) {
-  const structureId = document.getElementById("editStructureId")?.value;
-  const academicYearId = document.getElementById(
-    "editAcademicYearSelect",
-  )?.value;
-  const termId = document.getElementById("editSemesterSelect")?.value;
-  const classId = document.getElementById("editClassSelect")?.value;
-  const status = document.getElementById("editStatusSelect")?.value;
+document.addEventListener("DOMContentLoaded", () => {
+  // Elements
+  const addFeeItemBtn = document.getElementById("addFeeItemBtn");
+  const addItemModal = document.getElementById("addItemModal");
+  const closeAddItemModal = document.getElementById("closeAddItemModal");
+  const cancelAddItemModal = document.getElementById("cancelAddItemModal");
 
-  if (!structureId || !academicYearId || !termId || !classId) {
-    if (typeof showToast === "function")
-      showToast("Please select Academic Year, Term, and Class.", "error");
-    return;
-  }
+  // 1. Add Item Modal Handlers
+  addFeeItemBtn?.addEventListener("click", () => {
+    if (addItemModal) addItemModal.style.display = "flex";
+  });
 
-  if (tempEditFeeItems.length === 0) {
-    if (typeof showToast === "function")
-      showToast("Please add at least one fee item.", "error");
-    return;
-  }
+  closeAddItemModal?.addEventListener("click", () => {
+    if (addItemModal) addItemModal.style.display = "none";
+  });
 
-  const totalAmount = tempEditFeeItems.reduce(
-    (sum, item) => sum + Number(item.amount),
-    0,
+  cancelAddItemModal?.addEventListener("click", () => {
+    if (addItemModal) addItemModal.style.display = "none";
+  });
+
+  // 2. Edit Item Modal
+  const editItemModal = document.getElementById("editItemModal");
+  const closeEditItemModal = document.getElementById("closeEditItemModal");
+  const cancelEditItemModal = document.getElementById("cancelEditItemModal");
+
+  cancelEditItemModal?.addEventListener("click", () => {
+    if (editItemModal) editItemModal.style.display = "none";
+  });
+  closeEditItemModal?.addEventListener("click", () => {
+    if (editItemModal) editItemModal.style.display = "none";
+  });
+
+  // 3. Delete Item Modal
+  const deleteItemModal = document.getElementById("deleteItemModal");
+
+  // 4. Structure Modal (Create)
+  const structureModal = document.getElementById("structureModal");
+  const openStructureBtn = document.getElementById("addStructure");
+  const closeStructureModal = document.getElementById("closeStructureModal");
+  const cancelStructureModal = document.getElementById("cancelStructureModal");
+
+  openStructureBtn?.addEventListener("click", () => {
+    if (structureModal) structureModal.style.display = "flex";
+    lockBodyScroll();
+  });
+
+  closeStructureModal?.addEventListener("click", () => {
+    if (structureModal) structureModal.style.display = "none";
+    unLockBodyScroll();
+  });
+
+  cancelStructureModal?.addEventListener("click", () => {
+    if (structureModal) structureModal.style.display = "none";
+    unLockBodyScroll();
+  });
+
+  // 5. View Structure Modal
+  const viewStructureModal = document.getElementById("viewStructureModal");
+  const closeViewStructureModal = document.getElementById(
+    "closeViewStructureModal",
+  );
+  const closeViewBtn = document.getElementById("closeViewBtn");
+
+  closeViewStructureModal?.addEventListener("click", () => {
+    if (viewStructureModal) viewStructureModal.style.display = "none";
+    unLockBodyScroll();
+  });
+
+  closeViewBtn?.addEventListener("click", () => {
+    if (viewStructureModal) viewStructureModal.style.display = "none";
+    unLockBodyScroll();
+  });
+
+  // 6. Archive Structure Modal
+  const archiveStructureModal = document.getElementById(
+    "archiveStructureModal",
+  );
+  const cancelArchiveStructure = document.getElementById(
+    "cancelArchiveStructure",
   );
 
-  try {
-    // 1. Update parent record in fee_structures
-    const { error: updateErr } = await supabaseClient
-      .from("fee_structures")
-      .update({
-        academic_year_id: academicYearId,
-        term_id: termId,
-        class_id: classId,
-        status: status,
-        total_amount: totalAmount,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", structureId);
+  cancelArchiveStructure?.addEventListener("click", () => {
+    if (archiveStructureModal) archiveStructureModal.style.display = "none";
+    unLockBodyScroll();
+  });
 
-    if (updateErr) throw updateErr;
+  // 7. Edit Structure Modal Controls
+  const editStructureModal = document.getElementById("editStructureModal");
+  const closeEditStructureModal = document.getElementById(
+    "closeEditStructureModal",
+  );
+  const cancelEditStructureModal = document.getElementById(
+    "cancelEditStructureModal",
+  );
 
-    // 2. Remove old child items from database
-    const { error: deleteErr } = await supabaseClient
-      .from("fee_structure_items")
-      .delete()
-      .eq("fee_structure_id", structureId);
+  closeEditStructureModal?.addEventListener("click", () => {
+    if (editStructureModal) editStructureModal.style.display = "none";
+    unLockBodyScroll();
+  });
 
-    if (deleteErr) throw deleteErr;
+  cancelEditStructureModal?.addEventListener("click", () => {
+    if (editStructureModal) editStructureModal.style.display = "none";
+    unLockBodyScroll();
+  });
 
-    // 3. Insert remaining/updated items into database
-    const itemsToInsert = tempEditFeeItems.map((item) => ({
-      fee_structure_id: structureId,
-      fee_name: item.name,
-      amount: item.amount,
-    }));
+  // Global Outside Click Handler
+  window.addEventListener("click", (e) => {
+    if (e.target === addItemModal) addItemModal.style.display = "none";
+    if (e.target === editItemModal) editItemModal.style.display = "none";
+    if (e.target === deleteItemModal) deleteItemModal.style.display = "none";
+    if (e.target === structureModal) {
+      structureModal.style.display = "none";
+      unLockBodyScroll();
+    }
+    if (e.target === viewStructureModal) {
+      viewStructureModal.style.display = "none";
+      unLockBodyScroll();
+    }
+    if (e.target === archiveStructureModal) {
+      archiveStructureModal.style.display = "none";
+      unLockBodyScroll();
+    }
+    if (e.target === editStructureModal) {
+      editStructureModal.style.display = "none";
+      unLockBodyScroll();
+    }
+  });
 
-    const { error: insertErr } = await supabaseClient
-      .from("fee_structure_items")
-      .insert(itemsToInsert);
+  populateInitialDropdowns();
 
-    if (insertErr) throw insertErr;
+  const academicYearSelect = document.getElementById("academicYearSelect");
 
-    if (typeof showToast === "function")
-      showToast("Fee Structure updated successfully!", "success");
+  // Trigger semester fetch whenever Academic Year changes
+  academicYearSelect?.addEventListener("change", (e) => {
+    fetchSemestersForYear(e.target.value);
+  });
 
-    if (shouldPrint) {
-      window.print();
+  // Event delegation for table action buttons (View, Edit, Archive)
+  const feeStructuresBody = document.getElementById("feeStructuresBody");
+
+  if (feeStructuresBody) {
+    feeStructuresBody.addEventListener("click", (e) => {
+      // 1. View Button Handler
+      const viewBtn = e.target.closest(".view");
+      if (viewBtn) {
+        const id = viewBtn.getAttribute("data-id");
+        if (id) openViewStructureModal(id);
+        return;
+      }
+
+      // 2. Edit Button Handler
+      const editBtn = e.target.closest(".edit");
+      if (editBtn) {
+        const id = editBtn.getAttribute("data-id");
+        if (id) openEditStructureModal(id);
+        return;
+      }
+    });
+  }
+
+  // ✅ ADD INSIDE DOMCONTENTLOADED
+  document
+    .getElementById("btnUpdateStructure")
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      updateFeeStructure(false);
+    });
+
+  document
+    .getElementById("btnUpdateAndPrintStructure")
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      updateFeeStructure(true);
+    });
+
+  loadFeeStructures();
+
+  const btnSubmitEditFeeItem = document.getElementById("btnSubmitEditFeeItem");
+
+  btnSubmitEditFeeItem?.addEventListener("click", (e) => {
+    // 1. Stop form submission and event propagation to prevent nested modal triggers
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 2. Read values from edit modal inputs
+    const nameInput = document.getElementById("editItemNameInput");
+    const amountInput = document.getElementById("editItemAmountInput");
+
+    const name = nameInput?.value ? nameInput.value.trim() : "";
+    const amount = amountInput?.value ? parseFloat(amountInput.value) : NaN;
+
+    // 3. Validation
+    if (!name || isNaN(amount) || amount <= 0) {
+      if (typeof showToast === "function") {
+        showToast("Please enter a valid item name and amount.", "error");
+      }
+      return;
     }
 
-    // Refresh main table & close modal
-    loadFeeStructures();
-    const modal = document.getElementById("editStructureModal");
-    if (modal) modal.style.display = "none";
-    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-  } catch (err) {
-    console.error("Error updating structure:", err.message);
-    if (typeof showToast === "function")
-      showToast("Failed to update fee structure.", "error");
-  }
-}
+    // Prevent duplicate item names (case-insensitive)
+    const isDuplicate = tempEditFeeItems.some(
+      (item) => item.name.toLowerCase() === name.toLowerCase(),
+    );
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Existing modal elements...
-  const editstructureForm = document.getElementById("editstructureForm");
-  const updateAndPrintBtn = document.getElementById("updateAndPrintBtn");
+    if (isDuplicate) {
+      if (typeof showToast === "function") {
+        showToast(`"${name}" is already in this fee structure.`, "error");
+      }
+      return;
+    }
 
-  // 1. Listen for Form Submit (Triggers when clicking <button type="submit">)
-  editstructureForm?.addEventListener("submit", (e) => {
-    e.preventDefault(); // Prevents full page reload
-    updateFeeStructure(false);
+    // 4. Update memory state and table UI
+    tempEditFeeItems.push({
+      name: name,
+      amount: amount,
+    });
+
+    renderEditTempFeeItems();
+
+    // 5. Clear fields
+    nameInput.value = "";
+    amountInput.value = "";
   });
 
-  // 2. Listen for "Update & Print" Button Click
-  updateAndPrintBtn?.addEventListener("click", () => {
-    updateFeeStructure(true);
-  });
+  renderTempFeeItems();
 });

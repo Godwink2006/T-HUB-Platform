@@ -202,23 +202,38 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Academic Year *</label>
-                <select id="editAcademicYearSelect" required>
-                  <option value="">Select Academic Year</option>
-                </select>
+                <input
+                  type="text"
+                  id="editAcademicYearDisplay"
+                  class="form-control"
+                  readonly
+                  disabled
+                />
+                <input type="hidden" id="editAcademicYearSelect" />
               </div>
 
               <div class="form-group">
-                <label>Term *</label>
-                <select id="editSemesterSelect" required>
-                  <option value="">Select Term</option>
-                </select>
+                <label>Semester *</label>
+                <input
+                  type="text"
+                  id="editSemesterDisplay"
+                  class="form-control"
+                  readonly
+                  disabled
+                />
+                <input type="hidden" id="editSemesterSelect" />
               </div>
 
               <div class="form-group">
                 <label>Class *</label>
-                <select id="editClassSelect" required>
-                  <option value="">Select Class</option>
-                </select>
+                <input
+                  type="text"
+                  id="editClassDisplay"
+                  class="form-control"
+                  readonly
+                  disabled
+                />
+                <input type="hidden" id="editClassSelect" />
               </div>
 
               <div class="form-group">
@@ -230,6 +245,7 @@
               </div>
             </div>
 
+            <!-- Inside #editStructureModal form -->
             <section class="structure-table-card">
               <label>Fee Items</label>
               <table>
@@ -240,14 +256,34 @@
                     <th style="text-align: right">Action</th>
                   </tr>
                 </thead>
-                <!-- Target container for dynamic rendering -->
                 <tbody id="editFeeItemsBody"></tbody>
               </table>
             </section>
 
+            <!-- Direct input fields for Edit Modal -->
+            <div class="form-grid" style="margin-top: 1rem">
+              <div class="form-group">
+                <label>Item Name</label>
+                <input
+                  type="text"
+                  id="editItemNameInput"
+                  placeholder="e.g., Library Fee"
+                />
+              </div>
+              <div class="form-group">
+                <label>Amount</label>
+                <input
+                  type="number"
+                  id="editItemAmountInput"
+                  placeholder="0.00"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
             <button
               type="button"
-              id="addEditStructureItemBtn"
+              id="btnSubmitEditFeeItem"
               class="add-structure-btn"
             >
               <i class="fa-solid fa-plus"></i>
@@ -263,15 +299,21 @@
             <div class="editstructure-modal-footer">
               <button
                 type="button"
-                class="cancel-btn"
                 id="cancelEditStructureModal"
+                class="cancel-btn"
               >
                 Cancel
               </button>
-              <button type="button" id="updateAndPrintBtn" class="save-btn">
+
+              <button
+                type="button"
+                id="btnUpdateAndPrintStructure"
+                class="save-btn"
+              >
                 Update & Print
               </button>
-              <button type="submit" id="updateStructureBtn" class="save-btn">
+
+              <button type="button" id="btnUpdateStructure" class="save-btn">
                 Update
               </button>
             </div>
