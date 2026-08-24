@@ -197,9 +197,6 @@ function renderTempFeeItems() {
       <td>${item.name}</td>
       <td>$${Number(item.amount).toFixed(2)}</td>
       <td style="text-align: right;">
-        <button type="button" class="structures-actions-btn edit-addItem" data-index="${index}">
-          <i class="fa-solid fa-pen"></i>
-        </button>
         <button type="button" class="structures-actions-btn delete-addItem" data-index="${index}">
           <i class="fa-solid fa-trash-can"></i>
         </button>
@@ -222,7 +219,10 @@ if (addItemForm) {
     const amount = parseFloat(feeItemAmountInput.value);
 
     if (!name || isNaN(amount) || amount <= 0) {
-      alert("Please provide a valid item name and positive amount.");
+      showToast(
+        "Please provide a valid item name and positive amount.",
+        "error",
+      );
       return;
     }
 
@@ -237,6 +237,8 @@ if (addItemForm) {
     addItemModal.style.display = "none";
   });
 }
+
+renderTempFeeItems();
 
 // Event delegation for Edit and Delete buttons on table rows
 if (feeItemsBody) {
@@ -356,12 +358,12 @@ async function saveFeeStructure(shouldPrint = false) {
 
   // 1. Validation
   if (!academicYearId || !termId || !classId) {
-    alert("Please select Academic Year, Semester, and Class.");
+    showToast("Please select Academic Year, Semester, and Class.", "error");
     return;
   }
 
   if (tempFeeItems.length === 0) {
-    alert("Please add at least one fee item before saving.");
+    showToast("Please add at least one fee item before saving.", "error");
     return;
   }
 
@@ -393,7 +395,17 @@ async function saveFeeStructure(shouldPrint = false) {
       .select()
       .single();
 
-    if (structureError) throw structureError;
+    // Catch duplicate constraint error specifically
+    if (structureError) {
+      if (structureError.code === "23505") {
+        showToast(
+          "A fee structure already exists for this Class, Academic Year, and Semester.",
+          "error",
+        );
+        return; // Exit early without throwing to avoid duplicate error logs
+      }
+      throw structureError;
+    }
 
     // 3. Map temporary fee items with the returned parent ID
     const itemsToInsert = tempFeeItems.map((item) => ({
@@ -409,7 +421,7 @@ async function saveFeeStructure(shouldPrint = false) {
 
     if (itemsError) throw itemsError;
 
-    alert("Fee Structure saved successfully!");
+    showToast("Fee Structure saved successfully!", "success");
 
     // 5. Check if user clicked Save & Print
     if (shouldPrint) {

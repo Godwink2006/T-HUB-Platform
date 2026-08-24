@@ -770,7 +770,8 @@ tr {
     border-radius: 10px;
   }
 
-  .add-structures-btn {
+  .add-structures-btn,
+  .add-structure-btn {
     grid-column: 2;
     background: #15803d;
     color: #ffffff;
@@ -901,7 +902,7 @@ tr {
     }
   }
 
-  .class-modal-content-header {
+  .structure-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -909,11 +910,11 @@ tr {
     border-bottom: 1.5px solid rgb(219, 215, 215);
   }
 
-  .class-modal-content-header h2 {
+  .structure-modal-header h2 {
     font-size: 18px;
   }
 
-  .class-modal-content-header button {
+  .structure-modal-header button {
     cursor: pointer;
     color: #f9fafb;
     border: none;
