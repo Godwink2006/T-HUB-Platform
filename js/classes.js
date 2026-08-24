@@ -120,7 +120,7 @@ async function handleConfirmArchive() {
         status: "inactive",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", classToArchiveId);
+      .eq("id", classToArchiveId)
       .select();
 
     if (error) {
