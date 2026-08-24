@@ -879,12 +879,25 @@ tr {
   }
 
   .structure-modal-content,
-  .view-structure-modal-content {
+  .editstructure-modal-content {
     display: flex;
     flex-direction: column;
     width: 100%;
     max-width: 350px;
     height: 650px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 10px;
+    animation: modalShow 0.25s ease;
+    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
+  }
+
+  .view-structure-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 550px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
@@ -904,7 +917,8 @@ tr {
   }
 
   .structure-modal-header,
-  .view-structure-modal-header {
+  .view-structure-modal-header,
+  .editstructure-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -913,11 +927,13 @@ tr {
   }
 
   .structure-modal-header h2,
-  .view-structure-modal-header h2 {
+  .view-structure-modal-header h2,
+  .editstructure-modal-header h2 {
     font-size: 18px;
   }
 
   .structure-modal-header button,
+  .editstructure-modal-header button,
   #closeViewStructureModal {
     cursor: pointer;
     color: #f9fafb;
@@ -931,7 +947,8 @@ tr {
   }
 
   .structure-modal-body,
-  .view-structure-body {
+  .view-structure-body,
+  .editstructure-modal-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
@@ -968,8 +985,8 @@ tr {
   }
 
   /* Horizontal Modal Action Buttons with Space Between */
-  .edit-class-modal-footer,
-  .view-structure-modal-footer {
+  .view-structure-modal-footer,
+  .editstructure-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
