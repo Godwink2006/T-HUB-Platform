@@ -928,3 +928,20 @@ async function updateFeeStructure(shouldPrint = false) {
       showToast("Failed to update fee structure.", "error");
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Existing modal elements...
+  const editstructureForm = document.getElementById("editstructureForm");
+  const updateAndPrintBtn = document.getElementById("updateAndPrintBtn");
+
+  // 1. Listen for Form Submit (Triggers when clicking <button type="submit">)
+  editstructureForm?.addEventListener("submit", (e) => {
+    e.preventDefault(); // Prevents full page reload
+    updateFeeStructure(false);
+  });
+
+  // 2. Listen for "Update & Print" Button Click
+  updateAndPrintBtn?.addEventListener("click", () => {
+    updateFeeStructure(true);
+  });
+});
