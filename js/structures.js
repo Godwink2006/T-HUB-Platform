@@ -1031,14 +1031,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       closeArchiveModal();
 
-      // Optimistic DOM removal instead of expensive DB refetching
-      const targetRow = document.querySelector(
-        `[data-structure-id="${targetStructureId}"]`,
-      );
-      if (targetRow) {
-        targetRow.remove();
+      closeArchiveModal();
+
+      // Refresh dropdown options and re-fetch filtered table rows
+      if (typeof populateFilterDropdowns === "function") {
+        await populateFilterDropdowns();
+      }
+
+      if (typeof fetchFilteredFeeStructures === "function") {
+        await fetchFilteredFeeStructures();
       } else if (typeof loadFeeStructures === "function") {
-        loadFeeStructures();
+        await loadFeeStructures();
       }
     } catch (err) {
       console.error("Archive transaction failed:", err);
@@ -1126,7 +1129,9 @@ async function fetchFilteredFeeStructures() {
   const academicYearId = document.getElementById(
     "filterAcademicYearSelect",
   )?.value;
-  const statusFilter = document.getElementById("filterStatusSelect")?.value;
+  const statusFilter = document
+    .getElementById("filterStatusSelect")
+    ?.value.toLowerCase();
 
   let query = supabaseClient.from("fee_structures").select(`
     *,
@@ -1255,27 +1260,37 @@ async function populateFilterDropdowns() {
   // 1. Populate Academic Year Dropdown
   const yearSelect = document.getElementById("filterAcademicYearSelect");
   if (yearSelect) {
+    const selectedAcademicYear = yearSelect.value;
     yearSelect.innerHTML = `<option value="">All Academic Years</option>`;
     uniqueYears.forEach((year_label, id) => {
       yearSelect.add(new Option(year_label, id));
     });
+
+    yearSelect.value = selectedAcademicYear;
   }
 
   // 2. Populate Class Dropdown
   const classSelect = document.getElementById("filterClassSelect");
   if (classSelect) {
+    const selectedClass = classSelect.value; // Store user's current choice
+
     classSelect.innerHTML = `<option value="">All Classes</option>`;
     uniqueClasses.forEach((name, id) => {
       classSelect.add(new Option(name, id));
     });
+
+    classSelect.value = selectedClass; // Restore user's choice
   }
 
   // 3. Populate Term/Semester Dropdown
   const semesterSelect = document.getElementById("filterSemesterSelect");
   if (semesterSelect) {
+    const selectedsemester = semesterSelect.value;
     semesterSelect.innerHTML = `<option value="">All Semesters</option>`;
     uniqueTerms.forEach((name, id) => {
       semesterSelect.add(new Option(name, id));
     });
+
+    semesterSelect.value = selectedsemester;
   }
 }
