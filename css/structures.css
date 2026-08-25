@@ -790,6 +790,19 @@ tr {
     overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
   }
 
+  .confirm-modal {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 350px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 10px;
+    animation: modalShow 0.25s ease;
+    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
+  }
+
   .addItem-modal-content {
     display: flex;
     flex-direction: column;

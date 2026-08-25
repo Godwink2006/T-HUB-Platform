@@ -19,6 +19,20 @@ async function updateFeeStructure(shouldPrint = false) {
     0,
   );
 
+  // --- ADD THIS CHANGE CHECK ---
+  const originalStatus =
+    document.getElementById("editStructureModal")?.dataset.originalStatus;
+  const originalItemsJson =
+    document.getElementById("editStructureModal")?.dataset.originalItems;
+  // Normalize current memory state for comparison
+  const currentItemsJson = normalizeItems(tempEditFeeItems);
+
+  if (status === originalStatus && currentItemsJson === originalItemsJson) {
+    if (typeof showToast === "function")
+      showToast("No changes detected.", "info");
+    return;
+  }
+
   // Preserve button UI states
   const btnUpdate = document.getElementById("btnUpdateStructure");
   const btnUpdateAndPrint = document.getElementById(
@@ -41,26 +55,6 @@ async function updateFeeStructure(shouldPrint = false) {
   }
 
   try {
-    // --- ADD THIS CHANGE CHECK ---
-    const originalStatus =
-      document.getElementById("editStructureModal")?.dataset.originalStatus;
-    const originalItemsJson =
-      document.getElementById("editStructureModal")?.dataset.originalItems;
-
-    const currentItemsJson = JSON.stringify(
-      tempEditFeeItems.map((i) => ({
-        name: i.name.trim(),
-        amount: Number(i.amount),
-      })),
-    );
-
-    if (status === originalStatus && currentItemsJson === originalItemsJson) {
-      if (typeof showToast === "function")
-        showToast("No changes detected.", "info");
-      return;
-    }
-    // ------------------------------
-
     // Single Atomic Call via RPC (Replaces manual update, delete, insert)
     const { error: rpcErr } = await supabaseClient.rpc(
       "update_fee_structure_atomic",
@@ -72,6 +66,7 @@ async function updateFeeStructure(shouldPrint = false) {
       },
     );
 
+    // ✅ REPLACE WITH THIS 1 LINE
     if (rpcErr) throw rpcErr;
 
     if (typeof showToast === "function") {
@@ -94,10 +89,19 @@ async function updateFeeStructure(shouldPrint = false) {
         window.print();
       }, 100);
     }
+    // ✅ REPLACE WITH THIS
   } catch (err) {
-    console.error("Error updating structure:", err.message || err);
+    console.error("Error updating structure:", err);
+
+    let message = err.message || "Failed to update fee structure.";
+
+    if (err.code === "42501" || err.message?.includes("row-level security")) {
+      message =
+        "Unauthorized: You do not have permission to update fee structures.";
+    }
+
     if (typeof showToast === "function") {
-      showToast(err.message || "Failed to update fee structure.", "error");
+      showToast(message, "error");
     }
   } finally {
     // Restore button states
@@ -114,6 +118,30 @@ async function updateFeeStructure(shouldPrint = false) {
 
 // Expose to window scope in case of inline HTML onclicks
 window.updateFeeStructure = updateFeeStructure;
+
+// Global helper to normalize items array for exact string comparison
+const normalizeItems = (arr) =>
+  JSON.stringify(
+    (arr || [])
+      .map((i) => {
+        // Fallback checks both JS property (.name) and Supabase DB property (.fee_name)
+        const rawName = i?.name || i?.fee_name || "";
+        return {
+          name: rawName.trim().toLowerCase(),
+          amount: Number(i?.amount || 0),
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  );
+
+// 1. Fixed close logic helper
+function closeCreateModal() {
+  const modal = document.getElementById("structureModal"); // Fixed ID mismatch
+  if (modal) modal.style.display = "none";
+  tempFeeItems = [];
+  renderTempFeeItems();
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+}
 
 // Array to hold fee items locally before saving to the database
 let tempFeeItems = [];
@@ -180,6 +208,15 @@ if (addItemForm) {
         "Please provide a valid item name and non-negative amount.",
         "error",
       );
+      return;
+    }
+
+    // Replace inside addItemForm listener:
+    const exists = tempFeeItems.some(
+      (item) => item.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (exists) {
+      showToast(`"${name}" is already in the list.`, "error");
       return;
     }
     // Push item to in-memory state
@@ -325,68 +362,62 @@ async function saveFeeStructure(shouldPrint = false) {
   if (saveAndPrintBtn && shouldPrint) saveAndPrintBtn.innerHTML = "Saving...";
 
   try {
-    // 2. Insert Parent Record into fee_structures
-    const { data: structureData, error: structureError } = await supabaseClient
-      .from("fee_structures")
-      .insert([
-        {
-          academic_year_id: academicYearId,
-          term_id: termId,
-          class_id: classId,
-          status: status,
-          total_amount: totalAmount,
-        },
-      ])
-      .select()
-      .single();
+    // Single Atomic Database Transaction
+    const { data: newStructureId, error } = await supabaseClient.rpc(
+      "create_fee_structure_atomic",
+      {
+        p_academic_year_id: academicYearId,
+        p_term_id: termId,
+        p_class_id: classId,
+        p_status: status,
+        p_total_amount: totalAmount,
+        p_items: tempFeeItems,
+      },
+    );
 
-    // Catch duplicate constraint error specifically
-    if (structureError) {
-      if (structureError.code === "23505") {
-        showToast(
-          "A fee structure already exists for this Class, Academic Year, and Semester.",
-          "error",
-        );
-        return; // Exit early without throwing to avoid duplicate error logs
-      }
-      throw structureError;
-    }
-
-    // 3. Map temporary fee items with the returned parent ID
-    const itemsToInsert = tempFeeItems.map((item) => ({
-      fee_structure_id: structureData.id,
-      fee_name: item.name,
-      amount: item.amount,
-    }));
-
-    // 4. Batch insert Child Records into fee_structure_items
-    const { error: itemsError } = await supabaseClient
-      .from("fee_structure_items")
-      .insert(itemsToInsert);
-
-    if (itemsError) throw itemsError;
+    if (error) throw error;
 
     showToast("Fee Structure saved successfully!", "success");
 
-    // 5. Check if user clicked Save & Print
     if (shouldPrint) {
-      window.print(); // Triggers print dialog (or replace with your specific PDF/Print utility)
+      setTimeout(() => window.print(), 100);
     }
 
-    loadFeeStructures();
-    // 6. Reset Form & Local Array State
+    if (typeof loadFeeStructures === "function") await loadFeeStructures();
+
+    // Reset Form & UI State
     tempFeeItems = [];
     renderTempFeeItems();
-    document.getElementById("structureForm").reset();
+    document.getElementById("structureForm")?.reset();
 
-    // Reset dynamic semester dropdown to default state
     const semesterSelect = document.getElementById("semesterSelect");
     if (semesterSelect) {
       semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
     }
+
+    // Close Modal & Unlock Scroll safely
+    const modal = document.getElementById("createStructureModal"); // adjust ID to your modal element
+    if (modal) modal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   } catch (err) {
     console.error("Error saving fee structure:", err);
-    showToast(err.message || "Failed to save fee structure.", "error");
+
+    let message = "Failed to save fee structure.";
+
+    if (err.code === "23505") {
+      message =
+        "A fee structure already exists for this Class, Academic Year, and Semester.";
+    } else if (
+      err.code === "42501" ||
+      err.message?.includes("row-level security")
+    ) {
+      message =
+        "Unauthorized: You do not have permission to create fee structures.";
+    } else if (err.message) {
+      message = err.message;
+    }
+
+    showToast(message, "error");
   } finally {
     // Re-enable buttons
     if (saveBtn) saveBtn.disabled = false;
@@ -452,6 +483,7 @@ async function loadFeeStructures() {
         terms ( id, name )
       `,
       )
+      .eq("is_archived", false)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -694,14 +726,9 @@ async function openEditStructureModal(structureId) {
       amount: i.amount,
     }));
 
-    // Add these 2 lines inside openEditStructureModal after fetching `struct` and `items`:
+    // Save baseline dataset for change detection
     modal.dataset.originalStatus = struct.status;
-    modal.dataset.originalItems = JSON.stringify(
-      (items || []).map((i) => ({
-        name: i.fee_name.trim(),
-        amount: Number(i.amount),
-      })),
-    );
+    modal.dataset.originalItems = normalizeItems(items || []);
 
     // Render items in modal
     renderEditTempFeeItems();
@@ -760,6 +787,40 @@ if (editFeeItemsBody) {
     }
   });
 }
+
+let targetStructureId = null;
+
+// Open Archive Modal
+function openArchiveModal(structureId) {
+  targetStructureId = structureId;
+  const archiveStructureModal = document.getElementById(
+    "archiveStructureModal",
+  );
+  if (archiveStructureModal) {
+    archiveStructureModal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+  }
+}
+
+// Close Archive Modal Helper
+function closeArchiveModal() {
+  targetStructureId = null;
+  const archiveStructureModal = document.getElementById(
+    "archiveStructureModal",
+  );
+  if (archiveStructureModal) {
+    archiveStructureModal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  }
+}
+
+// Close Modal
+document
+  .getElementById("cancelArchiveStructure")
+  .addEventListener("click", () => {
+    targetStructureId = null;
+    document.getElementById("archiveStructureModal").classList.remove("active");
+  });
 
 document.addEventListener("DOMContentLoaded", () => {
   // Elements
@@ -918,8 +979,71 @@ document.addEventListener("DOMContentLoaded", () => {
         if (id) openEditStructureModal(id);
         return;
       }
+
+      // 3. Archive Button Handler (ADD THIS HERE)
+      const archiveBtn = e.target.closest(".archive");
+      if (archiveBtn) {
+        const id = archiveBtn.getAttribute("data-id");
+        if (id) openArchiveModal(id);
+        return;
+      }
     });
   }
+
+  confirmArchiveStructure?.addEventListener("click", async () => {
+    if (!targetStructureId) {
+      if (typeof showToast === "function") {
+        showToast("Error: No fee structure selected to archive.", "error");
+      }
+      return;
+    }
+
+    const originalText = confirmArchiveStructure.innerHTML;
+    confirmArchiveStructure.disabled = true;
+    confirmArchiveStructure.innerHTML = `Archiving...`;
+
+    try {
+      // Return only essential columns to keep payload micro-sized
+      const { data, error } = await supabaseClient
+        .from("fee_structures")
+        .update({ is_archived: true })
+        .eq("id", targetStructureId)
+        .select("id");
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        if (typeof showToast === "function") {
+          showToast("Permission denied or structure already removed.", "error");
+        }
+        return;
+      }
+
+      if (typeof showToast === "function") {
+        showToast("Fee structure archived successfully!", "success");
+      }
+
+      closeArchiveModal();
+
+      // Optimistic DOM removal instead of expensive DB refetching
+      const targetRow = document.querySelector(
+        `[data-structure-id="${targetStructureId}"]`,
+      );
+      if (targetRow) {
+        targetRow.remove();
+      } else if (typeof loadFeeStructures === "function") {
+        loadFeeStructures();
+      }
+    } catch (err) {
+      console.error("Archive transaction failed:", err);
+      if (typeof showToast === "function") {
+        showToast(err.message || "An unexpected error occurred.", "error");
+      }
+    } finally {
+      confirmArchiveStructure.disabled = false;
+      confirmArchiveStructure.innerHTML = originalText;
+    }
+  });
 
   // ✅ ADD INSIDE DOMCONTENTLOADED
   document
@@ -940,12 +1064,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btnSubmitEditFeeItem = document.getElementById("btnSubmitEditFeeItem");
 
+  // 2. Add sub-modal auto-close in btnSubmitEditFeeItem
   btnSubmitEditFeeItem?.addEventListener("click", (e) => {
-    // 1. Stop form submission and event propagation to prevent nested modal triggers
     e.preventDefault();
     e.stopPropagation();
 
-    // 2. Read values from edit modal inputs
     const nameInput = document.getElementById("editItemNameInput");
     const amountInput = document.getElementById("editItemAmountInput");
 
@@ -953,7 +1076,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const rawAmount = amountInput?.value ? amountInput.value.trim() : "";
     const amount = parseFloat(rawAmount);
 
-    // 3. Validation (Allows $0.00, rejects blank, NaN, and negative numbers)
     if (!name || rawAmount === "" || isNaN(amount) || amount < 0) {
       if (typeof showToast === "function") {
         showToast(
@@ -964,7 +1086,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Prevent duplicate item names (case-insensitive)
     const isDuplicate = tempEditFeeItems.some(
       (item) => item.name.toLowerCase() === name.toLowerCase(),
     );
@@ -976,17 +1097,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 4. Update memory state and table UI
-    tempEditFeeItems.push({
-      name: name,
-      amount: amount,
-    });
-
+    tempEditFeeItems.push({ name, amount });
     renderEditTempFeeItems();
 
-    // 5. Clear fields
+    // Clear fields and hide sub-modal
     nameInput.value = "";
     amountInput.value = "";
+    const editItemModal = document.getElementById("editItemModal");
+    if (editItemModal) editItemModal.style.display = "none";
   });
 
   renderTempFeeItems();
