@@ -537,10 +537,16 @@ function renderFeeStructuresTable(structures) {
     const className = struct.classes?.name || "N/A";
     const academicYear = struct.academic_years?.year_label || "N/A";
     const termName = struct.terms?.name || "N/A";
-    const statusClass =
-      struct.status === "Active"
-        ? "structures-status-active"
-        : "structures-status-inactive";
+    // Evaluate status strictly via is_archived
+    // Read the text status column directly from the database row
+    const currentStatus =
+      struct.status || (struct.is_archived ? "Inactive" : "Active");
+    const isInactive = currentStatus.toLowerCase() === "inactive";
+
+    const statusText = isInactive ? "Inactive" : "Active";
+    const statusClass = isInactive
+      ? "structures-status-inactive"
+      : "structures-status-active";
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -548,8 +554,8 @@ function renderFeeStructuresTable(structures) {
       <td>${academicYear}</td>
       <td>${termName}</td>
       <td>$${Number(struct.total_amount || 0).toFixed(2)}</td>
-      <td>
-        <span class="${statusClass}">${struct.status}</span>
+     <td>
+        <span class="${statusClass}">${statusText}</span>
       </td>
       <td>${formatDateTime(struct.created_at)}</td>
           <td>${formatDateTime(struct.updated_at)}</td>
@@ -1006,7 +1012,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Return only essential columns to keep payload micro-sized
       const { data, error } = await supabaseClient
         .from("fee_structures")
-        .update({ is_archived: true })
+        .update({ is_archived: true, status: "Inactive" })
         .eq("id", targetStructureId)
         .select("id");
 
@@ -1109,3 +1115,167 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderTempFeeItems();
 });
+
+async function fetchFilteredFeeStructures() {
+  const searchQuery = document
+    .getElementById("searchStructureInput")
+    ?.value.trim()
+    .toLowerCase();
+  const semesterId = document.getElementById("filterSemesterSelect")?.value;
+  const classId = document.getElementById("filterClassSelect")?.value;
+  const academicYearId = document.getElementById(
+    "filterAcademicYearSelect",
+  )?.value;
+  const statusFilter = document.getElementById("filterStatusSelect")?.value;
+
+  let query = supabaseClient.from("fee_structures").select(`
+    *,
+    academic_years ( id, year_label ),
+    classes ( id, name ),
+    terms ( id, name )
+  `);
+
+  // Foreign Key Filters
+  if (academicYearId) query = query.eq("academic_year_id", academicYearId);
+  if (semesterId) query = query.eq("term_id", semesterId);
+  if (classId) query = query.eq("class_id", classId);
+
+  // Status Filtering Rules:
+  // 1. "active": shows non-archived rows with status 'Active'
+  // 2. "inactive": shows non-archived rows with status 'Inactive'
+  // 3. "all" (All Status): shows both 'Active' and 'Inactive', but excludes all archived rows (is_archived = false)
+  query = query.eq("is_archived", false);
+
+  if (statusFilter === "active") {
+    query = query.eq("status", "Active");
+  } else if (statusFilter === "inactive") {
+    query = query.eq("status", "Inactive");
+  }
+
+  query = query.order("created_at", { ascending: false });
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Fetch error:", error.message);
+    return;
+  }
+
+  let filteredData = data || [];
+  if (searchQuery) {
+    filteredData = filteredData.filter((struct) => {
+      const className = struct.classes?.name?.toLowerCase() || "";
+      const yearLabel = struct.academic_years?.year_label?.toLowerCase() || "";
+      const termName = struct.terms?.name?.toLowerCase() || "";
+      const amount = String(struct.total_amount || "");
+
+      return (
+        className.includes(searchQuery) ||
+        yearLabel.includes(searchQuery) ||
+        termName.includes(searchQuery) ||
+        amount.includes(searchQuery)
+      );
+    });
+  }
+
+  renderFeeStructuresTable(filteredData);
+}
+
+let searchDebounceTimeout = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const searchInput = document.getElementById("searchStructureInput");
+  const semesterSelect = document.getElementById("filterSemesterSelect");
+  const classSelect = document.getElementById("filterClassSelect");
+  const yearSelect = document.getElementById("filterAcademicYearSelect");
+  const statusSelect = document.getElementById("filterStatusSelect");
+
+  // Debounced search bar input
+  searchInput?.addEventListener("input", () => {
+    clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = setTimeout(() => {
+      fetchFilteredFeeStructures();
+    }, 300);
+  });
+
+  // Direct dropdown listeners
+  semesterSelect?.addEventListener("change", fetchFilteredFeeStructures);
+  classSelect?.addEventListener("change", fetchFilteredFeeStructures);
+  yearSelect?.addEventListener("change", fetchFilteredFeeStructures);
+  statusSelect?.addEventListener("change", fetchFilteredFeeStructures);
+
+  // Load dropdown choices first, then run initial table fetch
+  await populateFilterDropdowns();
+  await fetchFilteredFeeStructures();
+});
+async function populateFilterDropdowns() {
+  // Query fee_structures to only extract options that actually exist in this table
+  const { data: structures, error } = await supabaseClient
+    .from("fee_structures")
+    .select(
+      `
+      academic_year_id,
+      academic_years ( id, year_label ),
+      class_id,
+      classes ( id, name ),
+      term_id,
+      terms ( id, name )
+    `,
+    )
+    .eq("is_archived", false); // Exclude archived rows from filter options if desired
+
+  if (error) {
+    console.error(
+      "Error fetching filter choices from fee_structures:",
+      error.message,
+    );
+    return;
+  }
+
+  const uniqueYears = new Map();
+  const uniqueClasses = new Map();
+  const uniqueTerms = new Map();
+
+  // Filter out duplicates and null relationships
+  structures?.forEach((struct) => {
+    if (struct.academic_years?.id && struct.academic_years?.year_label) {
+      uniqueYears.set(
+        struct.academic_years.id,
+        struct.academic_years.year_label,
+      );
+    }
+    if (struct.classes?.id && struct.classes?.name) {
+      uniqueClasses.set(struct.classes.id, struct.classes.name);
+    }
+    if (struct.terms?.id && struct.terms?.name) {
+      uniqueTerms.set(struct.terms.id, struct.terms.name);
+    }
+  });
+
+  // 1. Populate Academic Year Dropdown
+  const yearSelect = document.getElementById("filterAcademicYearSelect");
+  if (yearSelect) {
+    yearSelect.innerHTML = `<option value="">All Academic Years</option>`;
+    uniqueYears.forEach((year_label, id) => {
+      yearSelect.add(new Option(year_label, id));
+    });
+  }
+
+  // 2. Populate Class Dropdown
+  const classSelect = document.getElementById("filterClassSelect");
+  if (classSelect) {
+    classSelect.innerHTML = `<option value="">All Classes</option>`;
+    uniqueClasses.forEach((name, id) => {
+      classSelect.add(new Option(name, id));
+    });
+  }
+
+  // 3. Populate Term/Semester Dropdown
+  const semesterSelect = document.getElementById("filterSemesterSelect");
+  if (semesterSelect) {
+    semesterSelect.innerHTML = `<option value="">All Semesters</option>`;
+    uniqueTerms.forEach((name, id) => {
+      semesterSelect.add(new Option(name, id));
+    });
+  }
+}

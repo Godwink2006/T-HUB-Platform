@@ -45,32 +45,34 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search structures..." />
+          <!-- Search Input -->
+          <input
+            type="text"
+            id="searchStructureInput"
+            placeholder="Search structures..."
+          />
 
-          <select>
-            <option>1st Semester</option>
-            <option>2nd Semester</option>
+          <!-- Semester Select -->
+          <select id="filterSemesterSelect">
+            <option value="">All Semesters</option>
           </select>
 
-          <select>
-            <option>Class</option>
-            <option>Grade 7B</option>
+          <!-- Class Select -->
+          <select id="filterClassSelect">
+            <option value="">All Classes</option>
           </select>
 
-          <select>
-            <option>Academic Year</option>
-            <option>2026-2027</option>
-            <option>2025-2026</option>
-            <option>2024-2025</option>
+          <!-- Academic Year Select -->
+          <select id="filterAcademicYearSelect">
+            <option value="">All Academic Years</option>
           </select>
 
-          <select>
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+          <select id="filterStatusSelect">
+            <option value="" selected>All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
-
         <section class="structures-table-card">
           <table>
             <thead>
