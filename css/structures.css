@@ -394,7 +394,8 @@ tr {
   color: #dc2626;
 }
 
-.delete-addItem {
+.delete-addItem,
+.delete-editItem {
   background: #fee2e2;
   color: #dc2626;
 }

@@ -171,17 +171,17 @@ if (addItemForm) {
   addItemForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const name = feeItemNameInput.value.trim();
-    const amount = parseFloat(feeItemAmountInput.value);
+    const name = feeItemNameInput?.value.trim();
+    const rawAmount = document.getElementById("feeItemAmount")?.value.trim();
+    const amount = parseFloat(rawAmount);
 
-    if (!name || isNaN(amount) || amount <= 0) {
+    if (!name || rawAmount === "" || isNaN(amount) || amount < 0) {
       showToast(
-        "Please provide a valid item name and positive amount.",
+        "Please provide a valid item name and non-negative amount.",
         "error",
       );
       return;
     }
-
     // Push item to in-memory state
     tempFeeItems.push({ name, amount });
 
@@ -544,7 +544,10 @@ async function openViewStructureModal(structureId) {
   if (!viewModal || !itemsBody) return;
 
   // Clear previous items and show loading state
-  itemsBody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 12px;">Loading details...</td></tr>`;
+  itemsBody.innerHTML = `<tr>  <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading Details.........
+      </td></tr>`;
   if (typeof lockBodyScroll === "function") lockBodyScroll();
   viewModal.style.display = "flex";
 
@@ -585,7 +588,17 @@ async function openViewStructureModal(structureId) {
     document.getElementById("viewClass").textContent = className;
     document.getElementById("viewTotalAmount").textContent =
       `$${Number(struct.total_amount || 0).toFixed(2)}`;
-    document.getElementById("viewStatus").textContent = struct.status;
+    // 📍 STATUS CLASS LOGIC HERE 📍
+    const viewStatusEl = document.getElementById("viewStatus");
+    if (viewStatusEl) {
+      viewStatusEl.textContent = struct.status || "N/A";
+      viewStatusEl.className = "status"; // base class
+      viewStatusEl.classList.add(
+        struct.status?.toLowerCase() === "active"
+          ? "structures-status-active"
+          : "structures-status-inactive",
+      );
+    }
 
     // 4. Populate Items Table Body
     itemsBody.innerHTML = "";
@@ -937,12 +950,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const amountInput = document.getElementById("editItemAmountInput");
 
     const name = nameInput?.value ? nameInput.value.trim() : "";
-    const amount = amountInput?.value ? parseFloat(amountInput.value) : NaN;
+    const rawAmount = amountInput?.value ? amountInput.value.trim() : "";
+    const amount = parseFloat(rawAmount);
 
-    // 3. Validation
-    if (!name || isNaN(amount) || amount <= 0) {
+    // 3. Validation (Allows $0.00, rejects blank, NaN, and negative numbers)
+    if (!name || rawAmount === "" || isNaN(amount) || amount < 0) {
       if (typeof showToast === "function") {
-        showToast("Please enter a valid item name and amount.", "error");
+        showToast(
+          "Please enter a valid item name and non-negative amount.",
+          "error",
+        );
       }
       return;
     }
