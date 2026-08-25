@@ -147,11 +147,6 @@ tr {
   margin-right: 6px;
 }
 
-.view {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
 .edit {
   background: #fef3c7;
   color: #d97706;
@@ -357,39 +352,6 @@ tr {
   cursor: pointer;
 }
 
-.view-subject-modal-content {
-  width: 850px;
-  background: #ffff;
-  border-radius: 18px;
-  overflow: auto;
-  height: 445px;
-  animation: modalShow 0.25s ease;
-}
-
-.view-subject-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.view-subject-body {
-  padding: 30px;
-}
-
-.profile-section {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
 .details-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -410,37 +372,6 @@ tr {
 .details-item p {
   font-weight: 500;
   color: #111827;
-}
-
-.view-subject-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
-}
-
-.view-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-}
-
-#closeViewSubjectModal {
-  cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
-  border: none;
-  height: 40px;
-  width: 40px;
-  font-size: 22px;
-}
-
-.view-subject-status {
-  background: #dcfce7;
-  color: #166534;
 }
 
 .confirm-modal {

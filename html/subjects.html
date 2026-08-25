@@ -8,6 +8,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/subjects.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -44,22 +45,22 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search subjects..." />
+          <!-- Search Input -->
+          <input
+            type="text"
+            id="searchSubjectInput"
+            placeholder="Search subjects..."
+          />
 
-          <select>
-            <option>All Department</option>
-            <option>Science</option>
-            <option>Mathematics</option>
-            <option>Languages</option>
-            <option>Social Studies</option>
-            <option>ICT</option>
-            <option>Administration</option>
+          <!-- Department Filter -->
+          <select id="filterDepartmentSelect">
+            <option value="">All Departments</option>
           </select>
 
-          <select>
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+          <select id="filterStatusSelect">
+            <option value="" selected>All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
 
@@ -67,61 +68,17 @@
           <table>
             <thead>
               <tr>
-                <th>code</th>
                 <th>Subject</th>
                 <th>Department</th>
+                <th>Description</th>
                 <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th>Actions</th>
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>MATH101</td>
-                <td>Mathematics</td>
-                <td>Science</td>
-                <td>
-                  <span class="subjects-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="subjects-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="subjects-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="subjects-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>ENG101</td>
-                <td>English</td>
-                <td>Languages</td>
-                <td>
-                  <span class="subjects-status-inactive">Active</span>
-                </td>
-
-                <td>
-                  <button class="subjects-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="subjects-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="subjects-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="subjectsTableBody"></tbody>
           </table>
         </section>
       </main>
@@ -130,7 +87,7 @@
     <div id="subjectModal" class="modal-subject">
       <div class="subject-modal-content">
         <div class="subject-modal-header">
-          <h2>Add Subject</h2>
+          <h2 id="modalTitle">Add Subject</h2>
 
           <button id="closeSubjectModal">&times;</button>
         </div>
@@ -139,44 +96,40 @@
           <form id="subjectForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Subject Code *</label>
+                <label for="subjectNameInput">Subject Name *</label>
 
-                <input type="text" placeholder="Enter subject code" />
+                <input
+                  id="subjectNameInput"
+                  type="text"
+                  placeholder="Enter subject name"
+                />
               </div>
 
               <div class="form-group">
-                <label>Subject Name *</label>
+                <label for="departmentSelect">Department (Optional)</label>
 
-                <input type="text" placeholder="Enter subject name" />
+                <select id="departmentSelect">
+                  <option value="">Select department</option>
+                </select>
               </div>
 
               <div class="form-group">
-                <label>Department *</label>
+                <label for="statusSelect">Status *</label>
 
-                <select>
-                  <option>Select department</option>
-                  <option>Science</option>
-                  <option>Mathematics</option>
-                  <option>Languages</option>
-                  <option>Social Studies</option>
-                  <option>ICT</option>
-                  <option>Administration</option>
+                <select id="statusSelect">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
 
               <div class="form-group full-width">
-                <label>Description (Optional)</label>
+                <label for="descriptionInput">Description (Optional)</label>
 
-                <textarea rows="4" placeholder="Write description"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
-                </select>
+                <textarea
+                  id="descriptionInput"
+                  rows="4"
+                  placeholder="Write description"
+                ></textarea>
               </div>
             </div>
 
@@ -185,7 +138,9 @@
                 Cancel
               </button>
 
-              <button type="submit" class="save-btn">Save Subject</button>
+              <button type="submit" class="save-btn" id="saveSubjectBtn">
+                Save Subject
+              </button>
             </div>
           </form>
         </div>
@@ -193,57 +148,50 @@
     </div>
 
     <!---Edit student modal-->
-
     <div id="editSubjectModal" class="edit-modal-subject">
       <div class="edit-subject-modal-content">
         <div class="edit-subject-modal-header">
           <h2>Edit Subject</h2>
-
           <button id="closeEditSubjectModal">&times;</button>
         </div>
 
         <div class="edit-subject-modal-body">
-          <form id="subjectForm">
+          <form id="editSubjectForm">
+            <!-- Hidden input to store subject ID being edited -->
+            <input type="hidden" id="editSubjectId" />
+
             <div class="form-grid">
               <div class="form-group">
-                <label>Subject Code *</label>
-
-                <input type="text" placeholder="Enter subject code" />
+                <label for="editSubjectNameInput">Subject Name *</label>
+                <input
+                  type="text"
+                  id="editSubjectNameInput"
+                  placeholder="Enter subject name"
+                />
               </div>
 
               <div class="form-group">
-                <label>Subject Name *</label>
-
-                <input type="text" placeholder="Enter subject name" />
+                <label for="editDepartmentSelect">Department (Optional)</label>
+                <select id="editDepartmentSelect">
+                  <option value="">Select department</option>
+                </select>
               </div>
 
               <div class="form-group">
-                <label>Department *</label>
-
-                <select>
-                  <option>Select department</option>
-                  <option>Science</option>
-                  <option>Mathematics</option>
-                  <option>Languages</option>
-                  <option>Social Studies</option>
-                  <option>ICT</option>
-                  <option>Administration</option>
+                <label for="editStatusSelect">Status *</label>
+                <select id="editStatusSelect">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
 
               <div class="form-group full-width">
-                <label>Description (Optional)</label>
-
-                <textarea rows="4" placeholder="Write description"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
-                </select>
+                <label for="editDescriptionInput">Description (Optional)</label>
+                <textarea
+                  id="editDescriptionInput"
+                  rows="4"
+                  placeholder="Write description"
+                ></textarea>
               </div>
             </div>
 
@@ -255,73 +203,40 @@
               >
                 Cancel
               </button>
-
-              <button type="submit" class="edit-btn">Update Subject</button>
+              <button type="submit" class="edit-btn" id="updateSubjectBtn">
+                Update Subject
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <div id="viewSubjectModal" class="view-subject-modal">
-      <div class="view-subject-modal-content">
-        <div class="view-subject-modal-header">
-          <h2>Subject Details</h2>
-
-          <button id="closeViewSubjectModal">&times;</button>
-        </div>
-
-        <div class="view-subject-body">
-          <div class="profile-section">
-            <h3 id="viewSubjectName">Mathematics</h3>
-
-            <span class="view-subject-status active">Active</span>
-          </div>
-
-          <div class="details-grid">
-            <div class="details-item">
-              <label>Subject Code</label>
-              <p>Math101</p>
-            </div>
-
-            <div class="details-item">
-              <label>Department</label>
-              <p>Science</p>
-            </div>
-
-            <div class="details-item">
-              <label>Description</label>
-              <p>This subject is the most important subject in the school</p>
-            </div>
-          </div>
-
-          <div class="view-modal-footer">
-            <button id="closeViewBtn" class="cancel-btn">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div id="archiveSubjectModal" class="archive-modal">
       <div class="confirm-modal">
-        <div confirm-icon>
+        <div class="confirm-icon">
           <i class="fa-solid fa-box-archive"></i>
         </div>
 
         <h2>Archive Subject</h2>
 
-        <p>Are you sure you want to archive this subject?</p>
+        <p id="archiveModalText"></p>
 
         <div class="archive-modal-footer">
-          <button id="cancelArchive" class="cancel-btn">Cancel</button>
+          <button id="cancelArchiveModal" class="cancel-btn">Cancel</button>
 
-          <button id="confirmArchive" class="archive-confirm-btn">
+          <button id="confirmArchiveBtn" class="archive-confirm-btn">
             Archive
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/subjects.js"></script>
   </body>

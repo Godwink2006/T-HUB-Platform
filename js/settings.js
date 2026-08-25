@@ -70,11 +70,11 @@ async function initSettingsPage() {
           </button>
         </div>
 
-        <div class="setting-card">
-          <h4>Fee Structures</h4>
-          <p>Create and manage fee structures.</p>
-          <button onclick="window.location.href = 'structures.html'" class="manage-btn">
-            Manage Structures <i class="fa-solid fa-chevron-right"></i>
+         <div class="setting-card">
+          <h4>Subjects</h4>
+          <p>Create and manage all school subjects.</p>
+          <button onclick="window.location.href = 'subjects.html'" class="manage-btn">
+            Manage Subjects <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
 
@@ -82,11 +82,11 @@ async function initSettingsPage() {
           isAdmin
             ? `
 
-        <div class="setting-card">
-          <h4>Subjects</h4>
-          <p>Create and manage all school subjects.</p>
-          <button onclick="window.location.href = 'subjects.html'" class="manage-btn">
-            Manage Subjects <i class="fa-solid fa-chevron-right"></i>
+         <div class="setting-card">
+          <h4>Fee Structures</h4>
+          <p>Create and manage fee structures.</p>
+          <button onclick="window.location.href = 'structures.html'" class="manage-btn">
+            Manage Structures <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
 
