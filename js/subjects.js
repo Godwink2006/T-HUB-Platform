@@ -698,7 +698,14 @@ document.getElementById("subjectsTableBody")?.addEventListener("click", (e) => {
   } else if (archiveBtn) {
     const subjectId = archiveBtn.dataset.id;
     const row = archiveBtn.closest("tr");
-    const subjectName = row?.querySelector("td strong")?.textContent || "";
+
+    // Robust extraction: Checks data-name -> <strong> tag -> first table cell text
+    const subjectName =
+      archiveBtn.dataset.name ||
+      row?.querySelector("td strong")?.textContent?.trim() ||
+      row?.querySelector("td")?.textContent?.trim() ||
+      "";
+
     openArchiveModal(subjectId, subjectName);
   }
 });
