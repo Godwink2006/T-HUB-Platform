@@ -99,27 +99,52 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderNavigation(userRole);
 });
 
-function renderNavigation(userRole) {
-  const adminOnlyLinks = [
-    "nav-system-users",
-    "nav-departments",
-    "nav-rooms",
-    "nav-periods",
-    "nav-audit-logs",
-    "nav-semesters",
-    "nav-academic-years",
-    "changeSchoolLogo",
-  ];
+// auth-guard.js
 
-  const isAdmin = userRole === "admin";
+// 1. LIST YOUR PROTECTED PAGES HERE
+const ADMIN_ONLY_PAGES = [
+  "subjects.html",
+  "departments.html",
+  "academic-years.html",
+  "structure.html",
+  "classes.html",
+  "auditLogs.html",
+];
 
-  adminOnlyLinks.forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.display = isAdmin ? "block" : "none";
-    }
-  });
+async function checkPageAccess() {
+  // Get the current page filename from the URL (e.g., "subjects.html")
+  const currentPage = window.location.pathname.split("/").pop();
+
+  // If the current page isn't in our protected list, let them through
+  if (!ADMIN_ONLY_PAGES.includes(currentPage)) {
+    return;
+  }
+
+  // Check Supabase Session
+  const {
+    data: { session },
+  } = await supabaseClient.auth.getSession();
+
+  if (!session) {
+    window.location.replace("/index.html");
+    return;
+  }
+
+  // Check Role from DB
+  const { data: profile } = await supabaseClient
+    .from("users")
+    .select("role")
+    .eq("id", session.user.id)
+    .single();
+
+  if (profile?.role !== "admin") {
+    // Kick non-admins out to the main dashboard
+    window.location.replace("/index.html");
+  }
 }
+
+// Run immediately before page renders
+checkPageAccess();
 
 function showToast(message, type = "success", duration = 3000) {
   let container = document.getElementById("toastContainer");
