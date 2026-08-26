@@ -68,7 +68,7 @@ form.addEventListener("submit", async (e) => {
     showToast("Login successful!", "success");
 
     setTimeout(() => {
-      window.location.replace("/dashboard.html");
+      window.location.replace("/html/dashboard.html");
     }, 800);
   } catch (err) {
     showToast(err.message, "error");
