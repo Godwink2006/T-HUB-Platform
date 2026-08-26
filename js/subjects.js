@@ -37,15 +37,6 @@ const cancelEditSubjectModal = document.getElementById(
   "cancelEditSubjectModal",
 );
 const editSubjectModal = document.getElementById("editSubjectModal");
-const editButtons = document.querySelectorAll(".edit");
-
-editButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    editSubjectModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
 
 closeEditSubjectModal.addEventListener("click", () => {
   editSubjectModal.style.display = "none";
@@ -69,17 +60,7 @@ window.addEventListener("click", (e) => {
 
 const archiveSubjectModal = document.getElementById("archiveSubjectModal");
 
-const archiveButtons = document.querySelectorAll(".archive");
-
 const cancelArchive = document.getElementById("cancelArchive");
-
-archiveButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    archiveSubjectModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
 
 window.addEventListener("click", (e) => {
   if (e.target === archiveSubjectModal) {
@@ -175,14 +156,12 @@ async function handleAddSubject(event) {
     showToast("Subject created successfully!", "success");
     form.reset();
 
-    // Close modal if toggle function exists
-    if (typeof closeSubjectModal === "function") {
-      closeSubjectModal();
+    // Refresh UI using the correct function name & refresh filters
+    if (typeof populateSubjectFilterDropdowns === "function") {
+      await populateSubjectFilterDropdowns();
     }
 
-    if (typeof loadSubjects === "function") {
-      await loadSubjects();
-    }
+    await fetchFilteredSubjects();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -287,7 +266,7 @@ function renderSubjectsTable(subjects, isLoading = false) {
   if (isLoading) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">
+        <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading subjects...
       </td>
@@ -350,6 +329,7 @@ function renderSubjectsTable(subjects, isLoading = false) {
 
   tbody.innerHTML = rowsHTML;
 }
+
 // Populate Department Filter using only departments assigned in subjects
 async function populateSubjectFilterDropdowns() {
   const deptSelect = document.getElementById("filterDepartmentSelect");
@@ -462,6 +442,7 @@ async function openEditSubjectModal(subjectId) {
     // Show modal (or call your UI toggle function)
     const modal = document.getElementById("editSubjectModal");
     if (modal) modal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
   } catch (err) {
     showToast(err.message, "error");
   }
@@ -549,6 +530,14 @@ async function handleUpdateSubject(event) {
 
     showToast("Subject updated successfully!", "success");
     closeEditModal();
+    if (typeof unLockBodyScroll === "function") {
+      unLockBodyScroll();
+    }
+
+    // Refresh UI using the correct function name & refresh filters
+    if (typeof populateSubjectFilterDropdowns === "function") {
+      await populateSubjectFilterDropdowns();
+    }
 
     if (typeof fetchFilteredSubjects === "function") {
       await fetchFilteredSubjects();
@@ -567,28 +556,9 @@ async function handleUpdateSubject(event) {
 function closeEditModal() {
   const modal = document.getElementById("editSubjectModal");
   if (modal) modal.style.display = "none";
+  unLockBodyScroll();
   initialSubjectData = null;
 }
-
-// 4. Delegation Event Listener for Edit Action Buttons
-document.getElementById("subjectsTableBody")?.addEventListener("click", (e) => {
-  const editBtn = e.target.closest(".subjects-actions-btn.edit");
-  if (editBtn) {
-    const subjectId = editBtn.dataset.id;
-    openEditSubjectModal(subjectId);
-  }
-});
-
-// Event Listeners for Modal Controls
-document
-  .getElementById("editSubjectForm")
-  ?.addEventListener("submit", handleUpdateSubject);
-document
-  .getElementById("closeEditSubjectModal")
-  ?.addEventListener("click", closeEditModal);
-document
-  .getElementById("cancelEditSubjectModal")
-  ?.addEventListener("click", closeEditModal);
 
 // 4. Initializer & Event Listeners
 document.addEventListener("DOMContentLoaded", async () => {
@@ -616,6 +586,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   subjectForm?.addEventListener("submit", handleAddSubject);
 
   await populateDepartmentDropdown();
+
+  // Modal Event Listeners
+  document
+    .getElementById("confirmArchiveBtn")
+    ?.addEventListener("click", handleConfirmArchive);
+  document
+    .getElementById("cancelArchiveModal")
+    ?.addEventListener("click", closeArchiveModal);
+
+  // Event Listeners for Modal Controls
+  document
+    .getElementById("editSubjectForm")
+    ?.addEventListener("submit", handleUpdateSubject);
+  document
+    .getElementById("closeEditSubjectModal")
+    ?.addEventListener("click", closeEditModal);
+  document
+    .getElementById("cancelEditSubjectModal")
+    ?.addEventListener("click", closeEditModal);
 });
 
 let targetSubjectIdToArchive = null;
@@ -633,12 +622,14 @@ function openArchiveModal(subjectId, subjectName = "") {
 
   const modal = document.getElementById("archiveSubjectModal");
   if (modal) modal.style.display = "flex";
+  if (typeof lockBodyScroll === "function") lockBodyScroll();
 }
 
 // 2. Close Archive Modal
 function closeArchiveModal() {
   const modal = document.getElementById("archiveSubjectModal");
   if (modal) modal.style.display = "none";
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   targetSubjectIdToArchive = null;
 }
 
@@ -694,24 +685,20 @@ async function handleConfirmArchive() {
   }
 }
 
-// 4. Delegation Event Listener for Table Clicks
+// 4. Combined Table Event Delegation (Edit & Archive)
 document.getElementById("subjectsTableBody")?.addEventListener("click", (e) => {
+  const editBtn = e.target.closest(".subjects-actions-btn.edit");
   const archiveBtn = e.target.closest(".subjects-actions-btn.archive");
-  if (archiveBtn) {
-    const subjectId = archiveBtn.dataset.id;
 
-    // Grab name from parent row for confirmation text
+  if (editBtn) {
+    const subjectId = editBtn.dataset.id;
+    if (typeof openEditSubjectModal === "function") {
+      openEditSubjectModal(subjectId);
+    }
+  } else if (archiveBtn) {
+    const subjectId = archiveBtn.dataset.id;
     const row = archiveBtn.closest("tr");
     const subjectName = row?.querySelector("td strong")?.textContent || "";
-
     openArchiveModal(subjectId, subjectName);
   }
 });
-
-// Modal Event Listeners
-document
-  .getElementById("confirmArchiveBtn")
-  ?.addEventListener("click", handleConfirmArchive);
-document
-  .getElementById("cancelArchiveModal")
-  ?.addEventListener("click", closeArchiveModal);
