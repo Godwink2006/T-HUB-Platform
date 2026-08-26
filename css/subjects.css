@@ -626,7 +626,8 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
   }
 
-  .edit-subject-modal-content {
+  .edit-subject-modal-content,
+  .subject-modal-content {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -637,19 +638,6 @@ tr {
     border-radius: 10px;
     animation: modalShow 0.25s ease;
     overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
-  }
-
-  .subject-modal-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 650px; /* Fixed height requirement */
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
   }
 
   @keyframes modalShow {
