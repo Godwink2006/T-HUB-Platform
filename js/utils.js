@@ -132,7 +132,7 @@ async function checkPageAccess() {
 
   // Check Role from DB
   const { data: profile } = await supabaseClient
-    .from("users")
+    .from("profiles")
     .select("role")
     .eq("id", session.user.id)
     .single();
