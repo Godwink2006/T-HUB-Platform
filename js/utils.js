@@ -236,13 +236,73 @@ window.initInactivityTracker = function () {
   resetTimer();
 };
 
-// 3. Safe Auth State Listener
-window.initAuthListener = function (supabase) {
+// ==========================================
+// CENTRAL PAGE GUARD & AUTO-SESSION CHECK
+// Runs automatically on every page load
+// ==========================================
+(async function initPageGuard() {
+  // Wait for DOM to load
+  if (document.readyState === "loading") {
+    await new Promise((resolve) =>
+      document.addEventListener("DOMContentLoaded", resolve),
+    );
+  }
+
+  // 1. Identify public/login pages vs protected pages
+  const path = window.location.pathname.toLowerCase();
+  const isLoginPage =
+    path.endsWith("index.html") || path === "/" || path.endsWith("/login.html");
+
+  // Skip guard if we are already on the login page
+  if (isLoginPage) return;
+
+  // 2. Ensure Supabase client is initialized
+  if (!window.supabaseClient) {
+    console.error("Supabase client not initialized in window.supabaseClient");
+    return;
+  }
+
+  // 3. Actively validate token against Supabase Auth (Detects expired JWTs)
+  const {
+    data: { user },
+    error,
+  } = await window.supabaseClient.auth.getUser();
+
+  // Redirect immediately if no user or token expired
+  if (error || !user) {
+    console.warn("Session expired or invalid user. Redirecting to login...");
+    await window.supabaseClient.auth.signOut();
+    window.location.href = "/index.html";
+    return;
+  }
+
+  // 4. Setup real-time listener for signouts/timeouts during active session
+  window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if ((event === "SIGNED_OUT" || !session) && !isLoginPage) {
+      window.location.href = "/index.html";
+    }
+  });
+})();
+
+window.initAuthListener = async function (supabase) {
   if (!supabase) return;
 
-  supabase.auth.onAuthStateChange((event, session) => {
+  // 1. Actively validate token against Supabase Auth (catches expired JWTs immediately)
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if ((error || !user) && !isLoginPage()) {
+    await supabase.auth.signOut();
+    window.location.href = "/index.html";
+    return;
+  }
+
+  // 2. Real-time auth listener for auto-refresh and signouts
+  supabase.auth.onAuthStateChange(async (event, session) => {
     if ((event === "SIGNED_OUT" || !session) && !isLoginPage()) {
-      window.location.href = "/index.html"; // <-- Absolute path
+      window.location.href = "/index.html";
     }
   });
 };
@@ -252,6 +312,3 @@ window.initInactivityTracker();
 
 // Auto-run on DOM load
 document.addEventListener("DOMContentLoaded", loadHeaderSchoolLogo);
-
-// Auto-run on DOM load
-document.addEventListener("DOMContentLoaded", renderNavigation);

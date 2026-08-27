@@ -8,6 +8,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/periods.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -44,16 +45,22 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search periods..." />
+          <!-- Search Input ID for JavaScript debounce filtering -->
+          <input
+            type="text"
+            id="searchPeriodInput"
+            placeholder="Search periods..."
+          />
 
-          <select>
-            <option>School Level</option>
+          <!-- Filter Dropdown IDs -->
+          <select id="filterLevelSelect">
+            <option value="">All School Levels</option>
           </select>
 
-          <select>
-            <option>Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+          <select id="filterStatusSelect">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
 
@@ -66,50 +73,15 @@
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th>Actions</th>
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>Secondary</td>
-                <td>Period 1</td>
-                <td>08:00 AM</td>
-                <td>08:50 AM</td>
-                <td>
-                  <span class="periods-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="periods-actions-btn edit-Period">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="periods-actions-btn archive-Period">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Secondary</td>
-                <td>Lunch Break</td>
-                <td>12:30 PM</td>
-                <td>01:10 PM</td>
-                <td>
-                  <span class="periods-status-inactive">Inactive</span>
-                </td>
-
-                <td>
-                  <button class="periods-actions-btn edit-Period">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="periods-actions-btn archive-Period">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
+            <!-- Table Body ID targeted by renderPeriodsTable() -->
+            <tbody id="periodsTableBody">
+              <!-- Dynamic rows populated by JavaScript -->
             </tbody>
           </table>
         </section>
@@ -119,46 +91,54 @@
     <div id="periodModal" class="modal-period">
       <div class="period-modal-content">
         <div class="period-modal-header">
-          <h2>Add Period</h2>
-
+          <h2 id="periodModalTitle">Add Period</h2>
           <button id="closePeriodModal">&times;</button>
         </div>
 
         <div class="period-modal-body">
           <form id="periodForm">
+            <input type="hidden" id="editPeriodId" value="" />
+
             <div class="form-grid">
               <div class="form-group">
                 <label>School Level *</label>
-
-                <select>
-                  <option>Select School Level</option>
+                <select id="schoolLevelSelect" required>
+                  <option value="">Select School Level</option>
+                  <option value="Nursery">Nursery</option>
+                  <option value="Primary">Primary</option>
+                  <option value="Junior Primary">Junior Primary</option>
+                  <option value="Senior Primary">Senior Primary</option>
+                  <option value="Secondary">Secondary</option>
+                  <option value="Junior Secondary">Junior Secondary</option>
+                  <option value="Senior Secondary">Senior Secondary</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Period Name *</label>
-
-                <input type="text" placeholder="Enter period name" />
+                <input
+                  type="text"
+                  id="periodNameInput"
+                  placeholder="e.g. Period 1, Morning Break"
+                  required
+                />
               </div>
 
               <div class="form-group">
                 <label>Start Time *</label>
-
-                <input type="time" />
+                <input type="time" id="startTimeInput" required />
               </div>
 
               <div class="form-group">
                 <label>End Time *</label>
-
-                <input type="time" />
+                <input type="time" id="endTimeInput" required />
               </div>
 
               <div class="form-group">
                 <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Inactive</option>
+                <select id="periodStatusSelect" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
@@ -167,59 +147,63 @@
               <button type="button" class="cancel-btn" id="cancelPeriodModal">
                 Cancel
               </button>
-
-              <button type="submit" class="save-btn">Save</button>
+              <button type="submit" class="save-btn" id="savePeriodBtn">
+                Save Period
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!---Edit class modal-->
-
     <div id="editPeriodModal" class="edit-modal-period">
       <div class="edit-period-modal-content">
         <div class="edit-period-modal-header">
-          <h2>Edit Period</h2>
+          <h2 id="editPeriodModalTitle">Edit Period</h2>
 
-          <button id="closeEditPeriodModal">&times;</button>
+          <button type="button" id="closeEditPeriodModal">&times;</button>
         </div>
 
         <div class="edit-period-modal-body">
-          <form id="periodForm">
+          <form id="editPeriodForm">
+            <input type="hidden" id="editPeriodId" />
+
             <div class="form-grid">
               <div class="form-group">
-                <label>School Level *</label>
+                <label for="editSchoolLevelSelect">School Level *</label>
 
-                <select>
-                  <option>Select School Level</option>
-                </select>
+                <input type="text" id="editSchoolLevelInput" readonly />
               </div>
 
               <div class="form-group">
-                <label>Period Name *</label>
+                <label for="editPeriodNameInput">Period Name *</label>
 
-                <input type="text" placeholder="Enter period name" />
+                <input
+                  type="text"
+                  id="editPeriodNameInput"
+                  placeholder="Enter period name"
+                  required
+                />
               </div>
 
               <div class="form-group">
-                <label>Start Time *</label>
+                <label for="editStartTimeInput">Start Time *</label>
 
-                <input type="time" />
+                <input type="time" id="editStartTimeInput" required />
               </div>
 
               <div class="form-group">
-                <label>End Time *</label>
+                <label for="editEndTimeInput">End Time *</label>
 
-                <input type="time" />
+                <input type="time" id="editEndTimeInput" required />
               </div>
 
               <div class="form-group">
-                <label>Status *</label>
+                <label for="editPeriodStatusSelect">Status *</label>
 
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
+                <select id="editPeriodStatusSelect" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
@@ -233,7 +217,9 @@
                 Cancel
               </button>
 
-              <button type="submit" class="edit-btn">Update Period</button>
+              <button type="submit" class="edit-btn" id="updatePeriodBtn">
+                Update Period
+              </button>
             </div>
           </form>
         </div>
@@ -242,27 +228,48 @@
 
     <div id="archivePeriodModal" class="archive-modal">
       <div class="confirm-modal">
-        <div confirm-icon>
+        <div class="confirm-icon">
           <i class="fa-solid fa-box-archive"></i>
         </div>
 
         <h2>Archive Period</h2>
 
+        <p>Are you sure you want to archive this period?</p>
+
+        <div class="archive-period-details">
+          <p>
+            <strong>School Level:</strong>
+            <span id="archiveSchoolLevel"></span>
+          </p>
+
+          <p>
+            <strong>Period:</strong>
+            <span id="archivePeriodName"></span>
+          </p>
+        </div>
+
         <p>
-          Are you sure you want to archive this Period? Archived periods will
-          not be available when creating timetables.
+          This period will be marked as inactive and will no longer be available
+          when creating timetables.
         </p>
 
         <div class="archive-modal-footer">
-          <button id="cancelArchive" class="cancel-btn">Cancel</button>
+          <button type="button" id="cancelArchive" class="cancel-btn">
+            Cancel
+          </button>
 
-          <button id="confirmArchive" class="archive-confirm-btn">
+          <button type="button" id="confirmArchive" class="archive-confirm-btn">
             Archive
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/periods.js"></script>
   </body>

@@ -1,438 +1,842 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins',sans-serif;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
 }
 
-body{
-    background: rgb(231, 226, 226);
+/* Base modal wrapper: fixed overlay spanning the viewport */
+.modal-period {
+  display: none; /* hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent dark backdrop */
+  z-index: 9999; /* ensures it sits above header/tables */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Reveal modal when JS adds the 'active' class */
+.modal-period.active {
+  display: flex !important;
+}
+
+/* Modal inner dialog box styling */
+.period-modal-content {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+body {
+  background: rgb(231, 226, 226);
 }
 
 .period-container {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 10px;
 }
 
-.period-main-content{
-    border-radius: 10px;
-    padding: 20px;
+.period-main-content {
+  border-radius: 10px;
+  padding: 10px;
 }
 
 /* Topbar */
 
-.topbar{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
-.topbar h1{
-    font-size: 32px;
-    color: #1f2937;
+.topbar h1 {
+  font-size: 32px;
+  color: #1f2937;
 }
 
-.topbar p{
-    color: #6b7280;
-    margin-top: 5px;
+.topbar p {
+  color: #6b7280;
+  margin-top: 5px;
 }
 
-.top-right{
-    display: flex;
-    align-items: center;
-    gap: 25px;
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 25px;
 }
 
-.add-periods-btn{
-    width: auto;
-    height: 48px;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    border: 2px solid rgb(219, 215, 215);
+.add-periods-btn {
+  width: auto;
+  height: 48px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-.back-periods-btn{
-    height: 30px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    margin-top: 5px;
-    border: 2px solid rgb(219, 215, 215);
-    width: 70px;
-    justify-content: space-between;
+.back-periods-btn {
+  height: 30px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 5px;
+  border: 2px solid rgb(219, 215, 215);
+  width: 70px;
+  justify-content: space-between;
 }
 
-.toolbar{
-    display: flex;
-    gap: 15px;
-    margin: 25px 0;
+.toolbar {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
 }
 
 .toolbar input,
-.toolbar select{
-    height: 48px;
-    border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
-    padding: 0 15px;
-    outline: none;
-    background: #ffff;
+.toolbar select {
+  height: 48px;
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 10px;
+  padding: 0 15px;
+  outline: none;
+  background: #ffff;
 }
 
-.toolbar input{
-   width: 320px;
+.toolbar input {
+  width: 320px;
 }
 
-.periods-table-card{
-    background: #ffff;
-    overflow: hidden;
+.periods-table-card {
+  background: #ffff;
+  overflow: hidden;
 }
 
-table{
-    width: 100%;
-    border-collapse: collapse;
+table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-thead{
-    background: #f8fafc;
-    border: 2px solid rgb(219, 215, 215);
+thead {
+  background: #f8fafc;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-th{
-    padding: 18px;
-    text-align: left;
-    font-size: 14px;
-    color: #6b7280;
-    border: 2px solid rgb(219, 215, 215);
+th {
+  padding: 18px;
+  text-align: left;
+  font-size: 14px;
+  color: #6b7280;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-td{
-    padding: 18px;
+td {
+  padding: 18px;
 }
 
-tr{
-    border: 2px solid rgb(219, 215, 215);
+tr {
+  border: 2px solid rgb(219, 215, 215);
 }
 
-.status{
-    padding: 6px 14px;
-    border-radius: 30px;
-    font-size: 13px;
-    font-weight: 500;
+.status {
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.periods-status-active{
-    background: #dcfce7;
-    color: #166534;
+.periods-status-active {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.periods-status-inactive{
-    background: #fcdcdc;
-    color: #651616;
+.periods-status-inactive {
+  background: #fcdcdc;
+  color: #651616;
 }
 
-.periods-actions-btn{
-    width: 38px;
-    height: 38px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-right: 6px;
+.periods-actions-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-right: 6px;
 }
 
-.edit-Period{
-    background: #fef3c7;
-    color: #d97706;
+.edit-Period {
+  background: #fef3c7;
+  color: #d97706;
 }
 
-.archive-Period{
-    background: #fee2e2;
-    color: #dc2626;
+.archive-Period {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 /* Subject modal */
 
-.modal-period{
-    position: fixed;
-    top: 0;
-    left: 0;
+.modal-period {
+  position: fixed;
+  top: 0;
+  left: 0;
 
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, .45);
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
 
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.period-modal-content{
-    overflow: auto;
-    width: 700px;
-    max-width: 95%;
-    background: #ffff;
-    border-radius: 18px;
-    animation: modalShow .25s ease;
-    height: 450px;
+.period-modal-content {
+  overflow: auto;
+  width: 700px;
+  max-width: 95%;
+  background: #ffff;
+  border-radius: 18px;
+  animation: modalShow 0.25s ease;
+  height: 450px;
 }
 
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 
-@keyframes modalShow{
-    from{
-        opacity: 0;
-        transform: scale(.95);
-    }
-
-    to{
-        opacity: 1;
-        transform: scale(1);
-    }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.period-modal-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    border: 2px solid rgb(219, 215, 215);
+.period-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-.period-modal-header h2{
-    font-size: 22px;
+.period-modal-header h2 {
+  font-size: 22px;
 }
 
-.period-modal-header button{
-    cursor: pointer;
-    color: #374151;
-    background: #f3f4f6;
-    border-radius: 8px;
-    border: none;
-    height: 40px;
-    width: 40px;
-    font-size: 22px;
+.period-modal-header button {
+  cursor: pointer;
+  color: #374151;
+  background: #f3f4f6;
+  border-radius: 8px;
+  border: none;
+  height: 40px;
+  width: 40px;
+  font-size: 22px;
 }
 
-.period-modal-body{
-    padding: 25px;
+.period-modal-body {
+  padding: 25px;
 }
 
-.form-grid{
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 20px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
-.form-group{
-    display: flex;
-    flex-direction: column;
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 
-.form-group label{
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
+.form-group label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea{
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
-    outline: none;
-    font-size: 15px;
+.form-group textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 10px;
+  outline: none;
+  font-size: 15px;
 }
 
-.form-group textarea{
-    resize: none;
+.form-group textarea {
+  resize: none;
 }
 
-.full-width{
-    grid-column: 1 / -1;
+.full-width {
+  grid-column: 1 / -1;
 }
 
-.period-modal-footer{
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
+.period-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
 }
 
-.cancel-btn{
+.cancel-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 10px;
+  background: #e5e7eb;
+  cursor: pointer;
+}
+
+.save-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffff;
+  cursor: pointer;
+}
+
+.edit-modal-period {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.edit-modal-period.active {
+  display: flex;
+}
+
+.edit-period-modal-content {
+  overflow: auto;
+  width: 700px;
+  max-width: 95%;
+  background: #ffff;
+  border-radius: 18px;
+  animation: modalShow 0.25s ease;
+  height: 450px;
+}
+
+.edit-period-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+.edit-period-modal-header h2 {
+  font-size: 22px;
+}
+
+.edit-period-modal-header button {
+  cursor: pointer;
+  color: #374151;
+  background: #f3f4f6;
+  border-radius: 8px;
+  border: none;
+  height: 40px;
+  width: 40px;
+  font-size: 22px;
+}
+
+.edit-period-modal-body {
+  padding: 25px;
+}
+
+.edit-period-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.edit-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffff;
+  cursor: pointer;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.details-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.details-item label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.details-item p {
+  font-weight: 500;
+  color: #111827;
+}
+
+.confirm-modal {
+  width: 430px;
+  background: #ffff;
+  border-radius: 18px;
+  padding: 35px;
+  text-align: center;
+  animation: modalShow 0.25s ease;
+}
+
+.confirm-icon {
+  width: 70px;
+  height: 70px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 50%;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.confirm-modal h2 {
+  margin-bottom: 15px;
+}
+
+.confirm-modal p {
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.archive-confirm-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 10px;
+  background: #dc2626;
+  color: #ffff;
+  cursor: pointer;
+}
+
+.archive-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.archive-modal.active {
+  display: flex;
+}
+
+.archive-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+@media screen and (max-width: 768px) {
+  .archive-confirm-btn {
     padding: 12px 22px;
     border: none;
-    border-radius: 10px;
-    background: #e5e7eb;
-    cursor: pointer;
-}
-
-.save-btn{
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
-    background: #2563eb;
-    color: #ffff;
-    cursor: pointer;
-}
-
-.edit-modal-period{
-    position: fixed;
-    top: 0;
-    left: 0;
-
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, .45);
-
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.edit-period-modal-content{
-    overflow: auto;
-    width: 700px;
-    max-width: 95%;
-    background: #ffff;
-    border-radius: 18px;
-    animation: modalShow .25s ease;
-    height: 450px;
-}
-
-.edit-period-modal-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    border: 2px solid rgb(219, 215, 215);
-}
-
-.edit-period-modal-header h2{
-    font-size: 22px;
-}
-
-.edit-period-modal-header button{
-    cursor: pointer;
-    color: #374151;
-    background: #f3f4f6;
-    border-radius: 8px;
-    border: none;
-    height: 40px;
-    width: 40px;
-    font-size: 22px;
-}
-
-.edit-period-modal-body{
-    padding: 25px;
-}
-
-.edit-period-modal-footer{
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
-}
-
-.edit-btn{
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
-    background: #2563eb;
-    color: #ffff;
-    cursor: pointer;
-}
-
-.details-grid{
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 20px;
-}
-
-.details-item{
-    display: flex;
-    flex-direction: column;
-}
-
-.details-item label{
-    font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 6px;
-}
-
-.details-item p{
-    font-weight: 500;
-    color: #111827;
-}
-
-.confirm-modal{
-    width: 430px;
-    background: #ffff;
-    border-radius: 18px;
-    padding: 35px;
-    text-align: center;
-     animation: modalShow .25s ease;
-}
-
-.confirm-icon{
-    width: 70px;
-    height: 70px;
-    background: #fee2e2;
-    color: #dc2626;
-    border-radius: 50%;
-    margin: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    margin-bottom: 20px;
-}
-
-.confirm-modal h2{
-    margin-bottom: 15px;
-}
-
-.confirm-modal p{
-    line-height: 1.6;
-    color: #6b7280;
-}
-
-.archive-confirm-btn{
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
     background: #dc2626;
     color: #ffff;
     cursor: pointer;
-}
+    border-radius: 10px;
+  }
 
-.archive-modal{
-    position: fixed;
-    top: 0;
-    left: 0;
+  .confirm-modal {
+    display: flex;
+    flex-direction: column;
+    max-width: 350px;
+    height: 470px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 10px;
+    animation: modalShow 0.25s ease;
+    overflow: hidden;
+  }
 
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, .45);
+  .periods-status-active {
+    background: #dcfce7;
+    color: #166534;
+    padding: 10px;
+    border-radius: 10px;
+  }
 
-    display: none;
-    justify-content: center;
+  .periods-status-inactive {
+    background: #fcdcdc;
+    color: #651616;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .periods-actions-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    cursor: pointer;
+    margin-right: 6px;
+    border-radius: 10px;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  body {
+    background: rgb(231, 226, 226);
+  }
+
+  .topbar h1,
+  .topbar p {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .topbar {
+    align-items: center !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px 12px !important;
+  }
+
+  .topbar h1 {
+    font-size: 24px;
+    color: #1f2937;
+  }
+
+  .topbar p {
+    color: #6b7280;
+    margin-top: 2px;
+    font-size: 13px;
+  }
+
+  /* Back and Add User Buttons on the Same Line */
+  .top-right {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .back-periods-btn {
+    grid-column: 1;
+    width: auto !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
     align-items: center;
-    z-index: 1000;
-}
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid rgb(219, 215, 215);
+    background: #1f2937;
+    color: #f9fafb;
+    font-size: 13px;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
 
-.archive-modal-footer{
+  .add-periods-btn {
+    grid-column: 2;
+    background: #15803d;
+    color: #ffffff;
+    flex: 1 !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    border: 2px solid #14532d;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  /* --- Toolbar Inputs in a Single Horizontal Row --- */
+
+  .toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin: 10px 0;
+    width: 100%;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    height: 40px;
+    border: 1.5px solid rgb(219, 215, 215);
+    padding: 0 8px;
+    outline: none;
+    background: #ffffff;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0; /* Prevents overflow inside flex containers */
+    border-radius: 10px;
+  }
+
+  .periods-table-card {
+    background: #ffffff;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px; /* Ensures table doesn't shrink too much on small screens */
+  }
+
+  thead {
+    background: #f8fafc;
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  th {
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    border: 1.5px solid rgb(219, 215, 215);
+    white-space: nowrap;
+  }
+
+  th,
+  td {
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+  }
+
+  td {
+    padding: 8px 10px;
+    font-size: 12px;
+    border: 1.5px solid rgb(219, 215, 215);
+    white-space: nowrap;
+  }
+
+  tr {
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .edit-period-modal-content,
+  .period-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 590px; /* Fixed height requirement */
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 10px;
+    animation: modalShow 0.25s ease;
+    overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
+  }
+
+  @keyframes modalShow {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .period-modal-header {
     display: flex;
     justify-content: space-between;
-    gap: 15px;
-    margin-top: 30px;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .period-modal-header h2 {
+    font-size: 18px;
+  }
+
+  .period-modal-header button {
+    cursor: pointer;
+    color: #f9fafb;
+    border: none;
+    height: 34px;
+    border-radius: 10px !important;
+    width: 34px;
+    font-size: 16px;
+    background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+  }
+
+  .period-modal-body {
+    padding: 20px;
+    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    flex: 1;
+  }
+
+  .edit-period-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .edit-period-modal-header h2 {
+    font-size: 18px;
+  }
+
+  .edit-period-modal-header button {
+    cursor: pointer;
+    color: #f9fafb;
+    border: none;
+    height: 34px;
+    border-radius: 10px;
+    width: 34px;
+    font-size: 16px;
+    background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+  }
+
+  .edit-period-modal-body {
+    padding: 20px;
+    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    flex: 1;
+  }
+
+  /* Horizontal Modal Action Buttons with Space Between */
+  .edit-period-modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1.5px solid rgb(219, 215, 215);
+  }
+
+  /* Horizontal Modal Action Buttons with Space Between */
+  .period-modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-group label {
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px solid rgb(219, 215, 215);
+    outline: none;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .form-group textarea {
+    resize: none;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    justify-content: space-between;
+  }
+
+  .edit-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    justify-content: space-between;
+  }
+
+  .cancel-btn {
+    background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+    color: #f9fafb;
+  }
+
+  .save-btn {
+    background: #2563eb;
+    color: #ffffff;
+  }
 }
