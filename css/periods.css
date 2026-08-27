@@ -504,6 +504,10 @@ tr {
     border-radius: 10px;
   }
 
+  .confirm-icon {
+    border-radius: 50%;
+  }
+
   * {
     margin: 0;
     padding: 0;
