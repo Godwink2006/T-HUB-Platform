@@ -312,3 +312,27 @@ window.initInactivityTracker();
 
 // Auto-run on DOM load
 document.addEventListener("DOMContentLoaded", loadHeaderSchoolLogo);
+
+document.addEventListener("click", (event) => {
+  const modalIds = [
+    "periodModal",
+    "editPeriodModal",
+    "archivePeriodModal",
+    "archiveSystemUserModal",
+    "editSystemUserModal",
+    "systemUserModal",
+  ];
+
+  modalIds.forEach((id) => {
+    const modal = document.getElementById(id);
+
+    // Only close when the backdrop itself is clicked
+    if (modal && event.target === modal) {
+      modal.classList.remove("active");
+
+      if (typeof unLockBodyScroll === "function") {
+        unLockBodyScroll();
+      }
+    }
+  });
+});
