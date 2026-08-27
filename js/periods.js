@@ -265,6 +265,23 @@ async function confirmArchivePeriod() {
   }
 }
 
+document.addEventListener("click", (event) => {
+  const modalIds = ["periodModal", "editPeriodModal", "archivePeriodModal"];
+
+  modalIds.forEach((id) => {
+    const modal = document.getElementById(id);
+
+    // Only close when the backdrop itself is clicked
+    if (modal && event.target === modal) {
+      modal.classList.remove("active");
+
+      if (typeof unLockBodyScroll === "function") {
+        unLockBodyScroll();
+      }
+    }
+  });
+});
+
 function closeArchivePeriodModal() {
   const modal = document.getElementById("archivePeriodModal");
 
