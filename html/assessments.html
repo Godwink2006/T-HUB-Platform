@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/assessments.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="assessment-container">
+      <main class="assessment-main-content">
+        <header class="topbar">
+          <div>
+            <h1>Assessments & Categories</h1>
+            <p>Manage grading assessments and categories.</p>
+
+            <button
+              onclick="window.location.href = 'settings.html'"
+              class="back-assessments-btn"
+            >
+              <i class="fa-solid fa-chevron-left"></i>
+              Back
+            </button>
+          </div>
+        </header>
+
+        <!-- ========================= -->
+        <!-- ASSESSMENTS CARD -->
+        <!-- ========================= -->
+
+        <section class="assessment-card">
+          <div class="assessment-card-header">
+            <div>
+              <h2>Assessments</h2>
+              <p>Manage grading periods and their maximum marks.</p>
+            </div>
+
+            <button id="addAssessment" class="add-assessment-btn">
+              <i class="fa-solid fa-plus"></i>
+              Add Assessment
+            </button>
+          </div>
+
+          <div class="assessment-table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Assessment Name</th>
+                  <th>Description</th>
+                  <th>Marks</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="assessmentsTableBody">
+                <tr>
+                  <td>1st Period</td>
+                  <td>First grading period</td>
+                  <td>100</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Assessment">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Assessment">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>2nd Period</td>
+                  <td>Second grading period</td>
+                  <td>100</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Assessment">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Assessment">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>3rd Period</td>
+                  <td>Third grading period</td>
+                  <td>100</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Assessment">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Assessment">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>4th Period</td>
+                  <td>Fourth grading period</td>
+                  <td>100</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Assessment">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Assessment">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Exam</td>
+                  <td>End of year examination</td>
+                  <td>100</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Assessment">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Assessment">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ========================= -->
+        <!-- CATEGORIES CARD -->
+        <!-- ========================= -->
+
+        <section class="assessment-card">
+          <div class="assessment-card-header">
+            <div>
+              <h2>Categories</h2>
+              <p>Manage the categories used to calculate assessment marks.</p>
+            </div>
+
+            <button id="addCategory" class="add-assessment-btn">
+              <i class="fa-solid fa-plus"></i>
+              Add Category
+            </button>
+          </div>
+
+          <div class="assessment-table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Category Name</th>
+                  <th>Description</th>
+                  <th>Marks</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody id="categoriesTableBody">
+                <tr>
+                  <td>Homework</td>
+                  <td>Homework and take-home assignments</td>
+                  <td>20</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Category">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Category">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Classwork</td>
+                  <td>Work completed during class</td>
+                  <td>20</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Category">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Category">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Quiz</td>
+                  <td>Short quizzes and assessments</td>
+                  <td>20</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Category">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Category">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Test</td>
+                  <td>Subject tests</td>
+                  <td>60</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Category">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Category">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Project</td>
+                  <td>Individual or group projects</td>
+                  <td>20</td>
+                  <td>
+                    <span class="rooms-status-active">Active</span>
+                  </td>
+                  <td>
+                    <button class="rooms-actions-btn edit-Category">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="rooms-actions-btn archive-Category">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="assessmentModal" class="assessment-modal">
+      <div class="assessment-modal-content">
+        <div class="assessment-modal-header">
+          <h2>Add Assessment</h2>
+
+          <button
+            type="button"
+            id="closeAssessmentModal"
+            class="assessment-modal-close"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="assessment-modal-body">
+          <form id="assessmentForm">
+            <div class="assessment-form-group">
+              <label>Assessment Name *</label>
+              <input
+                type="text"
+                id="assessmentNameInput"
+                placeholder="e.g. 1st Period"
+                required
+              />
+            </div>
+
+            <div class="assessment-form-group">
+              <label>Description</label>
+              <textarea
+                id="assessmentDescriptionInput"
+                placeholder="Optional description"
+              ></textarea>
+            </div>
+
+            <div class="assessment-form-group">
+              <label>Maximum Marks *</label>
+              <input
+                type="number"
+                id="assessmentMarksInput"
+                min="1"
+                max="100"
+                placeholder="100"
+                required
+              />
+            </div>
+
+            <div class="assessment-form-group">
+              <label>Status *</label>
+
+              <select id="assessmentStatusInput" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </form>
+        </div>
+
+        <div class="assessment-modal-footer">
+          <button
+            type="button"
+            id="cancelAssessmentModal"
+            class="assessment-cancel-btn"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            form="assessmentForm"
+            class="assessment-save-btn"
+          >
+            Save Assessment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="editAssessmentModal" class="assessment-modal">
+      <div class="assessment-modal-content">
+        <div class="assessment-modal-header">
+          <h2>Edit Assessment</h2>
+
+          <button
+            type="button"
+            id="closeEditAssessmentModal"
+            class="assessment-modal-close"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="assessment-modal-body">
+          <form id="editAssessmentForm">
+            <input type="hidden" id="editAssessmentId" />
+
+            <div class="assessment-form-group">
+              <label>Assessment Name *</label>
+              <input type="text" id="editAssessmentNameInput" required />
+            </div>
+
+            <div class="assessment-form-group">
+              <label>Description</label>
+              <textarea id="editAssessmentDescriptionInput"></textarea>
+            </div>
+
+            <div class="assessment-form-group">
+              <label>Maximum Marks *</label>
+              <input
+                type="number"
+                id="editAssessmentMarksInput"
+                min="1"
+                max="100"
+                required
+              />
+            </div>
+
+            <div class="assessment-form-group">
+              <label>Status *</label>
+
+              <select id="editAssessmentStatusInput" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </form>
+        </div>
+
+        <div class="assessment-modal-footer">
+          <button
+            type="button"
+            id="cancelEditAssessmentModal"
+            class="assessment-cancel-btn"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            form="editAssessmentForm"
+            class="assessment-save-btn"
+          >
+            Update Assessment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="categoryModal" class="assessment-modal">
+      <div class="assessment-modal-content">
+        <div class="assessment-modal-header">
+          <h2 id="categoryModalTitle">Add Category</h2>
+
+          <button type="button" id="closeCategoryModal">&times;</button>
+        </div>
+
+        <div class="assessment-modal-body">
+          <form id="categoryForm">
+            <input type="hidden" id="categoryId" />
+
+            <div class="form-group">
+              <label for="categoryNameInput"> Category Name * </label>
+
+              <input
+                type="text"
+                id="categoryNameInput"
+                placeholder="e.g. Homework"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="categoryMarksInput"> Marks * </label>
+
+              <input
+                type="number"
+                id="categoryMarksInput"
+                min="1"
+                max="100"
+                placeholder="10"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="categoryStatusSelect"> Status * </label>
+
+              <select id="categoryStatusSelect" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="assessment-modal-footer">
+              <button type="button" class="cancel-btn" id="cancelCategoryModal">
+                Cancel
+              </button>
+
+              <button type="submit" class="save-btn" id="saveCategoryBtn">
+                Save Category
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/rooms.js"></script>
+  </body>
+</html>

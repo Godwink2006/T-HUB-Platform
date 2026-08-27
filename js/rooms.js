@@ -1,100 +1,260 @@
-const roomModal = document.getElementById("roomModal");
+// =========================================================
+// ASSESSMENT MODAL CONTROLS
+// =========================================================
 
-const cancelRoomModal = document.getElementById("cancelRoomModal");
+function openAssessmentModal() {
+  const modal = document.getElementById("assessmentModal");
 
-const openRoomModal = document.getElementById("addRoom");
+  if (!modal) return;
 
-const closeRoomModal = document.getElementById("closeRoomModal");
-
-openRoomModal.addEventListener("click", ()=> {
-roomModal.style.display="flex";
-
-lockBodyScroll();
-});
-
-closeRoomModal.addEventListener("click", ()=> {
-roomModal.style.display="none";
-
-unLockBodyScroll();
-});
-
-cancelRoomModal.addEventListener("click", ()=> {
-roomModal.style.display="none";
-
-unLockBodyScroll();
-});
-
-window.addEventListener("click",(e)=> {
-if(e.target===roomModal){
-roomModal.style.display="none";
-
-unLockBodyScroll();
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
 }
-});
 
+function closeAssessmentModal() {
+  const modal = document.getElementById("assessmentModal");
 
-const closeEditRoomModal = document.getElementById("closeEditRoomModal");
-const cancelEditRoomModal = document.getElementById("cancelEditRoomModal");
-const editRoomModal = document.getElementById("editRoomModal");
-const editRoomButtons = document.querySelectorAll(".edit-Room");
+  if (!modal) return;
 
-editRoomButtons.forEach(button=>{
-
-button.addEventListener("click", ()=> {
-editRoomModal.style.display="flex";
-
-lockBodyScroll();
-});
-
-})
-
-closeEditRoomModal.addEventListener("click", ()=> {
-editRoomModal.style.display="none";
-
-unLockBodyScroll();
-});
-
-cancelEditRoomModal.addEventListener("click", ()=> {
-editRoomModal.style.display="none";
-
-unLockBodyScroll();
-});
-
-window.addEventListener("click",(e)=> {
-if(e.target===editRoomModal){
-editRoomModal.style.display="none";
-
-unLockBodyScroll();
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
 }
-});
 
-const archiveRoomModal = document.getElementById("archiveRoomModal");
+function openEditAssessmentModal(id) {
+  const modal = document.getElementById("editAssessmentModal");
 
-const archiveButtons = document.querySelectorAll(".archive-Room");
+  if (!modal) return;
 
-const cancelArchive = document.getElementById("cancelArchive");
+  // Later we can load the assessment from Supabase here.
+  console.log("Edit assessment:", id);
 
-archiveButtons.forEach(button=>{
-
-button.addEventListener("click", ()=> {
-archiveRoomModal.style.display="flex";
-
-lockBodyScroll();
-});
-
-})
-
-cancelArchive.addEventListener("click", ()=> {
-archiveRoomModal.style.display="none";
-
-unLockBodyScroll();
-});
-
-window.addEventListener("click",(e)=> {
-
-if(e.target===archiveRoomModal){
-archiveRoomModal.style.display="none";
-
-unLockBodyScroll();
+  modal.dataset.id = id;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
 }
+
+function closeEditAssessmentModal() {
+  const modal = document.getElementById("editAssessmentModal");
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function openArchiveAssessmentModal(id, name) {
+  const modal = document.getElementById("archiveAssessmentModal");
+
+  if (!modal) return;
+
+  const nameElement = document.getElementById("archiveAssessmentName");
+
+  if (nameElement) {
+    nameElement.textContent = name;
+  }
+
+  modal.dataset.id = id;
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeArchiveAssessmentModal() {
+  const modal = document.getElementById("archiveAssessmentModal");
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+// =========================================================
+// CATEGORY MODALS
+// =========================================================
+
+function openCategoryModal() {
+  const modal = document.getElementById("categoryModal");
+
+  if (!modal) return;
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeCategoryModal() {
+  const modal = document.getElementById("categoryModal");
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function openEditCategoryModal(id) {
+  const modal = document.getElementById("editCategoryModal");
+
+  if (!modal) return;
+
+  console.log("Edit category:", id);
+
+  modal.dataset.id = id;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEditCategoryModal() {
+  const modal = document.getElementById("editCategoryModal");
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function openArchiveCategoryModal(id, name) {
+  const modal = document.getElementById("archiveCategoryModal");
+
+  if (!modal) return;
+
+  const nameElement = document.getElementById("archiveCategoryName");
+
+  if (nameElement) {
+    nameElement.textContent = name;
+  }
+
+  modal.dataset.id = id;
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeArchiveCategoryModal() {
+  const modal = document.getElementById("archiveCategoryModal");
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+// =========================================================
+// PAGE EVENT LISTENERS
+// =========================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+  // -------------------------
+  // Assessment Add
+  // -------------------------
+
+  document
+    .getElementById("addAssessmentBtn")
+    ?.addEventListener("click", openAssessmentModal);
+
+  document
+    .getElementById("closeAssessmentModal")
+    ?.addEventListener("click", closeAssessmentModal);
+
+  document
+    .getElementById("cancelAssessmentModal")
+    ?.addEventListener("click", closeAssessmentModal);
+
+  // -------------------------
+  // Assessment Edit
+  // -------------------------
+
+  document
+    .getElementById("closeEditAssessmentModal")
+    ?.addEventListener("click", closeEditAssessmentModal);
+
+  document
+    .getElementById("cancelEditAssessmentModal")
+    ?.addEventListener("click", closeEditAssessmentModal);
+
+  // -------------------------
+  // Assessment Archive
+  // -------------------------
+
+  document
+    .getElementById("cancelArchiveAssessment")
+    ?.addEventListener("click", closeArchiveAssessmentModal);
+
+  // -------------------------
+  // Category Add
+  // -------------------------
+
+  document
+    .getElementById("addCategoryBtn")
+    ?.addEventListener("click", openCategoryModal);
+
+  document
+    .getElementById("closeCategoryModal")
+    ?.addEventListener("click", closeCategoryModal);
+
+  document
+    .getElementById("cancelCategoryModal")
+    ?.addEventListener("click", closeCategoryModal);
+
+  // -------------------------
+  // Category Edit
+  // -------------------------
+
+  document
+    .getElementById("closeEditCategoryModal")
+    ?.addEventListener("click", closeEditCategoryModal);
+
+  document
+    .getElementById("cancelEditCategoryModal")
+    ?.addEventListener("click", closeEditCategoryModal);
+
+  // -------------------------
+  // Category Archive
+  // -------------------------
+
+  document
+    .getElementById("cancelArchiveCategory")
+    ?.addEventListener("click", closeArchiveCategoryModal);
+
+  // =======================================================
+  // BACKDROP CLICK
+  // =======================================================
+
+  const modalIds = [
+    "assessmentModal",
+    "editAssessmentModal",
+    "archiveAssessmentModal",
+    "categoryModal",
+    "editCategoryModal",
+    "archiveCategoryModal",
+  ];
+
+  modalIds.forEach((id) => {
+    const modal = document.getElementById(id);
+
+    if (!modal) return;
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        modal.classList.remove("active");
+        document.body.style.overflow = "";
+      }
+    });
+  });
+
+  // =======================================================
+  // ESCAPE KEY
+  // =======================================================
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+
+    modalIds.forEach((id) => {
+      const modal = document.getElementById(id);
+
+      if (modal?.classList.contains("active")) {
+        modal.classList.remove("active");
+      }
+    });
+
+    document.body.style.overflow = "";
+  });
 });

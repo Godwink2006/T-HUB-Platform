@@ -107,10 +107,10 @@ async function initSettingsPage() {
         </div>
 
         <div id="nav-rooms" class="setting-card">
-          <h4>Room</h4>
-          <p>Create and manage rooms.</p>
-          <button onclick="window.location.href = 'rooms.html'" class="manage-btn">
-            Manage Rooms <i class="fa-solid fa-chevron-right"></i>
+          <h4>Assessment</h4>
+          <p>Create and manage assessments.</p>
+          <button onclick="window.location.href = 'assessments.html'" class="manage-btn">
+            Manage Assessments <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
         `

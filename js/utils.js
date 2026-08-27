@@ -6,6 +6,28 @@ function unLockBodyScroll() {
   document.body.style.overflow = "";
 }
 
+async function checkSessionAndRedirect() {
+  if (isLoginPage()) return true;
+
+  if (!window.supabaseClient) {
+    console.error("Supabase client not initialized.");
+    return false;
+  }
+
+  const {
+    data: { user },
+    error,
+  } = await window.supabaseClient.auth.getUser();
+
+  if (error || !user) {
+    await window.supabaseClient.auth.signOut();
+    redirectToLogin();
+    return false;
+  }
+
+  return true;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const menuToggle = document.getElementById("menuToggle");
   const sidebar = document.querySelector(".sidebar");
@@ -76,6 +98,10 @@ async function loadHeaderSchoolLogo() {
   }
 }
 
+window.addEventListener("pageshow", async () => {
+  await checkSessionAndRedirect();
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
   await loadHeaderSchoolLogo();
 
@@ -85,7 +111,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   } = await supabaseClient.auth.getUser();
 
   if (authError || !user) {
-    renderNavigation(null);
+    if (typeof renderNavigation === "function") {
+      renderNavigation(null);
+    }
     return;
   }
 
@@ -95,10 +123,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     .eq("id", user.id)
     .single();
 
-  const userRole = profile?.role;
-  renderNavigation(userRole);
-});
+  if (profileError) {
+    console.error("Failed to load user profile:", profileError);
+  }
 
+  const userRole = profile?.role;
+
+  if (typeof renderNavigation === "function") {
+    renderNavigation(userRole);
+  }
+});
 // auth-guard.js
 
 // 1. LIST YOUR PROTECTED PAGES HERE
@@ -109,6 +143,7 @@ const ADMIN_ONLY_PAGES = [
   "structure.html",
   "classes.html",
   "auditLogs.html",
+  "periods.html",
 ];
 
 async function checkPageAccess() {
@@ -180,7 +215,7 @@ function showToast(message, type = "success", duration = 3000) {
 // CENTRALIZED SESSION & API UTILITIES
 // ==========================================
 
-const INACTIVITY_LIMIT = 60 * 30 * 1000; // 30 seconds testing
+const INACTIVITY_LIMIT = 30 * 60 * 1000;
 let inactivityTimer;
 
 // Helper function: Check if current page is the login page
@@ -211,7 +246,7 @@ window.forceLogout = async function () {
 
   // Redirect to absolute root /index.html
   if (!isLoginPage()) {
-    window.location.href = "/index.html"; // <-- Absolute path fixes /html/index.html error
+    window.location.replace("/index.html");
   }
 };
 
@@ -223,7 +258,7 @@ window.initInactivityTracker = function () {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(async () => {
       if (typeof showToast === "function") {
-        showToast("Logged out due to 15 minutes of inactivity.", "error");
+        showToast("Logged out due to 30 minutes of inactivity.", "info");
       }
       await window.forceLogout();
     }, INACTIVITY_LIMIT);
@@ -309,9 +344,6 @@ window.initAuthListener = async function (supabase) {
 
 // Auto-start inactivity tracker safely
 window.initInactivityTracker();
-
-// Auto-run on DOM load
-document.addEventListener("DOMContentLoaded", loadHeaderSchoolLogo);
 
 document.addEventListener("click", (event) => {
   const modalIds = [
