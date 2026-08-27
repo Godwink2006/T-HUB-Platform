@@ -70,17 +70,17 @@ async function initSettingsPage() {
           </button>
         </div>
 
-         <div class="setting-card">
+        ${
+          isAdmin
+            ? `
+
+             <div class="setting-card">
           <h4>Subjects</h4>
           <p>Create and manage all school subjects.</p>
           <button onclick="window.location.href = 'subjects.html'" class="manage-btn">
             Manage Subjects <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
-
-        ${
-          isAdmin
-            ? `
 
          <div class="setting-card">
           <h4>Fee Structures</h4>
@@ -113,6 +113,9 @@ async function initSettingsPage() {
             Manage Rooms <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
+        `
+            : ""
+        }
 
         <div id="nav-periods" class="setting-card">
           <h4>Periods</h4>
@@ -121,9 +124,6 @@ async function initSettingsPage() {
             Manage Periods <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
-        `
-            : ""
-        }
 
         <div class="setting-card">
           <h4>School Information</h4>

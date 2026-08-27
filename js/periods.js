@@ -222,13 +222,14 @@ async function confirmArchivePeriod() {
       confirmBtn.textContent = "Archiving...";
     }
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("periods")
       .update({
         status: "Inactive",
         is_archived: true,
       })
-      .eq("id", periodToArchive.id);
+      .eq("id", periodToArchive.id)
+      .select();
 
     if (error) {
       if (error.code === "42501") {
@@ -237,6 +238,14 @@ async function confirmArchivePeriod() {
       }
 
       showToast(error.message, "error");
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      showToast(
+        "Permission denied: You are not allowed to archive this period.",
+        "error",
+      );
       return;
     }
 
@@ -486,6 +495,14 @@ async function handleUpdatePeriod(event) {
       }
 
       showToast(error.message, "error");
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      showToast(
+        "Permission denied: You are not allowed to update this period.",
+        "error",
+      );
       return;
     }
 
