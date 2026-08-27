@@ -27,6 +27,15 @@
     transition: left 0.3s ease;
   }
 
+  .archive-confirm-btn {
+    padding: 12px 22px;
+    border: none;
+    background: #dc2626;
+    color: #ffff;
+    cursor: pointer;
+    border-radius: 10px;
+  }
+
   /* Off-screen Drawer Sidebar */
   .sidebar {
     position: fixed;
@@ -81,13 +90,13 @@
 
 .toast-container {
   position: fixed;
-  top: 20px;                   /* Positioned at the top */
-  left: 50%;                   /* Center horizontally */
+  top: 20px; /* Positioned at the top */
+  left: 50%; /* Center horizontally */
   transform: translateX(-50%); /* Precise horizontal alignment */
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  align-items: center;        /* Keep toast items centered */
+  align-items: center; /* Keep toast items centered */
   gap: 10px;
 }
 
