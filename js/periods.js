@@ -441,7 +441,7 @@ async function handleUpdatePeriod(event) {
     status === originalPeriodData.status;
 
   if (noChanges) {
-    showToast("No changes detected.", "error");
+    showToast("No changes detected.", "info");
     return;
   }
 
