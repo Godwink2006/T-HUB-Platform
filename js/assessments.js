@@ -19,6 +19,17 @@ function escapeAttribute(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+
+// Utility to format timestamps nicely
+function formatDateTime(isoString) {
+  if (!isoString) return "N/A";
+  const date = new Date(isoString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 // Global state cache for in-memory operations
 let currentAssessments = [];
 
@@ -33,9 +44,10 @@ async function loadAssessments() {
     // Optional loading indicator state
     tableBody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; padding: 20px;">
-          Loading assessments...
-        </td>
+         <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading assessments...
+      </td>
       </tr>
     `;
 
@@ -52,7 +64,7 @@ async function loadAssessments() {
       }
       tableBody.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align: center; color: red; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: red; padding: 20px;">
             Error loading data.
           </td>
         </tr>
@@ -80,7 +92,7 @@ function renderAssessmentTable(assessments) {
   if (assessments.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; padding: 20px;">
+        <td colspan="7" style="text-align: center; padding: 20px;">
           No assessments found.
         </td>
       </tr>
@@ -110,6 +122,8 @@ function renderAssessmentTable(assessments) {
               ${statusLabel}
             </span>
           </td>
+           <td>${formatDateTime(item.created_at)}</td>
+        <td>${formatDateTime(item.updated_at)}</td>
           <td>
             <div class="assessment-actions">
               <button
