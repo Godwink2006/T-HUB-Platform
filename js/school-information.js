@@ -86,7 +86,7 @@ function disableFormInputs(form) {
   }
 
   // Hide the logo file input for non-admins
-  const logoInput = document.getElementById("schoolLogo"); // or the ID of your file input
+  const logoInput = document.getElementById("changeSchoolLogo"); // or the ID of your file input
   if (logoInput) {
     logoInput.style.display = "none";
   }

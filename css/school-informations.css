@@ -154,13 +154,10 @@ body {
 input:disabled,
 select:disabled,
 textarea:disabled {
-  color: #14532d !important; /* Dark, crisp text */
-  background-color: #f0fdf4 !important; /* Transparent background */
-  border: none !important; /* Removes input border */
+  border: 2px solid rgb(219, 215, 215);
 
   outline: none !important;
   box-shadow: none !important;
-  -webkit-text-fill-color: #111827 !important; /* Prevents iOS graying */
   opacity: 1 !important;
   padding-left: 20px !important; /* Aligns text cleanly with labels */
   font-weight: 500; /* Makes text slightly bolder for better legibility */
