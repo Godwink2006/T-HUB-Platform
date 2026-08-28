@@ -1,13 +1,6 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
-}
-
-body {
-  background: #ffffff;
-}
+/* =========================================================
+ASSESSMENTS
+========================================================= */
 
 .assessment-container {
   display: flex;
@@ -46,85 +39,131 @@ body {
   gap: 25px;
 }
 
+/* =========================================================
+TOPBAR
+========================================================= */
+
+/* =========================================================
+BACK BUTTON
+========================================================= */
+
+.back-academic-settings-btn {
+  width: auto;
+  height: 48px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  font-size: 14px;
+}
+
+/* =========================================================
+ADD ASSESSMENT BUTTON
+========================================================= */
+
 .add-assessment-btn {
   width: auto;
   height: 48px;
   padding: 0 20px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
   border: 2px solid #14532d;
+  font-size: 14px;
 }
 
-.back-academic-settings-btn {
-  width: 50%;
-  height: 30px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  margin-top: 5px;
-  color: #ffffff;
-  background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
-}
-
-.toolbar {
-  display: flex;
-  gap: 15px;
-  margin: 25px 0;
-}
-
-.toolbar input,
-.toolbar select {
-  height: 48px;
-  border: 2px solid rgb(219, 215, 215);
-  padding: 0 15px;
-  outline: none;
-  background: #ffffff;
-}
-
-.toolbar input {
-  width: 320px;
-}
+/* =========================================================
+ASSESSMENT TABLE CARD
+========================================================= */
 
 .assessment-table-card {
   background: #ffffff;
   overflow: hidden;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
+/* =========================================================
+TABLE HEADER
+========================================================= */
+
+.assessment-table-header {
+  padding: 20px;
+  border: 2px solid rgb(219, 215, 215);
+  border-bottom: none;
 }
 
-thead {
+.assessment-table-header h2 {
+  font-size: 20px;
+  color: #1f2937;
+}
+
+.assessment-table-header p {
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* =========================================================
+TABLE WRAPPER
+========================================================= */
+
+.assessment-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* =========================================================
+TABLE
+========================================================= */
+
+.assessment-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+}
+
+.assessment-table-wrapper thead {
   background: #f8fafc;
   border: 2px solid rgb(219, 215, 215);
 }
 
-th {
+.assessment-table-wrapper th {
   padding: 18px;
   text-align: left;
   font-size: 14px;
   color: #6b7280;
   border: 2px solid rgb(219, 215, 215);
+  white-space: nowrap;
 }
 
-td {
+.assessment-table-wrapper td {
   padding: 18px;
-}
-
-tr {
   border: 2px solid rgb(219, 215, 215);
+  font-size: 14px;
+  color: #374151;
 }
 
-.status {
-  padding: 6px 14px;
+.assessment-table-wrapper tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* =========================================================
+STATUS
+========================================================= */
+
+.assessment-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -132,16 +171,24 @@ tr {
 .assessment-status-active {
   background: #dcfce7;
   color: #166534;
-  padding: 10px;
 }
 
 .assessment-status-inactive {
   background: #fcdcdc;
   color: #651616;
-  padding: 10px;
 }
 
-.assessment-actions-btn {
+/* =========================================================
+ACTIONS
+========================================================= */
+
+.assessment-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.assessment-action-btn {
   width: 38px;
   height: 38px;
   border: none;
@@ -149,80 +196,126 @@ tr {
   margin-right: 6px;
 }
 
-.edit {
+.assessment-edit-btn {
   background: #fef3c7;
   color: #d97706;
 }
 
-.archive {
+.assessment-archive-btn {
   background: #fee2e2;
   color: #dc2626;
 }
 
-/* Assessment Modals */
+.assessment-edit-btn:hover {
+  background: #fde68a;
+}
+
+.assessment-archive-btn:hover {
+  background: #fecaca;
+}
+
+/* =========================================================
+ASSESSMENT MODALS
+========================================================= */
 
 .assessment-modal {
   position: fixed;
   top: 0;
   left: 0;
+
   width: 100%;
   height: 100%;
+
   background: rgba(0, 0, 0, 0.45);
+
   display: none;
   justify-content: center;
   align-items: center;
+
   z-index: 1000;
 }
 
-.assessment-modal-content {
-  overflow: auto;
-  width: 850px;
-  max-width: 95%;
-  background: #ffffff;
-  animation: modalShow 0.25s ease;
-  height: 500px;
+.assessment-modal.active {
+  display: flex;
 }
 
-@keyframes modalShow {
+/* =========================================================
+MODAL CONTENT
+========================================================= */
+
+.assessment-modal-content {
+  overflow: auto;
+
+  width: 850px;
+  max-width: 95%;
+
+  background: #ffffff;
+
+  animation: assessmentModalShow 0.25s ease;
+
+  max-height: 90vh;
+}
+
+@keyframes assessmentModalShow {
   from {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
 
+/* =========================================================
+MODAL HEADER
+========================================================= */
+
 .assessment-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   padding: 20px 25px;
+
   border: 2px solid rgb(219, 215, 215);
 }
 
 .assessment-modal-header h2 {
   font-size: 22px;
+  color: #1f2937;
 }
 
-.assessment-modal-header button {
+.assessment-modal-close {
   cursor: pointer;
+
   color: #ffffff;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+
+  border: none;
+
   height: 40px;
   width: 40px;
+
   font-size: 22px;
 }
+
+/* =========================================================
+MODAL BODY
+========================================================= */
 
 .assessment-modal-body {
   padding: 25px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+/* =========================================================
+FORM
+========================================================= */
+
+.assessment-modal-body form {
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
@@ -233,8 +326,10 @@ tr {
 
 .form-group label {
   margin-bottom: 8px;
+
   font-size: 14px;
   font-weight: 500;
+
   color: #374151;
 }
 
@@ -242,185 +337,199 @@ tr {
 .form-group select,
 .form-group textarea {
   width: 100%;
+
   padding: 12px 15px;
+
   border: 2px solid rgb(219, 215, 215);
+
   outline: none;
+
   font-size: 15px;
+
+  background: #ffffff;
 }
 
 .form-group textarea {
-  resize: none;
+  min-height: 100px;
+  resize: vertical;
 }
 
-.full-width {
-  grid-column: 1 / -1;
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2563eb;
 }
+
+/* =========================================================
+MODAL FOOTER
+========================================================= */
 
 .assessment-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 15px;
-  margin-top: 30px;
+
+  padding: 20px 25px;
+
+  border-top: 2px solid rgb(219, 215, 215);
 }
+
+/* =========================================================
+CANCEL
+========================================================= */
 
 .cancel-btn {
   padding: 12px 22px;
+
   border: none;
+
   cursor: pointer;
+
   color: #ffffff;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
 }
+
+/* =========================================================
+SAVE
+========================================================= */
 
 .save-btn {
   padding: 12px 22px;
+
   border: none;
+
   background: #2563eb;
   color: #ffffff;
+
   cursor: pointer;
 }
 
-.edit-assessment-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.edit-assessment-modal-content {
-  overflow: auto;
-  width: 850px;
-  max-width: 95%;
-  background: #ffffff;
-  animation: modalShow 0.25s ease;
-  height: 500px;
-}
-
-.edit-assessment-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
-}
-
-.edit-assessment-modal-header h2 {
-  font-size: 22px;
-}
-
-.edit-assessment-modal-header button {
-  cursor: pointer;
-  color: #ffffff;
-  height: 40px;
-  width: 40px;
-  font-size: 22px;
-  background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
-}
-
-.edit-assessment-modal-body {
-  padding: 25px;
-}
-
-.edit-assessment-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-}
+/* =========================================================
+EDIT
+========================================================= */
 
 .edit-btn {
   padding: 12px 22px;
+
   border: none;
+
   background: #2563eb;
   color: #ffffff;
+
   cursor: pointer;
 }
 
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.details-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.details-item label {
-  font-size: 13px;
-  color: #6b7280;
-  margin-bottom: 6px;
-}
-
-.details-item p {
-  font-weight: 500;
-  color: #111827;
-}
+/* =========================================================
+ARCHIVE MODAL
+========================================================= */
 
 .archive-modal {
   position: fixed;
+
   top: 0;
   left: 0;
+
   width: 100%;
   height: 100%;
+
   background: rgba(0, 0, 0, 0.45);
+
   display: none;
+
   justify-content: center;
   align-items: center;
+
   z-index: 1000;
 }
 
+.archive-modal.active {
+  display: flex;
+}
+
+/* =========================================================
+CONFIRM MODAL
+========================================================= */
+
 .confirm-modal {
   width: 430px;
+  max-width: 95%;
+
   background: #ffffff;
+
   padding: 35px;
+
   text-align: center;
-  animation: modalShow 0.25s ease;
+
+  animation: assessmentModalShow 0.25s ease;
 }
+
+/* =========================================================
+CONFIRM ICON
+========================================================= */
 
 .confirm-icon {
   width: 70px;
   height: 70px;
+
   background: #fee2e2;
   color: #dc2626;
+
   margin: auto;
+  margin-bottom: 20px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-size: 28px;
-  margin-bottom: 20px;
 }
+
+/* =========================================================
+CONFIRM TEXT
+========================================================= */
 
 .confirm-modal h2 {
   margin-bottom: 15px;
+
+  color: #1f2937;
 }
 
 .confirm-modal p {
   line-height: 1.6;
+
   color: #6b7280;
+
+  margin-bottom: 5px;
 }
 
-.archive-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  background: #dc2626;
-  color: #ffffff;
-  cursor: pointer;
-}
+/* =========================================================
+ARCHIVE FOOTER
+========================================================= */
 
 .archive-modal-footer {
   display: flex;
+
   justify-content: space-between;
+
   gap: 15px;
+
   margin-top: 30px;
+}
+
+/* =========================================================
+ARCHIVE BUTTON
+========================================================= */
+
+.archive-confirm-btn {
+  padding: 12px 22px;
+
+  border: none;
+
+  background: #dc2626;
+
+  color: #ffffff;
+
+  cursor: pointer;
 }
 
 /* =========================================================
