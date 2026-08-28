@@ -24,36 +24,41 @@
   <body>
     <div class="assessment-container">
       <main class="assessment-main-content">
+        <!-- =========================
+     TOPBAR
+     ========================= -->
+
         <header class="topbar">
-          <div>
-            <h1>Assessments & Categories</h1>
-            <p>Manage grading assessments and categories.</p>
+          <div class="topbar-info">
+            <h1>Assessments</h1>
+            <p>Manage grading periods and their maximum marks.</p>
 
             <button
+              type="button"
               onclick="window.location.href = 'settings.html'"
-              class="back-assessments-btn"
+              class="back-academic-settings-btn"
             >
               <i class="fa-solid fa-chevron-left"></i>
               Back
             </button>
           </div>
+
+          <button type="button" id="addAssessment" class="add-assessment-btn">
+            <i class="fa-solid fa-plus"></i>
+            Add Assessment
+          </button>
         </header>
 
-        <!-- ========================= -->
-        <!-- ASSESSMENTS CARD -->
-        <!-- ========================= -->
+        <!-- =======================================================
+     ASSESSMENTS TABLE CARD
+     ======================================================= -->
 
-        <section class="assessment-card">
-          <div class="assessment-card-header">
+        <section class="assessment-table-card">
+          <div class="assessment-table-header">
             <div>
-              <h2>Assessments</h2>
-              <p>Manage grading periods and their maximum marks.</p>
+              <h2>Assessment Periods</h2>
+              <p>Manage the grading periods used in the academic year.</p>
             </div>
-
-            <button id="addAssessment" class="add-assessment-btn">
-              <i class="fa-solid fa-plus"></i>
-              Add Assessment
-            </button>
           </div>
 
           <div class="assessment-table-wrapper">
@@ -62,224 +67,211 @@
                 <tr>
                   <th>Assessment Name</th>
                   <th>Description</th>
-                  <th>Marks</th>
+                  <th>Maximum Marks</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
 
               <tbody id="assessmentsTableBody">
-                <tr>
+                <!-- Existing assessment -->
+
+                <tr data-id="1">
                   <td>1st Period</td>
+
                   <td>First grading period</td>
+
                   <td>100</td>
+
                   <td>
-                    <span class="rooms-status-active">Active</span>
+                    <span class="assessment-status assessment-status-active">
+                      Active
+                    </span>
                   </td>
+
                   <td>
-                    <button class="rooms-actions-btn edit-Assessment">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Assessment">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
+                    <div class="assessment-actions">
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-edit-btn edit-assessment"
+                        data-id="1"
+                        title="Edit Assessment"
+                      >
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-archive-btn archive-assessment"
+                        data-id="1"
+                        data-name="1st Period"
+                        title="Archive Assessment"
+                      >
+                        <i class="fa-solid fa-box-archive"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
 
-                <tr>
+                <tr data-id="2">
                   <td>2nd Period</td>
+
                   <td>Second grading period</td>
+
                   <td>100</td>
+
                   <td>
-                    <span class="rooms-status-active">Active</span>
+                    <span class="assessment-status assessment-status-active">
+                      Active
+                    </span>
                   </td>
+
                   <td>
-                    <button class="rooms-actions-btn edit-Assessment">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Assessment">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
+                    <div class="assessment-actions">
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-edit-btn edit-assessment"
+                        data-id="2"
+                        title="Edit Assessment"
+                      >
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-archive-btn archive-assessment"
+                        data-id="2"
+                        data-name="2nd Period"
+                        title="Archive Assessment"
+                      >
+                        <i class="fa-solid fa-box-archive"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
 
-                <tr>
+                <tr data-id="3">
                   <td>3rd Period</td>
+
                   <td>Third grading period</td>
+
                   <td>100</td>
+
                   <td>
-                    <span class="rooms-status-active">Active</span>
+                    <span class="assessment-status assessment-status-active">
+                      Active
+                    </span>
                   </td>
+
                   <td>
-                    <button class="rooms-actions-btn edit-Assessment">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Assessment">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
+                    <div class="assessment-actions">
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-edit-btn edit-assessment"
+                        data-id="3"
+                        title="Edit Assessment"
+                      >
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-archive-btn archive-assessment"
+                        data-id="3"
+                        data-name="3rd Period"
+                        title="Archive Assessment"
+                      >
+                        <i class="fa-solid fa-box-archive"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
 
-                <tr>
+                <tr data-id="4">
                   <td>4th Period</td>
+
                   <td>Fourth grading period</td>
+
                   <td>100</td>
+
                   <td>
-                    <span class="rooms-status-active">Active</span>
+                    <span class="assessment-status assessment-status-active">
+                      Active
+                    </span>
                   </td>
+
                   <td>
-                    <button class="rooms-actions-btn edit-Assessment">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Assessment">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
+                    <div class="assessment-actions">
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-edit-btn edit-assessment"
+                        data-id="4"
+                        title="Edit Assessment"
+                      >
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-archive-btn archive-assessment"
+                        data-id="4"
+                        data-name="4th Period"
+                        title="Archive Assessment"
+                      >
+                        <i class="fa-solid fa-box-archive"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
 
-                <tr>
+                <tr data-id="5">
                   <td>Exam</td>
+
                   <td>End of year examination</td>
+
                   <td>100</td>
+
                   <td>
-                    <span class="rooms-status-active">Active</span>
+                    <span class="assessment-status assessment-status-active">
+                      Active
+                    </span>
                   </td>
+
                   <td>
-                    <button class="rooms-actions-btn edit-Assessment">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Assessment">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
-                  </td>
-                </tr>
-                <!-- Loaded dynamically -->
-              </tbody>
-            </table>
-          </div>
-        </section>
+                    <div class="assessment-actions">
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-edit-btn edit-assessment"
+                        data-id="5"
+                        title="Edit Assessment"
+                      >
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
 
-        <!-- ========================= -->
-        <!-- CATEGORIES CARD -->
-        <!-- ========================= -->
-
-        <section class="assessment-card">
-          <div class="assessment-card-header">
-            <div>
-              <h2>Categories</h2>
-              <p>Manage the categories used to calculate assessment marks.</p>
-            </div>
-
-            <button id="addCategory" class="add-assessment-btn">
-              <i class="fa-solid fa-plus"></i>
-              Add Category
-            </button>
-          </div>
-
-          <div class="assessment-table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Category Name</th>
-                  <th>Description</th>
-                  <th>Marks</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
-              <tbody id="categoriesTableBody">
-                <tr>
-                  <td>Homework</td>
-                  <td>Homework and take-home assignments</td>
-                  <td>20</td>
-                  <td>
-                    <span class="rooms-status-active">Active</span>
-                  </td>
-                  <td>
-                    <button class="rooms-actions-btn edit-Category">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Category">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
+                      <button
+                        type="button"
+                        class="assessment-action-btn assessment-archive-btn archive-assessment"
+                        data-id="5"
+                        data-name="Exam"
+                        title="Archive Assessment"
+                      >
+                        <i class="fa-solid fa-box-archive"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
 
-                <tr>
-                  <td>Classwork</td>
-                  <td>Work completed during class</td>
-                  <td>20</td>
-                  <td>
-                    <span class="rooms-status-active">Active</span>
-                  </td>
-                  <td>
-                    <button class="rooms-actions-btn edit-Category">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Category">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Quiz</td>
-                  <td>Short quizzes and assessments</td>
-                  <td>20</td>
-                  <td>
-                    <span class="rooms-status-active">Active</span>
-                  </td>
-                  <td>
-                    <button class="rooms-actions-btn edit-Category">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Category">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Test</td>
-                  <td>Subject tests</td>
-                  <td>60</td>
-                  <td>
-                    <span class="rooms-status-active">Active</span>
-                  </td>
-                  <td>
-                    <button class="rooms-actions-btn edit-Category">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Category">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Project</td>
-                  <td>Individual or group projects</td>
-                  <td>20</td>
-                  <td>
-                    <span class="rooms-status-active">Active</span>
-                  </td>
-                  <td>
-                    <button class="rooms-actions-btn edit-Category">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="rooms-actions-btn archive-Category">
-                      <i class="fa-solid fa-box-archive"></i>
-                    </button>
-                  </td>
-                </tr>
-                <!-- Loaded dynamically -->
+                <!-- Additional assessments will be loaded dynamically -->
               </tbody>
             </table>
           </div>
         </section>
       </main>
     </div>
+
+    <!-- =========================================================
+     ADD ASSESSMENT MODAL
+     ========================================================= -->
 
     <div id="assessmentModal" class="assessment-modal">
       <div class="assessment-modal-content">
@@ -297,8 +289,9 @@
 
         <div class="assessment-modal-body">
           <form id="assessmentForm">
-            <div class="assessment-form-group">
-              <label>Assessment Name *</label>
+            <div class="form-group">
+              <label for="assessmentNameInput"> Assessment Name * </label>
+
               <input
                 type="text"
                 id="assessmentNameInput"
@@ -307,16 +300,18 @@
               />
             </div>
 
-            <div class="assessment-form-group">
-              <label>Description</label>
+            <div class="form-group">
+              <label for="assessmentDescriptionInput"> Description </label>
+
               <textarea
                 id="assessmentDescriptionInput"
                 placeholder="Optional description"
               ></textarea>
             </div>
 
-            <div class="assessment-form-group">
-              <label>Maximum Marks *</label>
+            <div class="form-group">
+              <label for="assessmentMarksInput"> Maximum Marks * </label>
+
               <input
                 type="number"
                 id="assessmentMarksInput"
@@ -327,8 +322,8 @@
               />
             </div>
 
-            <div class="assessment-form-group">
-              <label>Status *</label>
+            <div class="form-group">
+              <label for="assessmentStatusInput"> Status * </label>
 
               <select id="assessmentStatusInput" required>
                 <option value="Active">Active</option>
@@ -339,24 +334,20 @@
         </div>
 
         <div class="assessment-modal-footer">
-          <button
-            type="button"
-            id="cancelAssessmentModal"
-            class="assessment-cancel-btn"
-          >
+          <button type="button" id="cancelAssessmentModal" class="cancel-btn">
             Cancel
           </button>
 
-          <button
-            type="submit"
-            form="assessmentForm"
-            class="assessment-save-btn"
-          >
+          <button type="submit" form="assessmentForm" class="save-btn">
             Save Assessment
           </button>
         </div>
       </div>
     </div>
+
+    <!-- =========================================================
+     EDIT ASSESSMENT MODAL
+     ========================================================= -->
 
     <div id="editAssessmentModal" class="assessment-modal">
       <div class="assessment-modal-content">
@@ -376,18 +367,21 @@
           <form id="editAssessmentForm">
             <input type="hidden" id="editAssessmentId" />
 
-            <div class="assessment-form-group">
-              <label>Assessment Name *</label>
+            <div class="form-group">
+              <label for="editAssessmentNameInput"> Assessment Name * </label>
+
               <input type="text" id="editAssessmentNameInput" required />
             </div>
 
-            <div class="assessment-form-group">
-              <label>Description</label>
+            <div class="form-group">
+              <label for="editAssessmentDescriptionInput"> Description </label>
+
               <textarea id="editAssessmentDescriptionInput"></textarea>
             </div>
 
-            <div class="assessment-form-group">
-              <label>Maximum Marks *</label>
+            <div class="form-group">
+              <label for="editAssessmentMarksInput"> Maximum Marks * </label>
+
               <input
                 type="number"
                 id="editAssessmentMarksInput"
@@ -397,8 +391,8 @@
               />
             </div>
 
-            <div class="assessment-form-group">
-              <label>Status *</label>
+            <div class="form-group">
+              <label for="editAssessmentStatusInput"> Status * </label>
 
               <select id="editAssessmentStatusInput" required>
                 <option value="Active">Active</option>
@@ -412,17 +406,48 @@
           <button
             type="button"
             id="cancelEditAssessmentModal"
-            class="assessment-cancel-btn"
+            class="cancel-btn"
           >
             Cancel
           </button>
 
-          <button
-            type="submit"
-            form="editAssessmentForm"
-            class="assessment-save-btn"
-          >
+          <button type="submit" form="editAssessmentForm" class="edit-btn">
             Update Assessment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+     ARCHIVE ASSESSMENT MODAL
+     ========================================================= -->
+
+    <div id="archiveAssessmentModal" class="archive-modal">
+      <div class="confirm-modal">
+        <div class="confirm-icon">
+          <i class="fa-solid fa-box-archive"></i>
+        </div>
+
+        <h2>Archive Assessment?</h2>
+
+        <p>
+          Are you sure you want to archive
+          <strong id="archiveAssessmentName"></strong>?
+        </p>
+
+        <p>This assessment will no longer be active.</p>
+
+        <div class="archive-modal-footer">
+          <button type="button" id="cancelArchiveAssessment" class="cancel-btn">
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            id="confirmArchiveAssessment"
+            class="archive-confirm-btn"
+          >
+            Archive
           </button>
         </div>
       </div>
