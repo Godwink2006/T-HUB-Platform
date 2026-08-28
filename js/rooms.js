@@ -188,11 +188,12 @@ function openEditAssessmentModal(id) {
     assessment.status;
 
   // Save baseline state on form dataset for change detection
-  const normalizedStatus =
-    assessment.status.charAt(0).toUpperCase() +
-    assessment.status.slice(1).toLowerCase();
+  const rawStatus = assessment.status || "";
+  const normalizedStatus = rawStatus
+    ? rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase()
+    : "";
 
-  form.dataset.origDescription = assessment.description || null;
+  form.dataset.origDescription = assessment.description || "";
   form.dataset.origMarks = assessment.maximum_marks;
   form.dataset.origStatus = normalizedStatus;
 
@@ -543,11 +544,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const statusInput = document.getElementById("editAssessmentStatusInput");
 
       const saveButton =
-        event.submitter ||
-        editAssessmentForm.parentElement.querySelector(".edit-btn");
+        event.submitter || editAssessmentForm.querySelector('[type="submit"]');
 
       const assessmentId = idInput?.value.trim();
-      const description = descriptionInput?.value.trim() || null;
       const rawMarks = marksInput?.value.trim();
       const marks = Number(rawMarks);
       const status = statusInput?.value.trim();
@@ -586,16 +585,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const originalMarks = Number(editAssessmentForm.dataset.origMarks);
       const originalStatus = editAssessmentForm.dataset.origStatus;
 
+      // Fix: convert empty string dataset comparison to match null description
+      const currentDesc = descriptionInput?.value.trim() || null;
+      const baselineDesc =
+        originalDescription === "" ? null : originalDescription;
+
       const hasChanges =
-        description !== originalDescription ||
+        currentDesc !== baselineDesc ||
         marks !== originalMarks ||
         normalizedStatus !== originalStatus;
 
       if (!hasChanges) {
         notifyUser("No changes detected.", "info");
-        if (typeof closeEditAssessmentModal === "function") {
-          closeEditAssessmentModal();
-        }
+
         return;
       }
 
