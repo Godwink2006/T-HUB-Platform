@@ -46,13 +46,13 @@ async function checkAdminAuth() {
   const {
     data: { user },
     error: userError,
-  } = await supabaseClient.auth.getUser();
+  } = await window.supabaseClient.auth.getUser();
 
   if (userError || !user) {
     return { isAdmin: false, user: null };
   }
 
-  const { data: profile, error: profileError } = await supabaseClient
+  const { data: profile, error: profileError } = await window.supabaseClient
     .from("profiles")
     .select("role")
     .eq("id", user.id)
@@ -63,6 +63,38 @@ async function checkAdminAuth() {
   }
 
   return { isAdmin: true, user };
+}
+
+function enableFormInputs(form) {
+  if (!form) return;
+
+  // 1. Re-enable all inputs & textareas
+  const inputs = form.querySelectorAll("input, select, textarea, button");
+  inputs.forEach((input) => {
+    input.disabled = false;
+  });
+
+  // 2. Show Save & Reset buttons
+  const buttonsToShow = form.querySelectorAll(
+    '.save-btn, .reset-btn, button[type="submit"], button[type="reset"]',
+  );
+  buttonsToShow.forEach((btn) => {
+    btn.style.display = "";
+  });
+
+  // 3. Show the Change Logo wrapper container (#changeSchoolLogo)
+  const logoWrapper = document.getElementById("changeSchoolLogo");
+  if (logoWrapper) {
+    logoWrapper.style.display = "";
+  }
+
+  // 4. Show the Change Logo label button (.upload-btn)
+  const changeLogoBtn = document.querySelector(
+    '.upload-btn, label[for="schoolLogo"]',
+  );
+  if (changeLogoBtn) {
+    changeLogoBtn.style.display = "";
+  }
 }
 
 function disableFormInputs(form) {
@@ -82,15 +114,15 @@ function disableFormInputs(form) {
     btn.style.display = "none";
   });
 
-  // 3. Hide the Change Logo button (file input AND its label/wrapper)
-  const logoInput = document.getElementById("changeSchoolLogo");
-  if (logoInput) {
-    logoInput.style.display = "none";
+  // 3. Hide the Change Logo container
+  const logoWrapper = document.getElementById("changeSchoolLogo");
+  if (logoWrapper) {
+    logoWrapper.style.display = "none";
   }
 
-  // Target the green "Change Logo" button by class, label, or ID
+  // 4. Hide the Change Logo label button
   const changeLogoBtn = document.querySelector(
-    '.change-logo-btn, label[for="changeSchoolLogo"]',
+    '.upload-btn, label[for="schoolLogo"]',
   );
   if (changeLogoBtn) {
     changeLogoBtn.style.display = "none";
@@ -100,21 +132,37 @@ function disableFormInputs(form) {
 /**
  * Initializes form permissions and reveals the form smoothly.
  */
-async function initFormProtection(form) {
+async function initFormProtection() {
+  const form =
+    document.getElementById("schoolProfileForm") ||
+    document.querySelector("form");
+  const loader = document.getElementById("formLoader");
+  // Find your target form automatically by ID or tag
   if (!form) return;
 
   // 1. Run auth check
   const { isAdmin } = await checkAdminAuth();
 
-  // 2. If non-admin, apply input restrictions
-  if (!isAdmin) {
+  // 2. Apply field restrictions based on role
+  if (isAdmin) {
+    enableFormInputs(form);
+  } else {
     disableFormInputs(form);
   }
 
-  // 3. Remove initial hidden state and make form visible
+  // 3. Hide loading indicator
+  if (loader) {
+    loader.style.display = "none";
+  }
+
+  // 4. Reveal form smoothly
   form.classList.add("auth-ready");
 }
 
+// Automatically trigger on page load when DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+  initFormProtection();
+});
 /**
  * Loads existing school profile from Supabase and fills the form.
  */
