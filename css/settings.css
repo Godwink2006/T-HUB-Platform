@@ -9,10 +9,6 @@
   font-family: "Poppins", sans-serif;
 }
 
-body {
-  background: rgb(231, 226, 226);
-}
-
 .sidebar {
   width: 260px;
   height: 100vh;
@@ -120,7 +116,6 @@ body {
   background: #ffff;
   padding: 20px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
 }
 
 .setting-card h2 {
@@ -138,7 +133,6 @@ body {
 
 .setting-card {
   background-color: #ffffff;
-  border-radius: 12px;
   padding: 24px;
   display: flex;
   flex-direction: column; /* Stacks title, description, and button vertically */
@@ -168,7 +162,6 @@ body {
   background-color: #2563eb;
   color: #ffffff;
   border: none;
-  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;

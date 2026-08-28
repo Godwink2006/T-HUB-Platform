@@ -75,192 +75,6 @@
 
               <tbody id="assessmentsTableBody">
                 <!-- Existing assessment -->
-
-                <tr data-id="1">
-                  <td>1st Period</td>
-
-                  <td>First grading period</td>
-
-                  <td>100</td>
-
-                  <td>
-                    <span class="assessment-status assessment-status-active">
-                      Active
-                    </span>
-                  </td>
-
-                  <td>
-                    <div class="assessment-actions">
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-edit-btn edit-assessment"
-                        data-id="1"
-                        title="Edit Assessment"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-archive-btn archive-assessment"
-                        data-id="1"
-                        data-name="1st Period"
-                        title="Archive Assessment"
-                      >
-                        <i class="fa-solid fa-box-archive"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr data-id="2">
-                  <td>2nd Period</td>
-
-                  <td>Second grading period</td>
-
-                  <td>100</td>
-
-                  <td>
-                    <span class="assessment-status assessment-status-active">
-                      Active
-                    </span>
-                  </td>
-
-                  <td>
-                    <div class="assessment-actions">
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-edit-btn edit-assessment"
-                        data-id="2"
-                        title="Edit Assessment"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-archive-btn archive-assessment"
-                        data-id="2"
-                        data-name="2nd Period"
-                        title="Archive Assessment"
-                      >
-                        <i class="fa-solid fa-box-archive"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr data-id="3">
-                  <td>3rd Period</td>
-
-                  <td>Third grading period</td>
-
-                  <td>100</td>
-
-                  <td>
-                    <span class="assessment-status assessment-status-active">
-                      Active
-                    </span>
-                  </td>
-
-                  <td>
-                    <div class="assessment-actions">
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-edit-btn edit-assessment"
-                        data-id="3"
-                        title="Edit Assessment"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-archive-btn archive-assessment"
-                        data-id="3"
-                        data-name="3rd Period"
-                        title="Archive Assessment"
-                      >
-                        <i class="fa-solid fa-box-archive"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr data-id="4">
-                  <td>4th Period</td>
-
-                  <td>Fourth grading period</td>
-
-                  <td>100</td>
-
-                  <td>
-                    <span class="assessment-status assessment-status-active">
-                      Active
-                    </span>
-                  </td>
-
-                  <td>
-                    <div class="assessment-actions">
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-edit-btn edit-assessment"
-                        data-id="4"
-                        title="Edit Assessment"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-archive-btn archive-assessment"
-                        data-id="4"
-                        data-name="4th Period"
-                        title="Archive Assessment"
-                      >
-                        <i class="fa-solid fa-box-archive"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr data-id="5">
-                  <td>Exam</td>
-
-                  <td>End of year examination</td>
-
-                  <td>100</td>
-
-                  <td>
-                    <span class="assessment-status assessment-status-active">
-                      Active
-                    </span>
-                  </td>
-
-                  <td>
-                    <div class="assessment-actions">
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-edit-btn edit-assessment"
-                        data-id="5"
-                        title="Edit Assessment"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="assessment-action-btn assessment-archive-btn archive-assessment"
-                        data-id="5"
-                        data-name="Exam"
-                        title="Archive Assessment"
-                      >
-                        <i class="fa-solid fa-box-archive"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
                 <!-- Additional assessments will be loaded dynamically -->
               </tbody>
             </table>
@@ -292,20 +106,29 @@
             <div class="form-group">
               <label for="assessmentNameInput"> Assessment Name * </label>
 
-              <input
+              <select
                 type="text"
                 id="assessmentNameInput"
                 placeholder="e.g. 1st Period"
                 required
-              />
+              >
+                <option value="1st Period">1st Period</option>
+                <option value="2nd Period">2nd Period</option>
+                <option value="3rd Period">3rd Period</option>
+                <option value="4th Period">4th Period</option>
+                <option value="5th Period">5th Period</option>
+                <option value="6th Period">6th Period</option>
+              </select>
             </div>
 
             <div class="form-group">
-              <label for="assessmentDescriptionInput"> Description </label>
+              <label for="assessmentDescriptionInput">
+                Description (Optional)
+              </label>
 
               <textarea
                 id="assessmentDescriptionInput"
-                placeholder="Optional description"
+                placeholder="Write description"
               ></textarea>
             </div>
 
@@ -435,7 +258,7 @@
           <strong id="archiveAssessmentName"></strong>?
         </p>
 
-        <p>This assessment will no longer be active.</p>
+        <p>This assessment will no longer show when recording grades.</p>
 
         <div class="archive-modal-footer">
           <button type="button" id="cancelArchiveAssessment" class="cancel-btn">

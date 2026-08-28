@@ -7,6 +7,10 @@
   display: none;
 }
 
+body {
+  background: #f6f5f5;
+}
+
 @media screen and (max-width: 768px) {
   /* Fixed Hamburger Button */
   .menu-toggle {
