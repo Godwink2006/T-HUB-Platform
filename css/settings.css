@@ -203,10 +203,16 @@
     font-size: 14px;
   }
 
+  .setting-card .manage-btn,
+  .setting-card {
+    border-radius: 10px;
+  }
+
   /* 5. Convert 3-Column Grid to Single Column */
   .setting-cards {
     grid-template-columns: 1fr;
     gap: 15px;
+    border-radius: 10px;
   }
 
   /* 6. Stack Card Buttons on Small Screens */

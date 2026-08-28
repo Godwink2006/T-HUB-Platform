@@ -292,21 +292,38 @@ document.addEventListener("DOMContentLoaded", () => {
         confirmBtn.disabled = true;
         confirmBtn.textContent = "Archiving...";
 
-        const { error } = await supabaseClient
+        const { data, error } = await supabaseClient
           .from("assessments")
           .update({
             is_archive: true,
             status: "Inactive",
           })
-          .eq("id", id);
+          .eq("id", id)
+          .select();
 
+        // Fix 1: Handle RLS silent policy rejection (0 rows updated)
+        if (!error && (!data || data.length === 0)) {
+          notifyUser(
+            "You do not have permission to archive assessments.",
+            "error",
+          );
+          return;
+        }
+
+        // Fix 2: Broaden permission error code checks (42501, 403, PGRST301)
         if (error) {
           console.error("Supabase archive error:", error);
 
-          if (
+          const isPermissionErr =
             error.code === "42501" ||
-            error.message?.toLowerCase().includes("permission")
-          ) {
+            error.code === "PGRST301" ||
+            error.status === 403 ||
+            error.message?.toLowerCase().includes("permission") ||
+            error.message
+              ?.toLowerCase()
+              .includes("violates row-level security");
+
+          if (isPermissionErr) {
             notifyUser(
               "You do not have permission to archive assessments.",
               "error",
@@ -580,18 +597,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const normalizedStatus =
         status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
+      // 1. Prepare inputs & baseline comparisons
+      const description = descriptionInput?.value.trim() || null;
       const originalDescription =
         editAssessmentForm.dataset.origDescription || null;
+
+      const baselineDesc =
+        originalDescription === "" ? null : originalDescription;
       const originalMarks = Number(editAssessmentForm.dataset.origMarks);
       const originalStatus = editAssessmentForm.dataset.origStatus;
 
-      // Fix: convert empty string dataset comparison to match null description
-      const currentDesc = descriptionInput?.value.trim() || null;
-      const baselineDesc =
-        originalDescription === "" ? null : originalDescription;
-
       const hasChanges =
-        currentDesc !== baselineDesc ||
+        description !== baselineDesc ||
         marks !== originalMarks ||
         normalizedStatus !== originalStatus;
 
@@ -607,7 +624,7 @@ document.addEventListener("DOMContentLoaded", () => {
           saveButton.textContent = "Updating...";
         }
 
-        const { error } = await supabaseClient
+        const { data, error } = await supabaseClient
           .from("assessments")
           .update({
             description: description,
@@ -615,22 +632,38 @@ document.addEventListener("DOMContentLoaded", () => {
             status: normalizedStatus,
           })
           .eq("id", assessmentId)
-          .select()
-          .single();
+          .select();
 
+        // 1. Check if RLS blocked the update silently (0 rows updated)
+        if (!error && (!data || data.length === 0)) {
+          notifyUser(
+            "You do not have permission to edit this assessment.",
+            "error",
+          );
+          return;
+        }
+
+        // 2. Check for explicit permission errors from Supabase
         if (error) {
           console.error("Supabase update error:", error);
 
-          if (
+          const isPermissionErr =
             error.code === "42501" ||
-            error.message?.toLowerCase().includes("permission")
-          ) {
+            error.code === "PGRST301" ||
+            error.status === 403 ||
+            error.message?.toLowerCase().includes("permission") ||
+            error.message
+              ?.toLowerCase()
+              .includes("violates row-level security");
+
+          if (isPermissionErr) {
             notifyUser(
               "You do not have permission to edit this assessment.",
               "error",
             );
             return;
           }
+
           notifyUser("Failed to update assessment. Please try again.", "error");
           return;
         }

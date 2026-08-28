@@ -106,7 +106,15 @@ async function initSettingsPage() {
           </button>
         </div>
 
-        <div id="nav-rooms" class="setting-card">
+         <div id="nav-periods" class="setting-card">
+          <h4>Periods</h4>
+          <p>Manage and create periods.</p>
+          <button onclick="window.location.href = 'periods.html'" class="manage-btn">
+            Manage Periods <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+           <div id="nav-rooms" class="setting-card">
           <h4>Assessment</h4>
           <p>Create and manage assessments.</p>
           <button onclick="window.location.href = 'assessments.html'" class="manage-btn">
@@ -116,14 +124,6 @@ async function initSettingsPage() {
         `
             : ""
         }
-
-        <div id="nav-periods" class="setting-card">
-          <h4>Periods</h4>
-          <p>Manage and create periods.</p>
-          <button onclick="window.location.href = 'periods.html'" class="manage-btn">
-            Manage Periods <i class="fa-solid fa-chevron-right"></i>
-          </button>
-        </div>
 
         <div class="setting-card">
           <h4>School Information</h4>

@@ -144,6 +144,7 @@ const ADMIN_ONLY_PAGES = [
   "classes.html",
   "auditLogs.html",
   "periods.html",
+  "assessments.html",
 ];
 
 async function checkPageAccess() {
