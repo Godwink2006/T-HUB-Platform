@@ -39,57 +39,80 @@ async function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
 let existingRecordId = null;
 
 async function checkAdminAuth() {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabaseClient.auth.getSession();
+  if (!window.supabaseClient) {
+    return { isAdmin: false, user: null };
+  }
 
-  if (sessionError || !session) {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
     return { isAdmin: false, user: null };
   }
 
   const { data: profile, error: profileError } = await supabaseClient
     .from("profiles")
     .select("role")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (profileError || profile?.role !== "admin") {
-    return { isAdmin: false, user: session.user };
+    return { isAdmin: false, user };
   }
 
-  return { isAdmin: true, user: session.user };
+  return { isAdmin: true, user };
 }
 
-/**
- * Disables form submission and input fields if user is not an admin.
- */
 function disableFormInputs(form) {
-  const inputs = form.querySelectorAll(
-    'input, select, textarea, button[type="submit"]',
-  );
+  if (!form) return;
+
+  // 1. Disable inputs
+  const inputs = form.querySelectorAll("input, select, textarea, button");
   inputs.forEach((input) => {
     input.disabled = true;
   });
 
-  // Hide the save button completely
-  const saveBtn = form.querySelector('.save-btn, button[type="submit"]');
-  if (saveBtn) {
-    saveBtn.style.display = "none";
-  }
+  // 2. Hide Save & Reset buttons
+  const buttonsToHide = form.querySelectorAll(
+    '.save-btn, .reset-btn, button[type="submit"], button[type="reset"]',
+  );
+  buttonsToHide.forEach((btn) => {
+    btn.style.display = "none";
+  });
 
-  // Disable and hide the reset button
-  const resetBtn = form.querySelector('.reset-btn, button[type="reset"]');
-  if (resetBtn) {
-    resetBtn.disabled = true;
-    resetBtn.style.display = "none";
-  }
-
-  // Hide the logo file input for non-admins
-  const logoInput = document.getElementById("changeSchoolLogo"); // or the ID of your file input
+  // 3. Hide the Change Logo button (file input AND its label/wrapper)
+  const logoInput = document.getElementById("changeSchoolLogo");
   if (logoInput) {
     logoInput.style.display = "none";
   }
+
+  // Target the green "Change Logo" button by class, label, or ID
+  const changeLogoBtn = document.querySelector(
+    '.change-logo-btn, label[for="changeSchoolLogo"]',
+  );
+  if (changeLogoBtn) {
+    changeLogoBtn.style.display = "none";
+  }
+}
+
+/**
+ * Initializes form permissions and reveals the form smoothly.
+ */
+async function initFormProtection(form) {
+  if (!form) return;
+
+  // 1. Run auth check
+  const { isAdmin } = await checkAdminAuth();
+
+  // 2. If non-admin, apply input restrictions
+  if (!isAdmin) {
+    disableFormInputs(form);
+  }
+
+  // 3. Remove initial hidden state and make form visible
+  form.classList.add("auth-ready");
 }
 
 /**

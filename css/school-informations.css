@@ -150,6 +150,37 @@ body {
   border-radius: 10px;
 }
 
+/* 1. Hide the entire form by default while auth resolves */
+#schoolProfileForm {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* 2. Reveal the form once auth check finishes */
+#schoolProfileForm.auth-ready {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 3. Utility class: Completely hide admin-only elements if needed via CSS */
+.admin-only-hidden {
+  display: none !important;
+}
+
+/* Hide all admin-only elements instantly */
+.admin-only,
+.change-logo-btn,
+#changeSchoolLogo {
+  display: none !important;
+}
+
+/* Reveal admin-only elements only when authenticated as admin */
+body.is-admin .admin-only,
+body.is-admin .change-logo-btn {
+  display: inline-block !important;
+}
+
 /* Styling disabled inputs for clean read-only viewing */
 input:disabled,
 select:disabled,
