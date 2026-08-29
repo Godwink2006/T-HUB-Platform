@@ -3,13 +3,15 @@
 // ==========================================
 const ADMIN_ONLY_PAGES = [
   "subjects.html",
-  "departments.html",
-  "academic-years.html",
-  "structure.html",
+  "department.html",
+  "academic-year.html",
+  "structures.html",
   "classes.html",
-  "auditLogs.html",
+  "audit-logs.html",
   "periods.html",
   "assessments.html",
+  "semester.html",
+  "system-users.html",
 ];
 
 function isLoginPage() {
