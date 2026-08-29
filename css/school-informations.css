@@ -1,3 +1,22 @@
+/* =========================================================
+   DESKTOP / PC OVERRIDES (NO BORDER RADIUS)
+   ========================================================= */
+@media (min-width: 1024px) {
+  .form-section,
+  .form-section h3,
+  .school-logo-preview,
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .cancel-btn,
+  .save-btn,
+  .back-school-informations-btn,
+  .upload-btn,
+  .avatar-edit-container {
+    border-radius: 0 !important;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;

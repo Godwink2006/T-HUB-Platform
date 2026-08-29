@@ -158,11 +158,6 @@ async function initFormProtection() {
   // 4. Reveal form smoothly
   form.classList.add("auth-ready");
 }
-
-// Automatically trigger on page load when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
-  initFormProtection();
-});
 /**
  * Loads existing school profile from Supabase and fills the form.
  */
@@ -211,7 +206,6 @@ async function loadSchoolProfile() {
     console.error("Error loading school profile:", err.message);
   }
 }
-
 /**
  * Validates form inputs, uploads logo if present, and upserts data.
  */
@@ -223,8 +217,12 @@ async function handleFormSubmit() {
     alternative_phone: getValue("alternativePhone").trim(),
     website: getValue("schoolWebsite").trim(),
     address: getValue("schoolAddress").trim(),
-    city: getValue("schoolCity").trim(),
-    country: getValue("schoolCountry").trim(),
+    city: getValue("city")
+      ? getValue("city").trim()
+      : getValue("schoolCity").trim(),
+    country: getValue("country")
+      ? getValue("country").trim()
+      : getValue("schoolCountry").trim(),
     principal_name: getValue("principalName").trim(),
     principal_email: getValue("principalEmail").trim(),
     principal_phone: getValue("principalPhone").trim(),
@@ -232,16 +230,18 @@ async function handleFormSubmit() {
     education_level: getValue("educationLevel"),
   };
 
-  const logoFile = document.getElementById("schoolLogo")?.files[0];
+  const logoInput = document.getElementById("schoolLogo");
+  const logoFile = logoInput?.files[0];
 
   // --- 1. CHANGE DETECTION VALIDATION ---
-  let hasChanges = false;
-  if (logoFile) {
-    hasChanges = true;
-  } else {
+  let hasChanges = Boolean(logoFile);
+
+  if (!hasChanges) {
     for (const key in formData) {
-      const originalValue = (originalSchoolData[key] ?? "").toString().trim();
-      if (formData[key] !== originalValue) {
+      const currentValue = formData[key] ?? "";
+      const originalValue = originalSchoolData[key] ?? "";
+
+      if (currentValue.toString().trim() !== originalValue.toString().trim()) {
         hasChanges = true;
         break;
       }
@@ -294,7 +294,7 @@ async function handleFormSubmit() {
     return;
   }
 
-  // --- PHONE NUMBER VALIDATION (E.g., 10 digits starting with 077/088) ---
+  // --- PHONE NUMBER VALIDATION ---
   const phoneRegex = /^(077|088)\d{7}$/;
   if (
     formData.alternative_phone &&
@@ -315,13 +315,13 @@ async function handleFormSubmit() {
     return;
   }
 
-  // --- 1. COUNTRY VALIDATION ---
+  // --- COUNTRY VALIDATION ---
   if (formData.country.toLowerCase() !== "liberia") {
     showToast("Country must be Liberia.", "error");
     return;
   }
 
-  // --- 2. WEBSITE VALIDATION (Must start with https://) ---
+  // --- WEBSITE VALIDATION ---
   if (formData.website && !formData.website.startsWith("https://")) {
     showToast("School website URL must start with https://", "error");
     return;
@@ -337,10 +337,8 @@ async function handleFormSubmit() {
       saveBtn.textContent = "Saving...";
     }
 
-    const logoFile = document.getElementById("schoolLogo")?.files[0];
     if (logoFile) {
       const compressedBlob = await compressImageToBlob(logoFile, 800, 0.7);
-      // Fixed path per school profile so it overwrites instead of creating new files
       const filePath = `school-logos/logo-main.jpg`;
 
       const { error: uploadError } = await supabaseClient.storage
@@ -356,20 +354,26 @@ async function handleFormSubmit() {
         .from("avatars")
         .getPublicUrl(filePath);
 
-      // Bust cache via timestamp parameter so updated image renders immediately
       formData.logo_url = `${publicUrlData.publicUrl}?t=${Date.now()}`;
     }
 
-    // --- INSERT OR UPDATE ---
+    // --- INSERT OR UPDATE WITH SELECT ---
+    let savedRecord;
     let error;
+
     if (existingRecordId) {
-      // Update existing record
-      ({ error } = await supabaseClient
+      // Update existing record and return updated row
+      const { data, error: updateErr } = await supabaseClient
         .from("school_profile")
         .update({ ...formData, updated_at: new Date().toISOString() })
-        .eq("id", existingRecordId));
+        .eq("id", existingRecordId)
+        .select()
+        .single();
+
+      error = updateErr;
+      savedRecord = data;
     } else {
-      // Insert new record
+      // Insert new record and return created row
       const { data, error: insertErr } = await supabaseClient
         .from("school_profile")
         .insert([formData])
@@ -377,13 +381,21 @@ async function handleFormSubmit() {
         .single();
 
       error = insertErr;
-      if (data) existingRecordId = data.id;
+      savedRecord = data;
     }
 
     if (error) throw error;
 
-    // Update local baseline so subsequent submits don't trigger "No changes detected" prematurely
-    originalSchoolData = { ...originalSchoolData, ...formData };
+    if (savedRecord) {
+      existingRecordId = savedRecord.id;
+      // Sync baseline to exact row returned by Supabase
+      originalSchoolData = { ...savedRecord };
+    }
+
+    // Clear file selection state post-upload
+    if (logoInput) {
+      logoInput.value = "";
+    }
 
     showToast("School information saved successfully!", "success");
   } catch (err) {
@@ -447,35 +459,42 @@ function resetToOriginalData() {
     logoImg.src = originalSchoolData.logo_url;
   }
 }
-
 document.addEventListener("DOMContentLoaded", async () => {
-  const form = document.getElementById("schoolInformationForm");
+  const form =
+    document.getElementById("schoolInformationForm") ||
+    document.getElementById("schoolProfileForm") ||
+    document.querySelector("form");
+  const loader = document.getElementById("formLoader");
 
-  // 1. Check Session & Admin Role
-  const { isAdmin, user } = await checkAdminAuth();
-
-  // Disable write inputs for non-admin viewers
-  if (!isAdmin) {
+  // 1. Authenticate & Secure Controls
+  const { isAdmin } = await checkAdminAuth();
+  if (isAdmin) {
+    enableFormInputs(form);
+  } else {
     disableFormInputs(form);
   }
 
-  // 2. Load existing school profile data
+  // 2. Fetch Existing Profile Records
   await loadSchoolProfile();
 
-  // 3. Handle Form Submission
+  // 3. Reveal Form UI
+  if (loader) loader.style.display = "none";
+  if (form) form.classList.add("auth-ready");
+
+  // 4. Bind Form Event Handlers
   if (form && isAdmin) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       await handleFormSubmit();
     });
 
-    // --- ADD RESET EVENT LISTENER HERE ---
     form.addEventListener("reset", (e) => {
-      e.preventDefault(); // Stop default browser clear behavior
+      e.preventDefault();
       resetToOriginalData();
     });
   }
 
+  // 5. Image Preview Listener
   const logoInput = document.getElementById("schoolLogo");
   const logoPreview = document.getElementById("schoolLogoPreview");
 
@@ -484,14 +503,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
-
-        // When the reader finishes reading the file, update the image src
         reader.onload = (e) => {
           logoPreview.src = e.target.result;
         };
-
-        // Read the image file as a Data URL
         reader.readAsDataURL(file);
+      } else {
+        // Fallback to original saved logo if user cancels file picker
+        logoPreview.src = originalSchoolData.logo_url || "";
       }
     });
   }
