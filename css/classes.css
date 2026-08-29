@@ -54,7 +54,6 @@ body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
   background: #15803d;
   color: #ffffff;
   border: 2px solid #14532d;
@@ -127,7 +126,6 @@ tr {
 
 .status {
   padding: 6px 14px;
-  border-radius: 30px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -136,21 +134,18 @@ tr {
   background: #dcfce7;
   color: #166534;
   padding: 10px;
-  border-radius: 10px;
 }
 
 .classes-status-inactive {
   background: #fcdcdc;
   color: #651616;
   padding: 10px;
-  border-radius: 10px;
 }
 
 .classes-actions-btn {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -228,7 +223,6 @@ tr {
   height: 40px;
   width: 40px;
   font-size: 22px;
-  border-radius: 10px;
 }
 
 .class-modal-body {
@@ -422,7 +416,6 @@ tr {
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
-  border-radius: 10px;
 }
 
 .archive-modal {
@@ -448,6 +441,26 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
+  .class-modal-header button {
+    border-radius: 10px;
+  }
+
+  .archive-confirm-btn {
+    border-radius: 10px;
+  }
+
+  .classes-status-active {
+    border-radius: 10px;
+  }
+
+  .classes-status-inactive {
+    border-radius: 10px;
+  }
+
+  .classes-actions-btn {
+    border-radius: 10px;
+  }
+
   .confirm-icon {
     border-radius: 10px;
     padding: 10px;
