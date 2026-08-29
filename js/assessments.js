@@ -41,6 +41,11 @@ async function loadAssessments() {
   if (!tableBody) return;
 
   try {
+    if (!window.supabaseClient) {
+      console.error("Supabase client is not initialized.");
+      return;
+    }
+
     // Optional loading indicator state
     tableBody.innerHTML = `
       <tr>
@@ -76,8 +81,17 @@ async function loadAssessments() {
     currentAssessments = data || [];
     renderAssessmentTable(currentAssessments);
   } catch (err) {
-    // To this:
-    showToast("Unexpected error loading assessments.", "error");
+    console.error("Error loading assessments:", err);
+    if (typeof showToast === "function") {
+      showToast("Unexpected error loading assessments.", "error");
+    }
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; color: red; padding: 20px;">
+          Error loading data.
+        </td>
+      </tr>
+    `;
   }
 }
 
@@ -114,9 +128,9 @@ function renderAssessmentTable(assessments) {
 
       return `
         <tr data-id="${item.id}">
-          <td>${escapeHTML(item.name || "")}</td>
+         <td>${escapeHTML(item.name || "-")}</td>
           <td>${escapeHTML(item.description || "—")}</td>
-          <td>${item.maximum_marks}</td>
+          <td>${escapeHTML(item.maximum_marks ?? "-")}</td>
           <td>
             <span class="assessment-status ${statusClass}">
               ${statusLabel}
@@ -174,6 +188,9 @@ function closeAssessmentModal() {
 
   if (!modal) return;
 
+  const form = modal.querySelector("form");
+  if (form) form.reset();
+
   modal.classList.remove("active");
   document.body.style.overflow = "";
 }
@@ -225,6 +242,14 @@ function closeEditAssessmentModal() {
   const modal = document.getElementById("editAssessmentModal");
 
   if (!modal) return;
+
+  const form = document.getElementById("editAssessmentForm");
+  if (form) {
+    form.reset();
+    delete form.dataset.origDescription;
+    delete form.dataset.origMarks;
+    delete form.dataset.origStatus;
+  }
 
   modal.classList.remove("active");
   document.body.style.overflow = "";
@@ -400,33 +425,33 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1. Initial Data Load
   loadAssessments();
 
-  // 2. Delegate Edit and Archive button clicks on the table body
   const tableBody = document.getElementById("assessmentsTableBody");
-  if (tableBody && !tableBody.dataset.hasListener) {
-    tableBody.dataset.hasListener = "true";
+  if (!tableBody || tableBody.dataset.listenerAttached === "true") return;
 
-    tableBody.addEventListener("click", (event) => {
-      // Handle Edit Click
-      const editBtn = event.target.closest(".edit-assessment");
-      if (editBtn) {
-        const id = editBtn.dataset.id;
-        if (typeof openEditAssessmentModal === "function") {
-          openEditAssessmentModal(id);
-        }
-        return;
-      }
+  tableBody.dataset.listenerAttached = "true";
 
-      // Handle Archive Click
-      const archiveBtn = event.target.closest(".archive-assessment");
-      if (archiveBtn) {
-        const id = archiveBtn.dataset.id;
-        const name = archiveBtn.dataset.name;
-        if (typeof openArchiveAssessmentModal === "function") {
-          openArchiveAssessmentModal(id, name);
-        }
+  tableBody.addEventListener("click", (e) => {
+    // Handle Edit Click
+    const editBtn = event.target.closest(".edit-assessment");
+    if (editBtn) {
+      const id = editBtn.dataset.id;
+      if (typeof openEditAssessmentModal === "function") {
+        openEditAssessmentModal(id);
       }
-    });
-  }
+      return;
+    }
+
+    const archiveBtn = e.target.closest(".archive-assessment");
+    if (archiveBtn) {
+      const id = archiveBtn.dataset.id;
+      const rawName = archiveBtn.dataset.name || "";
+      // Decode escaped HTML entities stored in dataset back into readable text
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = rawName;
+      const name = tempDiv.textContent || tempDiv.innerText || "";
+      if (id) openArchiveAssessmentModal(id, name);
+    }
+  });
 
   /* =======================================================
      ADD ASSESSMENT FORM SUBMISSION
@@ -706,38 +731,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* =======================================================
-     BACKDROP CLICK & ESCAPE KEY CLOSE HANDLERS
-     ======================================================= */
-  const modalIds = [
-    "assessmentModal",
-    "editAssessmentModal",
-    "archiveAssessmentModal",
-  ];
-
-  modalIds.forEach((id) => {
-    const modal = document.getElementById(id);
-    if (!modal) return;
-
-    modal.addEventListener("click", (event) => {
-      if (event.target === modal) {
-        modal.classList.remove("active");
-        document.body.style.overflow = "";
-      }
-    });
-  });
-
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
 
-    modalIds.forEach((id) => {
+    let modalClosed = false;
+    allModalIds.forEach((id) => {
       const modal = document.getElementById(id);
       if (modal && modal.classList.contains("active")) {
         modal.classList.remove("active");
+        modalClosed = true;
       }
     });
 
-    document.body.style.overflow = "";
+    if (modalClosed) {
+      document.body.style.overflow = "";
+    }
   });
 
   /* =======================================================
@@ -1145,7 +1153,7 @@ async function loadCategories() {
   try {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">
+        <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
           <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
           Loading categories...
         </td>
@@ -1164,7 +1172,7 @@ async function loadCategories() {
       }
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: red; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: red; padding: 20px;">
             Error loading categories data.
           </td>
         </tr>
@@ -1193,7 +1201,7 @@ function renderCategoryTable(categories) {
   if (categories.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; padding: 20px;">
+        <td colspan="7" style="text-align: center; padding: 20px;">
           No categories found.
         </td>
       </tr>
@@ -1213,7 +1221,7 @@ function renderCategoryTable(categories) {
       return `
         <tr data-id="${item.id}">
           <td>${escapeHTML(item.name)}</td>
-          <td>${item.description || "-"}</td>
+          <td>${escapeHTML(item.description) || "-"}</td>
           <td>${item.marks}</td>
           <td>
             <span class="assessment-status ${statusClass}">
@@ -1293,7 +1301,9 @@ function openEditCategoryModal(id) {
   if (nameSelect) {
     nameSelect.value = category.name || "";
     // Enforce read-only state so category name cannot be edited
-    nameSelect.disabled = true;
+    // Better alternative to disabling
+    nameSelect.style.pointerEvents = "none";
+    nameSelect.tabIndex = -1;
   }
 
   document.getElementById("editCategoryId").value = category.id;

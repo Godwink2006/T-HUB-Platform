@@ -11,6 +11,10 @@ body {
   background: #f6f5f5;
 }
 
+tbody tr:hover {
+  background: #f8fafc;
+}
+
 @media screen and (max-width: 768px) {
   /* Fixed Hamburger Button */
   .menu-toggle {
@@ -29,20 +33,6 @@ body {
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: left 0.3s ease;
-  }
-
-  .confirm-icon {
-    border-radius: 10px;
-    width: 70px;
-    height: 70px;
-    background: #fee2e2;
-    color: #dc2626;
-    margin: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    margin-bottom: 20px;
   }
 
   /* Off-screen Drawer Sidebar */

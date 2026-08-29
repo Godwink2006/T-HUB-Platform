@@ -53,7 +53,9 @@ body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
+  background: #15803d;
+  color: #ffffff;
+  border: 2px solid #14532d;
 }
 
 .back-departments-btn {
@@ -63,7 +65,9 @@ body {
   align-items: center;
   cursor: pointer;
   margin-top: 5px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   width: 70px;
   justify-content: space-between;
 }
@@ -78,7 +82,6 @@ body {
 .toolbar select {
   height: 48px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -121,7 +124,6 @@ tr {
 
 .status {
   padding: 6px 14px;
-  border-radius: 30px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -129,14 +131,12 @@ tr {
 .departments-status-active {
   background: #dcfce7;
   color: #166534;
-  border-radius: 10px;
   padding: 10px;
 }
 
 .departments-status-inactive {
   background: #fcdcdc;
   color: #651616;
-  border-radius: 10px;
   padding: 10px;
 }
 
@@ -144,7 +144,6 @@ tr {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -181,7 +180,6 @@ tr {
   width: 600px;
   max-width: 85vh;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 390px;
 }
@@ -212,9 +210,9 @@ tr {
 
 .department-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -249,7 +247,6 @@ tr {
   width: 100%;
   padding: 12px 15px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   outline: none;
   font-size: 15px;
 }
@@ -272,15 +269,15 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
-  background: #e5e7eb;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   cursor: pointer;
 }
 
 .save-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -306,7 +303,6 @@ tr {
   width: 600px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 390px;
 }
@@ -325,9 +321,9 @@ tr {
 
 .edit-department-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -348,7 +344,6 @@ tr {
 .edit-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -379,7 +374,6 @@ tr {
 .confirm-modal {
   width: 430px;
   background: #ffff;
-  border-radius: 18px;
   padding: 35px;
   text-align: center;
   animation: modalShow 0.25s ease;
@@ -390,7 +384,6 @@ tr {
   height: 70px;
   background: #fee2e2;
   color: #dc2626;
-  border-radius: 50%;
   margin: auto;
   display: flex;
   align-items: center;
@@ -411,7 +404,6 @@ tr {
 .archive-confirm-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
@@ -440,11 +432,32 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
+  .confirm-icon {
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .archive-confirm-btn {
+    border-radius: 10px;
+  }
+
+  .departments-status-active {
+    border-radius: 10px;
+  }
+
+  .departments-status-inactive {
+    border-radius: 10px;
+  }
+
+  .departments-actions-btn {
+    border-radius: 10px;
+  }
+
   .confirm-modal {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 320px; /* Fixed height requirement */
+    height: 390px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;

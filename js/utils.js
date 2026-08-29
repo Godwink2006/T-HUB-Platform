@@ -262,12 +262,6 @@ window.addEventListener("pageshow", async (event) => {
       error,
     } = await window.supabaseClient.auth.getUser();
 
-    // 1. If active session exists on login page, redirect to main dashboard
-    if (isLoginPage() && user && !error) {
-      window.location.replace("/html/dashboard.html");
-      return;
-    }
-
     // 2. If session died on protected pages, kick to login
     if (!isLoginPage() && (error || !user)) {
       await window.forceLogout();
@@ -323,10 +317,10 @@ window.addEventListener("pageshow", async (event) => {
   } = await window.supabaseClient.auth.getUser();
 
   // If on login page with an active session, redirect to main application
-  if (isLogin && user && !error) {
-    window.location.replace("/html/dashboard.html"); // Adjust path to your main home/dashboard page
-    return;
-  }
+  //if (isLogin && user && !error) {
+  //window.location.replace("/html/dashboard.html"); // Adjust path to your main home/dashboard page
+  //return;
+  //}
 
   // Redirect immediately if no user or token expired on protected pages
   if (!isLogin && (error || !user)) {
@@ -427,3 +421,13 @@ window.addEventListener("pageshow", async (event) => {
     }
   }
 });
+
+window.escapeHTML = function (str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};

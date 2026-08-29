@@ -6,31 +6,26 @@ const openDepartmentModal = document.getElementById("addDepartment");
 
 const closeDepartmentModal = document.getElementById("closeDepartmentModal");
 
-openDepartmentModal.addEventListener("click", () => {
-  departmentModal.style.display = "flex";
+if (openDepartmentModal && departmentModal) {
+  openDepartmentModal.addEventListener("click", () => {
+    departmentModal.style.display = "flex";
+    lockBodyScroll();
+  });
+}
 
-  lockBodyScroll();
-});
-
-closeDepartmentModal.addEventListener("click", () => {
-  departmentModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-cancelDepartmentModal.addEventListener("click", () => {
-  departmentModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-window.addEventListener("click", (e) => {
-  if (e.target === departmentModal) {
+if (closeDepartmentModal && departmentModal) {
+  closeDepartmentModal.addEventListener("click", () => {
     departmentModal.style.display = "none";
-
     unLockBodyScroll();
-  }
-});
+  });
+}
+
+if (cancelDepartmentModal && departmentModal) {
+  cancelDepartmentModal.addEventListener("click", () => {
+    departmentModal.style.display = "none";
+    unLockBodyScroll();
+  });
+}
 
 const closeEditDepartmentModal = document.getElementById(
   "closeEditDepartmentModal",
@@ -40,14 +35,6 @@ const cancelEditDepartmentModal = document.getElementById(
 );
 const editDepartmentModal = document.getElementById("editDepartmentModal");
 const editDepartmentButtons = document.querySelectorAll(".edit-Department");
-
-editDepartmentButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    editDepartmentModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
 
 closeEditDepartmentModal.addEventListener("click", () => {
   editDepartmentModal.style.display = "none";
@@ -62,9 +49,16 @@ cancelEditDepartmentModal.addEventListener("click", () => {
 });
 
 window.addEventListener("click", (e) => {
+  if (e.target === departmentModal) {
+    departmentModal.style.display = "none";
+    unLockBodyScroll();
+  }
   if (e.target === editDepartmentModal) {
     editDepartmentModal.style.display = "none";
-
+    unLockBodyScroll();
+  }
+  if (e.target === archiveDepartmentModal) {
+    archiveDepartmentModal.style.display = "none";
     unLockBodyScroll();
   }
 });
@@ -77,27 +71,21 @@ const archiveButtons = document.querySelectorAll(".archive-Department");
 
 const cancelArchive = document.getElementById("cancelArchive");
 
-archiveButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    archiveDepartmentModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
-
 cancelArchive.addEventListener("click", () => {
   archiveDepartmentModal.style.display = "none";
 
   unLockBodyScroll();
 });
 
-window.addEventListener("click", (e) => {
-  if (e.target === archiveDepartmentModal) {
-    archiveDepartmentModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-});
+function escapeAttribute(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 // 1. Fetch Departments from Supabase
 async function loadDepartments() {
@@ -154,8 +142,8 @@ function renderDepartmentsTable(departments) {
     const descriptionText = item.description || "-";
 
     tr.innerHTML = `
-  <td>${item.name}</td>
-  <td>${descriptionText}</td>
+  <td>${escapeHTML(item.name || "-")}</td>
+  <td>${escapeHTML(descriptionText || "-")}</td>
   <td>
     <span class="${status}">${statusText}</span>
   </td>
@@ -165,9 +153,9 @@ function renderDepartmentsTable(departments) {
     <button class="departments-actions-btn edit-Department" onclick="openEditModal('${item.id}')">
       <i class="fa-solid fa-pen"></i>
     </button>
-    <button class="departments-actions-btn archive-Department" onclick="openArchiveModal('${item.id}')">
-      <i class="fa-solid fa-box-archive"></i>
-    </button>
+    <button class="departments-actions-btn archive-Department" onclick="openArchiveModal('${item.id}', '${escapeAttribute(item.name)}')">
+  <i class="fa-solid fa-box-archive"></i>
+</button>
   </td>
 `;
 
@@ -247,6 +235,10 @@ async function handleAddClass(event) {
 
     showToast("Department created successfully!", "success");
     form.reset();
+    if (departmentModal) {
+      departmentModal.style.display = "none";
+      unLockBodyScroll();
+    }
     await loadDepartments(); // Function to reload your table data
   } catch (err) {
     showToast(err.message, "error");
@@ -258,10 +250,10 @@ async function handleAddClass(event) {
   }
 }
 
-// 3. Attach Event Listener
-document
-  .getElementById("departmentForm")
-  .addEventListener("submit", handleAddClass);
+const departmentForm = document.getElementById("departmentForm");
+if (departmentForm) {
+  departmentForm.addEventListener("submit", handleAddClass);
+}
 
 // Rename this function to avoid overwriting async function openEditModal
 function showModalById(modalId) {
@@ -276,6 +268,11 @@ let originalDepartmentData = null;
 
 // 1. Open Edit Modal & Populate Form Data
 async function openEditModal(departmentId) {
+  if (!window.supabaseClient) {
+    console.error("Supabase client is not initialized.");
+    return;
+  }
+
   try {
     const { data, error } = await supabaseClient
       .from("departments")
@@ -284,22 +281,31 @@ async function openEditModal(departmentId) {
       .single();
 
     if (error || !data) {
-      showToast("Failed to fetch department details.", "error");
+      if (typeof showToast === "function") {
+        showToast("Failed to fetch department details.", "error");
+      }
       return;
     }
 
     // Cache original values to detect changes later
     originalDepartmentData = { ...data };
 
-    // Fill form fields
-    document.getElementById("editDepartmentId").value = data.id;
-    document.getElementById("editDepartmentName").value = data.name;
-    document.getElementById("editStatus").value = data.status;
-    document.getElementById("editDescription").value = data.description || "";
+    // Fill form fields safely
+    const idInput = document.getElementById("editDepartmentId");
+    const nameInput = document.getElementById("editDepartmentName");
+    const statusInput = document.getElementById("editStatus");
+    const descInput = document.getElementById("editDescription");
+
+    if (idInput) idInput.value = data.id;
+    if (nameInput) nameInput.value = data.name || "";
+    if (statusInput) statusInput.value = data.status || "";
+    if (descInput) descInput.value = data.description || "";
 
     showModalById("editDepartmentModal");
   } catch (err) {
-    showToast(err.message, "error");
+    if (typeof showToast === "function") {
+      showToast(err.message || "An error occurred.", "error");
+    }
   }
 }
 
@@ -357,24 +363,28 @@ async function handleEditDepartment(event) {
         return;
       }
       if (error.code === "42501") {
-        showToast("You do not have permission to add a department.", "error");
+        showToast(
+          "You do not have permission to update a department.",
+          "error",
+        );
         return;
       }
       showToast(error.message, "error");
       return;
     }
 
-    // 2. Check for RLS silent block (no error thrown, but 0 rows inserted)
+    // 2. Check for RLS silent block (no error thrown, but 0 rows updated)
     if (!data || data.length === 0) {
-      showToast("You do not have permission to add a department.", "error");
+      showToast("You do not have permission to update a department.", "error");
       return;
     }
 
     showToast("Department updated successfully!", "success");
-    // Close modal
-    editDepartmentModal.style.display = "none";
-    unLockBodyScroll();
-    await loadDepartments(); // Refresh main table
+    originalDepartmentData = null;
+    const editModalEl = document.getElementById("editDepartmentModal");
+    if (editModalEl) editModalEl.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+    await loadDepartments();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -385,19 +395,23 @@ async function handleEditDepartment(event) {
   }
 }
 
-// Attach Event Listeners
-document
-  .getElementById("editDepartmentForm")
-  .addEventListener("submit", handleEditDepartment);
-
+const editDepartmentForm = document.getElementById("editDepartmentForm");
+if (editDepartmentForm) {
+  editDepartmentForm.addEventListener("submit", handleEditDepartment);
+}
 let departmentToArchiveId = null;
 
 // 1. Open Archive Confirmation Modal
-function openArchiveModal(departmentId) {
+function openArchiveModal(departmentId, departmentName) {
   departmentToArchiveId = departmentId;
 
   const archiveModal = document.getElementById("archiveDepartmentModal");
   if (archiveModal) {
+    const nameElement = document.getElementById("archiveDepartmentName");
+    if (nameElement) {
+      nameElement.textContent = departmentName || "this department";
+    }
+
     archiveModal.style.display = "flex";
     if (typeof lockBodyScroll === "function") lockBodyScroll();
   }
@@ -466,11 +480,16 @@ async function handleConfirmArchive() {
 }
 
 // Attach Confirm Event Listener
-document
-  .getElementById("confirmArchive")
-  ?.addEventListener("click", handleConfirmArchive);
+const confirmArchiveBtn = document.getElementById("confirmArchive");
+if (confirmArchiveBtn) {
+  confirmArchiveBtn.addEventListener("click", handleConfirmArchive);
+}
 
 // Add this at the bottom of your file
-document.addEventListener("DOMContentLoaded", () => {
-  loadDepartments();
-});
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    if (typeof loadDepartments === "function") loadDepartments();
+  });
+} else {
+  if (typeof loadDepartments === "function") loadDepartments();
+}
