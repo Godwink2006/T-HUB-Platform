@@ -9,7 +9,7 @@ const ADMIN_ONLY_PAGES = [
   "classes.html",
   "audit-logs.html",
   "periods.html",
-  "assessments.html",
+  //"assessments.html",
   "semester.html",
   "system-users.html",
 ];
