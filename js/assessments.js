@@ -901,6 +901,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "editAssessmentModal",
     "archiveAssessmentModal",
     "categoryModal",
+    "editCategoryModal",
+    "archiveCategoryModal",
   ];
 
   allModalIds.forEach((id) => {
