@@ -114,17 +114,16 @@ async function initSettingsPage() {
           </button>
         </div>
 
-         
-        `
-            : ""
-        }
-          <div id="nav-rooms" class="setting-card">
+           <div id="nav-assessments" class="setting-card">
           <h4>Assessment</h4>
           <p>Create and manage assessments.</p>
           <button onclick="window.location.href = 'assessments.html'" class="manage-btn">
             Manage Assessments <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
+        `
+            : ""
+        }
 
         <div class="setting-card">
           <h4>School Information</h4>
