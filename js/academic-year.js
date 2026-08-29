@@ -57,7 +57,7 @@ function renderTableLoading() {
 
   tbody.innerHTML = `
     <tr>
-      <td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+      <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading academic years...
       </td>
@@ -70,7 +70,7 @@ function renderAcademicYearsTable() {
   if (!tbody) return;
 
   if (academicYears.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No academic years found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No academic years found.</td></tr>`;
     return;
   }
 

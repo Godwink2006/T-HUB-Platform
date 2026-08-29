@@ -407,12 +407,12 @@ async function loadSystemUsers() {
   const { data: users, error } = await query;
 
   if (error) {
-    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Failed to load users.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center;">Failed to load users.</td></tr>`;
     return;
   }
 
   if (!users || users.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No users found.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center;">No users found.</td></tr>`;
     return;
   }
 
@@ -424,17 +424,17 @@ async function loadSystemUsers() {
            <td>
           <img src="${user.photo_url ? user.photo_url : DEFAULT_AVATAR}" class="systemUser-photo" alt="Profile" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" />
         </td>
-      <td>${user.full_name || "N/A"}</td>
-      <td>${user.email || "N/A"}</td>
-      <td>${user.phone_number || "N/A"}</td>
-      <td>${user.role || "N/A"}</td>
+      <td>${user.full_name || "-"}</td>
+      <td>${user.email || "-"}</td>
+      <td>${user.phone_number || "-"}</td>
+      <td>${user.role || "-"}</td>
+       <td>${formatDateTime(user.created_at)}</td>
+      <td>${formatDateTime(user.updated_at)}</td>
       <td>
         <span class="systemUsers-status-${(user.status || "inactive").toLowerCase()}">
           ${user.status || "Inactive"}
         </span>
       </td>
-      <td>${formatDateTime(user.created_at)}</td>
-      <td>${formatDateTime(user.updated_at)}</td>
       <td>
         <button class="systemUsers-actions-btn edit-SystemUser" onclick="editUser('${user.id}')">
           <i class="fa-solid fa-pen"></i>
@@ -469,7 +469,7 @@ function renderTableLoading() {
 
   tableBody.innerHTML = `
     <tr>
-      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+      <td colspan="9" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading system users...
       </td>

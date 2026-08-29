@@ -494,7 +494,7 @@ async function loadFeeStructures() {
     console.error("Error loading fee structures:", err.message);
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; color: red; padding: 20px;">
+        <td colspan="8" style="text-align: center; color: red; padding: 20px;">
           Failed to load fee structures.
         </td>
       </tr>
@@ -525,7 +525,7 @@ function renderFeeStructuresTable(structures) {
   if (structures.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; color: #777; padding: 20px;">
+        <td colspan="8" style="text-align: center; color: #777; padding: 20px;">
           No fee structures found.
         </td>
       </tr>

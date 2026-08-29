@@ -55,7 +55,7 @@ function renderTableLoading() {
 
   tbody.innerHTML = `
     <tr>
-      <td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">
+      <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading semesters...
       </td>
@@ -68,7 +68,7 @@ function renderTermsTable() {
   if (!tbody) return;
 
   if (terms.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No semesters found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No semesters found.</td></tr>`;
     return;
   }
 

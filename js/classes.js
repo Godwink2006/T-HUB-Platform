@@ -196,7 +196,7 @@ async function loadClasses() {
     renderClassesTable(currentClassesData);
   } catch (err) {
     console.error("Fetch Error:", err.message);
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Failed to load classes.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Failed to load classes.</td></tr>`;
   }
 }
 
@@ -206,7 +206,7 @@ function renderClassesTable(classes) {
   tbody.innerHTML = "";
 
   if (classes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No classes found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No classes found.</td></tr>`;
     return;
   }
 
