@@ -748,4 +748,315 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", () => {
       window.location.href = "settings.html";
     });
+
+  /* =======================================================
+     CATEGORY INITIALIZATION & EVENT LISTENERS
+     ======================================================= */
+
+  // 1. Load categories on boot
+  loadCategories();
+
+  // 2. Open / Close Category Modal Controls
+  document
+    .getElementById("addCategoryBtn")
+    ?.addEventListener("click", openCategoryModal);
+
+  document
+    .getElementById("closeCategoryModal")
+    ?.addEventListener("click", closeCategoryModal);
+
+  document
+    .getElementById("cancelCategoryModal")
+    ?.addEventListener("click", closeCategoryModal);
+
+  // 3. Add Category Form Submission Listener
+  const categoryForm = document.getElementById("categoryForm");
+
+  if (categoryForm && !categoryForm.dataset.hasListener) {
+    categoryForm.dataset.hasListener = "true";
+
+    categoryForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const nameInput = document.getElementById("categoryNameInput");
+      const marksInput = document.getElementById("categoryMarksInput");
+      const statusSelect = document.getElementById("categoryStatusSelect");
+      const descriptionInput = document.getElementById(
+        "categoryDescriptionsInput",
+      );
+
+      const saveButton =
+        event.submitter || categoryForm.querySelector('[type="submit"]');
+
+      const name = nameInput?.value.trim();
+      const rawMarks = marksInput?.value.trim();
+      const marks = Number(rawMarks);
+      const status = statusSelect?.value.trim();
+      const description = descriptionInput?.value.trim() || null;
+
+      // --- Client-Side Validations ---
+      if (!name) {
+        return notifyUser("Category name is required.", "error", nameInput);
+      }
+      if (name.length > 100) {
+        return notifyUser(
+          "Category name must be 100 characters or less.",
+          "error",
+          nameInput,
+        );
+      }
+      if (!rawMarks || !Number.isInteger(marks)) {
+        return notifyUser(
+          "Marks must be a valid whole number.",
+          "error",
+          marksInput,
+        );
+      }
+      if (marks <= 0 || marks > 100) {
+        return notifyUser(
+          "Marks must be between 1 and 100.",
+          "error",
+          marksInput,
+        );
+      }
+      if (!status) {
+        return notifyUser("Please select a status.", "error", statusSelect);
+      }
+
+      const normalizedStatus =
+        status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+      try {
+        if (saveButton) {
+          saveButton.disabled = true;
+          saveButton.textContent = "Saving...";
+        }
+
+        // --- Supabase Insert Call ---
+        const { error } = await supabaseClient
+          .from("assessment_categories")
+          .insert([
+            {
+              name: name,
+              marks: marks,
+              status: normalizedStatus,
+              description: description,
+              is_archived: false,
+            },
+          ])
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Supabase category insert error:", error);
+
+          // Unique Constraint Check (PG code 23505)
+          if (error.code === "23505") {
+            notifyUser(
+              "A category with this name already exists.",
+              "error",
+              nameInput,
+            );
+            return;
+          }
+
+          // Permission / RLS Checks
+          if (
+            error.code === "42501" ||
+            error.message?.toLowerCase().includes("permission")
+          ) {
+            notifyUser(
+              "You do not have permission to create categories.",
+              "error",
+            );
+            return;
+          }
+
+          notifyUser("Failed to create category. Please try again.", "error");
+          return;
+        }
+
+        notifyUser("Category created successfully.", "success");
+        categoryForm.reset();
+        closeCategoryModal();
+        loadCategories();
+      } catch (err) {
+        console.error("Unexpected runtime error:", err);
+        notifyUser(
+          "Something went wrong while processing your request.",
+          "error",
+        );
+      } finally {
+        if (saveButton) {
+          saveButton.disabled = false;
+          saveButton.textContent = "Save Category";
+        }
+      }
+    });
+  }
+
+  // 4. Update Modal Backdrop & ESC Listeners to include categoryModal
+  const allModalIds = [
+    "assessmentModal",
+    "editAssessmentModal",
+    "archiveAssessmentModal",
+    "categoryModal",
+  ];
+
+  allModalIds.forEach((id) => {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        modal.classList.remove("active");
+        document.body.style.overflow = "";
+      }
+    });
+  });
 });
+
+/* =======================================================
+   CATEGORIES MODULE (STATE, LOAD, RENDER & CREATE)
+   ======================================================= */
+
+// Global state cache for categories
+let currentCategories = [];
+
+/**
+ * Fetch non-archived categories from Supabase
+ */
+async function loadCategories() {
+  const tableBody = document.getElementById("categoriesTableBody");
+  if (!tableBody) return;
+
+  try {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">
+          <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+          Loading categories...
+        </td>
+      </tr>
+    `;
+
+    const { data, error } = await supabaseClient
+      .from("assessment_categories")
+      .select("*")
+      .eq("is_archived", false)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      if (typeof showToast === "function") {
+        showToast("Failed to load categories.", "error");
+      }
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; color: red; padding: 20px;">
+            Error loading categories data.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    currentCategories = data || [];
+    renderCategoryTable(currentCategories);
+  } catch (err) {
+    console.error("Unexpected error loading categories:", err);
+    if (typeof showToast === "function") {
+      showToast("Unexpected error loading categories.", "error");
+    }
+  }
+}
+
+/**
+ * Render category records into the HTML table
+ * @param {Array} categories
+ */
+function renderCategoryTable(categories) {
+  const tableBody = document.getElementById("categoriesTableBody");
+  if (!tableBody) return;
+
+  if (categories.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 20px;">
+          No categories found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tableBody.innerHTML = categories
+    .map((item) => {
+      const isInactive = item.status?.toLowerCase() === "inactive";
+      const statusClass = isInactive
+        ? "assessment-status-inactive"
+        : "assessment-status-active";
+      const statusLabel = isInactive ? "Inactive" : "Active";
+      const rawName = item.name || "";
+
+      return `
+        <tr data-id="${item.id}">
+          <td>${escapeHTML(item.name)}</td>
+          <td>${item.description || "-"}</td>
+          <td>${item.marks}</td>
+          <td>
+            <span class="assessment-status ${statusClass}">
+              ${statusLabel}
+            </span>
+          </td>
+          <td>${formatDateTime(item.created_at)}</td>
+          <td>${formatDateTime(item.updated_at)}</td>
+          <td>
+            <div class="assessment-actions">
+              <button
+                type="button"
+                class="assessment-action-btn assessment-edit-btn edit-category"
+                data-id="${item.id}"
+                title="Edit Category"
+              >
+                <i class="fa-solid fa-pen"></i>
+              </button>
+
+              <button
+                type="button"
+                class="assessment-action-btn assessment-archive-btn archive-category"
+                data-id="${item.id}"
+                data-name="${escapeAttribute(rawName)}"
+                title="Archive Category"
+              >
+                <i class="fa-solid fa-box-archive"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+/* =========================================================
+   CATEGORY MODAL CONTROLS
+   ========================================================= */
+
+function openCategoryModal() {
+  const modal = document.getElementById("categoryModal");
+  if (!modal) return;
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeCategoryModal() {
+  const modal = document.getElementById("categoryModal");
+  if (!modal) return;
+
+  const form = document.getElementById("categoryForm");
+  if (form) form.reset();
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
