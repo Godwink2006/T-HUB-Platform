@@ -37,7 +37,7 @@
         <header class="topbar">
           <div class="topbar-info">
             <h1>Assessments</h1>
-            <p>Manage grading periods and their maximum marks.</p>
+            <p>Manage grading periods and assessment categories.</p>
 
             <button
               type="button"
@@ -49,10 +49,16 @@
             </button>
           </div>
 
-          <button type="button" id="addAssessment" class="add-assessment-btn">
-            <i class="fa-solid fa-plus"></i>
-            Add Assessment
-          </button>
+          <div class="topbar-actions">
+            <button type="button" id="addCategoryBtn" class="add-category-btn">
+              <i class="fa-solid fa-plus"></i>
+              Add Category
+            </button>
+            <button type="button" id="addAssessment" class="add-assessment-btn">
+              <i class="fa-solid fa-plus"></i>
+              Add Assessment
+            </button>
+          </div>
         </header>
 
         <!-- =======================================================
@@ -84,6 +90,39 @@
               <tbody id="assessmentsTableBody">
                 <!-- Existing assessment -->
                 <!-- Additional assessments will be loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- =======================================================
+             ASSESSMENT CATEGORIES TABLE CARD
+        ======================================================= -->
+        <section class="assessment-table-card" style="margin-top: 2rem">
+          <div class="assessment-table-header">
+            <div>
+              <h2>Assessment Categories</h2>
+              <p>
+                Manage category types (e.g., Homework, Quizzes, Exams) and their
+                max marks.
+              </p>
+            </div>
+          </div>
+
+          <div class="assessment-table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Category Name</th>
+                  <th>Marks</th>
+                  <th>Status</th>
+                  <th>Created At</th>
+                  <th>Updated At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="categoriesTableBody">
+                <!-- Loaded dynamically -->
               </tbody>
             </table>
           </div>
@@ -339,6 +378,106 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         ADD / EDIT CATEGORY MODAL
+    ========================================================= -->
+    <div id="categoryModal" class="assessment-modal">
+      <div class="assessment-modal-content">
+        <div class="assessment-modal-header">
+          <h2 id="categoryModalTitle">Add Category</h2>
+          <button
+            type="button"
+            id="closeCategoryModal"
+            class="assessment-modal-close"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="assessment-modal-body">
+          <form id="categoryForm">
+            <input type="hidden" id="categoryId" />
+
+            <div class="form-group">
+              <label for="categoryNameInput"> Category Name * </label>
+              <input
+                type="text"
+                id="categoryNameInput"
+                placeholder="e.g. Homework"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="categoryMarksInput"> Marks * </label>
+              <input
+                type="number"
+                id="categoryMarksInput"
+                min="1"
+                max="100"
+                placeholder="10"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="categoryStatusSelect"> Status * </label>
+              <select id="categoryStatusSelect" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </form>
+        </div>
+
+        <div class="assessment-modal-footer">
+          <button type="button" class="cancel-btn" id="cancelCategoryModal">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="categoryForm"
+            class="save-btn"
+            id="saveCategoryBtn"
+          >
+            Save Category
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         ARCHIVE CATEGORY MODAL
+    ========================================================= -->
+    <div id="archiveCategoryModal" class="archive-modal">
+      <div class="confirm-modal">
+        <div class="confirm-icon">
+          <i class="fa-solid fa-box-archive"></i>
+        </div>
+        <h2>Archive Category?</h2>
+        <p>
+          Are you sure you want to archive
+          <strong id="archiveCategoryName"></strong>?
+        </p>
+        <p>
+          This category will no longer be available when defining
+          sub-assessments.
+        </p>
+        <div class="archive-modal-footer">
+          <button type="button" id="cancelArchiveCategory" class="cancel-btn">
+            Cancel
+          </button>
+          <button
+            type="button"
+            id="confirmArchiveCategory"
+            class="archive-confirm-btn"
+          >
+            Archive
+          </button>
         </div>
       </div>
     </div>
