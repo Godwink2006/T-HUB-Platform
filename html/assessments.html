@@ -49,16 +49,14 @@
             </button>
           </div>
 
-          <div class="topbar-actions">
-            <button type="button" id="addCategoryBtn" class="add-category-btn">
-              <i class="fa-solid fa-plus"></i>
-              Add Category
-            </button>
-            <button type="button" id="addAssessment" class="add-assessment-btn">
-              <i class="fa-solid fa-plus"></i>
-              Add Assessment
-            </button>
-          </div>
+          <button type="button" id="addCategoryBtn" class="add-assessment-btn">
+            <i class="fa-solid fa-plus"></i>
+            Add Category
+          </button>
+          <button type="button" id="addAssessment" class="add-assessment-btn">
+            <i class="fa-solid fa-plus"></i>
+            Add Assessment
+          </button>
         </header>
 
         <!-- =======================================================
@@ -114,6 +112,7 @@
               <thead>
                 <tr>
                   <th>Category Name</th>
+                  <th>Description</th>
                   <th>Marks</th>
                   <th>Status</th>
                   <th>Created At</th>
@@ -323,67 +322,8 @@
       </div>
     </div>
 
-    <div id="categoryModal" class="assessment-modal">
-      <div class="assessment-modal-content">
-        <div class="assessment-modal-header">
-          <h2 id="categoryModalTitle">Add Category</h2>
-
-          <button type="button" id="closeCategoryModal">&times;</button>
-        </div>
-
-        <div class="assessment-modal-body">
-          <form id="categoryForm">
-            <input type="hidden" id="categoryId" />
-
-            <div class="form-group">
-              <label for="categoryNameInput"> Category Name * </label>
-
-              <input
-                type="text"
-                id="categoryNameInput"
-                placeholder="e.g. Homework"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="categoryMarksInput"> Marks * </label>
-
-              <input
-                type="number"
-                id="categoryMarksInput"
-                min="1"
-                max="100"
-                placeholder="10"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="categoryStatusSelect"> Status * </label>
-
-              <select id="categoryStatusSelect" required>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div class="assessment-modal-footer">
-              <button type="button" class="cancel-btn" id="cancelCategoryModal">
-                Cancel
-              </button>
-
-              <button type="submit" class="save-btn" id="saveCategoryBtn">
-                Save Category
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
     <!-- =========================================================
-         ADD / EDIT CATEGORY MODAL
+         ADD CATEGORY MODAL
     ========================================================= -->
     <div id="categoryModal" class="assessment-modal">
       <div class="assessment-modal-content">
@@ -431,6 +371,17 @@
                 <option value="Inactive">Inactive</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label for="categoryDescriptionsInput"
+                >Description (Optional)</label
+              >
+              <input
+                type="text"
+                id="categoryDescriptionsInput"
+                placeholder="Write description"
+              />
+            </div>
           </form>
         </div>
 
@@ -445,6 +396,85 @@
             id="saveCategoryBtn"
           >
             Save Category
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+     EDIT CATEGORY MODAL
+========================================================= -->
+    <div id="editCategoryModal" class="assessment-modal">
+      <div class="assessment-modal-content">
+        <div class="assessment-modal-header">
+          <h2>Edit Category</h2>
+          <button
+            type="button"
+            id="closeEditCategoryModal"
+            class="assessment-modal-close"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="assessment-modal-body">
+          <form id="editCategoryForm">
+            <input type="hidden" id="editCategoryId" />
+
+            <div class="form-group">
+              <label for="editCategoryNameInput"> Category Name * </label>
+              <input
+                type="text"
+                id="editCategoryNameInput"
+                placeholder="e.g. Homework"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editCategoryMarksInput"> Marks * </label>
+              <input
+                type="number"
+                id="editCategoryMarksInput"
+                min="1"
+                max="100"
+                placeholder="10"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editCategoryStatusSelect"> Status * </label>
+              <select id="editCategoryStatusSelect" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="categoryDescriptionsInput"
+                >Description (Optional)</label
+              >
+              <input
+                type="text"
+                id="categoryDescriptionsInput"
+                placeholder="Write description"
+              />
+            </div>
+          </form>
+        </div>
+
+        <div class="assessment-modal-footer">
+          <button type="button" class="cancel-btn" id="cancelEditCategoryModal">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="editCategoryForm"
+            class="edit-btn"
+            id="updateCategoryBtn"
+          >
+            Update Category
           </button>
         </div>
       </div>
