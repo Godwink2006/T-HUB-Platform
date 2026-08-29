@@ -6,44 +6,37 @@ const openClassModal = document.getElementById("addClass");
 
 const closeClassModal = document.getElementById("closeClassModal");
 
-openClassModal.addEventListener("click", () => {
-  classModal.style.display = "flex";
+if (openClassModal && classModal) {
+  openClassModal.addEventListener("click", () => {
+    classModal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+  });
+}
 
-  lockBodyScroll();
-});
+if (closeClassModal && classModal) {
+  closeClassModal.addEventListener("click", () => {
+    classModal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  });
+}
 
-closeClassModal.addEventListener("click", () => {
-  classModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-cancelClassModal.addEventListener("click", () => {
-  classModal.style.display = "none";
-
-  unLockBodyScroll();
-});
+if (cancelClassModal && classModal) {
+  cancelClassModal.addEventListener("click", () => {
+    classModal.style.display = "none";
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  });
+}
 
 window.addEventListener("click", (e) => {
-  if (e.target === classModal) {
-    classModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
+  if (e.target === classModal) closeModal("classModal");
+  if (e.target === editClassModal) closeModal("editClassModal");
+  if (e.target === archiveClassModal) closeModal("archiveClassModal");
 });
 
 const closeEditClassModal = document.getElementById("closeEditClassModal");
 const cancelEditClassModal = document.getElementById("cancelEditClassModal");
 const editClassModal = document.getElementById("editClassModal");
 const editButtons = document.querySelectorAll(".edit");
-
-editButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    editClassModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
 
 closeEditClassModal.addEventListener("click", () => {
   editClassModal.style.display = "none";
@@ -57,27 +50,11 @@ cancelEditClassModal.addEventListener("click", () => {
   unLockBodyScroll();
 });
 
-window.addEventListener("click", (e) => {
-  if (e.target === editClassModal) {
-    editClassModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-});
-
 const archiveClassModal = document.getElementById("archiveClassModal");
 
 const archiveButtons = document.querySelectorAll(".archive");
 
 const cancelArchive = document.getElementById("cancelArchive");
-
-archiveButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    archiveClassModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
 
 cancelArchive.addEventListener("click", () => {
   archiveClassModal.style.display = "none";
@@ -85,19 +62,16 @@ cancelArchive.addEventListener("click", () => {
   unLockBodyScroll();
 });
 
-window.addEventListener("click", (e) => {
-  if (e.target === archiveClassModal) {
-    archiveClassModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-});
-
 let classToArchiveId = null;
 
-// 1. Open Archive Confirmation Modal
-function openArchiveModal(classId) {
+function openArchiveModal(classId, className) {
   classToArchiveId = classId;
+
+  const nameElement = document.getElementById("archiveClassName");
+  if (nameElement) {
+    nameElement.textContent = className || "this class";
+  }
+
   openModal("archiveClassModal");
 }
 
@@ -247,22 +221,22 @@ function renderClassesTable(classes) {
     const descriptionText = item.description || "-";
 
     tr.innerHTML = `
-      <td>${item.name}</td>
-      <td>${formatSchoolLevel(item.school_level)}</td>
-      <td>${item.capacity}</td>
-      <td>
-        <span class="${statusClass}">${statusText}</span>
-      </td>
-      <td>${descriptionText}</td>
+      <td>${escapeHTML(item.name || "-")}</td>
+  <td>${escapeHTML(formatSchoolLevel(item.school_level))}</td>
+  <td>${escapeHTML(item.capacity || 0)}</td>
+  <td>
+    <span class="${statusClass}">${statusText}</span>
+  </td>
+  <td>${escapeHTML(descriptionText || "-")}</td>
        <td>${formatDateTime(item.created_at)}</td>
           <td>${formatDateTime(item.updated_at)}</td>
       <td>
         <button class="classes-actions-btn edit" onclick="openEditModal('${item.id}')">
           <i class="fa-solid fa-pen"></i>
         </button>
-        <button class="classes-actions-btn archive" onclick="openArchiveModal('${item.id}')">
-          <i class="fa-solid fa-box-archive"></i>
-        </button>
+       <button class="classes-actions-btn archive" onclick="openArchiveModal('${item.id}', '${escapeAttribute(item.name || "")}')">
+      <i class="fa-solid fa-box-archive"></i>
+    </button>
       </td>
     `;
 
@@ -285,8 +259,12 @@ function formatDateTime(isoString) {
 
 let originalClassData = null;
 
-// 1. Open Edit Modal & Populate Form Data
 async function openEditModal(classId) {
+  if (!window.supabaseClient) {
+    console.error("Supabase client is not initialized.");
+    return;
+  }
+
   try {
     const { data, error } = await supabaseClient
       .from("classes")
@@ -295,24 +273,33 @@ async function openEditModal(classId) {
       .single();
 
     if (error || !data) {
-      showToast("Failed to fetch class details.", "error");
+      if (typeof showToast === "function") {
+        showToast("Failed to fetch class details.", "error");
+      }
       return;
     }
 
-    // Cache original values to detect changes later
     originalClassData = { ...data };
 
-    // Fill form fields
-    document.getElementById("editClassId").value = data.id;
-    document.getElementById("editClassName").value = data.name;
-    document.getElementById("editSchoolLevel").value = data.school_level;
-    document.getElementById("editCapacity").value = data.capacity;
-    document.getElementById("editStatus").value = data.status;
-    document.getElementById("editDescription").value = data.description || "";
+    const idInput = document.getElementById("editClassId");
+    const nameInput = document.getElementById("editClassName");
+    const levelInput = document.getElementById("editSchoolLevel");
+    const capInput = document.getElementById("editCapacity");
+    const statusInput = document.getElementById("editStatus");
+    const descInput = document.getElementById("editDescription");
+
+    if (idInput) idInput.value = data.id;
+    if (nameInput) nameInput.value = data.name || "";
+    if (levelInput) levelInput.value = data.school_level || "";
+    if (capInput) capInput.value = data.capacity || "";
+    if (statusInput) statusInput.value = data.status || "";
+    if (descInput) descInput.value = data.description || "";
 
     openModal("editClassModal");
   } catch (err) {
-    showToast(err.message, "error");
+    if (typeof showToast === "function") {
+      showToast(err.message || "An error occurred.", "error");
+    }
   }
 }
 
@@ -373,30 +360,29 @@ async function handleEditClass(event) {
       })
       .eq("id", classId)
       .select(); // <--- ADD .select() to return the updated row
-    // 1. Handle hard database errors
+    // 1. Handle database errors (duplicate names, RLS permission blocks)
     if (error) {
-      showToast(
-        "Permission denied: Only active admins can archive classes.",
-        "error",
-      );
+      if (error.code === "23505") {
+        showToast("This class name already exists.", "error");
+        return;
+      }
+      if (error.code === "42501") {
+        showToast(
+          "Permission denied: Only active admins can edit classes.",
+          "error",
+        );
+        return;
+      }
+      showToast(error.message || "Failed to update class.", "error");
       return;
     }
 
     // 2. Handle RLS silent block (0 rows modified)
     if (!data || data.length === 0) {
       showToast(
-        "Permission denied: Only active admins can archive classes.",
+        "Permission denied: Only active admins can edit classes.",
         "error",
       );
-      return;
-    }
-
-    if (error) {
-      if (error.code === "23505") {
-        showToast("This class name already exists.", "error");
-        return;
-      }
-      showToast(error.message, "error");
       return;
     }
 
@@ -413,17 +399,6 @@ async function handleEditClass(event) {
   }
 }
 
-// Attach Event Listeners
-document
-  .getElementById("editClassForm")
-  .addEventListener("submit", handleEditClass);
-document
-  .getElementById("closeEditClassModal")
-  .addEventListener("click", () => closeModal("editClassModal"));
-document
-  .getElementById("cancelEditClassModal")
-  .addEventListener("click", () => closeModal("editClassModal"));
-
 // 3. Client-Side Search & Filter Handler
 function filterClasses() {
   const searchVal = document
@@ -439,15 +414,6 @@ function filterClasses() {
 
   renderClassesTable(filtered);
 }
-
-// Attach Event Listeners for Filters & Page Load
-document
-  .getElementById("classSearchInput")
-  .addEventListener("input", filterClasses);
-document
-  .getElementById("statusFilter")
-  .addEventListener("change", filterClasses);
-document.addEventListener("DOMContentLoaded", loadClasses);
 
 async function handleAddClass(event) {
   event.preventDefault();
@@ -520,6 +486,7 @@ async function handleAddClass(event) {
 
     showToast("Class created successfully!", "success");
     form.reset();
+    closeModal("classModal");
     await loadClasses(); // Function to reload your table data
   } catch (err) {
     showToast(err.message, "error");
@@ -531,5 +498,26 @@ async function handleAddClass(event) {
   }
 }
 
-// 3. Attach Event Listener
-document.getElementById("classForm").addEventListener("submit", handleAddClass);
+// Safe Event Listener Registrations
+document
+  .getElementById("editClassForm")
+  ?.addEventListener("submit", handleEditClass);
+document
+  .getElementById("closeEditClassModal")
+  ?.addEventListener("click", () => closeModal("editClassModal"));
+document
+  .getElementById("cancelEditClassModal")
+  ?.addEventListener("click", () => closeModal("editClassModal"));
+
+document
+  .getElementById("classSearchInput")
+  ?.addEventListener("input", filterClasses);
+document
+  .getElementById("statusFilter")
+  ?.addEventListener("change", filterClasses);
+
+document
+  .getElementById("classForm")
+  ?.addEventListener("submit", handleAddClass);
+
+document.addEventListener("DOMContentLoaded", loadClasses);

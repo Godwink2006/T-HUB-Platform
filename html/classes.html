@@ -242,13 +242,19 @@
 
     <div id="archiveClassModal" class="archive-modal">
       <div class="confirm-modal">
-        <div confirm-icon>
+        <div class="confirm-icon">
           <i class="fa-solid fa-box-archive"></i>
         </div>
 
         <h2>Archive Class</h2>
 
-        <p>Are you sure you want to archive this class?</p>
+        <p>
+          Are you sure you want to archive
+          <span id="archiveClassName" style="font-weight: 600; color: black"
+            >this class</span
+          >? Archived class will not show when assigning teachers or students to
+          a class.
+        </p>
 
         <div class="archive-modal-footer">
           <button id="cancelArchive" class="cancel-btn">Cancel</button>

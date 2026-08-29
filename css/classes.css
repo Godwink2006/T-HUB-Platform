@@ -399,7 +399,6 @@ tr {
   height: 70px;
   background: #fee2e2;
   color: #dc2626;
-  border-radius: 50%;
   margin: auto;
   display: flex;
   align-items: center;
@@ -449,11 +448,16 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
+  .confirm-icon {
+    border-radius: 10px;
+    padding: 10px;
+  }
+
   .confirm-modal {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 270px; /* Fixed height requirement */
+    height: 390px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;

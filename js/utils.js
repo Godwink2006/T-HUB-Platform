@@ -431,3 +431,13 @@ window.escapeHTML = function (str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 };
+
+function escapeAttribute(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
