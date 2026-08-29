@@ -914,6 +914,216 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  /* =======================================================
+     CATEGORIES TABLE DELEGATION (EDIT & ARCHIVE CLICK)
+     ======================================================= */
+  const categoriesTableBody = document.getElementById("categoriesTableBody");
+  if (categoriesTableBody && !categoriesTableBody.dataset.hasListener) {
+    categoriesTableBody.dataset.hasListener = "true";
+
+    categoriesTableBody.addEventListener("click", (event) => {
+      const editBtn = event.target.closest(".edit-category");
+      if (editBtn) {
+        openEditCategoryModal(editBtn.dataset.id);
+        return;
+      }
+
+      const archiveBtn = event.target.closest(".archive-category");
+      if (archiveBtn) {
+        openArchiveCategoryModal(
+          archiveBtn.dataset.id,
+          archiveBtn.dataset.name,
+        );
+      }
+    });
+  }
+
+  /* =======================================================
+     EDIT CATEGORY FORM SUBMISSION (CHANGE DETECTION)
+     ======================================================= */
+  const editCategoryForm = document.getElementById("editCategoryForm");
+  if (editCategoryForm && !editCategoryForm.dataset.hasListener) {
+    editCategoryForm.dataset.hasListener = "true";
+
+    editCategoryForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const idInput = document.getElementById("editCategoryId");
+      const marksInput = document.getElementById("editCategoryMarksInput");
+      const statusSelect = document.getElementById("editCategoryStatusSelect");
+      const descriptionInput = document.getElementById(
+        "editCategoryDescriptionInput",
+      );
+
+      const saveButton =
+        event.submitter || editCategoryForm.querySelector('[type="submit"]');
+
+      const categoryId = idInput?.value.trim();
+      const rawMarks = marksInput?.value.trim();
+      const marks = Number(rawMarks);
+      const status = statusSelect?.value.trim();
+      const description = descriptionInput?.value.trim() || null;
+
+      if (!categoryId)
+        return notifyUser("Invalid category reference ID.", "error");
+      if (!rawMarks || !Number.isInteger(marks))
+        return notifyUser(
+          "Marks must be a valid whole number.",
+          "error",
+          marksInput,
+        );
+      if (marks <= 0 || marks > 100)
+        return notifyUser(
+          "Marks must be between 1 and 100.",
+          "error",
+          marksInput,
+        );
+      if (!status)
+        return notifyUser("Please select a status.", "error", statusSelect);
+
+      const normalizedStatus =
+        status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+      // Change Detection against original baseline values
+      const origMarks = Number(editCategoryForm.dataset.origMarks);
+      const origStatus = editCategoryForm.dataset.origStatus;
+      const origDescription = editCategoryForm.dataset.origDescription || null;
+      const baselineDesc = origDescription === "" ? null : origDescription;
+
+      const hasChanges =
+        marks !== origMarks ||
+        normalizedStatus !== origStatus ||
+        description !== baselineDesc;
+
+      if (!hasChanges) {
+        return notifyUser("No changes detected.", "info");
+      }
+
+      try {
+        if (saveButton) {
+          saveButton.disabled = true;
+          saveButton.textContent = "Updating...";
+        }
+
+        // Update database without touching the category name
+        const { data, error } = await supabaseClient
+          .from("assessment_categories")
+          .update({
+            marks: marks,
+            status: normalizedStatus,
+            description: description,
+          })
+          .eq("id", categoryId)
+          .select();
+
+        if (!error && (!data || data.length === 0)) {
+          notifyUser(
+            "You do not have permission to edit this category.",
+            "error",
+          );
+          return;
+        }
+
+        if (error) {
+          console.error("Supabase update category error:", error);
+          if (
+            error.code === "42501" ||
+            error.message?.toLowerCase().includes("permission")
+          ) {
+            notifyUser(
+              "You do not have permission to edit this category.",
+              "error",
+            );
+            return;
+          }
+          notifyUser("Failed to update category. Please try again.", "error");
+          return;
+        }
+
+        notifyUser("Category updated successfully.", "success");
+        closeEditCategoryModal();
+        loadCategories();
+      } catch (err) {
+        console.error("Unexpected runtime error:", err);
+        notifyUser(
+          "Something went wrong while processing your request.",
+          "error",
+        );
+      } finally {
+        if (saveButton) {
+          saveButton.disabled = false;
+          saveButton.textContent = "Update Category";
+        }
+      }
+    });
+  }
+
+  /* =======================================================
+     ARCHIVE CATEGORY CONFIRMATION LISTENER
+     ======================================================= */
+  const confirmArchiveBtn = document.getElementById("confirmArchiveCategory");
+  const cancelArchiveBtn = document.getElementById("cancelArchiveCategory");
+  const archiveCategoryModal = document.getElementById("archiveCategoryModal");
+
+  cancelArchiveBtn?.addEventListener("click", closeArchiveCategoryModal);
+  document
+    .getElementById("closeEditCategoryModal")
+    ?.addEventListener("click", closeEditCategoryModal);
+  document
+    .getElementById("cancelEditCategoryModal")
+    ?.addEventListener("click", closeEditCategoryModal);
+
+  if (confirmArchiveBtn && !confirmArchiveBtn.dataset.hasListener) {
+    confirmArchiveBtn.dataset.hasListener = "true";
+
+    confirmArchiveBtn.addEventListener("click", async function () {
+      const id = archiveCategoryModal?.dataset.id;
+      if (!id) return;
+
+      try {
+        confirmArchiveBtn.disabled = true;
+        confirmArchiveBtn.textContent = "Archiving...";
+
+        // Set category to archived and change status to Inactive
+        const { data, error } = await supabaseClient
+          .from("assessment_categories")
+          .update({
+            is_archived: true,
+            status: "Inactive",
+          })
+          .eq("id", id)
+          .select();
+
+        if (!error && (!data || data.length === 0)) {
+          notifyUser(
+            "You do not have permission to archive this category.",
+            "error",
+          );
+          return;
+        }
+
+        if (error) {
+          console.error("Supabase category archive error:", error);
+          notifyUser("Failed to archive category. Please try again.", "error");
+          return;
+        }
+
+        notifyUser("Category archived successfully.", "success");
+        closeArchiveCategoryModal();
+        loadCategories();
+      } catch (err) {
+        console.error("Unexpected runtime error:", err);
+        notifyUser(
+          "Something went wrong while processing your request.",
+          "error",
+        );
+      } finally {
+        confirmArchiveBtn.disabled = false;
+        confirmArchiveBtn.textContent = "Archive";
+      }
+    });
+  }
 });
 
 /* =======================================================
@@ -1056,6 +1266,87 @@ function closeCategoryModal() {
 
   const form = document.getElementById("categoryForm");
   if (form) form.reset();
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+/* =========================================================
+   OPEN / CLOSE EDIT CATEGORY MODAL
+   ========================================================= */
+
+function openEditCategoryModal(id) {
+  const modal = document.getElementById("editCategoryModal");
+  const form = document.getElementById("editCategoryForm");
+
+  if (!modal || !form || !id) return;
+
+  const category = currentCategories.find(
+    (item) => String(item.id) === String(id),
+  );
+  if (!category) return;
+
+  // Populate form fields
+  const nameSelect = document.getElementById("editCategoryNameInput");
+  if (nameSelect) {
+    nameSelect.value = category.name || "";
+    // Enforce read-only state so category name cannot be edited
+    nameSelect.disabled = true;
+  }
+
+  document.getElementById("editCategoryId").value = category.id;
+  document.getElementById("editCategoryMarksInput").value = category.marks;
+  document.getElementById("editCategoryStatusSelect").value = category.status;
+  document.getElementById("editCategoryDescriptionInput").value =
+    category.description || "";
+
+  // Store original baseline state for change detection
+  const rawStatus = category.status || "";
+  const normalizedStatus = rawStatus
+    ? rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase()
+    : "";
+
+  form.dataset.origMarks = category.marks;
+  form.dataset.origStatus = normalizedStatus;
+  form.dataset.origDescription = category.description || "";
+
+  modal.dataset.id = id;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEditCategoryModal() {
+  const modal = document.getElementById("editCategoryModal");
+  if (!modal) return;
+
+  const nameSelect = document.getElementById("editCategoryNameInput");
+  if (nameSelect) nameSelect.disabled = false;
+
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+/* =========================================================
+   OPEN / CLOSE ARCHIVE CATEGORY MODAL
+   ========================================================= */
+
+function openArchiveCategoryModal(id, name) {
+  const modal = document.getElementById("archiveCategoryModal");
+  if (!modal || !id) return;
+
+  const nameElement = document.getElementById("archiveCategoryName");
+  if (nameElement) {
+    nameElement.textContent = name || "this category";
+  }
+
+  modal.dataset.id = id;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeArchiveCategoryModal() {
+  const modal = document.getElementById("archiveCategoryModal");
+  if (!modal) return;
 
   modal.classList.remove("active");
   document.body.style.overflow = "";
