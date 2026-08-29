@@ -150,14 +150,9 @@
         <div class="assessment-modal-body">
           <form id="assessmentForm">
             <div class="form-group">
-              <label for="assessmentNameInput"> Assessment Name * </label>
-
-              <select
-                type="text"
-                id="assessmentNameInput"
-                placeholder="e.g. 1st Period"
-                required
-              >
+              <label for="assessmentNameInput">Assessment Name *</label>
+              <select id="assessmentNameInput" required>
+                <option value="" disabled selected>Select Period</option>
                 <option value="1st Period">1st Period</option>
                 <option value="2nd Period">2nd Period</option>
                 <option value="3rd Period">3rd Period</option>
@@ -350,7 +345,7 @@
             <div class="form-group">
               <label for="categoryNameInput"> Category Name * </label>
               <select id="categoryNameInput" required>
-                <option value="" disabled selected>Select a Category</option>
+                <option value="">Select a Category</option>
                 <option value="Quiz">Quiz</option>
                 <option value="Classwork">Classwork</option>
                 <option value="Homework">Homework</option>

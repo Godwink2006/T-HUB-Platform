@@ -152,6 +152,58 @@ function closeModal(modalId) {
   }
 }
 
+function getSchoolLevelFromClass(className) {
+  if (!className) return "";
+
+  if (["ABC", "K1", "K2"].includes(className)) return "nursery";
+
+  // 1. Check Senior Secondary FIRST so "Grade 10", "Grade 11", "Grade 12" aren't caught by "Grade 1"
+  if (
+    ["Grade 10", "Grade 11", "Grade 12"].some((g) => className.startsWith(g))
+  ) {
+    return "senior_secondary";
+  }
+
+  // 2. Check Junior Secondary (Grade 7, 8, 9)
+  if (["Grade 7", "Grade 8", "Grade 9"].some((g) => className.startsWith(g))) {
+    return "junior_secondary";
+  }
+
+  // 3. Check Senior Primary (Grade 4, 5, 6)
+  if (["Grade 4", "Grade 5", "Grade 6"].some((g) => className.startsWith(g))) {
+    return "senior_primary";
+  }
+
+  // 4. Check Junior Primary (Grade 1, 2, 3)
+  if (["Grade 1", "Grade 2", "Grade 3"].some((g) => className.startsWith(g))) {
+    return "junior_primary";
+  }
+
+  return "other";
+}
+
+// 2. Event listener to update the level dropdown automatically
+document.addEventListener("DOMContentLoaded", () => {
+  const classSelect = document.getElementById("className");
+  const levelSelect = document.getElementById("schoolLevel");
+  const hiddenLevelInput = document.getElementById("schoolLevelHidden");
+
+  if (classSelect && levelSelect) {
+    classSelect.addEventListener("change", (e) => {
+      const selectedClass = e.target.value;
+      const autoLevel = getSchoolLevelFromClass(selectedClass);
+
+      // Update the disabled select view
+      levelSelect.value = autoLevel;
+
+      // Update the hidden input value (useful for JS form extractions/Supabase)
+      if (hiddenLevelInput) {
+        hiddenLevelInput.value = autoLevel;
+      }
+    });
+  }
+});
+
 let currentClassesData = [];
 
 // Helper to display clean school level names
@@ -351,8 +403,6 @@ async function handleEditClass(event) {
     const { data, error } = await supabaseClient
       .from("classes")
       .update({
-        name,
-        school_level: schoolLevel,
         capacity,
         status,
         description: description || null,

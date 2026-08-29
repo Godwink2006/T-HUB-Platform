@@ -588,23 +588,21 @@ async function loadClassesIntoSchoolLevelDropdown() {
   const select = document.getElementById("schoolLevelSelect");
   if (!select) return;
 
-  const staticLevels = [
-    "Nursery",
-    "Primary",
-    "Junior Primary",
-    "Senior Primary",
-    "Secondary",
-    "Junior Secondary",
-    "Senior Secondary",
-  ];
-
   const currentVal = select.value;
 
-  // Only fetch ACTIVE classes.
-  // Inactive classes are never included.
+  // Helper map to convert database keys to user-friendly titles
+  const levelLabels = {
+    nursery: "Nursery",
+    junior_primary: "Junior Primary",
+    senior_primary: "Senior Primary",
+    junior_secondary: "Junior Secondary",
+    senior_secondary: "Senior Secondary",
+  };
+
+  // 1. Fetch active classes AND their corresponding school_level
   const { data: classes, error } = await supabaseClient
     .from("classes")
-    .select("name")
+    .select("name, school_level")
     .eq("status", "active")
     .order("name", { ascending: true });
 
@@ -613,31 +611,45 @@ async function loadClassesIntoSchoolLevelDropdown() {
     return;
   }
 
-  const activeClasses = (classes || []).map((c) => c.name).filter(Boolean);
+  const activeClasses = classes || [];
 
+  // 2. Extract unique school_level keys present in active classes
+  const uniqueLevels = [
+    ...new Set(activeClasses.map((c) => c.school_level).filter(Boolean)),
+  ];
+
+  // 3. Render HTML dynamically
   select.innerHTML = `
     <option value="">Select Level or Class</option>
 
     <optgroup label="School Levels">
-      ${staticLevels
-        .map((lvl) => `<option value="${lvl}">${lvl}</option>`)
-        .join("")}
+      ${
+        uniqueLevels.length > 0
+          ? uniqueLevels
+              .map(
+                (lvl) =>
+                  `<option value="${lvl}">${levelLabels[lvl] || lvl}</option>`,
+              )
+              .join("")
+          : `<option disabled>No active school levels</option>`
+      }
     </optgroup>
 
-    ${
-      activeClasses.length > 0
-        ? `<optgroup label="Active Classes">
-            ${activeClasses
-              .map((cls) => `<option value="${cls}">${cls}</option>`)
-              .join("")}
-           </optgroup>`
-        : `<optgroup label="Active Classes">
-            <option disabled>No active classes found</option>
-           </optgroup>`
-    }
+    <optgroup label="Active Classes">
+      ${
+        activeClasses.length > 0
+          ? activeClasses
+              .map(
+                (cls) =>
+                  `<option value="${cls.name}" data-level="${cls.school_level}">${cls.name}</option>`,
+              )
+              .join("")
+          : `<option disabled>No active classes found</option>`
+      }
+    </optgroup>
   `;
 
-  // Restore the previous selection if it still exists.
+  // 4. Restore previous selection if valid
   if (
     currentVal &&
     [...select.options].some((option) => option.value === currentVal)

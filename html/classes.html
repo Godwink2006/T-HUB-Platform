@@ -98,17 +98,70 @@
             <div class="form-grid">
               <div class="form-group">
                 <label for="className">Class Name *</label>
-                <input
-                  type="text"
-                  id="className"
-                  placeholder="e.g. Grade 10A"
-                  required
-                />
+                <select id="className" required>
+                  <option value="" disabled selected>Select Class</option>
+
+                  <optgroup label="Early Childhood (ECE)">
+                    <option value="ABC">ABC</option>
+                    <option value="K1">K1 (Kindergarten 1)</option>
+                    <option value="K2">K2 (Kindergarten 2)</option>
+                  </optgroup>
+
+                  <optgroup label="Primary (Elementary)">
+                    <option value="Grade 1">Grade 1</option>
+                    <option value="Grade 2">Grade 2</option>
+                    <option value="Grade 3">Grade 3</option>
+                    <option value="Grade 4">Grade 4</option>
+                    <option value="Grade 5">Grade 5</option>
+                    <option value="Grade 6">Grade 6</option>
+                  </optgroup>
+
+                  <optgroup label="Junior High">
+                    <!-- Grade 7 -->
+                    <option value="Grade 7">Grade 7</option>
+                    <option value="Grade 7 A">Grade 7 A</option>
+                    <option value="Grade 7 B">Grade 7 B</option>
+                    <option value="Grade 7 C">Grade 7 C</option>
+
+                    <!-- Grade 8 -->
+                    <option value="Grade 8">Grade 8</option>
+                    <option value="Grade 8 A">Grade 8 A</option>
+                    <option value="Grade 8 B">Grade 8 B</option>
+                    <option value="Grade 8 C">Grade 8 C</option>
+
+                    <!-- Grade 9 -->
+                    <option value="Grade 9">Grade 9</option>
+                    <option value="Grade 9 A">Grade 9 A</option>
+                    <option value="Grade 9 B">Grade 9 B</option>
+                    <option value="Grade 9 C">Grade 9 C</option>
+                  </optgroup>
+
+                  <optgroup label="Senior High">
+                    <!-- Grade 10 -->
+                    <option value="Grade 10">Grade 10</option>
+                    <option value="Grade 10 A">Grade 10 A</option>
+                    <option value="Grade 10 B">Grade 10 B</option>
+                    <option value="Grade 10 C">Grade 10 C</option>
+
+                    <!-- Grade 11 -->
+                    <option value="Grade 11">Grade 11</option>
+                    <option value="Grade 11 A">Grade 11 A</option>
+                    <option value="Grade 11 B">Grade 11 B</option>
+                    <option value="Grade 11 C">Grade 11 C</option>
+
+                    <!-- Grade 12 -->
+                    <option value="Grade 12">Grade 12</option>
+                    <option value="Grade 12 A">Grade 12 A</option>
+                    <option value="Grade 12 B">Grade 12 B</option>
+                    <option value="Grade 12 C">Grade 12 C</option>
+                  </optgroup>
+                </select>
               </div>
 
               <div class="form-group">
                 <label for="schoolLevel">School Level *</label>
-                <select id="schoolLevel" required>
+                <!-- Disabled so the user cannot manually edit it -->
+                <select id="schoolLevel" disabled required>
                   <option value="">Select School Level</option>
                   <option value="nursery">Nursery</option>
                   <option value="junior_primary">Junior Primary</option>
@@ -116,6 +169,12 @@
                   <option value="junior_secondary">Junior Secondary</option>
                   <option value="senior_secondary">Senior Secondary</option>
                 </select>
+                <!-- Hidden input to preserve the value if you use standard form submission -->
+                <input
+                  type="hidden"
+                  id="schoolLevelHidden"
+                  name="school_level"
+                />
               </div>
 
               <div class="form-group">
@@ -132,7 +191,7 @@
                 <label for="status">Status *</label>
                 <select id="status" required>
                   <option value="active">Active</option>
-                  <option value="inactive" selected>Inactive</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
 
@@ -176,17 +235,62 @@
             <div class="form-grid">
               <div class="form-group">
                 <label for="editClassName">Class Name *</label>
-                <input
-                  type="text"
-                  id="editClassName"
-                  placeholder="e.g. Grade 10A"
-                  required
-                />
+                <select id="editClassName" disabled required>
+                  <option value="" disabled selected>Select Class</option>
+
+                  <optgroup label="Early Childhood (ECE)">
+                    <option value="ABC">ABC</option>
+                    <option value="K1">K1 (Kindergarten 1)</option>
+                    <option value="K2">K2 (Kindergarten 2)</option>
+                    <option value="Kindergarten 1">Kindergarten 1</option>
+                    <option value="Kindergarten 2">Kindergarten 2</option>
+                  </optgroup>
+
+                  <optgroup label="Primary (Elementary)">
+                    <option value="Grade 1">Grade 1</option>
+                    <option value="Grade 2">Grade 2</option>
+                    <option value="Grade 3">Grade 3</option>
+                    <option value="Grade 4">Grade 4</option>
+                    <option value="Grade 5">Grade 5</option>
+                    <option value="Grade 6">Grade 6</option>
+                  </optgroup>
+
+                  <optgroup label="Junior High">
+                    <option value="Grade 7">Grade 7</option>
+                    <option value="Grade 7 A">Grade 7 A</option>
+                    <option value="Grade 7 B">Grade 7 B</option>
+                    <option value="Grade 7 C">Grade 7 C</option>
+                    <option value="Grade 8">Grade 8</option>
+                    <option value="Grade 8 A">Grade 8 A</option>
+                    <option value="Grade 8 B">Grade 8 B</option>
+                    <option value="Grade 8 C">Grade 8 C</option>
+                    <option value="Grade 9">Grade 9</option>
+                    <option value="Grade 9 A">Grade 9 A</option>
+                    <option value="Grade 9 B">Grade 9 B</option>
+                    <option value="Grade 9 C">Grade 9 C</option>
+                  </optgroup>
+
+                  <optgroup label="Senior High">
+                    <option value="Grade 10">Grade 10</option>
+                    <option value="Grade 10 A">Grade 10 A</option>
+                    <option value="Grade 10 B">Grade 10 B</option>
+                    <option value="Grade 10 C">Grade 10 C</option>
+                    <option value="Grade 11">Grade 11</option>
+                    <option value="Grade 11 A">Grade 11 A</option>
+                    <option value="Grade 11 B">Grade 11 B</option>
+                    <option value="Grade 11 C">Grade 11 C</option>
+                    <option value="Grade 12">Grade 12</option>
+                    <option value="Grade 12 A">Grade 12 A</option>
+                    <option value="Grade 12 B">Grade 12 B</option>
+                    <option value="Grade 12 C">Grade 12 C</option>
+                  </optgroup>
+                </select>
               </div>
 
+              <!-- Locked School Level Field -->
               <div class="form-group">
                 <label for="editSchoolLevel">School Level *</label>
-                <select id="editSchoolLevel" required>
+                <select id="editSchoolLevel" disabled required>
                   <option value="">Select School Level</option>
                   <option value="nursery">Nursery</option>
                   <option value="junior_primary">Junior Primary</option>
