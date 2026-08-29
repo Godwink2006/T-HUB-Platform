@@ -160,7 +160,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     "subjectModal",
     "structureModal",
     "editStructureModal",
-    "addItemModal",
     "viewStructureModal",
     "archiveStructureModal",
     "termModal",

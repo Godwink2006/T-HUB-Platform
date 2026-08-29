@@ -550,26 +550,26 @@ function renderFeeStructuresTable(structures) {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${className}</td>
-      <td>${academicYear}</td>
-      <td>${termName}</td>
-      <td>$${Number(struct.total_amount || 0).toFixed(2)}</td>
-     <td>
-        <span class="${statusClass}">${statusText}</span>
-      </td>
-      <td>${formatDateTime(struct.created_at)}</td>
-          <td>${formatDateTime(struct.updated_at)}</td>
-      <td>
-        <button class="structures-actions-btn view" data-id="${struct.id}" title="View">
-          <i class="fa-solid fa-eye"></i>
-        </button>
-        <button class="structures-actions-btn edit" data-id="${struct.id}" title="Edit">
-          <i class="fa-solid fa-pen"></i>
-        </button>
-        <button class="structures-actions-btn archive" data-id="${struct.id}" title="Archive">
-          <i class="fa-solid fa-box-archive"></i>
-        </button>
-      </td>
+     <td>${escapeHTML(className || "-")}</td>
+<td>${escapeHTML(academicYear || "-")}</td>
+<td>${escapeHTML(termName || "-")}</td>
+<td>$${Number(struct.total_amount || 0).toFixed(2)}</td>
+<td>
+  <span class="${statusClass}">${statusText}</span>
+</td>
+<td>${formatDateTime(struct.created_at)}</td>
+<td>${formatDateTime(struct.updated_at)}</td>
+<td>
+  <button class="structures-actions-btn view" data-id="${struct.id}" title="View">
+    <i class="fa-solid fa-eye"></i>
+  </button>
+  <button class="structures-actions-btn edit" data-id="${struct.id}" title="Edit">
+    <i class="fa-solid fa-pen"></i>
+  </button>
+  <button class="structures-actions-btn archive" data-id="${struct.id}" data-name="${escapeAttribute(struct.name || struct.title || className || "")}" title="Archive">
+    <i class="fa-solid fa-box-archive"></i>
+  </button>
+</td>
     `;
     tbody.appendChild(tr);
   });
@@ -797,8 +797,14 @@ if (editFeeItemsBody) {
 let targetStructureId = null;
 
 // Open Archive Modal
-function openArchiveModal(structureId) {
+function openArchiveModal(structureId, structureName) {
   targetStructureId = structureId;
+
+  const nameElement = document.getElementById("archiveStructureName");
+  if (nameElement) {
+    nameElement.textContent = structureName || "this fee structure";
+  }
+
   const archiveStructureModal = document.getElementById(
     "archiveStructureModal",
   );
@@ -820,13 +826,14 @@ function closeArchiveModal() {
   }
 }
 
-// Close Modal
-document
-  .getElementById("cancelArchiveStructure")
-  .addEventListener("click", () => {
-    targetStructureId = null;
-    document.getElementById("archiveStructureModal").classList.remove("active");
-  });
+document.addEventListener("click", (e) => {
+  const archiveBtn = e.target.closest(".structures-actions-btn.archive");
+  if (archiveBtn) {
+    const id = archiveBtn.dataset.id;
+    const name = archiveBtn.dataset.name;
+    openArchiveModal(id, name);
+  }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   // Elements
