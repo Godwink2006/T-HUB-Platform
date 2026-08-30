@@ -133,21 +133,18 @@ tr {
   background: #dcfce7;
   color: #166534;
   padding: 8px;
-  border-radius: 8px;
 }
 
 .academic-years-status-inactive {
   background: #fcdcdc;
   color: #651616;
   padding: 8px;
-  border-radius: 8px;
 }
 
 .academic-years-actions-btn {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -156,21 +153,18 @@ tr {
   background: #dcfce7;
   color: #166534;
   padding: 8px;
-  border-radius: 8px;
 }
 
 .terms-status-inactive {
   background: #fcdcdc;
   color: #651616;
   padding: 8px;
-  border-radius: 8px;
 }
 
 .terms-actions-btn {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -529,7 +523,6 @@ tr {
   padding: 35px;
   text-align: center;
   animation: modalShow 0.25s ease;
-  border-radius: 10px;
 }
 
 .confirm-icon {
@@ -537,7 +530,6 @@ tr {
   height: 70px;
   background: #fee2e2;
   color: #dc2626;
-  border-radius: 50%;
   margin: auto;
   display: flex;
   align-items: center;
@@ -561,7 +553,6 @@ tr {
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
-  border-radius: 10px;
 }
 
 .archive-modal {
@@ -588,11 +579,26 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
+  .terms-status-active,
+  .terms-actions-btn,
+  .terms-status-inactive,
+  .academic-years-actions-btn,
+  .academic-years-status-inactive,
+  .academic-years-status-active,
+  .archive-confirm-btn {
+    border-radius: 10px;
+  }
+
+  .confirm-icon {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
   .confirm-modal {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 350px; /* Fixed height requirement */
+    height: 390px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;

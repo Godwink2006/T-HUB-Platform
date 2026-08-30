@@ -91,9 +91,12 @@ function renderAcademicYearsTable() {
             <button class="academic-years-actions-btn edit-academicYear" onclick="openEditModal('${item.id}')">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button class="academic-years-actions-btn archive-AcademicYear" onclick="openArchiveModal('${item.id}')">
-              <i class="fa-solid fa-box-archive"></i>
-            </button>
+            <button 
+  class="academic-years-actions-btn archive-AcademicYear" 
+  onclick="openArchiveModal('${item.id}', '${(item.year_label || "this Academic Year").replace(/'/g, "\\'")}')"
+>
+  <i class="fa-solid fa-box-archive"></i>
+</button>
           </td>
         </tr>
       `;
@@ -297,8 +300,14 @@ async function handleEditAcademicYear(event) {
 }
 
 // --- 5. SOFT DELETE (ARCHIVE) ---
-function openArchiveModal(id) {
+function openArchiveModal(id, yearName) {
   selectedYearId = id;
+
+  const nameElement = document.getElementById("archiveAcademicYearName");
+  if (nameElement) {
+    nameElement.textContent = yearName || "this Academic Year";
+  }
+
   openModal("archiveAcademicYearModal");
 }
 
