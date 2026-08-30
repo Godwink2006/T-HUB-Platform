@@ -164,7 +164,7 @@ async function initFormProtection() {
 async function loadSchoolProfile() {
   try {
     const { data, error } = await supabaseClient
-      .from("school_profile")
+      .from("schools")
       .select("*")
       .limit(1)
       .maybeSingle();
@@ -364,7 +364,7 @@ async function handleFormSubmit() {
     if (existingRecordId) {
       // Update existing record and return updated row
       const { data, error: updateErr } = await supabaseClient
-        .from("school_profile")
+        .from("schools")
         .update({ ...formData, updated_at: new Date().toISOString() })
         .eq("id", existingRecordId)
         .select()
@@ -375,7 +375,7 @@ async function handleFormSubmit() {
     } else {
       // Insert new record and return created row
       const { data, error: insertErr } = await supabaseClient
-        .from("school_profile")
+        .from("schools")
         .insert([formData])
         .select()
         .single();
