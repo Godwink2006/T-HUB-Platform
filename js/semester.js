@@ -95,9 +95,12 @@ function renderTermsTable() {
             <button class="terms-actions-btn edit-term" onclick="openEditModal('${item.id}')">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button class="terms-actions-btn archive-term" onclick="openArchiveModal('${item.id}')">
-              <i class="fa-solid fa-box-archive"></i>
-            </button>
+            <button 
+  class="terms-actions-btn archive-term" 
+  onclick="openArchiveModal('${item.id}', '${(item.name || "this Semester").replace(/'/g, "\\'")}')"
+>
+  <i class="fa-solid fa-box-archive"></i>
+</button>
           </td>
         </tr>
       `;
@@ -385,8 +388,14 @@ async function handleEditTerm(event) {
 }
 
 // --- 5. ARCHIVE ---
-function openArchiveModal(id) {
+function openArchiveModal(id, termName) {
   selectedTermId = id;
+
+  const nameElement = document.getElementById("archiveTermName");
+  if (nameElement) {
+    nameElement.textContent = termName || "this Semester";
+  }
+
   openModal("archiveTermModal");
 }
 
