@@ -440,3 +440,30 @@ function escapeAttribute(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.supabaseClient?.auth) {
+    window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      // 1. Skip running automatic sign-out logic on the index/login page
+      const isLoginPage =
+        window.location.pathname.endsWith("index.html") ||
+        window.location.pathname === "/";
+      if (isLoginPage) return;
+
+      if (session?.user) {
+        const { data: profile, error } = await window.supabaseClient
+          .from("profiles")
+          .select("status")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        // Sign out if profile query fails (due to RLS), profile is missing, or status is not active
+        if (error || !profile || profile.status !== "active") {
+          await window.supabaseClient.auth.signOut();
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.replace("/index.html?error=account_disabled");
+        }
+      }
+    });
+  }
+});

@@ -303,16 +303,6 @@ function togglePassword(id) {
   input.type = input.type === "password" ? "text" : "password";
 }
 
-// Global function called by onclick="editUser('${user.id}')"
-function editUser(userId) {
-  const modal = document.getElementById("editSystemUserModal"); // Match your HTML modal ID
-  if (modal) {
-    modal.style.display = "flex";
-    if (typeof lockBodyScroll === "function") lockBodyScroll();
-    // Option to fetch/populate user data using userId
-  }
-}
-
 function deleteUser(userId) {
   targetUserToArchive = userId; // Store the ID globally for the confirmation button
   const modal = document.getElementById("archiveSystemUserModal");
@@ -416,7 +406,7 @@ async function loadSystemUsers() {
     return;
   }
 
-  // 3. Populate all 7 columns matching system-users.html
+  // 3. Populate all 9 columns matching system-users.html
   tableBody.innerHTML = users
     .map(
       (user) => `
@@ -628,7 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Global variable to store the snapshot
+let targetUserToEdit = null;
 let originalUserData = null;
 
 async function editUser(userId) {
@@ -780,7 +770,7 @@ async function handleUpdateUser(event) {
         .from("avatars")
         .getPublicUrl(filePath);
 
-      photoUrl = `${urlData.publicUrl}?t=${Date.now()}`; // Bypass cache
+      photoUrl = urlData.publicUrl;
     }
 
     if (editSystemButton) editSystemButton.textContent = "Updating profile...";
@@ -847,5 +837,3 @@ async function handleUpdateUser(event) {
     }
   }
 }
-// Call on initial load
-document.addEventListener("DOMContentLoaded", loadSystemUsers);

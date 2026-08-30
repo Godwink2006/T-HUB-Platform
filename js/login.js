@@ -33,38 +33,33 @@ form.addEventListener("submit", async (e) => {
     } = await window.supabaseClient.auth.getSession();
 
     if (!session) {
-      showToast("No session found.", "error");
+      throw new Error("No session found.");
     }
 
+    // Fetch user profile
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
       .select("*")
       .eq("id", data.user.id)
       .maybeSingle();
 
-    // 1. Let the catch block handle the toast when profileError exists
     if (profileError) {
       console.error(profileError);
       throw new Error(profileError.message || "Failed to fetch user profile.");
     }
 
-    // 2. Throw the error directly—the catch block will render the single toast!
-    if (!profile) {
+    // Check if profile exists and status is active
+    if (!profile || profile.status !== "active") {
+      // Sign out immediately to clear local session
       await window.supabaseClient.auth.signOut();
+
+      // Throw error message to be handled by catch block
       throw new Error(
         "Your account has been deactivated. Contact the system administrator.",
       );
     }
 
-    // 2. Throw the error directly—the catch block will render the single toast!
-    if (profile.status !== "active") {
-      await window.supabaseClient.auth.signOut();
-      throw new Error(
-        "Your account has been deactivated. Contact the system administrator.",
-      );
-    }
-
-    // 3. Success toast and redirect
+    // Success flow
     showToast("Login successful!", "success");
 
     setTimeout(() => {
