@@ -92,20 +92,6 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   });
 }
 
-// Add inside DOMContentLoaded:
-document
-  .getElementById("fullName")
-  ?.addEventListener("input", checkProfileChanges);
-document
-  .getElementById("emailAddress")
-  ?.addEventListener("input", checkProfileChanges);
-document
-  .getElementById("phoneNumber")
-  ?.addEventListener("input", checkProfileChanges);
-document
-  .getElementById("myProfilePhoto")
-  ?.addEventListener("change", checkProfileChanges);
-
 async function handleUpdateProfile(event) {
   if (event) event.preventDefault();
 
@@ -174,7 +160,7 @@ async function handleUpdateProfile(event) {
         .from("avatars")
         .getPublicUrl(filePath);
 
-      photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      photoUrl = urlData.publicUrl;
     }
 
     // 2. Request Email Change in Supabase Auth (Sends Confirmation Link)
@@ -294,6 +280,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const passwordForm = document.getElementById("changeMyPassword");
+  if (passwordForm) {
+    passwordForm.addEventListener("submit", handleChangePassword);
+  }
+
   // Live Image Preview
   if (fileInput) {
     fileInput.addEventListener("change", (e) => {
@@ -307,13 +298,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-});
 
-document.addEventListener("DOMContentLoaded", () => {
-  const passwordForm = document.getElementById("changeMyPassword");
-  if (passwordForm) {
-    passwordForm.addEventListener("submit", handleChangePassword);
-  }
+  // Add inside DOMContentLoaded:
+  document
+    .getElementById("fullName")
+    ?.addEventListener("input", checkProfileChanges);
+  document
+    .getElementById("emailAddress")
+    ?.addEventListener("input", checkProfileChanges);
+  document
+    .getElementById("phoneNumber")
+    ?.addEventListener("input", checkProfileChanges);
+  document
+    .getElementById("myProfilePhoto")
+    ?.addEventListener("change", checkProfileChanges);
 });
 
 async function handleChangePassword(event) {
@@ -331,11 +329,6 @@ async function handleChangePassword(event) {
 
   if (newPassword !== confirmPassword) {
     showToast("New passwords do not match.", "error");
-    return;
-  }
-
-  if (newPassword.length < 6) {
-    showToast("Password must be at least 6 characters.", "error");
     return;
   }
 
