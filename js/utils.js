@@ -231,7 +231,7 @@ async function loadHeaderSchoolLogo() {
     if (!user) return;
 
     const { data, error } = await window.supabaseClient
-      .from("school_profile")
+      .from("schools")
       .select("logo_url")
       .limit(1)
       .maybeSingle();
