@@ -240,14 +240,6 @@ const cancelEditSystemUserModal = document.getElementById(
 const editSystemUserModal = document.getElementById("editSystemUserModal");
 const editSystemUserButtons = document.querySelectorAll(".edit-SystemUser");
 
-editSystemUserButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    editSystemUserModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
-
 closeEditSystemUserModal.addEventListener("click", () => {
   editSystemUserModal.style.display = "none";
 
@@ -276,14 +268,6 @@ const archiveButtons = document.querySelectorAll(".archive-SystemUser");
 
 const cancelArchive = document.getElementById("cancelArchive");
 
-archiveButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    archiveSystemUserModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
-});
-
 cancelArchive.addEventListener("click", () => {
   archiveSystemUserModal.style.display = "none";
 
@@ -303,8 +287,15 @@ function togglePassword(id) {
   input.type = input.type === "password" ? "text" : "password";
 }
 
-function deleteUser(userId) {
+function deleteUser(userId, userName) {
   targetUserToArchive = userId; // Store the ID globally for the confirmation button
+
+  // Update the user name text in the modal
+  const nameElement = document.getElementById("archiveUserName");
+  if (nameElement) {
+    nameElement.textContent = userName || "this user";
+  }
+
   const modal = document.getElementById("archiveSystemUserModal");
   if (modal) {
     modal.style.display = "flex";
@@ -318,7 +309,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (confirmArchiveBtn) {
     confirmArchiveBtn.addEventListener("click", async () => {
       if (targetUserToArchive) {
-        // Pass confirmArchiveBtn into the function
         await archiveUser(targetUserToArchive, confirmArchiveBtn);
         targetUserToArchive = null; // Reset after archiving
       }
@@ -429,9 +419,12 @@ async function loadSystemUsers() {
         <button class="systemUsers-actions-btn edit-SystemUser" onclick="editUser('${user.id}')">
           <i class="fa-solid fa-pen"></i>
         </button>
-        <button class="systemUsers-actions-btn archive-SystemUser" onclick="deleteUser('${user.id}')">
-          <i class="fa-solid fa-box-archive"></i>
-        </button>
+        <button 
+  class="systemUsers-actions-btn archive-SystemUser" 
+  onclick="deleteUser('${user.id}', '${user.full_name}')"
+>
+  <i class="fa-solid fa-box-archive"></i>
+</button>
       </td>
     </tr>
   `,
@@ -508,6 +501,11 @@ async function archiveUser(targetUserId, confirmBtn) {
     // 2. Prevent Self-Archiving
     if (session.user.id === targetUserId) {
       showToast("You cannot archive your own admin account.", "error");
+
+      // ADD THESE TWO LINES TO UNFREEZE THE UI:
+      document.getElementById("archiveSystemUserModal").style.display = "none";
+      if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+
       return;
     }
 
@@ -564,34 +562,73 @@ async function archiveUser(targetUserId, confirmBtn) {
     }
   }
 }
+let targetUserToEdit = null;
+let originalUserData = null;
 
 // Function to populate edit modal with user profile data
 async function editUser(userId) {
   targetUserToEdit = userId;
 
+  // Fetch the latest user profile data from Supabase
   const { data: user, error } = await supabaseClient
     .from("profiles")
     .select("full_name, email, phone_number, role, status, photo_url")
     .eq("id", userId)
     .single();
 
-  if (error || !user) return;
-
-  // Set avatar preview safely
-  const previewImg = document.getElementById("editAvatarPreview");
-  if (previewImg) {
-    previewImg.src = user.photo_url || "assets/default-avatar.png";
+  if (error || !user) {
+    if (typeof showToast === "function") {
+      showToast("Could not load user details.", "error");
+    }
+    return;
   }
 
-  // Clear hidden file input and reset file label
+  const fullNameValue = user.full_name || "";
+  const phoneValue = user.phone_number || "";
+  const statusValue = user.status || "";
+  const roleValue = user.role || "";
+  const photoUrlValue = user.photo_url || null;
+
+  // Populate form fields safely
+  const fullNameInput = document.getElementById("editFullName");
+  const phoneInput = document.getElementById("editPhone");
+  const emailInput = document.getElementById("editEmail");
+  const statusInput = document.getElementById("editStatus");
+  const roleInput = document.getElementById("editRole");
+
+  if (fullNameInput) fullNameInput.value = fullNameValue;
+  if (phoneInput) phoneInput.value = phoneValue;
+  if (emailInput) emailInput.value = user.email || "";
+  if (statusInput) statusInput.value = statusValue;
+  if (roleInput) roleInput.value = roleValue;
+
+  // Set avatar preview safely
+  const avatarPreview = document.getElementById("editAvatarPreview");
+  if (avatarPreview) {
+    avatarPreview.src = photoUrlValue || "assets/default-avatar.png";
+  }
+
+  // Clear hidden file input and reset file label text
   const fileInput = document.getElementById("editAvatarInput");
   const fileNameText = document.getElementById("fileNameDisplay");
   if (fileInput) fileInput.value = "";
   if (fileNameText) fileNameText.textContent = "No new file chosen";
 
+  // Store original state for change-detection comparisons
+  originalUserData = {
+    fullName: fullNameValue,
+    phone: phoneValue,
+    role: roleValue,
+    status: statusValue,
+    photoUrl: photoUrlValue,
+  };
+
   // Display Modal
   const modal = document.getElementById("editSystemUserModal");
-  if (modal) modal.style.display = "flex";
+  if (modal) {
+    modal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+  }
 }
 
 // Live preview handler when a new file is selected
@@ -604,10 +641,8 @@ document.addEventListener("DOMContentLoaded", () => {
     fileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (file) {
-        // Update label with file name
         if (fileNameText) fileNameText.textContent = file.name;
 
-        // Render live preview locally without uploading yet
         const reader = new FileReader();
         reader.onload = (event) => {
           if (previewImg) previewImg.src = event.target.result;
@@ -616,76 +651,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-});
 
-let targetUserToEdit = null;
-let originalUserData = null;
-
-async function editUser(userId) {
-  targetUserToEdit = userId;
-
-  // Fetch the latest user profile data from Supabase
-  const { data: user, error } = await supabaseClient
-    .from("profiles")
-    .select("full_name, phone_number, role, status, photo_url")
-    .eq("id", userId)
-    .single();
-
-  if (error || !user) {
-    showToast("Could not load user details.", "error");
-    return;
-  }
-
-  const fullNameValue = user.full_name || "";
-  const phoneValue = user.phone_number || "";
-  const statusValue = user.status || "";
-  const roleValue = user.role || "";
-
-  // Populate the edit modal form fields
-  document.getElementById("editFullName").value = fullNameValue;
-  document.getElementById("editPhone").value = phoneValue;
-  // ✅ CORRECT: Update an <img> preview element instead of the file input
-  const avatarPreview = document.getElementById("editAvatarPreview");
-  if (avatarPreview) {
-    avatarPreview.src = user.photo_url || DEFAULT_AVATAR; // Fallback image
-  }
-
-  // Clear the file input so it is ready for a new file upload if selected
-  const fileInput = document.getElementById("editAvatarInput");
-  if (fileInput) {
-    fileInput.value = "";
-  }
-
-  document.getElementById("editStatus").value = statusValue;
-
-  const roleInput = document.getElementById("editRole");
-  if (roleInput) {
-    roleInput.value = roleValue;
-  }
-
-  // Inside editUser():
-  const photoUrlValue = user.photo_url || null;
-
-  // AFTER:
-  originalUserData = {
-    fullName: fullNameValue,
-    phone: phoneValue,
-    role: roleValue, // <-- ADD THIS
-    status: statusValue,
-    photoUrl: photoUrlValue, // <-- Add this property
-  };
-
-  // Open the modal
-  const modal = document.getElementById("editSystemUserModal");
-  if (modal) {
-    modal.style.display = "flex";
-    if (typeof lockBodyScroll === "function") lockBodyScroll();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
   const updateSystemUserBtn = document.getElementById("updateSystemUserBtn");
-
   if (updateSystemUserBtn) {
     updateSystemUserBtn.addEventListener("click", async () => {
       if (targetUserToEdit) {
@@ -704,26 +671,26 @@ async function handleUpdateUser(event) {
   const fullNameInput = document.getElementById("editFullName");
   const phoneInput = document.getElementById("editPhone");
   const statusInput = document.getElementById("editStatus");
-  const roleInput = document.getElementById("editRole"); // Added Role field
+  const roleInput = document.getElementById("editRole");
   const fileInput = document.getElementById("editAvatarInput");
 
-  // 2. Extract and format values (Force Lowercase for Role & Status)
+  // Extract and format values (Force lowercase)
   const fullName = fullNameInput ? fullNameInput.value.trim() : "";
   const phone = phoneInput ? phoneInput.value.trim() : "";
   const status = statusInput ? statusInput.value.trim().toLowerCase() : "";
 
-  // Fallback to original role if role input doesn't exist on the form
   const rawRole = roleInput ? roleInput.value : (originalUserData?.role ?? "");
   const role = rawRole.trim().toLowerCase();
 
   const avatarFile = fileInput && fileInput.files ? fileInput.files[0] : null;
 
-  const origName = originalUserData?.fullName ?? "";
-  const origPhone = originalUserData?.phone ?? "";
-  const origStatus = originalUserData?.status ?? "";
-  const origRole = originalUserData?.role ?? "";
+  // Force original values to lowercase for exact comparison
+  const origName = (originalUserData?.fullName ?? "").trim();
+  const origPhone = (originalUserData?.phone ?? "").trim();
+  const origStatus = (originalUserData?.status ?? "").trim().toLowerCase();
+  const origRole = (originalUserData?.role ?? "").trim().toLowerCase();
 
-  // Check for changes
+  // Check for actual changes
   const hasTextChanged =
     fullName !== origName ||
     phone !== origPhone ||
@@ -744,7 +711,6 @@ async function handleUpdateUser(event) {
   }
 
   try {
-    // Line 53 fix:
     let photoUrl =
       originalUserData?.photoUrl || originalUserData?.photo_url || null;
 
@@ -753,7 +719,7 @@ async function handleUpdateUser(event) {
         editSystemButton.textContent = "Compressing photo...";
 
       const compressedBlob = await compressImageToBlob(avatarFile, 800, 0.7);
-      const filePath = `${userId}/avatar.jpg`; // Fixed path overwrites old file
+      const filePath = `${userId}/avatar.jpg`;
 
       if (editSystemButton) editSystemButton.textContent = "Uploading photo...";
 
@@ -761,7 +727,7 @@ async function handleUpdateUser(event) {
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
-          upsert: true, // Overwrites existing avatar
+          upsert: true,
         });
 
       if (uploadError) throw uploadError;
@@ -770,52 +736,48 @@ async function handleUpdateUser(event) {
         .from("avatars")
         .getPublicUrl(filePath);
 
-      photoUrl = urlData.publicUrl;
+      // Append cache buster so browser instantly loads the new picture
+      photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     }
 
     if (editSystemButton) editSystemButton.textContent = "Updating profile...";
 
-    // Invoke Deno Edge Function with aligned key names
+    // Invoke Deno Edge Function
     const { data, error } = await supabaseClient.functions.invoke(
       "admin-update-user",
       {
         body: {
           userId,
-          full_name: fullName, // <-- ADD THIS BACK
-          phone_number: phone, // <-- ADD THIS BACK
-          role: role, // <-- Sending lowercase role ("admin", "teacher", etc.)
-          status: status, // <-- Sending lowercase status ("active", "inactive")
+          full_name: fullName,
+          phone_number: phone,
+          role: role,
+          status: status,
           photoUrl: photoUrl,
         },
       },
     );
 
-    // 2. Check for Edge Function errors (HTTP 400/500)
     if (error) {
       let errorMessage = "Failed to update user.";
 
-      // Extract custom JSON message from Edge Function
       if (error.context) {
         try {
           const errorBody = await error.context.json();
           if (errorBody?.message) {
-            errorMessage = errorBody.message; // e.g., "Invalid role or status provided."
+            errorMessage = errorBody.message;
           }
         } catch (e) {
-          /* Fallback if body parsing fails */
+          /* Fallback parsing */
         }
       }
 
-      // Throwing here sends execution straight to catch(err)
       throw new Error(errorMessage);
     }
 
-    // 3. Handle explicit success = false responses (HTTP 200 edge cases)
     if (data && data.success === false) {
       throw new Error(data.message || "Failed to update user.");
     }
 
-    // 4. Success Toast
     showToast(data.message || "User updated successfully!", "success");
 
     // Close modal & reload UI
@@ -827,8 +789,6 @@ async function handleUpdateUser(event) {
     targetUserToEdit = null;
     originalUserData = null;
   } catch (err) {
-    // 5. HERE IS YOUR SHOWTOAST FOR ERRORS!
-    // It receives the exact error message thrown from above.
     showToast(err.message, "error");
   } finally {
     if (editSystemButton) {

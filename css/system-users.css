@@ -19,7 +19,6 @@ body {
 .systemUser-photo {
   width: 42px;
   height: 42px;
-  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -294,7 +293,7 @@ tr {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 290px; /* Fixed height requirement */
+    height: 390px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
@@ -704,6 +703,21 @@ tr {
     background: #2563eb;
     color: #ffffff;
   }
+
+  .archive-confirm-btn {
+    border-radius: 10px;
+  }
+
+  .confirm-icon {
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .upload-btn,
+  .edit-btn,
+  .avatar-edit-container {
+    border-radius: 10px;
+  }
 }
 
 .edit-modal-systemUser {
@@ -728,7 +742,6 @@ tr {
   background: #ffff;
   animation: modalShow 0.25s ease;
   height: 390px;
-  border-radius: 10px;
 }
 
 .edit-systemUser-modal-header {
@@ -751,7 +764,6 @@ tr {
   height: 40px;
   width: 40px;
   font-size: 22px;
-  border-radius: 10px;
 }
 
 .edit-systemUser-modal-body {
@@ -771,7 +783,6 @@ tr {
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
-border-radius: 10px;
 }
 
 .details-grid {
@@ -802,7 +813,6 @@ border-radius: 10px;
   padding: 35px;
   text-align: center;
   animation: modalShow 0.25s ease;
-  border-radius: 10px;
 }
 
 .confirm-icon {
@@ -810,7 +820,6 @@ border-radius: 10px;
   height: 70px;
   background: #fee2e2;
   color: #dc2626;
-  border-radius: 50%;
   margin: auto;
   display: flex;
   align-items: center;
@@ -834,7 +843,6 @@ border-radius: 10px;
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
-  border-radius: 10px;
 }
 
 .archive-modal {
@@ -905,18 +913,17 @@ border-radius: 10px;
   padding: 0.75rem;
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
 }
 
 /* Circular Avatar Frame */
 .avatar-preview-wrapper {
   width: 70px;
   height: 70px;
-  border-radius: 50%;
   overflow: hidden;
   border: 2px solid #cbd5e1;
   background-color: #ffffff;
   flex-shrink: 0;
+  border-radius: 50%;
 }
 
 .avatar-preview-wrapper img {
@@ -946,7 +953,6 @@ border-radius: 10px;
   border: 1px solid #cbd5e1;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 10px;
 }
 
 .upload-btn:hover {
