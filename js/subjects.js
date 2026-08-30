@@ -616,7 +616,7 @@ function openArchiveModal(subjectId, subjectName = "") {
   const textElem = document.getElementById("archiveModalText");
   if (textElem) {
     const formattedName = subjectName
-      ? `"<span style="font-weight: 600; color: #000000;">${escapeHTML(subjectName)}</span>"`
+      ? `"<span style="font-weight: 600; color: green;">${escapeHTML(subjectName)}</span>"`
       : "this subject";
 
     textElem.innerHTML = `Are you sure you want to archive ${formattedName}? Archived subject will not show when assigning teacher to subjects`;

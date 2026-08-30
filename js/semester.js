@@ -25,6 +25,36 @@ window.addEventListener("click", (e) => {
   });
 });
 
+// --- NEW REUSABLE VALIDATION HELPER ---
+function validateTermDates(
+  academicYearId,
+  name,
+  startDate,
+  endDate,
+  currentTermId = null,
+) {
+  if (new Date(startDate) >= new Date(endDate)) {
+    return "End date must be strictly after start date.";
+  }
+
+  if (name === "2nd Semester") {
+    const firstSemester = terms.find(
+      (t) =>
+        t.academic_year_id === academicYearId &&
+        t.name === "1st Semester" &&
+        t.id !== currentTermId,
+    );
+
+    if (firstSemester && firstSemester.end_date) {
+      if (new Date(startDate) <= new Date(firstSemester.end_date)) {
+        return `2nd Semester start date must be after 1st Semester end date (${formatDate(firstSemester.end_date)}).`;
+      }
+    }
+  }
+
+  return null;
+}
+
 // --- 1. FETCH & RENDER ---
 async function loadTerms() {
   renderTableLoading();
@@ -195,6 +225,18 @@ async function handleAddTerm(event) {
     return;
   }
 
+  // Add this right before try {} block in handleAddTerm:
+  const validationError = validateTermDates(
+    academicYearId,
+    name,
+    startDate,
+    endDate,
+  );
+  if (validationError) {
+    showToast(validationError, "error");
+    return;
+  }
+
   const form = event.target;
   const saveBtn = form.querySelector('button[type="submit"]');
 
@@ -316,6 +358,19 @@ async function handleEditTerm(event) {
     return;
   }
 
+  // Replace inline date checks in handleEditTerm with:
+  const validationError = validateTermDates(
+    academicYearId,
+    name,
+    startDate,
+    endDate,
+    selectedTermId,
+  );
+  if (validationError) {
+    showToast(validationError, "error");
+    return;
+  }
+
   const form = event.target;
   const updateBtn = form.querySelector('button[type="submit"]');
 
@@ -326,33 +381,6 @@ async function handleEditTerm(event) {
     }
 
     await handleSingleActiveStatus(status, selectedTermId);
-
-    // Ensure end date is strictly after start date
-    if (new Date(startDate) >= new Date(endDate)) {
-      showToast("End date must be after start date.", "error");
-      return;
-    }
-
-    const currentTerm = terms.find((t) => t.id === selectedTermId);
-
-    if (currentTerm && currentTerm.name === "2nd Semester") {
-      // Find 1st Semester for the same academic year
-      const firstSemester = terms.find(
-        (t) =>
-          t.academic_year_id === currentTerm.academic_year_id &&
-          t.name === "1st Semester",
-      );
-
-      if (firstSemester && firstSemester.end_date) {
-        if (new Date(startDate) <= new Date(firstSemester.end_date)) {
-          showToast(
-            `2nd Semester start date must be after 1st Semester end date (${formatDate(firstSemester.end_date)}).`,
-            "error",
-          );
-          return;
-        }
-      }
-    }
 
     const { data, error } = await supabaseClient
       .from("terms")
@@ -454,10 +482,17 @@ function openModal(modalId) {
   lockBodyScroll();
 }
 
+// --- FIX ---
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "none";
   unLockBodyScroll();
+
+  // Reset global state on close
+  if (modalId === "editTermModal") {
+    originalTermData = null;
+    selectedTermId = null;
+  }
 }
 
 function setupModalListeners() {
@@ -533,8 +568,8 @@ async function populateAcademicYearDropdowns() {
       : `<option value="">No Active Academic Years Available</option>`;
   }
 
-  // 3. EDIT MODAL: Load ALL years so the selected term's year can render
-  if (editSelect) {
+  // Check if edit modal is visible before overwriting
+  if (editSelect && editTermModal?.style.display !== "flex") {
     editSelect.innerHTML = data
       .map((item) => `<option value="${item.id}">${item.year_label}</option>`)
       .join("");

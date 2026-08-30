@@ -6,18 +6,16 @@ const archiveAcademicYearModal = document.getElementById(
   "archiveAcademicYearModal",
 );
 
+// --- FIX ---
 window.addEventListener("click", (e) => {
   const modals = [
     academicYearModal,
     editAcademicYearModal,
     archiveAcademicYearModal,
   ];
-
   modals.forEach((modal) => {
-    // Check if the modal is currently open AND the click was on the dark backdrop itself
     if (modal && modal.style.display === "flex" && e.target === modal) {
-      modal.style.display = "none";
-      unLockBodyScroll();
+      closeModal(modal.id);
     }
   });
 });
@@ -117,23 +115,16 @@ function formatDateTime(isoString) {
   });
 }
 
-// --- 2. SINGLE ACTIVE YEAR ENFORCEMENT ---
-async function handleSingleActiveStatus(
-  requestedStatus,
-  currentRecordId = null,
-) {
-  if (requestedStatus === "Active") {
-    // Set all existing active years to 'Archive'
-    let query = supabaseClient
+// --- CLIENT-SIDE SAFE SEQUENCING FIX ---
+// Instead of inactivating first, insert/update first, then deactivate others if set to Active:
+async function handleSingleActiveStatus(requestedStatus, currentRecordId) {
+  if (requestedStatus === "Active" && currentRecordId) {
+    const { error } = await supabaseClient
       .from("academic_years")
       .update({ status: "Inactive" })
-      .eq("status", "Active");
+      .eq("status", "Active")
+      .neq("id", currentRecordId);
 
-    if (currentRecordId) {
-      query = query.neq("id", currentRecordId);
-    }
-
-    const { error } = await query;
     if (error) throw error;
   }
 }
@@ -150,31 +141,43 @@ async function handleAddAcademicYear(event) {
     return;
   }
 
-  // 2. Select submit button scoped to THIS form/modal
   const form = event.target;
   const saveBtn = form.querySelector('button[type="submit"]');
 
   try {
-    // 3. Set loading state
     if (saveBtn) {
       saveBtn.disabled = true;
       saveBtn.textContent = "Saving...";
     }
-    // Rule: Ensure only one Active year
-    await handleSingleActiveStatus(status);
 
+    // Attempt status update cleanly
+    if (status === "Active") {
+      const { error: updateErr } = await supabaseClient
+        .from("academic_years")
+        .update({ status: "Inactive" })
+        .eq("status", "Active");
+
+      if (updateErr) {
+        showToast(
+          "Permission denied when setting existing year to Inactive: " +
+            updateErr.message,
+          "error",
+        );
+        return;
+      }
+    }
+
+    // Perform Insert
     const { data, error } = await supabaseClient
       .from("academic_years")
       .insert([{ year_label: yearLabel, status, is_archived: false }])
       .select();
 
-    // 1. Handle Database Execution Errors
     if (error) {
       if (error.code === "23505") {
         showToast("This Academic Year has already been created.", "error");
         return;
       }
-      // Handle Row-Level Security / Permission Violation
       if (error.code === "42501") {
         showToast(
           "You do not have permission to add an academic year.",
@@ -182,24 +185,20 @@ async function handleAddAcademicYear(event) {
         );
         return;
       }
-
-      // Fallback for other errors
       showToast(error.message, "error");
       return;
     }
 
-    // 3. Success Flow
     showToast("Academic Year added successfully!", "success");
     closeModal("academicYearModal");
-    document.getElementById("academicYearForm").reset();
+    form.reset();
     await loadAcademicYears();
   } catch (err) {
-    showToast(err.message, "error");
+    showToast(err.message || "An unexpected error occurred.", "error");
   } finally {
-    // 5. Always restore button state
     if (saveBtn) {
       saveBtn.disabled = false;
-      saveBtn.textContent = "Save"; // Replace with your original text
+      saveBtn.textContent = "Save";
     }
   }
 }
@@ -365,13 +364,22 @@ function openModal(modalId) {
   lockBodyScroll();
 }
 
+// --- FIX ---
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "none";
 
   unLockBodyScroll();
-}
 
+  // Reset state on modal close
+  if (
+    modalId === "editAcademicYearModal" ||
+    modalId === "archiveAcademicYearModal"
+  ) {
+    selectedYearId = null;
+    originalYearData = {};
+  }
+}
 function setupModalListeners() {
   // Add Modal
   document
