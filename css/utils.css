@@ -53,6 +53,21 @@ tbody tr:hover {
     padding: 0 12px; /* Match padding of your other inputs */
   }
 
+  .details-item label {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 6px;
+  }
+
+  .details-item p {
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .details-item.full-width {
+    grid-column: span 2;
+  }
+
   /* Off-screen Drawer Sidebar */
   .sidebar {
     position: fixed;
@@ -149,4 +164,19 @@ tbody tr:hover {
 
 .toast-info {
   background-color: #3b82f6; /* Blue */
+}
+
+.details-item label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.details-item p {
+  font-weight: 500;
+  color: #111827;
+}
+
+.details-item.full-width {
+  grid-column: span 2;
 }

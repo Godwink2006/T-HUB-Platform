@@ -414,22 +414,15 @@ tr {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .details-item {
   display: flex;
   flex-direction: column;
-}
-
-.details-item label {
-  font-size: 13px;
-  color: #6b7280;
-  margin-bottom: 6px;
-}
-
-.details-item p {
-  font-weight: 500;
-  color: #111827;
+  min-width: 0; /* Prevents grid items from expanding past 1fr width */
+  word-break: break-word; /* Forces long text or emails to wrap */
 }
 
 .view-teacher-modal-header {
@@ -823,12 +816,13 @@ tr {
   }
 
   .edit-teacher-modal-content,
-  .teacher-modal-content {
+  .teacher-modal-content,
+  .view-teacher-modal-content {
     display: flex;
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 650px; /* Fixed height requirement */
+    height: 600px; /* Fixed height requirement */
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
