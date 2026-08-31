@@ -1,5 +1,23 @@
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
+async function loadDepartmentDropdown() {
+  const { data: departments, error } = await supabaseClient
+    .from("departments")
+    .select("id, name")
+    .eq("status", "active");
+
+  if (error) return;
+
+  const selectEl = document.getElementById("teacherDepartment");
+  selectEl.innerHTML = `<option value="">Select Department</option>`;
+
+  departments.forEach((dept) => {
+    const option = document.createElement("option");
+    option.value = dept.id;
+    option.textContent = dept.name;
+    selectEl.appendChild(option);
+  });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   // DOM Elements
@@ -237,25 +255,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function loadDepartmentDropdown() {
-    const { data: departments, error } = await supabaseClient
-      .from("departments")
-      .select("id, name")
-      .eq("status", "active");
-
-    if (error) return;
-
-    const selectEl = document.getElementById("teacherDepartment");
-    selectEl.innerHTML = `<option value="">Select Department</option>`;
-
-    departments.forEach((dept) => {
-      const option = document.createElement("option");
-      option.value = dept.id;
-      option.textContent = dept.name;
-      selectEl.appendChild(option);
-    });
-  }
-
   // ------------------------------------------------------------------
   // 3. Data Fetching & Dynamic Table Rendering
   // ------------------------------------------------------------------
@@ -339,6 +338,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // Attach action handlers
         tr.querySelector(".view").addEventListener("click", () =>
           openViewModal(teacher),
+        );
+        // Attach action handlers
+        tr.querySelector(".edit").addEventListener("click", () =>
+          openEditModal(teacher),
         );
         tr.querySelector(".archive").addEventListener("click", () =>
           openArchiveModal(teacher.id),
@@ -486,4 +489,211 @@ function resetTeacherForm() {
   if (teacherForm) teacherForm.reset();
   const previewImg = document.getElementById("teacherPhotoPreview");
   if (previewImg) previewImg.src = DEFAULT_AVATAR;
+}
+
+let originalTeacherData = null; // Track baseline values for change detection
+
+async function openEditModal(teacher) {
+  selectedTeacherId = teacher.id;
+  const profile = teacher.profiles || {};
+
+  // 1. Populate the Department dropdown FIRST and wait for options to build
+  await loadDepartmentDropdown("editTeacherDepartment");
+
+  // 2. Parse Name Split
+  const fullNameParts = (profile.full_name || "").trim().split(" ");
+  const firstName = fullNameParts[0] || "";
+  const lastName = fullNameParts.slice(1).join(" ") || "";
+
+  // 3. Assign Field Values
+  document.getElementById("editTeacherStaffId").value = teacher.staff_id || "";
+  document.getElementById("editTeacherFirstName").value = firstName;
+  document.getElementById("editTeacherLastName").value = lastName;
+  document.getElementById("editTeacherGender").value = teacher.gender || "";
+  document.getElementById("editTeacherDob").value = teacher.date_of_birth || "";
+
+  // Extract Department ID safely across all Supabase join structures
+  let deptId = teacher.department_id || "";
+
+  if (!deptId && teacher.departments) {
+    if (Array.isArray(teacher.departments) && teacher.departments.length > 0) {
+      deptId = teacher.departments[0].id;
+    } else if (typeof teacher.departments === "object") {
+      deptId = teacher.departments.id;
+    }
+  }
+
+  // Assign to dropdown after options are loaded
+  document.getElementById("editTeacherDepartment").value = deptId || "";
+
+  document.getElementById("editTeacherQualification").value =
+    teacher.qualification || "";
+  document.getElementById("editTeacherPhone").value =
+    profile.phone_number || "";
+
+  // Match casing for Status dropdown
+  const statusValue = profile.status || teacher.status || "Active";
+  const statusSelect = document.getElementById("editTeacherStatus");
+  statusSelect.value =
+    statusValue.charAt(0).toUpperCase() + statusValue.slice(1).toLowerCase();
+
+  document.getElementById("editTeacherAddress").value = teacher.address || "";
+
+  // 4. Set Photo Preview
+  const previewImg = document.getElementById("editTeacherPhotoPreview");
+  previewImg.src = profile.photo_url || DEFAULT_AVATAR;
+  document.getElementById("editTeacherPhotoFileName").textContent =
+    "No new file chosen";
+  document.getElementById("editTeacherPhoto").value = "";
+
+  // Store Baseline State for Change Detection
+  originalTeacherData = {
+    firstName,
+    lastName,
+    gender: teacher.gender || "",
+    date_of_birth: teacher.date_of_birth || "",
+    department_id: deptId,
+    qualification: teacher.qualification || "",
+    phone_number: profile.phone_number || "",
+    status: statusSelect.value,
+    address: teacher.address || "",
+    photo_url: profile.photo_url || "",
+  };
+
+  // Show Modal
+  document.getElementById("editTeacherModal").style.display = "flex";
+}
+
+// File Upload Preview Listener
+const editPhotoInput = document.getElementById("editTeacherPhoto");
+if (editPhotoInput) {
+  editPhotoInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      document.getElementById("editTeacherPhotoFileName").textContent =
+        file.name;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.getElementById("editTeacherPhotoPreview").src =
+          event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+// Edit Form Submit Listener
+const editTeacherForm = document.getElementById("editTeacherForm");
+if (editTeacherForm) {
+  editTeacherForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const submitBtn = editTeacherForm.querySelector('button[type="submit"]');
+
+    try {
+      const firstName = document
+        .getElementById("editTeacherFirstName")
+        .value.trim();
+      const lastName = document
+        .getElementById("editTeacherLastName")
+        .value.trim();
+      const photoInput = document.getElementById("editTeacherPhoto");
+
+      let photoBase64 = null;
+      if (photoInput && photoInput.files.length > 0) {
+        photoBase64 = await compressToBase64(photoInput.files[0], 800, 0.7);
+      }
+
+      // Current values object
+      const currentValues = {
+        firstName,
+        lastName,
+        gender: document.getElementById("editTeacherGender").value,
+        date_of_birth: document.getElementById("editTeacherDob").value,
+        department_id: document.getElementById("editTeacherDepartment").value,
+        qualification: document.getElementById("editTeacherQualification")
+          .value,
+        phone_number: document.getElementById("editTeacherPhone").value.trim(),
+        status: document.getElementById("editTeacherStatus").value,
+        address: document.getElementById("editTeacherAddress").value.trim(),
+      };
+
+      // Detect Changes: Compare current inputs against original stored state
+      const hasPhotoChanged = photoBase64 !== null;
+      const hasDataChanged = Object.keys(currentValues).some(
+        (key) => currentValues[key] !== originalTeacherData[key],
+      );
+
+      if (!hasDataChanged && !hasPhotoChanged) {
+        showToast("No changes detected.", "info");
+        hideEditModal();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Updating...";
+
+      // Construct Payload for Edge Function (Excludes staff_id)
+      const payload = {
+        teacher_id: selectedTeacherId,
+        full_name: `${firstName} ${lastName}`.trim(),
+        gender: currentValues.gender,
+        date_of_birth: currentValues.date_of_birth,
+        department_id: currentValues.department_id || null,
+        qualification: currentValues.qualification,
+        phone_number: currentValues.phone_number,
+        status: currentValues.status,
+        address: currentValues.address,
+        photo: photoBase64, // null if photo hasn't changed
+      };
+
+      // Get Authentication JWT Token
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      // Invoke Update Edge Function
+      const { data, error } = await supabaseClient.functions.invoke(
+        "update-teacher",
+        {
+          body: payload,
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+        },
+      );
+
+      if (error) {
+        let serverMessage = null;
+        if (error.context) {
+          try {
+            const bodyText = await error.context.text();
+            serverMessage = JSON.parse(bodyText).message;
+          } catch (e) {}
+        }
+        throw new Error(
+          serverMessage ||
+            data?.message ||
+            error.message ||
+            "Failed to update teacher.",
+        );
+      }
+
+      if (data && !data.success) {
+        throw new Error(data.message || "Failed to update teacher.");
+      }
+
+      showToast("Teacher updated successfully!", "success");
+      hideEditModal();
+      loadTeachers();
+    } catch (err) {
+      console.error("Error updating teacher:", err);
+      showToast(err.message || "An error occurred during update.", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Update Teacher";
+    }
+  });
 }

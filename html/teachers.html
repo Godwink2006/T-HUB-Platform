@@ -398,109 +398,134 @@
       </div>
     </div>
 
-    <!---Edit student modal-->
-
+    <!-- Edit Teacher Modal -->
     <div id="editTeacherModal" class="edit-modal-teacher">
       <div class="edit-teacher-modal-content">
         <div class="edit-teacher-modal-header">
           <h2>Edit Teacher</h2>
-
           <button id="closeEditTeacherModal">&times;</button>
         </div>
 
         <div class="edit-teacher-modal-body">
-          <form id="teacherForm">
+          <form id="editTeacherForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Staff ID *</label>
-
-                <input type="text" placeholder="Enter staff ID" />
+                <label>Staff ID (Cannot be edited)</label>
+                <input type="text" id="editTeacherStaffId" disabled />
               </div>
 
               <div class="form-group">
                 <label>First name *</label>
-
-                <input type="text" placeholder="Enter first name" />
+                <input
+                  type="text"
+                  id="editTeacherFirstName"
+                  placeholder="Enter first name"
+                  required
+                />
               </div>
 
               <div class="form-group">
                 <label>Last name *</label>
-
-                <input type="text" placeholder="Enter last name" />
+                <input
+                  type="text"
+                  id="editTeacherLastName"
+                  placeholder="Enter last name"
+                  required
+                />
               </div>
 
               <div class="form-group">
                 <label>Gender *</label>
-
-                <select>
-                  <option>Select Gender</option>
-                  <option>Male</option>
-                  <option>Female</option>
+                <select id="editTeacherGender" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Date of birth *</label>
-
-                <input type="date" />
+                <input type="date" id="editTeacherDob" required />
               </div>
 
               <div class="form-group">
-                <label>Department *</label>
-
-                <select>
-                  <option>Select department</option>
-                  <option>Science</option>
-                  <option>Mathematics</option>
-                  <option>Languages</option>
-                  <option>Social Studies</option>
-                  <option>ICT</option>
-                  <option>Administration</option>
+                <label>Department (Optional)</label>
+                <select id="editTeacherDepartment">
+                  <option value="">Select department</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Qualification *</label>
-
-                <select>
-                  <option>Select qualification</option>
-                  <option>Qualify</option>
-                  <option>Not Qualify</option>
+                <select id="editTeacherQualification" required>
+                  <option value="">Select qualification</option>
+                  <option value="Bachelor of Education">
+                    Bachelor of Education
+                  </option>
+                  <option value="Master of Education">
+                    Master of Education
+                  </option>
+                  <option value="Doctor of Education">
+                    Doctor of Education
+                  </option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Phone *</label>
-
-                <input type="tel" placeholder="+250...." />
-              </div>
-
-              <div class="form-group">
-                <label>Email *</label>
-
-                <input type="email" placeholder="teacher@gmail.com" />
-              </div>
-
-              <div class="form-group">
-                <label>Employment date *</label>
-
-                <input type="date" />
-              </div>
-
-              <div class="form-group full-width">
-                <label>Address (Optional)</label>
-
-                <textarea rows="4" placeholder="Teacher address"></textarea>
+                <label>Phone Number *</label>
+                <input
+                  type="tel"
+                  id="editTeacherPhone"
+                  placeholder="Enter phone number"
+                  required
+                />
               </div>
 
               <div class="form-group">
                 <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>On Leave</option>
-                  <option>Retired</option>
+                <select id="editTeacherStatus" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
+              </div>
+
+              <div class="form-group full-width">
+                <label>Address (Optional)</label>
+                <textarea
+                  id="editTeacherAddress"
+                  rows="4"
+                  placeholder="Teacher address"
+                ></textarea>
+              </div>
+
+              <div class="avatar-upload-group full-width">
+                <label class="form-label">Profile photo (Optional)</label>
+                <div class="avatar-edit-container">
+                  <div class="avatar-preview-wrapper">
+                    <img
+                      id="editTeacherPhotoPreview"
+                      src=""
+                      alt="Teacher Photo Preview"
+                    />
+                  </div>
+                  <div class="avatar-upload-actions">
+                    <label
+                      for="editTeacherPhoto"
+                      class="btn-secondary upload-btn"
+                    >
+                      <i class="bx bx-upload"></i> Change Photo
+                    </label>
+                    <input
+                      type="file"
+                      id="editTeacherPhoto"
+                      accept="image/*"
+                      hidden
+                    />
+                    <span id="editTeacherPhotoFileName" class="file-name-text"
+                      >No new file chosen</span
+                    >
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -512,14 +537,12 @@
               >
                 Cancel
               </button>
-
               <button type="submit" class="edit-btn">Update Teacher</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-
     <div id="viewTeacherModal" class="view-teacher-modal">
       <div class="view-teacher-modal-content">
         <div class="view-teacher-modal-header">
