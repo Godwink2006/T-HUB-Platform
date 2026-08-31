@@ -35,6 +35,24 @@ tbody tr:hover {
     transition: left 0.3s ease;
   }
 
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+
+    /* --- ADD THESE STYLES TO FIX HEIGHT --- */
+    min-height: 48px; /* Matches your other text inputs' height */
+    line-height: normal; /* Prevents iOS vertical collapse */
+    display: flex; /* Ensures internal content aligns vertically */
+    align-items: center;
+    padding: 0 12px; /* Match padding of your other inputs */
+  }
+
   /* Off-screen Drawer Sidebar */
   .sidebar {
     position: fixed;
