@@ -402,6 +402,19 @@ tr {
   margin-bottom: 30px;
 }
 
+.profile-section img {
+  margin-bottom: 5px;
+}
+
+.profile-section h3 {
+  margin: 0 0 6px 0;
+}
+
+.profile-section .view-teacher-status {
+  display: inline-block;
+  margin-top: 5px;
+}
+
 .view-teacher-photo {
   width: 120px;
   height: 120px;
@@ -441,9 +454,9 @@ tr {
 }
 
 #closeViewTeacherModal {
-  cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border-radius: 8px;
   border: none;
   height: 40px;
@@ -451,9 +464,27 @@ tr {
   font-size: 22px;
 }
 
+/* Base Status Badge */
 .view-teacher-status {
-  background: #dcfce7;
-  color: #166534;
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 20px;
+  text-transform: capitalize;
+  text-align: center;
+}
+
+/* Active State (Green) */
+.view-teacher-status.active {
+  background-color: #e6f4ea;
+  color: #137333;
+}
+
+/* Inactive State (Red/Gray) */
+.view-teacher-status.inactive {
+  background-color: #fce8e6;
+  color: #c5221f;
 }
 
 .confirm-modal {
@@ -616,6 +647,12 @@ tr {
   .confirm-icon {
     border-radius: 10px;
     padding: 10px;
+  }
+
+  .view-teacher-status {
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 10px;
   }
 
   .upload-btn,
@@ -841,7 +878,8 @@ tr {
     }
   }
 
-  .teacher-modal-header {
+  .teacher-modal-header,
+  .view-teacher-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -849,7 +887,8 @@ tr {
     border-bottom: 1.5px solid rgb(219, 215, 215);
   }
 
-  .teacher-modal-header h2 {
+  .teacher-modal-header h2,
+  .view-teacher-modal-header h2 {
     font-size: 18px;
   }
 
@@ -865,7 +904,8 @@ tr {
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .teacher-modal-body {
+  .teacher-modal-body,
+  .view-teacher-body {
     padding: 20px;
     overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
     flex: 1;
@@ -913,7 +953,8 @@ tr {
   }
 
   /* Horizontal Modal Action Buttons with Space Between */
-  .teacher-modal-footer {
+  .teacher-modal-footer,
+  .view-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
