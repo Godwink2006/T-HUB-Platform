@@ -213,6 +213,11 @@ tr {
   color: #166534;
 }
 
+.teachers-status-inactive {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 .teachers-actions-btn {
   width: 38px;
   height: 38px;
@@ -620,6 +625,11 @@ tr {
     padding: 10px;
   }
 
+  .upload-btn,
+  .avatar-edit-container {
+    border-radius: 10px;
+  }
+
   .archive-confirm-btn {
     padding: 12px 22px;
     border: none;
@@ -989,4 +999,90 @@ tr {
     background: #2563eb;
     color: #ffffff;
   }
+}
+
+/* Avatar Section Wrapper */
+.avatar-upload-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.avatar-upload-group .form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Flex Row for Preview + Actions */
+.avatar-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+/* Circular Avatar Frame */
+.avatar-preview-wrapper {
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  border: 2px solid #cbd5e1;
+  background-color: #ffffff;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.avatar-preview-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Column for Upload Button + File Name */
+.avatar-upload-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+/* Custom Upload Button Styling */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #15803d;
+  color: #ffffff;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-btn:hover {
+  background-color: #5b8646;
+  border-color: #94a3b8;
+}
+
+.upload-btn i {
+  font-size: 1.1rem;
+}
+
+/* File name span styling */
+.file-name-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  margin: 0;
+  display: block;
+  width: 100%;
+  max-width: 150px; /* Constrains max width to prevent horizontal modal scroll */
 }

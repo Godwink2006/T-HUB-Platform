@@ -1,3 +1,6 @@
+const DEFAULT_AVATAR =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
+
 document.addEventListener("DOMContentLoaded", () => {
   // DOM Elements
   const addTeacherBtn = document.getElementById("addTeacher");
@@ -50,6 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Open Add Teacher Modal
   if (addTeacherBtn) {
     addTeacherBtn.addEventListener("click", () => {
+      // 1. Populate active departments into <select>
+      loadDepartmentDropdown();
       teacherForm.reset();
       teacherModal.style.display = "flex";
     });
@@ -79,14 +84,43 @@ document.addEventListener("DOMContentLoaded", () => {
   const hideArchiveModal = () => (archiveTeacherModal.style.display = "none");
   if (cancelArchive) cancelArchive.addEventListener("click", hideArchiveModal);
 
-  // Helper: Convert File to Base64 String
-  const convertToBase64 = (file) =>
-    new Promise((resolve, reject) => {
+  // Compress file and return compressed Base64 String
+  function compressToBase64(file, maxWidth = 800, quality = 0.7) {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
+
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert canvas output directly to JPEG Base64
+          const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+          resolve(compressedBase64);
+        };
+
+        img.onerror = (err) => reject(err);
+      };
+
+      reader.onerror = (err) => reject(err);
     });
+  }
 
   // Global helper function for toggling password visibility inline
   window.togglePassword = function (inputId, btn) {
@@ -95,7 +129,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const isPassword = input.type === "password";
     input.type = isPassword ? "text" : "password";
   };
-
   // ------------------------------------------------------------------
   // 2. Submit Add Teacher Form (Invoking Edge Function)
   // ------------------------------------------------------------------
@@ -108,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const confirmPassword = document.getElementById("confirmPassword").value;
 
       if (newPassword !== confirmPassword) {
-        alert("Passwords do not match.");
+        showToast("Passwords do not match.", "error");
         return;
       }
 
@@ -117,43 +150,33 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.textContent = "Saving...";
 
       try {
-        // Collect Input Data
-        const inputs = teacherForm.querySelectorAll("input, select, textarea");
-        const formData = {};
-
-        // Parse profile photo if selected
-        const photoInput = teacherForm.querySelector('input[type="file"]');
+        const photoInput = document.getElementById("teacherPhoto");
         let photoBase64 = null;
+
         if (photoInput && photoInput.files.length > 0) {
-          photoBase64 = await convertToBase64(photoInput.files[0]);
+          // Compresses image to max width 800px at 70% JPEG quality
+          photoBase64 = await compressToBase64(photoInput.files[0], 800, 0.7);
         }
 
-        // Map inputs matching Edge Function payload attributes
-        const firstName = teacherForm
-          .querySelector('input[placeholder="Enter first name"]')
+        // Read values directly using specific IDs
+        const firstName = document
+          .getElementById("teacherFirstName")
           .value.trim();
-        const lastName = teacherForm
-          .querySelector('input[placeholder="Enter last name"]')
+        const lastName = document
+          .getElementById("teacherLastName")
           .value.trim();
 
         const payload = {
-          staff_id: teacherForm
-            .querySelector('input[placeholder="Enter staff ID"]')
-            .value.trim(),
+          staff_id: document.getElementById("teacherStaffId").value.trim(),
           full_name: `${firstName} ${lastName}`.trim(),
-          gender: teacherForm.querySelectorAll("select")[0].value,
-          date_of_birth:
-            teacherForm.querySelectorAll('input[type="date"]')[0].value,
-          department: teacherForm.querySelectorAll("select")[1].value,
-          qualification: teacherForm.querySelectorAll("select")[2].value,
-          phone_number: teacherForm
-            .querySelector('input[type="tel"]')
-            .value.trim(),
-          email: teacherForm.querySelector('input[type="email"]').value.trim(),
-          employment_date:
-            teacherForm.querySelectorAll('input[type="date"]')[1].value,
-          address: teacherForm.querySelector("textarea").value.trim(),
-          status: teacherForm.querySelectorAll("select")[3].value,
+          gender: document.getElementById("teacherGender").value,
+          date_of_birth: document.getElementById("teacherDob").value,
+          department_id: document.getElementById("teacherDepartment").value,
+          qualification: document.getElementById("teacherQualification").value,
+          phone_number: document.getElementById("teacherPhone").value.trim(),
+          email: document.getElementById("teacherEmail").value.trim(),
+          address: document.getElementById("teacherAddress").value.trim(),
+          status: document.getElementById("teacherStatus").value,
           photo: photoBase64,
           password: newPassword,
         };
@@ -176,23 +199,60 @@ document.addEventListener("DOMContentLoaded", () => {
           },
         );
 
-        if (error || !data.success) {
+        // Extract custom error message from Edge Function non-2xx response
+        if (error) {
+          let serverMessage = null;
+          if (error.context) {
+            try {
+              const bodyText = await error.context.text();
+              const jsonBody = JSON.parse(bodyText);
+              serverMessage = jsonBody.message;
+            } catch (e) {
+              console.error("Failed to parse error body:", e);
+            }
+          }
           throw new Error(
-            data?.message || error?.message || "Failed to create teacher.",
+            serverMessage ||
+              data?.message ||
+              error.message ||
+              "Failed to create teacher.",
           );
         }
 
-        alert("Teacher created successfully!");
+        if (data && !data.success) {
+          throw new Error(data.message || "Failed to create teacher.");
+        }
+
+        showToast("Teacher created successfully!", "success");
         teacherForm.reset();
         hideAddModal();
         loadTeachers();
       } catch (err) {
         console.error("Error creating teacher:", err);
-        alert(err.message || "An error occurred.");
+        showToast(err.message || "An error occurred.", "error");
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "Save Teacher";
       }
+    });
+  }
+
+  async function loadDepartmentDropdown() {
+    const { data: departments, error } = await supabaseClient
+      .from("departments")
+      .select("id, name")
+      .eq("status", "active");
+
+    if (error) return;
+
+    const selectEl = document.getElementById("teacherDepartment");
+    selectEl.innerHTML = `<option value="">Select Department</option>`;
+
+    departments.forEach((dept) => {
+      const option = document.createElement("option");
+      option.value = dept.id;
+      option.textContent = dept.name;
+      selectEl.appendChild(option);
     });
   }
 
@@ -208,22 +268,24 @@ document.addEventListener("DOMContentLoaded", () => {
       // Query relational data joining profiles and teachers tables
       const { data: teachers, error } = await supabaseClient.from("teachers")
         .select(`
-          id,
-          staff_id,
-          gender,
-          department,
-          qualification,
-          employment_date,
-          address,
-          date_of_birth,
-          profiles:id (
-            full_name,
-            email,
-            phone_number,
-            status,
-            photo_url
-          )
-        `);
+  id,
+  staff_id,
+  gender,
+  qualification,
+  address,
+  date_of_birth,
+  departments:department_id (
+    id,
+    name
+  ),
+  profiles:id (
+    full_name,
+    email,
+    phone_number,
+    status,
+    photo_url
+  )
+`);
 
       if (error) throw error;
 
@@ -239,13 +301,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
-          <td><img src="${profile.photo_url || "images/profile.png"}" class="teacher-photo" alt="Photo" /></td>
-          <td>${teacher.staff_id || "N/A"}</td>
-          <td>${profile.full_name || "N/A"}</td>
-          <td>${teacher.gender || "N/A"}</td>
-          <td>${teacher.department || "N/A"}</td>
-          <td>${profile.email || "N/A"}</td>
-          <td>${profile.phone_number || "N/A"}</td>
+         <td>
+  <img 
+    src="${profile.photo_url || DEFAULT_AVATAR}" 
+    class="teacher-photo" 
+    alt="Photo" 
+    onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';" 
+  />
+</td>
+          <td>${teacher.staff_id || "-"}</td>
+          <td>${profile.full_name || "-"}</td>
+          <td>${teacher.gender || "-"}</td>
+          <td>${teacher.departments?.name || "-"}</td>
+          <td>${profile.email || "-"}</td>
+          <td>${profile.phone_number || "-"}</td>
+          <td>${teacher.qualification || "-"}</td>
           <td>
             <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
               ${profile.status || "Active"}
@@ -262,7 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
               <i class="fa-solid fa-box-archive"></i>
             </button>
           </td>
-          <td>${teacher.qualification || "N/A"}</td>
         `;
 
         // Attach action handlers
@@ -286,25 +355,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openViewModal(teacher) {
     const profile = teacher.profiles || {};
+
+    // Profile Header Elements
     document.getElementById("viewTeacherName").textContent =
-      profile.full_name || "N/A";
-    document.querySelector(".view-teacher-photo").src =
-      profile.photo_url || "images/profile.png";
+      profile.full_name || "-";
+    const photoEl = document.getElementById("viewTeacherPhoto");
+    photoEl.src = profile.photo_url || DEFAULT_AVATAR;
+    photoEl.onerror = function () {
+      this.onerror = null;
+      this.src = DEFAULT_AVATAR;
+    };
 
-    const detailsGrid = document.querySelectorAll(".details-item p");
-    if (detailsGrid.length >= 9) {
-      detailsGrid[0].textContent = teacher.staff_id || "N/A";
-      detailsGrid[1].textContent = teacher.gender || "N/A";
-      detailsGrid[2].textContent = teacher.date_of_birth || "N/A";
-      detailsGrid[3].textContent = teacher.department || "N/A";
-      detailsGrid[4].textContent = teacher.qualification || "N/A";
-      detailsGrid[5].textContent = profile.phone_number || "N/A";
-      detailsGrid[6].textContent = profile.email || "N/A";
-      detailsGrid[7].textContent = teacher.employment_date || "N/A";
-      detailsGrid[8].textContent = teacher.address || "N/A";
+    // Status Badge Handling
+    const statusElement = document.getElementById("viewTeacherStatus");
+    const currentStatus = profile.status || teacher.status || "Active";
+    statusElement.textContent = currentStatus;
+    statusElement.className = `view-teacher-status ${currentStatus.toLowerCase()}`;
+
+    // Grid Details Elements
+    document.getElementById("viewTeacherStaffId").textContent =
+      teacher.staff_id || "-";
+    document.getElementById("viewTeacherGender").textContent =
+      teacher.gender || "-";
+    document.getElementById("viewTeacherDob").textContent =
+      teacher.date_of_birth || "-";
+    document.getElementById("viewTeacherDepartment").textContent =
+      teacher.departments?.name || teacher.department || "-";
+    document.getElementById("viewTeacherQualification").textContent =
+      teacher.qualification || "-";
+    document.getElementById("viewTeacherPhone").textContent =
+      profile.phone_number || "-";
+    document.getElementById("viewTeacherEmail").textContent =
+      profile.email || "-";
+    document.getElementById("viewTeacherAddress").textContent =
+      teacher.address || "-";
+
+    // Display Modal
+    const viewTeacherModal = document.getElementById("viewTeacherModal");
+    if (viewTeacherModal) {
+      viewTeacherModal.style.display = "flex";
     }
-
-    viewTeacherModal.style.display = "flex";
   }
 
   function openArchiveModal(id) {
@@ -319,7 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const { error } = await supabaseClient
           .from("profiles")
-          .update({ status: "retired" })
+          .update({ status: "Inactive" })
           .eq("id", selectedTeacherId);
 
         if (error) throw error;
@@ -335,4 +425,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initial Data Fetch
   loadTeachers();
+  loadDepartmentDropdown();
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const teacherPhotoInput = document.getElementById("teacherPhoto");
+  const teacherPhotoPreview = document.getElementById("teacherPhotoPreview");
+  const teacherPhotoFileName = document.getElementById("teacherPhotoFileName");
+
+  if (teacherPhotoInput) {
+    teacherPhotoInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (teacherPhotoFileName) {
+          teacherPhotoFileName.textContent = file.name;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (teacherPhotoPreview) {
+            teacherPhotoPreview.src = event.target.result;
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        if (teacherPhotoFileName) {
+          teacherPhotoFileName.textContent = "No file chosen";
+        }
+        if (teacherPhotoPreview) {
+          teacherPhotoPreview.src = DEFAULT_AVATAR;
+        }
+      }
+    });
+  }
+});
+
+// Helper function to reset form & image preview when modal closes
+function resetTeacherForm() {
+  if (teacherForm) teacherForm.reset();
+  const previewImg = document.getElementById("teacherPhotoPreview");
+  if (previewImg) previewImg.src = DEFAULT_AVATAR;
+}

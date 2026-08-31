@@ -156,73 +156,13 @@
                 <th>Department</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Qualification</th>
                 <th>Status</th>
                 <th>Actions</th>
-                <th>Qualification</th>
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td><img src="images/profile.png" class="teacher-photo" /></td>
-                <td>ST001</td>
-                <td>John Doe</td>
-                <td>Male</td>
-                <td>Science</td>
-                <td>john@gmail.com</td>
-                <td>+250 788 000 000</td>
-
-                <td>
-                  <span class="teachers-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="teachers-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="teachers-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="teachers-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-
-                <td>Qualify</td>
-              </tr>
-
-              <tr>
-                <td><img src="images/profile.png" class="teacher-photo" /></td>
-                <td>ST001</td>
-                <td>John Doe</td>
-                <td>Male</td>
-                <td>Science</td>
-                <td>john@gmail.com</td>
-                <td>+250 788 000 000</td>
-
-                <td>
-                  <span class="teachers-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="teachers-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="teachers-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="teachers-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-
-                <td>Not Qualify</td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </section>
       </main>
@@ -232,7 +172,6 @@
       <div class="teacher-modal-content">
         <div class="teacher-modal-header">
           <h2>Add Teacher</h2>
-
           <button id="closeTeacherModal">&times;</button>
         </div>
 
@@ -240,113 +179,151 @@
           <form id="teacherForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Staff ID *</label>
-
-                <input type="text" placeholder="Enter staff ID" />
+                <label for="teacherStaffId">Staff ID *</label>
+                <input
+                  type="text"
+                  id="teacherStaffId"
+                  placeholder="Enter staff ID"
+                  required
+                />
               </div>
 
               <div class="form-group">
-                <label>First name *</label>
-
-                <input type="text" placeholder="Enter first name" />
+                <label for="teacherFirstName">First name *</label>
+                <input
+                  type="text"
+                  id="teacherFirstName"
+                  placeholder="Enter first name"
+                  required
+                />
               </div>
 
               <div class="form-group">
-                <label>Last name *</label>
-
-                <input type="text" placeholder="Enter last name" />
+                <label for="teacherLastName">Last name *</label>
+                <input
+                  type="text"
+                  id="teacherLastName"
+                  placeholder="Enter last name"
+                  required
+                />
               </div>
 
               <div class="form-group">
-                <label>Gender *</label>
-
-                <select>
-                  <option>Select Gender</option>
-                  <option>Male</option>
-                  <option>Female</option>
+                <label for="teacherGender">Gender *</label>
+                <select id="teacherGender" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Date of birth *</label>
-
-                <input type="date" />
+                <label for="teacherDob">Date of birth *</label>
+                <input type="date" id="teacherDob" required />
               </div>
 
               <div class="form-group">
-                <label>Department *</label>
+                <label for="teacherDepartment">Department (Optional)</label>
+                <select id="teacherDepartment"></select>
+              </div>
 
-                <select>
-                  <option>Select department</option>
-                  <option>Science</option>
-                  <option>Mathematics</option>
-                  <option>Languages</option>
-                  <option>Social Studies</option>
-                  <option>ICT</option>
-                  <option>Administration</option>
+              <div class="form-group">
+                <label for="teacherQualification">Qualification *</label>
+                <select id="teacherQualification" required>
+                  <option value="">Select qualification</option>
+                  <option value="Bachelor of Education">
+                    Bachelor of Education
+                  </option>
+                  <option value="Master of Education">
+                    Master of Education
+                  </option>
+                  <option value="Doctor of Education">
+                    Doctor of Education
+                  </option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Qualification *</label>
-
-                <select>
-                  <option>Select qualification</option>
-                  <option>Qualify</option>
-                  <option>Not Qualify</option>
-                </select>
+                <label for="teacherPhone">Phone *</label>
+                <input
+                  type="tel"
+                  id="teacherPhone"
+                  placeholder="077 or 088...."
+                  required
+                />
               </div>
 
               <div class="form-group">
-                <label>Phone *</label>
-
-                <input type="tel" placeholder="+250...." />
-              </div>
-
-              <div class="form-group">
-                <label>Email *</label>
-
-                <input type="email" placeholder="teacher@gmail.com" />
-              </div>
-
-              <div class="form-group">
-                <label>Employment date *</label>
-
-                <input type="date" />
+                <label for="teacherEmail">Email *</label>
+                <input
+                  type="email"
+                  id="teacherEmail"
+                  placeholder="teacher@gmail.com"
+                  required
+                />
               </div>
 
               <div class="form-group full-width">
-                <label>Address (Optional)</label>
-
-                <textarea rows="4" placeholder="Teacher address"></textarea>
+                <label for="teacherAddress">Address (Optional)</label>
+                <textarea
+                  id="teacherAddress"
+                  rows="4"
+                  placeholder="Teacher address"
+                ></textarea>
               </div>
 
               <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>On Leave</option>
-                  <option>Retired</option>
+                <label for="teacherStatus">Status *</label>
+                <select id="teacherStatus" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
 
-              <div class="form-group">
-                <label>Profile photo (Optional)</label>
+              <div class="avatar-upload-group">
+                <label class="form-label">Profile photo (Optional)</label>
+                <div class="avatar-edit-container">
+                  <!-- Current Avatar Preview -->
+                  <div class="avatar-preview-wrapper">
+                    <img
+                      id="teacherPhotoPreview"
+                      src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>"
+                      alt="Teacher Photo Preview"
+                    />
+                  </div>
 
-                <input type="file" />
+                  <!-- Upload Controls -->
+                  <div class="avatar-upload-actions">
+                    <label for="teacherPhoto" class="btn-secondary upload-btn">
+                      <i class="bx bx-upload"></i> Add Photo
+                    </label>
+                    <input
+                      type="file"
+                      id="teacherPhoto"
+                      accept="image/*"
+                      hidden
+                    />
+                    <span id="teacherPhotoFileName" class="file-name-text"
+                      >No file chosen</span
+                    >
+                  </div>
+                </div>
               </div>
 
               <div class="form-group">
-                <label>Role *</label>
-                <select>
-                  <option>Teacher</option>
+                <label for="teacherRole">Role *</label>
+                <select
+                  id="teacherRole"
+                  disabled
+                  style="background-color: #e9ecef"
+                >
+                  <option selected value="Teacher">Teacher</option>
                 </select>
+                <input type="hidden" name="role" value="Teacher" />
               </div>
 
               <div class="form-group">
                 <label for="newPassword">Password *</label>
-
                 <div class="password-field">
                   <input
                     type="password"
@@ -354,7 +331,6 @@
                     placeholder="Enter New Password"
                     required
                   />
-
                   <button
                     type="button"
                     class="toggle-password"
@@ -380,7 +356,6 @@
 
               <div class="form-group">
                 <label for="confirmPassword">Confirm Password *</label>
-
                 <div class="password-field">
                   <input
                     type="password"
@@ -388,7 +363,6 @@
                     placeholder="Confirm Password"
                     required
                   />
-
                   <button
                     type="button"
                     class="toggle-password"
@@ -417,7 +391,6 @@
               <button type="button" class="cancel-btn" id="cancelTeacherModal">
                 Cancel
               </button>
-
               <button type="submit" class="save-btn">Save Teacher</button>
             </div>
           </form>
@@ -551,63 +524,57 @@
       <div class="view-teacher-modal-content">
         <div class="view-teacher-modal-header">
           <h2>Teacher Details</h2>
-
           <button id="closeViewTeacherModal">&times;</button>
         </div>
 
         <div class="view-teacher-body">
           <div class="profile-section">
-            <img src="images/profile.png" class="view-teacher-photo" />
+            <img id="viewTeacherPhoto" class="view-teacher-photo" />
 
-            <h3 id="viewTeacherName">John Doe</h3>
+            <h3 id="viewTeacherName"></h3>
 
-            <span class="view-teacher-status active">Active</span>
+            <span id="viewTeacherStatus" class="view-teacher-status"></span>
           </div>
 
           <div class="details-grid">
             <div class="details-item">
               <label>Staff ID</label>
-              <p>ST001</p>
+              <p id="viewTeacherStaffId"></p>
             </div>
 
             <div class="details-item">
               <label>Gender</label>
-              <p>Male</p>
+              <p id="viewTeacherGender"></p>
             </div>
 
             <div class="details-item">
               <label>Date of birth</label>
-              <p>12 April 2010</p>
+              <p id="viewTeacherDob"></p>
             </div>
 
             <div class="details-item">
               <label>Department</label>
-              <p>Science</p>
+              <p id="viewTeacherDepartment"></p>
             </div>
 
             <div class="details-item">
               <label>Qualification</label>
-              <p>Qualify</p>
+              <p id="viewTeacherQualification"></p>
             </div>
 
             <div class="details-item">
               <label>Phone</label>
-              <p>+250 788 000 000</p>
+              <p id="viewTeacherPhone"></p>
             </div>
 
             <div class="details-item">
               <label>Email</label>
-              <p>teacher@gmail.com</p>
-            </div>
-
-            <div class="details-item">
-              <label>Employment date</label>
-              <p>15 January 2025</p>
+              <p id="viewTeacherEmail"></p>
             </div>
 
             <div class="details-item full-width">
               <label>Address</label>
-              <p>Kigali, Rwanda</p>
+              <p id="viewTeacherAddress"></p>
             </div>
           </div>
 
