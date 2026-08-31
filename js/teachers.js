@@ -274,6 +274,8 @@ document.addEventListener("DOMContentLoaded", () => {
   qualification,
   address,
   date_of_birth,
+  created_at,
+    updated_at,
   departments:department_id (
     id,
     name
@@ -352,9 +354,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------------
   // 4. Action Handlers (View & Archive)
   // ------------------------------------------------------------------
-
   function openViewModal(teacher) {
     const profile = teacher.profiles || {};
+
+    // Helper function to format ISO timestamps into readable strings
+    const formatDate = (dateString) => {
+      if (!dateString) return "-";
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "-";
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    };
 
     // Profile Header Elements
     document.getElementById("viewTeacherName").textContent =
@@ -389,6 +402,14 @@ document.addEventListener("DOMContentLoaded", () => {
       profile.email || "-";
     document.getElementById("viewTeacherAddress").textContent =
       teacher.address || "-";
+
+    // Created At and Updated At Timestamps
+    document.getElementById("viewTeacherCreatedAt").textContent = formatDate(
+      teacher.created_at || profile.created_at,
+    );
+    document.getElementById("viewTeacherUpdatedAt").textContent = formatDate(
+      teacher.updated_at || profile.updated_at,
+    );
 
     // Display Modal
     const viewTeacherModal = document.getElementById("viewTeacherModal");
