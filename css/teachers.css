@@ -836,6 +836,16 @@ tr {
     overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
   }
 
+  input[type="date"],
+  input[type="time"] {
+    -webkit-appearance: none; /* Resets iOS internal formatting */
+    appearance: none;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important; /* Forces input to shrink inside mobile flex containers */
+    box-sizing: border-box;
+  }
+
   @keyframes modalShow {
     from {
       opacity: 0;
