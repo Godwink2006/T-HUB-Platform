@@ -1,17 +1,24 @@
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
-async function loadDepartmentDropdown() {
-  const { data: departments, error } = await supabaseClient
-    .from("departments")
-    .select("id, name")
-    .eq("status", "active");
+let cachedDepartments = [];
 
-  if (error) return;
+async function loadDepartmentDropdown(selectId = "teacherDepartment") {
+  const selectEl = document.getElementById(selectId);
+  if (!selectEl) return;
 
-  const selectEl = document.getElementById("teacherDepartment");
+  // Use cached data if available
+  if (cachedDepartments.length === 0) {
+    const { data: departments, error } = await supabaseClient
+      .from("departments")
+      .select("id, name")
+      .eq("status", "active");
+
+    if (error) return;
+    cachedDepartments = departments || [];
+  }
+
   selectEl.innerHTML = `<option value="">Select Department</option>`;
-
-  departments.forEach((dept) => {
+  cachedDepartments.forEach((dept) => {
     const option = document.createElement("option");
     option.value = dept.id;
     option.textContent = dept.name;
@@ -75,31 +82,44 @@ document.addEventListener("DOMContentLoaded", () => {
       loadDepartmentDropdown();
       teacherForm.reset();
       teacherModal.style.display = "flex";
+      lockBodyScroll();
     });
   }
 
   // Close Add Teacher Modal
-  const hideAddModal = () => (teacherModal.style.display = "none");
+  const hideAddModal = () => {
+    teacherModal.style.display = "none";
+    unLockBodyScroll();
+  };
   if (closeTeacherModal)
     closeTeacherModal.addEventListener("click", hideAddModal);
   if (cancelTeacherModal)
     cancelTeacherModal.addEventListener("click", hideAddModal);
 
   // Close Edit Teacher Modal
-  const hideEditModal = () => (editTeacherModal.style.display = "none");
+  const hideEditModal = () => {
+    editTeacherModal.style.display = "none";
+    unLockBodyScroll();
+  };
   if (closeEditTeacherModal)
     closeEditTeacherModal.addEventListener("click", hideEditModal);
   if (cancelEditTeacherModal)
     cancelEditTeacherModal.addEventListener("click", hideEditModal);
 
   // Close View Teacher Modal
-  const hideViewModal = () => (viewTeacherModal.style.display = "none");
+  const hideViewModal = () => {
+    viewTeacherModal.style.display = "none";
+    unLockBodyScroll();
+  };
   if (closeViewTeacherModal)
     closeViewTeacherModal.addEventListener("click", hideViewModal);
   if (closeViewBtn) closeViewBtn.addEventListener("click", hideViewModal);
 
   // Close Archive Teacher Modal
-  const hideArchiveModal = () => (archiveTeacherModal.style.display = "none");
+  const hideArchiveModal = () => {
+    archiveTeacherModal.style.display = "none";
+    unLockBodyScroll();
+  };
   if (cancelArchive) cancelArchive.addEventListener("click", hideArchiveModal);
 
   // Compress file and return compressed Base64 String
@@ -259,99 +279,103 @@ document.addEventListener("DOMContentLoaded", () => {
   // 3. Data Fetching & Dynamic Table Rendering
   // ------------------------------------------------------------------
 
+  let currentTeachersList = [];
+
   async function loadTeachers() {
     const tbody = document.querySelector(".teachers-table-card tbody");
     if (!tbody) return;
 
+    // Render spinner instantly
+    renderTeachersTableLoading();
+
     try {
-      // Query relational data joining profiles and teachers tables
       const { data: teachers, error } = await supabaseClient.from("teachers")
         .select(`
-  id,
-  staff_id,
-  gender,
-  qualification,
-  address,
-  date_of_birth,
-  created_at,
-    updated_at,
-  departments:department_id (
-    id,
-    name
-  ),
-  profiles:id (
-    full_name,
-    email,
-    phone_number,
-    status,
-    photo_url
-  )
-`);
+        id, staff_id, gender, qualification, address, date_of_birth, created_at, updated_at,
+        departments:department_id ( id, name ),
+        profiles:id ( full_name, email, phone_number, status, photo_url )
+      `);
 
       if (error) throw error;
 
-      tbody.innerHTML = "";
+      currentTeachersList = teachers || [];
 
-      if (!teachers || teachers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No teachers found.</td></tr>`;
+      if (currentTeachersList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No teachers found.</td></tr>`;
         return;
       }
 
-      teachers.forEach((teacher) => {
-        const profile = teacher.profiles || {};
-        const tr = document.createElement("tr");
+      // Yield execution so spinner renders smoothly before heavy table insertion
+      setTimeout(() => {
+        const rowsHtml = currentTeachersList
+          .map((teacher) => {
+            const profile = teacher.profiles || {};
+            return `
+          <tr>
+            <td>
+              <img 
+                src="${profile.photo_url || DEFAULT_AVATAR}" 
+                class="teacher-photo" 
+                alt="Photo" 
+                loading="lazy" 
+                onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';" 
+              />
+            </td>
+            <td>${teacher.staff_id || "-"}</td>
+            <td>${profile.full_name || "-"}</td>
+            <td>${teacher.gender || "-"}</td>
+            <td>${profile.email || "-"}</td>
+            <td>
+              <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
+                ${profile.status || "Active"}
+              </span>
+            </td>
+            <td>
+              <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
+              <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
+              <button class="teachers-actions-btn archive" data-id="${teacher.id}"><i class="fa-solid fa-box-archive"></i></button>
+            </td>
+          </tr>`;
+          })
+          .join("");
 
-        tr.innerHTML = `
-         <td>
-  <img 
-    src="${profile.photo_url || DEFAULT_AVATAR}" 
-    class="teacher-photo" 
-    alt="Photo" 
-    onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';" 
-  />
-</td>
-          <td>${teacher.staff_id || "-"}</td>
-          <td>${profile.full_name || "-"}</td>
-          <td>${teacher.gender || "-"}</td>
-          <td>${teacher.departments?.name || "-"}</td>
-          <td>${profile.email || "-"}</td>
-          <td>${profile.phone_number || "-"}</td>
-          <td>${teacher.qualification || "-"}</td>
-          <td>
-            <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
-              ${profile.status || "Active"}
-            </span>
-          </td>
-          <td>
-            <button class="teachers-actions-btn view" data-id="${teacher.id}">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="teachers-actions-btn edit" data-id="${teacher.id}">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="teachers-actions-btn archive" data-id="${teacher.id}">
-              <i class="fa-solid fa-box-archive"></i>
-            </button>
-          </td>
-        `;
-
-        // Attach action handlers
-        tr.querySelector(".view").addEventListener("click", () =>
-          openViewModal(teacher),
-        );
-        // Attach action handlers
-        tr.querySelector(".edit").addEventListener("click", () =>
-          openEditModal(teacher),
-        );
-        tr.querySelector(".archive").addEventListener("click", () =>
-          openArchiveModal(teacher.id),
-        );
-
-        tbody.appendChild(tr);
-      });
+        tbody.innerHTML = rowsHtml;
+      }, 50);
     } catch (err) {
       console.error("Failed to fetch teachers:", err);
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #ef4444;">Failed to load teachers.</td></tr>`;
     }
+  }
+
+  // Event Delegation for Table Actions
+  document
+    .querySelector(".teachers-table-card tbody")
+    ?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".teachers-actions-btn");
+      if (!btn) return;
+
+      const teacherId = btn.dataset.id;
+      const teacher = currentTeachersList.find((t) => t.id === teacherId);
+      if (!teacher) return;
+
+      if (btn.classList.contains("view")) openViewModal(teacher);
+      else if (btn.classList.contains("edit")) openEditModal(teacher);
+      else if (btn.classList.contains("archive")) openArchiveModal(teacherId);
+    });
+
+  // Helper function to render loading state in the teachers table
+  function renderTeachersTableLoading() {
+    const tbody = document.querySelector(".teachers-table-card tbody");
+    if (!tbody) return;
+
+    tbody.innerHTML = `
+    <tr>
+      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading teachers...
+      </td>
+    </tr>
+  `;
   }
 
   // ------------------------------------------------------------------
@@ -418,12 +442,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const viewTeacherModal = document.getElementById("viewTeacherModal");
     if (viewTeacherModal) {
       viewTeacherModal.style.display = "flex";
+      lockBodyScroll();
     }
   }
 
   function openArchiveModal(id) {
     selectedTeacherId = id;
     archiveTeacherModal.style.display = "flex";
+    lockBodyScroll();
   }
 
   if (confirmArchive) {
@@ -482,6 +508,23 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Close modals when clicking directly on the backdrop/overlay
+  [
+    teacherModal,
+    editTeacherModal,
+    viewTeacherModal,
+    archiveTeacherModal,
+  ].forEach((modal) => {
+    if (!modal) return;
+    modal.addEventListener("click", (e) => {
+      // Only close if the click occurred directly on the backdrop overlay, not inside the modal content box
+      if (e.target === modal) {
+        modal.style.display = "none";
+        unLockBodyScroll();
+      }
+    });
+  });
 });
 
 // Helper function to reset form & image preview when modal closes
@@ -562,6 +605,7 @@ async function openEditModal(teacher) {
 
   // Show Modal
   document.getElementById("editTeacherModal").style.display = "flex";
+  lockBodyScroll();
 }
 
 // File Upload Preview Listener

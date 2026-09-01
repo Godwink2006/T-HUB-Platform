@@ -1,3 +1,7 @@
+/* ==========================================================================
+   1. Base & Global Styles
+   ========================================================================== */
+
 * {
   margin: 0;
   padding: 0;
@@ -6,14 +10,28 @@
 }
 
 body {
+   overflow: hidden; /* Body never scrolls */
   background: rgb(231, 226, 226);
 }
+
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   2. Layout & Sidebar
+   ========================================================================== */
 
 .teachers-container {
   display: flex;
 }
-
-/* Sidebar */
 
 .sidebar {
   width: 260px;
@@ -22,7 +40,6 @@ body {
   position: fixed;
   left: 0;
   top: 0;
-
   background: #1d4ed8;
   color: #fff;
   padding: 25px;
@@ -32,7 +49,6 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
-
   margin-bottom: 40px;
 }
 
@@ -60,12 +76,9 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
-
   color: #fff;
   text-decoration: none;
-
   padding: 14px 16px;
-  border-radius: 12px;
   transition: 0.3s;
 }
 
@@ -83,16 +96,20 @@ body {
   text-align: center;
 }
 
-/* Main Content */
+/* Main Content Containers */
 
 .teachers-main-content {
   margin-left: 260px;
   width: calc(100% - 260px);
-  min-height: 100vh;
+  height: 100vh; /* Constrains element height to viewport */
   padding: 10px;
+  box-sizing: border-box;
+  overflow-y: auto; /* Enables vertical scrolling when content overflows 100vh */
 }
 
-/* Topbar */
+/* ==========================================================================
+   3. Navigation, Topbar & Toolbar
+   ========================================================================== */
 
 .topbar {
   display: flex;
@@ -127,7 +144,6 @@ body {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-
   object-fit: cover;
   cursor: pointer;
 }
@@ -140,6 +156,12 @@ body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  background: #15803d;
+  color: #ffffff;
+  border: 2px solid #14532d;
+}
+
+.add-teachers-btn {
   border: 2px solid rgb(219, 215, 215);
 }
 
@@ -153,18 +175,21 @@ body {
 .toolbar select {
   height: 48px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   padding: 0 15px;
   outline: none;
-  background: #ffff;
+  background: #ffffff;
 }
 
 .toolbar input {
   width: 320px;
 }
 
+/* ==========================================================================
+   4. Tables & Badges
+   ========================================================================== */
+
 .teachers-table-card {
-  background: #ffff;
+  background: #ffffff;
   overflow: hidden;
 }
 
@@ -203,7 +228,6 @@ tr {
 
 .status {
   padding: 6px 14px;
-  border-radius: 30px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -222,7 +246,6 @@ tr {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -242,46 +265,47 @@ tr {
   color: #dc2626;
 }
 
-/* Student modal */
+/* ==========================================================================
+   5. Modals & Forms (Desktop)
+   ========================================================================== */
 
-.modal-teacher {
+.modal-teacher,
+.view-teacher-modal,
+.archive-modal,
+.edit-modal-teacher {
   position: fixed;
   top: 0;
   left: 0;
-
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.45);
-
   display: none;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-.teacher-modal-content {
+.teacher-modal-content,
+.edit-teacher-modal-content {
   overflow: auto;
   width: 850px;
   max-width: 95%;
-  background: #ffff;
-  border-radius: 18px;
+  background: #ffffff;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
 
-@keyframes modalShow {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.view-teacher-modal-content {
+  width: 850px;
+  background: #ffffff;
+  overflow: auto;
+  height: 500px;
+  animation: modalShow 0.25s ease;
 }
 
-.teacher-modal-header {
+.teacher-modal-header,
+.view-teacher-modal-header,
+.edit-teacher-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -289,22 +313,26 @@ tr {
   border: 2px solid rgb(219, 215, 215);
 }
 
-.teacher-modal-header h2 {
+.teacher-modal-header h2,
+.view-teacher-modal-header h2,
+.edit-teacher-modal-header h2 {
   font-size: 22px;
 }
 
-.teacher-modal-header button {
+.teacher-modal-header button,
+.edit-teacher-modal-header button {
   cursor: pointer;
   color: #374151;
   background: #f3f4f6;
-  border-radius: 8px;
   border: none;
   height: 40px;
   width: 40px;
   font-size: 22px;
 }
 
-.teacher-modal-body {
+.teacher-modal-body,
+.view-teacher-body,
+.edit-teacher-modal-body {
   padding: 25px;
 }
 
@@ -332,7 +360,6 @@ tr {
   width: 100%;
   padding: 12px 15px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   outline: none;
   font-size: 15px;
 }
@@ -345,57 +372,80 @@ tr {
   grid-column: 1 / -1;
 }
 
-.teacher-modal-footer {
+.teacher-modal-footer,
+.view-modal-footer,
+.edit-teacher-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 15px;
   margin-top: 30px;
 }
 
+.archive-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 30px;
+}
+
 .cancel-btn {
   padding: 12px 22px;
-  border: none;
-  border-radius: 10px;
-  background: #e5e7eb;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   cursor: pointer;
 }
 
-.save-btn {
+.save-btn,
+.edit-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
-  color: #ffff;
+  color: #ffffff;
   cursor: pointer;
 }
 
-.view-teacher-modal-content {
-  width: 850px;
-  background: #ffff;
-  border-radius: 18px;
-  overflow: auto;
-  height: 500px;
+.archive-confirm-btn {
+  padding: 12px 22px;
+  border: none;
+  background: #dc2626;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+/* Confirmation Modal Specifics */
+
+.confirm-modal {
+  width: 430px;
+  background: #ffffff;
+  padding: 35px;
+  text-align: center;
   animation: modalShow 0.25s ease;
 }
 
-.view-teacher-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
+.confirm-icon {
+  width: 70px;
+  height: 70px;
+  background: #fee2e2;
+  color: #dc2626;
+  margin: auto;
+  display: flex;
   align-items: center;
-  z-index: 1000;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 20px;
 }
 
-.view-teacher-body {
-  padding: 30px;
+.confirm-modal h2 {
+  margin-bottom: 15px;
 }
+
+.confirm-modal p {
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* Detailed Profile View Mechanics */
 
 .profile-section {
   text-align: center;
@@ -434,189 +484,45 @@ tr {
 .details-item {
   display: flex;
   flex-direction: column;
-  min-width: 0; /* Prevents grid items from expanding past 1fr width */
-  word-break: break-word; /* Forces long text or emails to wrap */
+  min-width: 0;
+  word-break: break-word;
 }
 
-.view-teacher-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
-}
-
-.view-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
+.details-item label {
+  font-size: 13px;
 }
 
 #closeViewTeacherModal {
-  border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
-  border-radius: 8px;
   border: none;
   height: 40px;
   width: 40px;
   font-size: 22px;
 }
 
-/* Base Status Badge */
+/* Status Badges */
+
 .view-teacher-status {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 10px;
   font-size: 1rem;
   font-weight: 600;
-  border-radius: 20px;
   text-transform: capitalize;
   text-align: center;
 }
 
-/* Active State (Green) */
 .view-teacher-status.active {
   background-color: #e6f4ea;
   color: #137333;
 }
 
-/* Inactive State (Red/Gray) */
 .view-teacher-status.inactive {
   background-color: #fce8e6;
   color: #c5221f;
 }
 
-.confirm-modal {
-  width: 430px;
-  background: #ffff;
-  border-radius: 18px;
-  padding: 35px;
-  text-align: center;
-  animation: modalShow 0.25s ease;
-}
-
-.confirm-icon {
-  width: 70px;
-  height: 70px;
-  background: #fee2e2;
-  color: #dc2626;
-  border-radius: 50%;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  margin-bottom: 20px;
-}
-
-.confirm-modal h2 {
-  margin-bottom: 15px;
-}
-
-.confirm-modal p {
-  line-height: 1.6;
-  color: #6b7280;
-}
-
-.archive-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 10px;
-  background: #dc2626;
-  color: #ffff;
-  cursor: pointer;
-}
-
-.archive-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.archive-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
-.edit-modal-teacher {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.edit-teacher-modal-content {
-  overflow: auto;
-  width: 850px;
-  max-width: 95%;
-  background: #ffff;
-  border-radius: 18px;
-  animation: modalShow 0.25s ease;
-  height: 500px;
-}
-
-.edit-teacher-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
-}
-
-.edit-teacher-modal-header h2 {
-  font-size: 22px;
-}
-
-.edit-teacher-modal-header button {
-  cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
-  border: none;
-  height: 40px;
-  width: 40px;
-  font-size: 22px;
-}
-
-.edit-teacher-modal-body {
-  padding: 25px;
-}
-
-.edit-teacher-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-}
-
-.edit-btn {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 10px;
-  background: #2563eb;
-  color: #ffff;
-  cursor: pointer;
-}
+/* Password Visibility Toggler */
 
 .password-field {
   position: relative;
@@ -643,400 +549,8 @@ tr {
   color: #333;
 }
 
-@media screen and (max-width: 768px) {
-  .confirm-icon {
-    border-radius: 10px;
-    padding: 10px;
-  }
+/* Avatar Upload Components */
 
-  .view-teacher-status {
-    border-radius: 10px;
-    padding: 10px;
-    margin-top: 10px;
-  }
-
-  .upload-btn,
-  .avatar-edit-container {
-    border-radius: 10px;
-  }
-
-  .archive-confirm-btn {
-    padding: 12px 22px;
-    border: none;
-    background: #dc2626;
-    color: #ffff;
-    cursor: pointer;
-    border-radius: 10px;
-  }
-
-  .confirm-modal {
-    display: flex;
-    flex-direction: column;
-    max-width: 350px;
-    height: 390px; /* Fixed height requirement */
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
-  }
-
-  .teachers-status-active {
-    background: #dcfce7;
-    color: #166534;
-    padding: 10px;
-    border-radius: 10px;
-  }
-
-  .teachers-status-inactive {
-    background: #fcdcdc;
-    color: #651616;
-    padding: 10px;
-    border-radius: 10px;
-  }
-
-  .teachers-actions-btn {
-    width: 38px;
-    height: 38px;
-    border: none;
-    cursor: pointer;
-    margin-right: 6px;
-    border-radius: 10px;
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
-  }
-
-  body {
-    background: rgb(231, 226, 226);
-  }
-
-  .topbar h1,
-  .topbar p {
-    grid-column: 1 / -1;
-    margin: 0;
-  }
-
-  .topbar {
-    align-items: center !important;
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    gap: 10px 12px !important;
-  }
-
-  .topbar h1 {
-    font-size: 24px;
-    color: #1f2937;
-  }
-
-  .topbar p {
-    color: #6b7280;
-    margin-top: 2px;
-    font-size: 13px;
-  }
-
-  /* Back and Add User Buttons on the Same Line */
-  .top-right {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 10px !important;
-    width: 100% !important;
-  }
-
-  .back-academic-settings-btn {
-    grid-column: 1;
-    width: auto !important;
-    height: 40px !important;
-    padding: 0 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: 1px solid rgb(219, 215, 215);
-    background: #1f2937;
-    color: #f9fafb;
-    font-size: 13px;
-    white-space: nowrap;
-    border-radius: 10px;
-  }
-
-  .add-teachers-btn {
-    grid-column: 2;
-    background: #15803d;
-    color: #ffffff;
-    flex: 1 !important;
-    height: 40px !important;
-    padding: 0 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    border: 2px solid #14532d;
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-    border-radius: 10px;
-  }
-
-  /* --- Toolbar Inputs in a Single Horizontal Row --- */
-
-  .toolbar {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    margin: 10px 0;
-    width: 100%;
-  }
-
-  .toolbar input,
-  .toolbar select {
-    height: 40px;
-    border: 1.5px solid rgb(219, 215, 215);
-    padding: 0 8px;
-    outline: none;
-    background: #ffffff;
-    font-size: 12px;
-    flex: 1;
-    min-width: 0; /* Prevents overflow inside flex containers */
-    border-radius: 10px;
-  }
-
-  .teachers-table-card {
-    background: #ffffff;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 500px; /* Ensures table doesn't shrink too much on small screens */
-  }
-
-  thead {
-    background: #f8fafc;
-    border: 1.5px solid rgb(219, 215, 215);
-  }
-
-  th {
-    padding: 8px 10px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    border: 1.5px solid rgb(219, 215, 215);
-    white-space: nowrap;
-  }
-
-  th,
-  td {
-    padding: 12px 14px !important;
-    font-size: 14px !important;
-  }
-
-  td {
-    padding: 8px 10px;
-    font-size: 12px;
-    border: 1.5px solid rgb(219, 215, 215);
-    white-space: nowrap;
-  }
-
-  tr {
-    border: 1.5px solid rgb(219, 215, 215);
-  }
-
-  .edit-teacher-modal-content,
-  .teacher-modal-content,
-  .view-teacher-modal-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 600px; /* Fixed height requirement */
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
-  }
-
-  @keyframes modalShow {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .teacher-modal-header,
-  .view-teacher-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
-  }
-
-  .teacher-modal-header h2,
-  .view-teacher-modal-header h2 {
-    font-size: 18px;
-  }
-
-  .teacher-modal-header button {
-    cursor: pointer;
-    color: #f9fafb;
-    border: none;
-    height: 34px;
-    border-radius: 10px !important;
-    width: 34px;
-    font-size: 16px;
-    background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-  }
-
-  .teacher-modal-body,
-  .view-teacher-body {
-    padding: 20px;
-    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
-    flex: 1;
-  }
-
-  .edit-teacher-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
-  }
-
-  .edit-teacher-modal-header h2 {
-    font-size: 18px;
-  }
-
-  .edit-teacher-modal-header button {
-    cursor: pointer;
-    color: #f9fafb;
-    border: none;
-    height: 34px;
-    border-radius: 10px;
-    width: 34px;
-    font-size: 16px;
-    background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-  }
-
-  .edit-teacher-modal-body {
-    padding: 20px;
-    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
-    flex: 1;
-  }
-
-  /* Horizontal Modal Action Buttons with Space Between */
-  .edit-teacher-modal-footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
-  }
-
-  /* Horizontal Modal Action Buttons with Space Between */
-  .teacher-modal-footer,
-  .view-modal-footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
-  }
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .form-group label {
-    margin-bottom: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1.5px solid rgb(219, 215, 215);
-    outline: none;
-    font-size: 13px;
-    border-radius: 10px;
-  }
-
-  .form-group textarea {
-    resize: none;
-  }
-
-  .full-width {
-    grid-column: 1 / -1;
-  }
-
-  .cancel-btn,
-  .save-btn {
-    flex: 1;
-    padding: 10px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
-    justify-content: space-between;
-  }
-
-  .edit-btn {
-    flex: 1;
-    padding: 10px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
-    justify-content: space-between;
-  }
-
-  .cancel-btn {
-    background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
-  }
-
-  .save-btn {
-    background: #2563eb;
-    color: #ffffff;
-  }
-}
-
-/* Avatar Section Wrapper */
 .avatar-upload-group {
   display: flex;
   flex-direction: column;
@@ -1049,7 +563,6 @@ tr {
   color: #334155;
 }
 
-/* Flex Row for Preview + Actions */
 .avatar-edit-container {
   display: flex;
   align-items: center;
@@ -1059,7 +572,6 @@ tr {
   border: 1px solid #e2e8f0;
 }
 
-/* Circular Avatar Frame */
 .avatar-preview-wrapper {
   width: 70px;
   height: 70px;
@@ -1076,7 +588,6 @@ tr {
   object-fit: cover;
 }
 
-/* Column for Upload Button + File Name */
 .avatar-upload-actions {
   display: flex;
   flex-direction: column;
@@ -1084,7 +595,6 @@ tr {
   gap: 0.4rem;
 }
 
-/* Custom Upload Button Styling */
 .upload-btn {
   display: inline-flex;
   align-items: center;
@@ -1108,7 +618,6 @@ tr {
   font-size: 1.1rem;
 }
 
-/* File name span styling */
 .file-name-text {
   font-size: 0.75rem;
   color: #64748b;
@@ -1119,5 +628,239 @@ tr {
   margin: 0;
   display: block;
   width: 100%;
-  max-width: 150px; /* Constrains max width to prevent horizontal modal scroll */
+  max-width: 150px;
+}
+
+/* ==========================================================================
+   6. Mobile Responsive Adjustments (max-width: 768px)
+   ========================================================================== */
+
+@media screen and (max-width: 768px) {
+  /* Responsive Topbar */
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px 12px !important;
+    align-items: center !important;
+  }
+
+  .topbar h1,
+  .topbar p {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .topbar h1 {
+    font-size: 24px;
+  }
+
+  .topbar p {
+    margin-top: 2px;
+    font-size: 13px;
+  }
+
+  .top-right {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .add-teachers-btn {
+    grid-column: 2;
+    background: #15803d;
+    color: #ffffff;
+    flex: 1 !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    border: 2px solid #14532d;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin: 10px 0;
+    width: 100%;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    height: 40px;
+    border: 1.5px solid rgb(219, 215, 215);
+    padding: 0 8px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+    border-radius: 10px;
+  }
+
+  /* Responsive Table */
+  .teachers-table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  table {
+    min-width: 500px;
+  }
+
+  thead {
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  th,
+  td {
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    border: 1.5px solid rgb(219, 215, 215);
+    white-space: nowrap;
+  }
+
+  tr {
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .teachers-status-active {
+    background: #dcfce7;
+    color: #166534;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .teachers-status-inactive {
+    background: #fcdcdc;
+    color: #651616;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .teachers-actions-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  /* Responsive Modals */
+  .modal-systemUser {
+    padding: 16px;
+  }
+
+  .edit-teacher-modal-content,
+  .teacher-modal-content,
+  .view-teacher-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 600px;
+    max-height: 85vh;
+    border-radius: 10px;
+    overflow: auto;
+  }
+
+  .confirm-modal {
+    display: flex;
+    flex-direction: column;
+    max-width: 350px;
+    height: 390px;
+    max-height: 85vh;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .teacher-modal-header,
+  .view-teacher-modal-header,
+  .edit-teacher-modal-header {
+    padding: 14px 20px;
+    border-bottom: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .teacher-modal-header h2,
+  .view-teacher-modal-header h2,
+  .edit-teacher-modal-header h2 {
+    font-size: 18px;
+  }
+
+  .teacher-modal-header button,
+  .edit-teacher-modal-header button {
+    height: 34px;
+    width: 34px;
+    font-size: 16px;
+    border-radius: 10px !important;
+  }
+
+  .teacher-modal-body,
+  .view-teacher-body,
+  .edit-teacher-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .teacher-modal-footer,
+  .view-modal-footer,
+  .edit-teacher-modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-group label {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px;
+    border: 1.5px solid rgb(219, 215, 215);
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .cancel-btn,
+  .save-btn,
+  .edit-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .confirm-icon,
+  .view-teacher-status,
+  .upload-btn,
+  .avatar-edit-container,
+  .archive-confirm-btn {
+    border-radius: 10px;
+  }
+
+  .view-teacher-status {
+    padding: 10px;
+    margin-top: 10px;
+  }
 }
