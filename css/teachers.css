@@ -849,11 +849,15 @@ tr {
     font-weight: 500;
   }
 
-  .confirm-icon,
   .view-teacher-status,
   .upload-btn,
   .avatar-edit-container,
   .archive-confirm-btn {
+    border-radius: 10px;
+  }
+
+  .confirm-icon {
+    padding: 10px;
     border-radius: 10px;
   }
 
