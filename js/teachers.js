@@ -96,16 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (cancelTeacherModal)
     cancelTeacherModal.addEventListener("click", hideAddModal);
 
-  // Close Edit Teacher Modal
-  const hideEditModal = () => {
-    editTeacherModal.style.display = "none";
-    unLockBodyScroll();
-  };
-  if (closeEditTeacherModal)
-    closeEditTeacherModal.addEventListener("click", hideEditModal);
-  if (cancelEditTeacherModal)
-    cancelEditTeacherModal.addEventListener("click", hideEditModal);
-
   // Close View Teacher Modal
   const hideViewModal = () => {
     viewTeacherModal.style.display = "none";
@@ -114,13 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (closeViewTeacherModal)
     closeViewTeacherModal.addEventListener("click", hideViewModal);
   if (closeViewBtn) closeViewBtn.addEventListener("click", hideViewModal);
-
-  // Close Archive Teacher Modal
-  const hideArchiveModal = () => {
-    archiveTeacherModal.style.display = "none";
-    unLockBodyScroll();
-  };
-  if (cancelArchive) cancelArchive.addEventListener("click", hideArchiveModal);
 
   // Compress file and return compressed Base64 String
   function compressToBase64(file, maxWidth = 800, quality = 0.7) {
@@ -275,204 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ------------------------------------------------------------------
-  // 3. Data Fetching & Dynamic Table Rendering
-  // ------------------------------------------------------------------
-
-  let currentTeachersList = [];
-
-  async function loadTeachers() {
-    const tbody = document.querySelector(".teachers-table-card tbody");
-    if (!tbody) return;
-
-    // Render spinner instantly
-    renderTeachersTableLoading();
-
-    try {
-      const { data: teachers, error } = await supabaseClient.from("teachers")
-        .select(`
-        id, staff_id, gender, qualification, address, date_of_birth, created_at, updated_at,
-        departments:department_id ( id, name ),
-        profiles:id ( full_name, email, phone_number, status, photo_url )
-      `);
-
-      if (error) throw error;
-
-      currentTeachersList = teachers || [];
-
-      if (currentTeachersList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No teachers found.</td></tr>`;
-        return;
-      }
-
-      // Yield execution so spinner renders smoothly before heavy table insertion
-      setTimeout(() => {
-        const rowsHtml = currentTeachersList
-          .map((teacher) => {
-            const profile = teacher.profiles || {};
-            return `
-          <tr>
-            <td>
-              <img 
-                src="${profile.photo_url || DEFAULT_AVATAR}" 
-                class="teacher-photo" 
-                alt="Photo" 
-                loading="lazy" 
-                onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';" 
-              />
-            </td>
-            <td>${teacher.staff_id || "-"}</td>
-            <td>${profile.full_name || "-"}</td>
-            <td>${teacher.gender || "-"}</td>
-            <td>${profile.email || "-"}</td>
-            <td>
-              <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
-                ${profile.status || "Active"}
-              </span>
-            </td>
-            <td>
-              <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
-              <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
-              <button class="teachers-actions-btn archive" data-id="${teacher.id}"><i class="fa-solid fa-box-archive"></i></button>
-            </td>
-          </tr>`;
-          })
-          .join("");
-
-        tbody.innerHTML = rowsHtml;
-      }, 50);
-    } catch (err) {
-      console.error("Failed to fetch teachers:", err);
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #ef4444;">Failed to load teachers.</td></tr>`;
-    }
-  }
-
-  // Event Delegation for Table Actions
-  document
-    .querySelector(".teachers-table-card tbody")
-    ?.addEventListener("click", (e) => {
-      const btn = e.target.closest(".teachers-actions-btn");
-      if (!btn) return;
-
-      const teacherId = btn.dataset.id;
-      const teacher = currentTeachersList.find((t) => t.id === teacherId);
-      if (!teacher) return;
-
-      if (btn.classList.contains("view")) openViewModal(teacher);
-      else if (btn.classList.contains("edit")) openEditModal(teacher);
-      else if (btn.classList.contains("archive")) openArchiveModal(teacherId);
-    });
-
-  // Helper function to render loading state in the teachers table
-  function renderTeachersTableLoading() {
-    const tbody = document.querySelector(".teachers-table-card tbody");
-    if (!tbody) return;
-
-    tbody.innerHTML = `
-    <tr>
-      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
-        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
-        Loading teachers...
-      </td>
-    </tr>
-  `;
-  }
-
-  // ------------------------------------------------------------------
-  // 4. Action Handlers (View & Archive)
-  // ------------------------------------------------------------------
-  function openViewModal(teacher) {
-    const profile = teacher.profiles || {};
-
-    // Helper function to format ISO timestamps into readable strings
-    const formatDate = (dateString) => {
-      if (!dateString) return "-";
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "-";
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    };
-
-    // Profile Header Elements
-    document.getElementById("viewTeacherName").textContent =
-      profile.full_name || "-";
-    const photoEl = document.getElementById("viewTeacherPhoto");
-    photoEl.src = profile.photo_url || DEFAULT_AVATAR;
-    photoEl.onerror = function () {
-      this.onerror = null;
-      this.src = DEFAULT_AVATAR;
-    };
-
-    // Status Badge Handling
-    const statusElement = document.getElementById("viewTeacherStatus");
-    const currentStatus = profile.status || teacher.status || "Active";
-    statusElement.textContent = currentStatus;
-    statusElement.className = `view-teacher-status ${currentStatus.toLowerCase()}`;
-
-    // Grid Details Elements
-    document.getElementById("viewTeacherStaffId").textContent =
-      teacher.staff_id || "-";
-    document.getElementById("viewTeacherGender").textContent =
-      teacher.gender || "-";
-    document.getElementById("viewTeacherDob").textContent =
-      teacher.date_of_birth || "-";
-    document.getElementById("viewTeacherDepartment").textContent =
-      teacher.departments?.name || teacher.department || "-";
-    document.getElementById("viewTeacherQualification").textContent =
-      teacher.qualification || "-";
-    document.getElementById("viewTeacherPhone").textContent =
-      profile.phone_number || "-";
-    document.getElementById("viewTeacherEmail").textContent =
-      profile.email || "-";
-    document.getElementById("viewTeacherAddress").textContent =
-      teacher.address || "-";
-
-    // Created At and Updated At Timestamps
-    document.getElementById("viewTeacherCreatedAt").textContent = formatDate(
-      teacher.created_at || profile.created_at,
-    );
-    document.getElementById("viewTeacherUpdatedAt").textContent = formatDate(
-      teacher.updated_at || profile.updated_at,
-    );
-
-    // Display Modal
-    const viewTeacherModal = document.getElementById("viewTeacherModal");
-    if (viewTeacherModal) {
-      viewTeacherModal.style.display = "flex";
-      lockBodyScroll();
-    }
-  }
-
-  function openArchiveModal(id) {
-    selectedTeacherId = id;
-    archiveTeacherModal.style.display = "flex";
-    lockBodyScroll();
-  }
-
-  if (confirmArchive) {
-    confirmArchive.addEventListener("click", async () => {
-      if (!selectedTeacherId) return;
-
-      try {
-        const { error } = await supabaseClient
-          .from("profiles")
-          .update({ status: "Inactive" })
-          .eq("id", selectedTeacherId);
-
-        if (error) throw error;
-
-        hideArchiveModal();
-        loadTeachers();
-      } catch (err) {
-        console.error("Archive operation failed:", err);
-        alert("Failed to archive teacher record.");
-      }
-    });
-  }
-
   // Initial Data Fetch
   loadTeachers();
   loadDepartmentDropdown();
@@ -527,85 +312,156 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// ------------------------------------------------------------------
+// 4. Action Handlers (View & Archive)
+// ------------------------------------------------------------------
+function openViewModal(teacher) {
+  const profile = teacher.profiles || {};
+
+  // Helper function to format ISO timestamps into readable strings
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "-";
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Profile Header Elements
+  document.getElementById("viewTeacherName").textContent =
+    profile.full_name || "-";
+  const photoEl = document.getElementById("viewTeacherPhoto");
+  photoEl.src = profile.photo_url || DEFAULT_AVATAR;
+  photoEl.onerror = function () {
+    this.onerror = null;
+    this.src = DEFAULT_AVATAR;
+  };
+
+  // Status Badge Handling
+  const statusElement = document.getElementById("viewTeacherStatus");
+  const currentStatus = profile.status || teacher.status || "Active";
+  statusElement.textContent = currentStatus;
+  statusElement.className = `view-teacher-status ${currentStatus.toLowerCase()}`;
+
+  // Grid Details Elements
+  document.getElementById("viewTeacherStaffId").textContent =
+    teacher.staff_id || "-";
+  document.getElementById("viewTeacherGender").textContent =
+    teacher.gender || "-";
+  document.getElementById("viewTeacherDob").textContent =
+    teacher.date_of_birth || "-";
+  document.getElementById("viewTeacherDepartment").textContent =
+    teacher.departments?.name || teacher.department || "-";
+  document.getElementById("viewTeacherQualification").textContent =
+    teacher.qualification || "-";
+  document.getElementById("viewTeacherPhone").textContent =
+    profile.phone_number || "-";
+  document.getElementById("viewTeacherEmail").textContent =
+    profile.email || "-";
+  document.getElementById("viewTeacherAddress").textContent =
+    teacher.address || "-";
+
+  // Created At and Updated At Timestamps
+  document.getElementById("viewTeacherCreatedAt").textContent = formatDate(
+    teacher.created_at || profile.created_at,
+  );
+  document.getElementById("viewTeacherUpdatedAt").textContent = formatDate(
+    teacher.updated_at || profile.updated_at,
+  );
+
+  // Display Modal
+  const viewTeacherModal = document.getElementById("viewTeacherModal");
+  if (viewTeacherModal) {
+    viewTeacherModal.style.display = "flex";
+    lockBodyScroll();
+  }
+}
+
+// Close Archive Teacher Modal
+const hideArchiveModal = () => {
+  const archiveTeacherModal = document.getElementById("archiveTeacherModal");
+  if (archiveTeacherModal) {
+    archiveTeacherModal.style.display = "none";
+  }
+  unLockBodyScroll();
+};
+
+const cancelArchive = document.getElementById("cancelArchive");
+if (cancelArchive) {
+  cancelArchive.addEventListener("click", hideArchiveModal);
+}
+
+function openArchiveModal(id, teacherName = "this teacher") {
+  selectedTeacherId = id;
+
+  const nameElement = document.getElementById("archiveTeacherName");
+  if (nameElement) {
+    nameElement.textContent = teacherName;
+  }
+
+  const archiveTeacherModal = document.getElementById("archiveTeacherModal");
+  if (archiveTeacherModal) {
+    archiveTeacherModal.style.display = "flex";
+    lockBodyScroll();
+  }
+}
+
+const confirmArchive = document.getElementById("confirmArchive");
+if (confirmArchive) {
+  confirmArchive.addEventListener("click", async () => {
+    if (!selectedTeacherId) {
+      showToast("No teacher selected for archiving.", "error");
+      return;
+    }
+
+    confirmArchive.disabled = true;
+    confirmArchive.textContent = "Archiving...";
+
+    try {
+      // 1. Mark teacher as archived in `teachers` table
+      const { error: teacherErr } = await supabaseClient
+        .from("teachers")
+        .update({
+          is_archived: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", selectedTeacherId);
+
+      if (teacherErr) throw teacherErr;
+
+      // 2. Mark profile as archived and set status to inactive
+      const { error: profileErr } = await supabaseClient
+        .from("profiles")
+        .update({
+          status: "inactive",
+          is_archived: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", selectedTeacherId);
+
+      if (profileErr) throw profileErr;
+
+      showToast("Teacher archived successfully!", "success");
+      hideArchiveModal();
+      loadTeachers();
+    } catch (err) {
+      console.error("Archive operation failed:", err);
+      showToast(err.message || "Failed to archive teacher record.", "error");
+    } finally {
+      confirmArchive.disabled = false;
+      confirmArchive.textContent = "Archive";
+    }
+  });
+}
+
 // Helper function to reset form & image preview when modal closes
 function resetTeacherForm() {
   if (teacherForm) teacherForm.reset();
   const previewImg = document.getElementById("teacherPhotoPreview");
   if (previewImg) previewImg.src = DEFAULT_AVATAR;
-}
-
-let originalTeacherData = null; // Track baseline values for change detection
-
-async function openEditModal(teacher) {
-  selectedTeacherId = teacher.id;
-  const profile = teacher.profiles || {};
-
-  // 1. Populate the Department dropdown FIRST and wait for options to build
-  await loadDepartmentDropdown("editTeacherDepartment");
-
-  // 2. Parse Name Split
-  const fullNameParts = (profile.full_name || "").trim().split(" ");
-  const firstName = fullNameParts[0] || "";
-  const lastName = fullNameParts.slice(1).join(" ") || "";
-
-  // 3. Assign Field Values
-  document.getElementById("editTeacherStaffId").value = teacher.staff_id || "";
-  document.getElementById("editTeacherFirstName").value = firstName;
-  document.getElementById("editTeacherLastName").value = lastName;
-  document.getElementById("editTeacherGender").value = teacher.gender || "";
-  document.getElementById("editTeacherDob").value = teacher.date_of_birth || "";
-
-  // Extract Department ID safely across all Supabase join structures
-  let deptId = teacher.department_id || "";
-
-  if (!deptId && teacher.departments) {
-    if (Array.isArray(teacher.departments) && teacher.departments.length > 0) {
-      deptId = teacher.departments[0].id;
-    } else if (typeof teacher.departments === "object") {
-      deptId = teacher.departments.id;
-    }
-  }
-
-  // Assign to dropdown after options are loaded
-  document.getElementById("editTeacherDepartment").value = deptId || "";
-
-  document.getElementById("editTeacherQualification").value =
-    teacher.qualification || "";
-  document.getElementById("editTeacherPhone").value =
-    profile.phone_number || "";
-
-  // Match casing for Status dropdown
-  const statusValue = profile.status || teacher.status || "Active";
-  const statusSelect = document.getElementById("editTeacherStatus");
-  statusSelect.value =
-    statusValue.charAt(0).toUpperCase() + statusValue.slice(1).toLowerCase();
-
-  document.getElementById("editTeacherAddress").value = teacher.address || "";
-
-  // 4. Set Photo Preview
-  const previewImg = document.getElementById("editTeacherPhotoPreview");
-  previewImg.src = profile.photo_url || DEFAULT_AVATAR;
-  document.getElementById("editTeacherPhotoFileName").textContent =
-    "No new file chosen";
-  document.getElementById("editTeacherPhoto").value = "";
-
-  // Store Baseline State for Change Detection
-  originalTeacherData = {
-    firstName,
-    lastName,
-    gender: teacher.gender || "",
-    date_of_birth: teacher.date_of_birth || "",
-    department_id: deptId,
-    qualification: teacher.qualification || "",
-    phone_number: profile.phone_number || "",
-    status: statusSelect.value,
-    address: teacher.address || "",
-    photo_url: profile.photo_url || "",
-  };
-
-  // Show Modal
-  document.getElementById("editTeacherModal").style.display = "flex";
-  lockBodyScroll();
 }
 
 // File Upload Preview Listener
@@ -626,11 +482,118 @@ if (editPhotoInput) {
   });
 }
 
+// Close Edit Teacher Modal
+const hideEditModal = () => {
+  editTeacherModal.style.display = "none";
+  unLockBodyScroll();
+};
+if (closeEditTeacherModal)
+  closeEditTeacherModal.addEventListener("click", hideEditModal);
+if (cancelEditTeacherModal)
+  cancelEditTeacherModal.addEventListener("click", hideEditModal);
+
+let originalTeacherData = null;
+
+async function openEditModal(teacher) {
+  // Resolve ID across potential schema variants (prefers teacher.id, falls back to profile.id)
+  const resolvedId = teacher.id || teacher.profiles?.id;
+  selectedTeacherId = resolvedId;
+
+  // Set the dataset attribute on the form element
+  const editForm = document.getElementById("editTeacherForm");
+  if (editForm) {
+    editForm.dataset.teacherId = resolvedId;
+  }
+
+  const profile = teacher.profiles || {};
+
+  // Populate Department dropdown with active departments
+  await loadDepartmentDropdown("editTeacherDepartment");
+
+  // Parse Name Split
+  const fullNameParts = (profile.full_name || "").trim().split(" ");
+  const firstName = fullNameParts[0] || "";
+  const lastName = fullNameParts.slice(1).join(" ") || "";
+
+  // Assign Field Values
+  document.getElementById("editTeacherStaffId").value = teacher.staff_id || "";
+  document.getElementById("editTeacherFirstName").value = firstName;
+  document.getElementById("editTeacherLastName").value = lastName;
+  document.getElementById("editTeacherGender").value = teacher.gender || "";
+  document.getElementById("editTeacherDob").value = teacher.date_of_birth || "";
+
+  // Extract Department ID
+  let deptId = teacher.department_id || "";
+  if (!deptId && teacher.departments) {
+    if (Array.isArray(teacher.departments) && teacher.departments.length > 0) {
+      deptId = teacher.departments[0].id;
+    } else if (typeof teacher.departments === "object") {
+      deptId = teacher.departments.id;
+    }
+  }
+
+  document.getElementById("editTeacherDepartment").value = deptId || "";
+  document.getElementById("editTeacherQualification").value =
+    teacher.qualification || "";
+  document.getElementById("editTeacherPhone").value =
+    profile.phone_number || "";
+
+  // Normalize Status value matching
+  const statusValue = profile.status || teacher.status || "Active";
+  const statusSelect = document.getElementById("editTeacherStatus");
+  statusSelect.value =
+    statusValue.charAt(0).toUpperCase() + statusValue.slice(1).toLowerCase();
+
+  document.getElementById("editTeacherAddress").value = teacher.address || "";
+
+  // Set Photo Preview
+  const previewImg = document.getElementById("editTeacherPhotoPreview");
+  if (previewImg) {
+    previewImg.src = profile.photo_url || DEFAULT_AVATAR;
+  }
+  const photoFileNameEl = document.getElementById("editTeacherPhotoFileName");
+  if (photoFileNameEl) {
+    photoFileNameEl.textContent = "No new file chosen";
+  }
+  const photoInput = document.getElementById("editTeacherPhoto");
+  if (photoInput) {
+    photoInput.value = "";
+  }
+
+  // Store Baseline State for Change Detection
+  originalTeacherData = {
+    firstName,
+    lastName,
+    gender: teacher.gender || "",
+    date_of_birth: teacher.date_of_birth || "",
+    department_id: deptId,
+    qualification: teacher.qualification || "",
+    phone_number: profile.phone_number || "",
+    status: statusSelect.value,
+    address: teacher.address || "",
+    photo_url: profile.photo_url || "",
+  };
+
+  // Display Edit Modal
+  const editTeacherModal = document.getElementById("editTeacherModal");
+  if (editTeacherModal) {
+    editTeacherModal.style.display = "flex";
+    lockBodyScroll();
+  }
+}
+
 // Edit Form Submit Listener
 const editTeacherForm = document.getElementById("editTeacherForm");
 if (editTeacherForm) {
   editTeacherForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    const teacherId = editTeacherForm.dataset.teacherId || selectedTeacherId;
+
+    if (!teacherId) {
+      showToast("Invalid teacher selection.", "error");
+      return;
+    }
 
     const submitBtn = editTeacherForm.querySelector('button[type="submit"]');
 
@@ -645,10 +608,11 @@ if (editTeacherForm) {
 
       let photoBase64 = null;
       if (photoInput && photoInput.files.length > 0) {
+        // Compress image using the same configuration as the create handler
         photoBase64 = await compressToBase64(photoInput.files[0], 800, 0.7);
       }
 
-      // Current values object
+      // Collect current form input state
       const currentValues = {
         firstName,
         lastName,
@@ -662,11 +626,13 @@ if (editTeacherForm) {
         address: document.getElementById("editTeacherAddress").value.trim(),
       };
 
-      // Detect Changes: Compare current inputs against original stored state
+      // Detect if user made any modified inputs or provided a new image
       const hasPhotoChanged = photoBase64 !== null;
-      const hasDataChanged = Object.keys(currentValues).some(
-        (key) => currentValues[key] !== originalTeacherData[key],
-      );
+      const hasDataChanged =
+        originalTeacherData &&
+        Object.keys(currentValues).some(
+          (key) => currentValues[key] !== originalTeacherData[key],
+        );
 
       if (!hasDataChanged && !hasPhotoChanged) {
         showToast("No changes detected.", "info");
@@ -677,9 +643,9 @@ if (editTeacherForm) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Updating...";
 
-      // Construct Payload for Edge Function (Excludes staff_id)
+      // Construct Payload aligned with backend conventions
       const payload = {
-        teacher_id: selectedTeacherId,
+        teacher_id: teacherId,
         full_name: `${firstName} ${lastName}`.trim(),
         gender: currentValues.gender,
         date_of_birth: currentValues.date_of_birth,
@@ -688,17 +654,18 @@ if (editTeacherForm) {
         phone_number: currentValues.phone_number,
         status: currentValues.status,
         address: currentValues.address,
-        photo: photoBase64, // null if photo hasn't changed
+        photo: photoBase64,
       };
 
-      // Get Authentication JWT Token
+      // Retrieve Session JWT Token for Auth Header
       const { data: sessionData, error: sessionError } =
         await supabaseClient.auth.getSession();
+
       if (sessionError || !sessionData.session) {
         throw new Error("Session expired. Please log in again.");
       }
 
-      // Invoke Update Edge Function
+      // Invoke 'update-teacher' Edge Function
       const { data, error } = await supabaseClient.functions.invoke(
         "update-teacher",
         {
@@ -709,13 +676,17 @@ if (editTeacherForm) {
         },
       );
 
+      // Extract custom server response error messages
       if (error) {
         let serverMessage = null;
         if (error.context) {
           try {
             const bodyText = await error.context.text();
-            serverMessage = JSON.parse(bodyText).message;
-          } catch (e) {}
+            const jsonBody = JSON.parse(bodyText);
+            serverMessage = jsonBody.message;
+          } catch (e) {
+            console.error("Failed to parse edit error body:", e);
+          }
         }
         throw new Error(
           serverMessage ||
@@ -740,4 +711,121 @@ if (editTeacherForm) {
       submitBtn.textContent = "Update Teacher";
     }
   });
+}
+
+// ------------------------------------------------------------------
+// 3. Data Fetching & Dynamic Table Rendering
+// ------------------------------------------------------------------
+
+let currentTeachersList = [];
+
+async function loadTeachers() {
+  const tbody = document.querySelector(".teachers-table-card tbody");
+  if (!tbody) return;
+
+  // Render spinner instantly
+  renderTeachersTableLoading();
+
+  try {
+    const { data: teachers, error } = await supabaseClient
+      .from("teachers")
+      .select(
+        `
+    id, staff_id, gender, qualification, address, date_of_birth, created_at, updated_at, is_archived,
+    departments:department_id ( id, name ),
+    profiles:id ( full_name, email, phone_number, status, photo_url )
+  `,
+      )
+      .eq("is_archived", false);
+    if (error) throw error;
+
+    currentTeachersList = teachers || [];
+
+    if (currentTeachersList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No teachers found.</td></tr>`;
+      return;
+    }
+
+    // Yield execution so spinner renders smoothly before heavy table insertion
+    setTimeout(() => {
+      const rowsHtml = currentTeachersList
+        .map((teacher) => {
+          const profile = teacher.profiles || {};
+          return `
+          <tr>
+            <td>
+              <img 
+                src="${profile.photo_url || DEFAULT_AVATAR}" 
+                class="teacher-photo" 
+                alt="Photo" 
+                loading="lazy" 
+                onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';" 
+              />
+            </td>
+            <td>${teacher.staff_id || "-"}</td>
+            <td>${profile.full_name || "-"}</td>
+            <td>${teacher.gender || "-"}</td>
+            <td>${profile.email || "-"}</td>
+            <td>
+              <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
+                ${profile.status || "Active"}
+              </span>
+            </td>
+            <td>
+              <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
+              <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
+            <button class="teachers-actions-btn archive" data-id="${teacher.id}" data-name="${teacher.profiles?.full_name || "this teacher"}">
+  <i class="fa-solid fa-box-archive"></i>
+</button>
+            </td>
+          </tr>`;
+        })
+        .join("");
+
+      tbody.innerHTML = rowsHtml;
+    }, 50);
+  } catch (err) {
+    console.error("Failed to fetch teachers:", err);
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #ef4444;">Failed to load teachers.</td></tr>`;
+  }
+}
+
+// Event Delegation for Table Actions
+document
+  .querySelector(".teachers-table-card tbody")
+  ?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".teachers-actions-btn");
+    if (!btn) return;
+
+    const teacherId = btn.dataset.id;
+    const teacher = currentTeachersList.find((t) => t.id === teacherId);
+    if (!teacher) return;
+
+    if (btn.classList.contains("view")) openViewModal(teacher);
+    else if (btn.classList.contains("edit")) openEditModal(teacher);
+    else if (btn.classList.contains("archive")) openArchiveModal(teacherId);
+  });
+
+document.addEventListener("click", (e) => {
+  const archiveBtn = e.target.closest(".teachers-actions-btn.archive");
+  if (archiveBtn) {
+    const id = archiveBtn.dataset.id;
+    const name = archiveBtn.dataset.name;
+    openArchiveModal(id, name);
+  }
+});
+
+// Helper function to render loading state in the teachers table
+function renderTeachersTableLoading() {
+  const tbody = document.querySelector(".teachers-table-card tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading teachers...
+      </td>
+    </tr>
+  `;
 }

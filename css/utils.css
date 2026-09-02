@@ -118,6 +118,10 @@ tbody tr:hover {
     width: 100% !important;
     padding-top: 70px; /* Space for the hamburger button */
   }
+
+  .menu li a {
+    border-radius: 10px;
+  }
 }
 
 .toast-container {

@@ -10,7 +10,7 @@
 }
 
 body {
-   overflow: hidden; /* Body never scrolls */
+  overflow: hidden; /* Body never scrolls */
   background: rgb(231, 226, 226);
 }
 
