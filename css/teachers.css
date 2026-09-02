@@ -772,7 +772,7 @@ tr {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 390px;
+    height: 420px;
     max-height: 85vh;
     border-radius: 10px;
     overflow: hidden;

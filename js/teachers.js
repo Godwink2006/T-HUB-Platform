@@ -653,7 +653,9 @@ if (editTeacherForm) {
         .value.trim();
       const photoInput = document.getElementById("editTeacherPhoto");
       const avatarFile =
-        photoInput && photoInput.files ? photoInput.files[0] : null;
+        photoInput && photoInput.files && photoInput.files.length > 0
+          ? photoInput.files[0]
+          : null;
 
       // Collect current form input state
       const currentValues = {
@@ -679,38 +681,38 @@ if (editTeacherForm) {
 
       if (!hasDataChanged && !hasNewPhoto) {
         showToast("No changes detected.", "info");
-        hideEditModal();
         return;
       }
 
       submitBtn.disabled = true;
       submitBtn.textContent = "Updating...";
 
-      // Handle direct file upload to Storage using a fixed file path
       let photoUrl = originalTeacherData?.photo_url || null;
 
-      if (hasNewPhoto) {
+      // Only execute compression and upload if a NEW file was explicitly selected
+      if (avatarFile) {
         submitBtn.textContent = "Compressing photo...";
         const compressedBlob = await compressImageToBlob(avatarFile, 800, 0.7);
 
-        submitBtn.textContent = "Uploading photo...";
-        const filePath = `${teacherId}/avatar.jpg`;
+        if (compressedBlob) {
+          submitBtn.textContent = "Uploading photo...";
+          const filePath = `${teacherId}/avatar.jpg`;
 
-        const { error: uploadError } = await supabaseClient.storage
-          .from("avatars")
-          .upload(filePath, compressedBlob, {
-            contentType: "image/jpeg",
-            upsert: true, // Overwrites existing avatar file
-          });
+          const { error: uploadError } = await supabaseClient.storage
+            .from("avatars")
+            .upload(filePath, compressedBlob, {
+              contentType: "image/jpeg",
+              upsert: true,
+            });
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabaseClient.storage
-          .from("avatars")
-          .getPublicUrl(filePath);
+          const { data: urlData } = supabaseClient.storage
+            .from("avatars")
+            .getPublicUrl(filePath);
 
-        // Append timestamp cache-buster so UI updates instantly
-        photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+          photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+        }
       }
 
       submitBtn.textContent = "Saving changes...";
