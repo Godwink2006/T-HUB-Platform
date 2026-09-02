@@ -453,7 +453,6 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
     reader.onerror = (err) => reject(err);
   });
 }
-
 // Close Archive Teacher Modal
 const hideArchiveModal = () => {
   const archiveTeacherModal = document.getElementById("archiveTeacherModal");
@@ -495,7 +494,23 @@ if (confirmArchive) {
     confirmArchive.textContent = "Archiving...";
 
     try {
-      // 1. Mark teacher as archived in `teachers` table
+      // 1. Client-Side Guard: Prevent teachers/non-admins from triggering this action
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
+      const { data: currentProfile } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", user?.id)
+        .single();
+
+      if (currentProfile?.role !== "admin") {
+        throw new Error(
+          "Permission denied: Only administrators can archive teacher accounts.",
+        );
+      }
+
+      // 2. Mark teacher as archived in `teachers` table
       const { error: teacherErr } = await supabaseClient
         .from("teachers")
         .update({
@@ -504,9 +519,15 @@ if (confirmArchive) {
         })
         .eq("id", selectedTeacherId);
 
-      if (teacherErr) throw teacherErr;
+      if (teacherErr) {
+        // Handle RLS policy violations gracefully
+        if (teacherErr.code === "42501") {
+          throw new Error("Permission denied by database security policy.");
+        }
+        throw teacherErr;
+      }
 
-      // 2. Mark profile as archived and set status to inactive
+      // 3. Mark profile as archived and set status to inactive
       const { error: profileErr } = await supabaseClient
         .from("profiles")
         .update({
@@ -516,7 +537,12 @@ if (confirmArchive) {
         })
         .eq("id", selectedTeacherId);
 
-      if (profileErr) throw profileErr;
+      if (profileErr) {
+        if (profileErr.code === "42501") {
+          throw new Error("Permission denied by database security policy.");
+        }
+        throw profileErr;
+      }
 
       showToast("Teacher archived successfully!", "success");
       hideArchiveModal();
