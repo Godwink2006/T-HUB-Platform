@@ -227,7 +227,6 @@ tr {
 }
 
 .status {
-  padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -235,11 +234,13 @@ tr {
 .teachers-status-active {
   background: #dcfce7;
   color: #166534;
+  padding: 10px;
 }
 
 .teachers-status-inactive {
   background: #fee2e2;
   color: #dc2626;
+  padding: 10px;
 }
 
 .teachers-actions-btn {
@@ -322,8 +323,9 @@ tr {
 .teacher-modal-header button,
 .edit-teacher-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -753,11 +755,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Responsive Modals */
-  .modal-systemUser {
-    padding: 16px;
-  }
-
   .edit-teacher-modal-content,
   .teacher-modal-content,
   .view-teacher-modal-content {
@@ -795,7 +792,8 @@ tr {
   }
 
   .teacher-modal-header button,
-  .edit-teacher-modal-header button {
+  .edit-teacher-modal-header button,
+  #closeViewTeacherModal {
     height: 34px;
     width: 34px;
     font-size: 16px;
