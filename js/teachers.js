@@ -557,6 +557,106 @@ if (confirmArchive) {
   });
 }
 
+// Populate Department and Status Filter Dropdowns
+async function setupTeacherToolbarFilters() {
+  const departmentSelect = document.querySelector(
+    ".toolbar select:nth-of-type(1)",
+  );
+  const statusSelect = document.querySelector(".toolbar select:nth-of-type(2)");
+
+  // 1. Set explicit options for Status (Active and Inactive only, excluding Archived)
+  if (statusSelect) {
+    statusSelect.innerHTML = `
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    `;
+  }
+
+  // 2. Fetch unique departments linked to active teachers from `teachers` table
+  if (departmentSelect) {
+    try {
+      const { data: teacherDepts, error } = await supabaseClient
+        .from("teachers")
+        .select("department_id, departments(id, name)")
+        .eq("is_archived", false)
+        .not("department_id", "is", null);
+
+      if (error) throw error;
+
+      // Filter out duplicate departments
+      const uniqueDepartments = [];
+      const seenIds = new Set();
+
+      teacherDepts.forEach((item) => {
+        if (item.departments && !seenIds.has(item.departments.id)) {
+          seenIds.add(item.departments.id);
+          uniqueDepartments.push(item.departments);
+        }
+      });
+
+      // Render options into dropdown
+      let optionsHtml = '<option value="">All Department</option>';
+      uniqueDepartments.forEach((dept) => {
+        optionsHtml += `<option value="${dept.id}">${dept.name}</option>`;
+      });
+
+      departmentSelect.innerHTML = optionsHtml;
+    } catch (err) {
+      console.error("Failed to load departments for filter:", err);
+    }
+  }
+}
+
+// Populate Department and Status Filter Dropdowns using Element IDs
+async function setupTeacherToolbarFilters() {
+  const departmentSelect = document.getElementById("teacherDepartmentFilter");
+  const statusSelect = document.getElementById("teacherStatusFilter");
+
+  // 1. Set explicit options for Status (Active and Inactive only, excluding Archived)
+  if (statusSelect) {
+    statusSelect.innerHTML = `
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    `;
+  }
+
+  // 2. Fetch unique departments linked to active teachers from `teachers` table
+  if (departmentSelect) {
+    try {
+      const { data: teacherDepts, error } = await supabaseClient
+        .from("teachers")
+        .select("department_id, departments(id, name)")
+        .eq("is_archived", false)
+        .not("department_id", "is", null);
+
+      if (error) throw error;
+
+      // Filter out duplicate departments
+      const uniqueDepartments = [];
+      const seenIds = new Set();
+
+      teacherDepts.forEach((item) => {
+        if (item.departments && !seenIds.has(item.departments.id)) {
+          seenIds.add(item.departments.id);
+          uniqueDepartments.push(item.departments);
+        }
+      });
+
+      // Render options into dropdown using department IDs as values
+      let optionsHtml = '<option value="">All Department</option>';
+      uniqueDepartments.forEach((dept) => {
+        optionsHtml += `<option value="${dept.id}">${dept.name}</option>`;
+      });
+
+      departmentSelect.innerHTML = optionsHtml;
+    } catch (err) {
+      console.error("Failed to load departments for filter:", err);
+    }
+  }
+}
+
 // Helper function to reset form & image preview when modal closes
 function resetTeacherForm() {
   if (teacherForm) teacherForm.reset();

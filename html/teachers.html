@@ -125,23 +125,20 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search Teachers..." />
+          <input
+            type="text"
+            id="teacherSearchInput"
+            placeholder="Search Teachers..."
+          />
 
-          <select>
-            <option>All Department</option>
-            <option>Science</option>
-            <option>Mathematics</option>
-            <option>Languages</option>
-            <option>Social Studies</option>
-            <option>ICT</option>
-            <option>Administration</option>
+          <select id="teacherDepartmentFilter">
+            <option value="">All Department</option>
           </select>
 
-          <select>
-            <option>All Status</option>
-            <option>Active</option>
-            <option>On Leave</option>
-            <option>Retired</option>
+          <select id="teacherStatusFilter">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
 
