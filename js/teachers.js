@@ -105,44 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
     closeViewTeacherModal.addEventListener("click", hideViewModal);
   if (closeViewBtn) closeViewBtn.addEventListener("click", hideViewModal);
 
-  // Compress file and return compressed Base64 String
-  function compressToBase64(file, maxWidth = 800, quality = 0.7) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-
-        img.onload = () => {
-          let width = img.width;
-          let height = img.height;
-
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
-
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Convert canvas output directly to JPEG Base64
-          const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
-          resolve(compressedBase64);
-        };
-
-        img.onerror = (err) => reject(err);
-      };
-
-      reader.onerror = (err) => reject(err);
-    });
-  }
-
   // Global helper function for toggling password visibility inline
   window.togglePassword = function (inputId, btn) {
     const input = document.getElementById(inputId);
@@ -380,6 +342,92 @@ function openViewModal(teacher) {
   }
 }
 
+// Compress file and return compressed Base64 String
+function compressToBase64(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert canvas output directly to JPEG Base64
+        const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressedBase64);
+      };
+
+      img.onerror = (err) => reject(err);
+    };
+
+    reader.onerror = (err) => reject(err);
+  });
+}
+
+// Updated helper: returns a compressed Blob ready for Supabase Storage
+function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Maintain aspect ratio while resizing
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert canvas directly to a binary Blob (image/jpeg)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Canvas encoding failed."));
+            }
+          },
+          "image/jpeg", // Convert all uploads to compressed JPEG
+          quality, // 0.7 = 70% quality (great compression ratio)
+        );
+      };
+
+      img.onerror = (err) => reject(err);
+    };
+
+    reader.onerror = (err) => reject(err);
+  });
+}
+
 // Close Archive Teacher Modal
 const hideArchiveModal = () => {
   const archiveTeacherModal = document.getElementById("archiveTeacherModal");
@@ -581,7 +629,6 @@ async function openEditModal(teacher) {
     lockBodyScroll();
   }
 }
-
 // Edit Form Submit Listener
 const editTeacherForm = document.getElementById("editTeacherForm");
 if (editTeacherForm) {
@@ -605,12 +652,8 @@ if (editTeacherForm) {
         .getElementById("editTeacherLastName")
         .value.trim();
       const photoInput = document.getElementById("editTeacherPhoto");
-
-      let photoBase64 = null;
-      if (photoInput && photoInput.files.length > 0) {
-        // Compress image using the same configuration as the create handler
-        photoBase64 = await compressToBase64(photoInput.files[0], 800, 0.7);
-      }
+      const avatarFile =
+        photoInput && photoInput.files ? photoInput.files[0] : null;
 
       // Collect current form input state
       const currentValues = {
@@ -626,15 +669,15 @@ if (editTeacherForm) {
         address: document.getElementById("editTeacherAddress").value.trim(),
       };
 
-      // Detect if user made any modified inputs or provided a new image
-      const hasPhotoChanged = photoBase64 !== null;
+      // Detect changes
       const hasDataChanged =
         originalTeacherData &&
         Object.keys(currentValues).some(
           (key) => currentValues[key] !== originalTeacherData[key],
         );
+      const hasNewPhoto = avatarFile !== null;
 
-      if (!hasDataChanged && !hasPhotoChanged) {
+      if (!hasDataChanged && !hasNewPhoto) {
         showToast("No changes detected.", "info");
         hideEditModal();
         return;
@@ -643,7 +686,36 @@ if (editTeacherForm) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Updating...";
 
-      // Construct Payload aligned with backend conventions
+      // Handle direct file upload to Storage using a fixed file path
+      let photoUrl = originalTeacherData?.photo_url || null;
+
+      if (hasNewPhoto) {
+        submitBtn.textContent = "Compressing photo...";
+        const compressedBlob = await compressImageToBlob(avatarFile, 800, 0.7);
+
+        submitBtn.textContent = "Uploading photo...";
+        const filePath = `${teacherId}/avatar.jpg`;
+
+        const { error: uploadError } = await supabaseClient.storage
+          .from("avatars")
+          .upload(filePath, compressedBlob, {
+            contentType: "image/jpeg",
+            upsert: true, // Overwrites existing avatar file
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabaseClient.storage
+          .from("avatars")
+          .getPublicUrl(filePath);
+
+        // Append timestamp cache-buster so UI updates instantly
+        photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      }
+
+      submitBtn.textContent = "Saving changes...";
+
+      // Construct Payload
       const payload = {
         teacher_id: teacherId,
         full_name: `${firstName} ${lastName}`.trim(),
@@ -654,10 +726,10 @@ if (editTeacherForm) {
         phone_number: currentValues.phone_number,
         status: currentValues.status,
         address: currentValues.address,
-        photo: photoBase64,
+        photoUrl: photoUrl, // Pass direct storage URL
       };
 
-      // Retrieve Session JWT Token for Auth Header
+      // Retrieve Session Token
       const { data: sessionData, error: sessionError } =
         await supabaseClient.auth.getSession();
 
@@ -665,7 +737,7 @@ if (editTeacherForm) {
         throw new Error("Session expired. Please log in again.");
       }
 
-      // Invoke 'update-teacher' Edge Function
+      // Invoke Edge Function
       const { data, error } = await supabaseClient.functions.invoke(
         "update-teacher",
         {
@@ -676,7 +748,6 @@ if (editTeacherForm) {
         },
       );
 
-      // Extract custom server response error messages
       if (error) {
         let serverMessage = null;
         if (error.context) {
@@ -684,9 +755,7 @@ if (editTeacherForm) {
             const bodyText = await error.context.text();
             const jsonBody = JSON.parse(bodyText);
             serverMessage = jsonBody.message;
-          } catch (e) {
-            console.error("Failed to parse edit error body:", e);
-          }
+          } catch (e) {}
         }
         throw new Error(
           serverMessage ||
@@ -712,7 +781,6 @@ if (editTeacherForm) {
     }
   });
 }
-
 // ------------------------------------------------------------------
 // 3. Data Fetching & Dynamic Table Rendering
 // ------------------------------------------------------------------
