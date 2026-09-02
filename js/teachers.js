@@ -2,6 +2,137 @@ const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 let cachedDepartments = [];
 
+// 1. Filter function handling Search, Department, and Status
+function filterTeachersTable() {
+  const searchQuery =
+    document.getElementById("teacherSearchInput")?.value.trim().toLowerCase() ||
+    "";
+  const selectedDepartment =
+    document.getElementById("teacherDepartmentFilter")?.value || "";
+  const selectedStatus =
+    document.getElementById("teacherStatusFilter")?.value?.toLowerCase() || "";
+
+  const tbody = document.querySelector(".teachers-table-card tbody");
+  if (!tbody) return;
+
+  const filteredTeachers = currentTeachersList.filter((teacher) => {
+    const profile = teacher.profiles || {};
+
+    // Get Department ID and Name directly from teacher object
+    let deptId = teacher.department_id || teacher.departments?.id;
+    if (Array.isArray(teacher.departments)) deptId = teacher.departments[0]?.id;
+
+    // Department Filter Match
+    const matchesDept =
+      !selectedDepartment || String(deptId) === String(selectedDepartment);
+
+    // Status Filter Match
+    const teacherStatus = (profile.status || "active").toLowerCase();
+    const matchesStatus = !selectedStatus || teacherStatus === selectedStatus;
+
+    // Search Input Match (Staff ID, Full Name, Email)
+    const staffId = (teacher.staff_id || "").toLowerCase();
+    const name = (profile.full_name || "").toLowerCase();
+    const email = (profile.email || "").toLowerCase();
+
+    const matchesSearch =
+      !searchQuery ||
+      staffId.includes(searchQuery) ||
+      name.includes(searchQuery) ||
+      email.includes(searchQuery);
+
+    return matchesDept && matchesStatus && matchesSearch;
+  });
+
+  if (filteredTeachers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No matching teachers found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filteredTeachers
+    .map((teacher) => {
+      const profile = teacher.profiles || {};
+      const photoUrl = profile.photo_url || DEFAULT_AVATAR;
+
+      return `
+      <tr>
+        <td>
+          <img 
+            src="${photoUrl}" 
+            class="teacher-photo" 
+            alt="Photo" 
+            loading="lazy" 
+            onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" 
+          />
+        </td>
+        <td>${teacher.staff_id || "-"}</td>
+        <td>${profile.full_name || "-"}</td>
+        <td>${teacher.gender || "-"}</td>
+        <td>${profile.email || "-"}</td>
+        <td>
+          <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
+            ${profile.status || "Active"}
+          </span>
+        </td>
+        <td>
+          <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
+          <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
+          <button class="teachers-actions-btn archive" data-id="${teacher.id}"><i class="fa-solid fa-box-archive"></i></button>
+        </td>
+      </tr>`;
+    })
+    .join("");
+}
+
+// 2. Setup function populating departments directly from teacher data
+function setupTeacherToolbarFilters() {
+  const searchInput = document.getElementById("teacherSearchInput");
+  const departmentSelect = document.getElementById("teacherDepartmentFilter");
+  const statusSelect = document.getElementById("teacherStatusFilter");
+
+  // Populate Status Options
+  if (statusSelect) {
+    statusSelect.innerHTML = `
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    `;
+  }
+
+  // Populate Department Options from currentTeachersList
+  if (departmentSelect) {
+    const uniqueDepartments = new Map();
+
+    currentTeachersList.forEach((teacher) => {
+      let deptObj = teacher.departments;
+      if (Array.isArray(deptObj)) deptObj = deptObj[0];
+
+      if (deptObj && deptObj.id && deptObj.name) {
+        uniqueDepartments.set(deptObj.id, deptObj.name);
+      } else if (teacher.department_id) {
+        uniqueDepartments.set(
+          teacher.department_id,
+          `Department ${teacher.department_id}`,
+        );
+      }
+    });
+
+    let optionsHtml = '<option value="">All Department</option>';
+    uniqueDepartments.forEach((deptName, deptId) => {
+      optionsHtml += `<option value="${deptId}">${deptName}</option>`;
+    });
+
+    departmentSelect.innerHTML = optionsHtml;
+  }
+
+  // Attach Event Listeners
+  if (searchInput) searchInput.addEventListener("input", filterTeachersTable);
+  if (departmentSelect)
+    departmentSelect.addEventListener("change", filterTeachersTable);
+  if (statusSelect)
+    statusSelect.addEventListener("change", filterTeachersTable);
+}
+
 async function loadDepartmentDropdown(
   selectId = "teacherDepartment",
   forceRefresh = false,
@@ -9,18 +140,16 @@ async function loadDepartmentDropdown(
   const selectEl = document.getElementById(selectId);
   if (!selectEl) return;
 
-  // Clear cache if explicitly requested
   if (forceRefresh) {
     cachedDepartments = [];
   }
 
-  // Fetch only if cache is empty
   if (cachedDepartments.length === 0) {
     const { data: departments, error } = await supabaseClient
       .from("departments")
       .select("id, name")
-      .eq("status", "active")
-      .order("name", { ascending: true }); // Alphabetical sorting
+      .eq("is_archived", false) // Fixed column to match schema
+      .order("name", { ascending: true });
 
     if (error) {
       console.error("Failed to fetch departments:", error);
@@ -29,7 +158,6 @@ async function loadDepartmentDropdown(
     cachedDepartments = departments || [];
   }
 
-  // Re-populate target select element
   selectEl.innerHTML = `<option value="">Select Department</option>`;
   cachedDepartments.forEach((dept) => {
     const option = document.createElement("option");
@@ -287,10 +415,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-
   // Initial Data Fetch
   loadTeachers();
   loadDepartmentDropdown();
+  setupTeacherToolbarFilters(); // <-- ADD THIS CALL
 });
 
 // ------------------------------------------------------------------
@@ -555,106 +683,6 @@ if (confirmArchive) {
       confirmArchive.textContent = "Archive";
     }
   });
-}
-
-// Populate Department and Status Filter Dropdowns
-async function setupTeacherToolbarFilters() {
-  const departmentSelect = document.querySelector(
-    ".toolbar select:nth-of-type(1)",
-  );
-  const statusSelect = document.querySelector(".toolbar select:nth-of-type(2)");
-
-  // 1. Set explicit options for Status (Active and Inactive only, excluding Archived)
-  if (statusSelect) {
-    statusSelect.innerHTML = `
-      <option value="">All Status</option>
-      <option value="active">Active</option>
-      <option value="inactive">Inactive</option>
-    `;
-  }
-
-  // 2. Fetch unique departments linked to active teachers from `teachers` table
-  if (departmentSelect) {
-    try {
-      const { data: teacherDepts, error } = await supabaseClient
-        .from("teachers")
-        .select("department_id, departments(id, name)")
-        .eq("is_archived", false)
-        .not("department_id", "is", null);
-
-      if (error) throw error;
-
-      // Filter out duplicate departments
-      const uniqueDepartments = [];
-      const seenIds = new Set();
-
-      teacherDepts.forEach((item) => {
-        if (item.departments && !seenIds.has(item.departments.id)) {
-          seenIds.add(item.departments.id);
-          uniqueDepartments.push(item.departments);
-        }
-      });
-
-      // Render options into dropdown
-      let optionsHtml = '<option value="">All Department</option>';
-      uniqueDepartments.forEach((dept) => {
-        optionsHtml += `<option value="${dept.id}">${dept.name}</option>`;
-      });
-
-      departmentSelect.innerHTML = optionsHtml;
-    } catch (err) {
-      console.error("Failed to load departments for filter:", err);
-    }
-  }
-}
-
-// Populate Department and Status Filter Dropdowns using Element IDs
-async function setupTeacherToolbarFilters() {
-  const departmentSelect = document.getElementById("teacherDepartmentFilter");
-  const statusSelect = document.getElementById("teacherStatusFilter");
-
-  // 1. Set explicit options for Status (Active and Inactive only, excluding Archived)
-  if (statusSelect) {
-    statusSelect.innerHTML = `
-      <option value="">All Status</option>
-      <option value="active">Active</option>
-      <option value="inactive">Inactive</option>
-    `;
-  }
-
-  // 2. Fetch unique departments linked to active teachers from `teachers` table
-  if (departmentSelect) {
-    try {
-      const { data: teacherDepts, error } = await supabaseClient
-        .from("teachers")
-        .select("department_id, departments(id, name)")
-        .eq("is_archived", false)
-        .not("department_id", "is", null);
-
-      if (error) throw error;
-
-      // Filter out duplicate departments
-      const uniqueDepartments = [];
-      const seenIds = new Set();
-
-      teacherDepts.forEach((item) => {
-        if (item.departments && !seenIds.has(item.departments.id)) {
-          seenIds.add(item.departments.id);
-          uniqueDepartments.push(item.departments);
-        }
-      });
-
-      // Render options into dropdown using department IDs as values
-      let optionsHtml = '<option value="">All Department</option>';
-      uniqueDepartments.forEach((dept) => {
-        optionsHtml += `<option value="${dept.id}">${dept.name}</option>`;
-      });
-
-      departmentSelect.innerHTML = optionsHtml;
-    } catch (err) {
-      console.error("Failed to load departments for filter:", err);
-    }
-  }
 }
 
 // Helper function to reset form & image preview when modal closes
@@ -956,6 +984,8 @@ async function loadTeachers() {
     if (error) throw error;
 
     currentTeachersList = teachers || [];
+
+     setupTeacherToolbarFilters(); // Populates department options & enables search listeners
 
     if (currentTeachersList.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No teachers found.</td></tr>`;
