@@ -65,7 +65,6 @@ body {
   text-decoration: none;
 
   padding: 14px 16px;
-  border-radius: 12px;
   transition: 0.3s;
 }
 
@@ -140,7 +139,9 @@ body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
+  background: #15803d;
+  color: #ffffff;
+  border: 2px solid #14532d;
 }
 
 .toolbar {
@@ -153,7 +154,6 @@ body {
 .toolbar select {
   height: 48px;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -203,21 +203,21 @@ tr {
 
 .status {
   padding: 6px 14px;
-  border-radius: 30px;
   font-size: 13px;
   font-weight: 500;
+  padding: 10px;
 }
 
 .students-status-active {
   background: #dcfce7;
   color: #166534;
+  padding: 10px;
 }
 
 .students-actions-btn {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -259,7 +259,6 @@ tr {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -290,9 +289,9 @@ tr {
 
 .student-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -327,7 +326,6 @@ tr {
   width: 100%;
   padding: 12px 15px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   outline: none;
   font-size: 15px;
 }
@@ -350,15 +348,15 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
-  background: #e5e7eb;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   cursor: pointer;
 }
 
 .save-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -367,7 +365,6 @@ tr {
 .view-student-modal-content {
   width: 850px;
   background: #ffff;
-  border-radius: 18px;
   overflow: auto;
   height: 500px;
   animation: modalShow 0.25s ease;
@@ -444,9 +441,9 @@ tr {
 
 #closeViewStudentModal {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -461,7 +458,6 @@ tr {
 .confirm-modal {
   width: 430px;
   background: #ffff;
-  border-radius: 18px;
   padding: 35px;
   text-align: center;
   animation: modalShow 0.25s ease;
@@ -472,7 +468,6 @@ tr {
   height: 70px;
   background: #fee2e2;
   color: #dc2626;
-  border-radius: 50%;
   margin: auto;
   display: flex;
   align-items: center;
@@ -493,7 +488,6 @@ tr {
 .archive-confirm-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
@@ -541,7 +535,6 @@ tr {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -560,10 +553,9 @@ tr {
 
 .edit-student-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
-  border: none;
+  color: #f9fafb;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
   height: 40px;
   width: 40px;
   font-size: 22px;
@@ -583,7 +575,6 @@ tr {
 .edit-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -807,6 +798,11 @@ tr {
   .view-student-status {
     padding: 10px;
     margin-top: 10px;
+  }
+
+  .avatar-edit-container,
+  .upload-btn {
+    border-radius: 10px;
   }
 }
 

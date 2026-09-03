@@ -159,8 +159,6 @@
                 <td>John Doe</td>
                 <td>Male</td>
                 <td>Senior 2</td>
-                <td>Peter Doe</td>
-                <td>+250 788 000 000</td>
 
                 <td>
                   <span class="students-status-active">Active</span>
@@ -187,8 +185,6 @@
                 <td>John Doe</td>
                 <td>Male</td>
                 <td>Senior 2</td>
-                <td>Peter Doe</td>
-                <td>+250 788 000 000</td>
 
                 <td>
                   <span class="students-status-active">Active</span>
@@ -218,97 +214,145 @@
       <div class="student-modal-content">
         <div class="student-modal-header">
           <h2>Add Student</h2>
-
           <button id="closeStudentModal">&times;</button>
         </div>
 
         <div class="student-modal-body">
           <form id="studentForm">
             <div class="form-grid">
+              <!-- Student ID -->
               <div class="form-group">
-                <label>Student ID *</label>
-
-                <input type="text" placeholder="Enter student ID" />
+                <label for="studentCustomId">Student ID *</label>
+                <input
+                  type="text"
+                  id="studentCustomId"
+                  name="studentCustomId"
+                  placeholder="Enter student ID"
+                  required
+                />
               </div>
 
+              <!-- Email (Required for Supabase Auth/Profile) -->
               <div class="form-group">
-                <label>First name *</label>
-
-                <input type="text" placeholder="Enter first name" />
+                <label for="studentEmail">Email *</label>
+                <input
+                  type="email"
+                  id="studentEmail"
+                  name="email"
+                  placeholder="Enter student email"
+                  required
+                />
               </div>
 
+              <!-- First Name -->
               <div class="form-group">
-                <label>Last name *</label>
-
-                <input type="text" placeholder="Enter last name" />
+                <label for="studentFirstName">First name *</label>
+                <input
+                  type="text"
+                  id="studentFirstName"
+                  name="firstName"
+                  placeholder="Enter first name"
+                  required
+                />
               </div>
 
+              <!-- Last Name -->
               <div class="form-group">
-                <label>Gender *</label>
+                <label for="studentLastName">Last name *</label>
+                <input
+                  type="text"
+                  id="studentLastName"
+                  name="lastName"
+                  placeholder="Enter last name"
+                  required
+                />
+              </div>
 
-                <select>
-                  <option>Select Gender</option>
-                  <option>Male</option>
-                  <option>Female</option>
+              <!-- Gender -->
+              <div class="form-group">
+                <label for="studentGender">Gender *</label>
+                <select id="studentGender" name="gender" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
                 </select>
               </div>
 
+              <!-- Date of Birth -->
               <div class="form-group">
-                <label>Date of birth *</label>
-
-                <input type="date" />
+                <label for="studentDob">Date of birth *</label>
+                <input
+                  type="date"
+                  id="studentDob"
+                  name="dateOfBirth"
+                  required
+                />
               </div>
 
+              <!-- Class -->
               <div class="form-group">
-                <label>Class *</label>
-
-                <select>
-                  <option>Select class</option>
+                <label for="studentClass">Class *</label>
+                <select id="studentClass" name="classId" required>
+                  <option value="">Select class</option>
                 </select>
               </div>
 
+              <!-- Academic Year -->
               <div class="form-group">
-                <label>Academic year *</label>
-
-                <select>
-                  <option>Select academic year</option>
+                <label for="studentAcademicYear">Academic year *</label>
+                <select id="studentAcademicYear" name="academicYearId" required>
+                  <option value="">Select academic year</option>
                 </select>
               </div>
 
+              <!-- Admission Date -->
               <div class="form-group">
-                <label>Admission date *</label>
-
-                <input type="date" />
+                <label for="studentAdmissionDate">Admission date *</label>
+                <input
+                  type="date"
+                  id="studentAdmissionDate"
+                  name="admissionDate"
+                  required
+                />
               </div>
 
+              <!-- Status -->
+              <div class="form-group">
+                <label for="studentStatus">Status *</label>
+                <select id="studentStatus" name="status" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <!-- Address -->
               <div class="form-group full-width">
-                <label>Address (Optional)</label>
-
-                <textarea rows="4" placeholder="Student address"></textarea>
-              </div>
-
-              <div class="form-group full-width">
-                <label>Medical notes (Optional)</label>
-
+                <label for="studentAddress">Address (Optional)</label>
                 <textarea
+                  id="studentAddress"
+                  name="address"
+                  rows="4"
+                  placeholder="Student address"
+                ></textarea>
+              </div>
+
+              <!-- Medical Notes -->
+              <div class="form-group full-width">
+                <label for="studentMedicalNotes"
+                  >Medical notes (Optional)</label
+                >
+                <textarea
+                  id="studentMedicalNotes"
+                  name="medicalNotes"
                   rows="6"
                   placeholder="Student medical notes"
                 ></textarea>
               </div>
 
-              <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </div>
-
-              <div class="avatar-upload-group">
+              <!-- Profile Photo Upload -->
+              <div class="avatar-upload-group full-width">
                 <label class="form-label">Profile photo (Optional)</label>
                 <div class="avatar-edit-container">
-                  <!-- Current Avatar Preview -->
                   <div class="avatar-preview-wrapper">
                     <img
                       id="studentPhotoPreview"
@@ -317,7 +361,6 @@
                     />
                   </div>
 
-                  <!-- Upload Controls -->
                   <div class="avatar-upload-actions">
                     <label for="studentPhoto" class="btn-secondary upload-btn">
                       <i class="bx bx-upload"></i> Add Photo
@@ -325,6 +368,7 @@
                     <input
                       type="file"
                       id="studentPhoto"
+                      name="photo"
                       accept="image/*"
                       hidden
                     />
@@ -335,6 +379,7 @@
                 </div>
               </div>
 
+              <!-- Role -->
               <div class="form-group">
                 <label for="studentRole">Role *</label>
                 <select
@@ -342,17 +387,24 @@
                   disabled
                   style="background-color: #e9ecef"
                 >
-                  <option selected value="Student">Student</option>
+                  <option selected value="student">Student</option>
                 </select>
-                <input type="hidden" name="role" value="Student" />
+                <input
+                  type="hidden"
+                  id="hiddenStudentRole"
+                  name="role"
+                  value="student"
+                />
               </div>
 
+              <!-- Password -->
               <div class="form-group">
                 <label for="newPassword">Password *</label>
                 <div class="password-field">
                   <input
                     type="password"
                     id="newPassword"
+                    name="password"
                     placeholder="Enter New Password"
                     required
                   />
@@ -379,6 +431,7 @@
                 </div>
               </div>
 
+              <!-- Confirm Password -->
               <div class="form-group">
                 <label for="confirmPassword">Confirm Password *</label>
                 <div class="password-field">
@@ -416,8 +469,9 @@
               <button type="button" class="cancel-btn" id="cancelStudentModal">
                 Cancel
               </button>
-
-              <button type="submit" class="save-btn">Save student</button>
+              <button type="submit" class="save-btn" id="saveStudentBtn">
+                Save student
+              </button>
             </div>
           </form>
         </div>
