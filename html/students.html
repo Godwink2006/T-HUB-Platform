@@ -129,19 +129,12 @@
 
           <select>
             <option>All Classes</option>
-            <option>Senior 1</option>
-            <option>Senior 2</option>
-            <option>Senior 3</option>
-            <option>Senior 4</option>
-            <option>Senior 5</option>
-            <option>Senior 6</option>
           </select>
 
           <select>
             <option>All Status</option>
             <option>Active</option>
-            <option>Graduated</option>
-            <option>Transferred</option>
+            <option>Inactive</option>
           </select>
         </section>
 
@@ -154,8 +147,6 @@
                 <th>Name</th>
                 <th>Gender</th>
                 <th>Class</th>
-                <th>Guardian</th>
-                <th>Phone</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -273,31 +264,15 @@
 
                 <select>
                   <option>Select class</option>
-                  <option>Senior 1</option>
-                  <option>Senior 2</option>
-                  <option>Senior 3</option>
-                  <option>Senior 4</option>
-                  <option>Senior 5</option>
-                  <option>Senior 6</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Guardian name *</label>
+                <label>Academic year *</label>
 
-                <input type="text" placeholder="Guardian name" />
-              </div>
-
-              <div class="form-group">
-                <label>Guardian phone *</label>
-
-                <input type="tel" placeholder="+250...." />
-              </div>
-
-              <div class="form-group">
-                <label>Guardian email (Optional)</label>
-
-                <input type="email" placeholder="guardian@gmail.com" />
+                <select>
+                  <option>Select academic year</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -312,20 +287,128 @@
                 <textarea rows="4" placeholder="Student address"></textarea>
               </div>
 
+              <div class="form-group full-width">
+                <label>Medical notes (Optional)</label>
+
+                <textarea
+                  rows="6"
+                  placeholder="Student medical notes"
+                ></textarea>
+              </div>
+
               <div class="form-group">
                 <label>Status *</label>
 
                 <select>
                   <option>Active</option>
-                  <option>Transferred</option>
-                  <option>Graduated</option>
+                  <option>Inactive</option>
                 </select>
               </div>
 
-              <div class="form-group">
-                <label>Profile photo (Optional)</label>
+              <div class="avatar-upload-group">
+                <label class="form-label">Profile photo (Optional)</label>
+                <div class="avatar-edit-container">
+                  <!-- Current Avatar Preview -->
+                  <div class="avatar-preview-wrapper">
+                    <img
+                      id="studentPhotoPreview"
+                      src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>"
+                      alt="Student Photo Preview"
+                    />
+                  </div>
 
-                <input type="file" />
+                  <!-- Upload Controls -->
+                  <div class="avatar-upload-actions">
+                    <label for="studentPhoto" class="btn-secondary upload-btn">
+                      <i class="bx bx-upload"></i> Add Photo
+                    </label>
+                    <input
+                      type="file"
+                      id="studentPhoto"
+                      accept="image/*"
+                      hidden
+                    />
+                    <span id="studentPhotoFileName" class="file-name-text"
+                      >No file chosen</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="studentRole">Role *</label>
+                <select
+                  id="studentRole"
+                  disabled
+                  style="background-color: #e9ecef"
+                >
+                  <option selected value="Student">Student</option>
+                </select>
+                <input type="hidden" name="role" value="Student" />
+              </div>
+
+              <div class="form-group">
+                <label for="newPassword">Password *</label>
+                <div class="password-field">
+                  <input
+                    type="password"
+                    id="newPassword"
+                    placeholder="Enter New Password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    onclick="togglePassword('newPassword', this)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="confirmPassword">Confirm Password *</label>
+                <div class="password-field">
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    placeholder="Confirm Password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    onclick="togglePassword('confirmPassword', this)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -432,13 +515,21 @@
                 <textarea rows="4" placeholder="Student address"></textarea>
               </div>
 
+              <div class="form-group full-width">
+                <label>Medical notes (Optional)</label>
+
+                <textarea
+                  rows="4"
+                  placeholder="Student medical notes"
+                ></textarea>
+              </div>
+
               <div class="form-group">
                 <label>Status *</label>
 
                 <select>
                   <option>Active</option>
-                  <option>Transferred</option>
-                  <option>Graduated</option>
+                  <option>Inactive</option>
                 </select>
               </div>
 
