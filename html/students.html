@@ -232,18 +232,6 @@
                 />
               </div>
 
-              <!-- Email (Required for Supabase Auth/Profile) -->
-              <div class="form-group">
-                <label for="studentEmail">Email *</label>
-                <input
-                  type="email"
-                  id="studentEmail"
-                  name="email"
-                  placeholder="Enter student email"
-                  required
-                />
-              </div>
-
               <!-- First Name -->
               <div class="form-group">
                 <label for="studentFirstName">First name *</label>
@@ -394,6 +382,18 @@
                   id="hiddenStudentRole"
                   name="role"
                   value="student"
+                />
+              </div>
+
+              <!-- Email (Required for Supabase Auth/Profile) -->
+              <div class="form-group">
+                <label for="studentEmail">Email *</label>
+                <input
+                  type="email"
+                  id="studentEmail"
+                  name="email"
+                  placeholder="Enter student email"
+                  required
                 />
               </div>
 
@@ -703,6 +703,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase.js"></script>

@@ -175,46 +175,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const cancelTeacherModal = document.getElementById("cancelTeacherModal");
   const teacherForm = document.getElementById("teacherForm");
 
-  const editTeacherModal = document.getElementById("editTeacherModal");
-  const closeEditTeacherModal = document.getElementById(
-    "closeEditTeacherModal",
-  );
-  const cancelEditTeacherModal = document.getElementById(
-    "cancelEditTeacherModal",
-  );
-
   const viewTeacherModal = document.getElementById("viewTeacherModal");
   const closeViewTeacherModal = document.getElementById(
     "closeViewTeacherModal",
   );
   const closeViewBtn = document.getElementById("closeViewBtn");
 
-  const archiveTeacherModal = document.getElementById("archiveTeacherModal");
-  const cancelArchive = document.getElementById("cancelArchive");
-  const confirmArchive = document.getElementById("confirmArchive");
-
   const menuToggle = document.getElementById("menuToggle");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
   const sidebar = document.querySelector(".sidebar");
 
-  let selectedTeacherId = null;
-
   // ------------------------------------------------------------------
   // 1. Navigation & Modal Controls
   // ------------------------------------------------------------------
-
-  // Mobile Menu Toggle
-  if (menuToggle && sidebarOverlay && sidebar) {
-    menuToggle.addEventListener("click", () => {
-      sidebar.classList.toggle("open");
-      sidebarOverlay.classList.toggle("active");
-    });
-
-    sidebarOverlay.addEventListener("click", () => {
-      sidebar.classList.remove("open");
-      sidebarOverlay.classList.remove("active");
-    });
-  }
 
   // Open Add Teacher Modal
   if (addTeacherBtn) {
@@ -985,7 +958,7 @@ async function loadTeachers() {
 
     currentTeachersList = teachers || [];
 
-     setupTeacherToolbarFilters(); // Populates department options & enables search listeners
+    setupTeacherToolbarFilters(); // Populates department options & enables search listeners
 
     if (currentTeachersList.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No teachers found.</td></tr>`;
