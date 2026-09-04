@@ -151,59 +151,8 @@
                 <th>Actions</th>
               </tr>
             </thead>
-
-            <tbody>
-              <tr>
-                <td><img src="images/profile.png" class="student-photo" /></td>
-                <td>ST001</td>
-                <td>John Doe</td>
-                <td>Male</td>
-                <td>Senior 2</td>
-
-                <td>
-                  <span class="students-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="students-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="students-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="students-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td><img src="images/profile.png" class="student-photo" /></td>
-                <td>ST001</td>
-                <td>John Doe</td>
-                <td>Male</td>
-                <td>Senior 2</td>
-
-                <td>
-                  <span class="students-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="students-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="students-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="students-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
+            <tbody id="studentsTableBody">
+              <!-- Rows will be dynamically rendered here -->
             </tbody>
           </table>
         </section>
@@ -277,11 +226,16 @@
                 />
               </div>
 
-              <!-- Class -->
+              <!-- Recommended HTML Markup -->
               <div class="form-group">
-                <label for="studentClass">Class *</label>
-                <select id="studentClass" name="classId" required>
-                  <option value="">Select class</option>
+                <label for="studentClassSelect">Class *</label>
+                <select
+                  id="studentClassSelect"
+                  class="form-control"
+                  name="class_id"
+                  required
+                >
+                  <option value="" disabled selected>Select class</option>
                 </select>
               </div>
 

@@ -13,6 +13,99 @@ function isEligibleClass(classId) {
   return /(?:10|11|12|Grade\s*(?:10|11|12))/i.test(name);
 }
 
+// Compress file and return compressed Base64 String
+function compressToBase64(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    // Guard against null, undefined, or non-file values
+    if (!file || !(file instanceof Blob || file instanceof File)) {
+      return resolve(null);
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressedBase64);
+      };
+
+      img.onerror = (err) => reject(err);
+    };
+
+    reader.onerror = (err) => reject(err);
+  });
+}
+
+// Updated helper: returns a compressed Blob ready for Supabase Storage
+function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    // Guard against null, undefined, or non-file values
+    if (!file || !(file instanceof Blob || file instanceof File)) {
+      return resolve(null);
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Canvas encoding failed."));
+            }
+          },
+          "image/jpeg",
+          quality,
+        );
+      };
+
+      img.onerror = (err) => reject(err);
+    };
+
+    reader.onerror = (err) => reject(err);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // DOM Elements
   const addStudentBtn =
@@ -131,29 +224,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ------------------------------------------------------------------
-  // 2. Load Dropdowns (Active Classes & Active Academic Years)
-  // ------------------------------------------------------------------
   async function loadStudentDropdowns() {
     try {
-      // Fetch Active Classes
-      const { data: classData, error: classError } = await supabaseClient
+      const classSelectEl =
+        studentClassSelect ||
+        document.getElementById("studentClassSelect") ||
+        document.getElementById("studentClass");
+
+      // Get current logged in user's profile to retrieve school_id
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("school_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile || !profile.school_id) return;
+
+      // Query ONLY classes matching the user's school_id
+      const { data: classes, error } = await supabaseClient
         .from("classes")
-        .select("id, name, status")
-        .eq("status", "active")
+        .select("id, name")
+        .eq("school_id", profile.school_id)
         .order("name", { ascending: true });
 
-      if (classError) throw classError;
-      cachedClasses = classData || [];
+      if (error) throw error;
 
-      if (studentClassSelect) {
-        studentClassSelect.innerHTML = `<option value="">Select class</option>`;
-        cachedClasses.forEach((cls) => {
-          const opt = document.createElement("option");
-          opt.value = cls.id;
-          opt.textContent = cls.name;
-          studentClassSelect.appendChild(opt);
+      cachedClasses = classes || [];
+
+      if (classSelectEl) {
+        classSelectEl.innerHTML = `<option value="">Select class</option>`;
+        cachedClasses.forEach((c) => {
+          const option = document.createElement("option");
+          option.value = c.id;
+          option.textContent = c.name;
+          classSelectEl.appendChild(option);
         });
+
+        // Sync field visibility as soon as classes load
+        updatePasswordVisibility();
       }
 
       // Fetch Active Academic Years
@@ -166,54 +279,78 @@ document.addEventListener("DOMContentLoaded", () => {
       if (yearError) throw yearError;
       cachedAcademicYears = yearData || [];
 
-      if (studentAcademicYearSelect) {
-        studentAcademicYearSelect.innerHTML = `<option value="">Select academic year</option>`;
+      const yearSelectEl =
+        studentAcademicYearSelect ||
+        document.getElementById("studentAcademicYear");
+
+      if (yearSelectEl) {
+        yearSelectEl.innerHTML = `<option value="">Select academic year</option>`;
         cachedAcademicYears.forEach((yr) => {
           const opt = document.createElement("option");
           opt.value = yr.id;
-          // Fixed: mapped yr.year_label instead of non-existent yr.name
           opt.textContent = yr.year_label;
-          studentAcademicYearSelect.appendChild(opt);
+          yearSelectEl.appendChild(opt);
         });
       }
     } catch (err) {
       console.error("Error loading student dropdowns:", err);
-      if (typeof showToast === "function") {
-        showToast(
-          "Failed to load options for class or academic year.",
-          "error",
-        );
-      }
     }
   }
 
-  // ------------------------------------------------------------------
-  // 3. Dynamic Password & Date Visibility Handlers
-  // ------------------------------------------------------------------
+  // Dynamic Email, Password & Role Visibility Handler
   function updatePasswordVisibility() {
-    const selectedClassId = studentClassSelect ? studentClassSelect.value : "";
-    const passwordFields = document.querySelectorAll(
-      "#newPassword, #confirmPassword",
-    );
+    // Get the current DOM element dynamically every execution
+    const classSelectEl =
+      studentClassSelect ||
+      document.getElementById("studentClassSelect") ||
+      document.getElementById("studentClass");
 
-    const eligible = isEligibleClass(selectedClassId);
+    const selectedClassId = classSelectEl ? classSelectEl.value : "";
 
-    passwordFields.forEach((field) => {
-      const container = field.closest(".form-group");
-      if (container) {
-        container.style.display = eligible ? "block" : "none";
-      }
+    // Check eligibility using cachedClasses lookup
+    const eligible =
+      typeof isEligibleClass === "function" && isEligibleClass(selectedClassId);
+
+    // Explicitly select form fields
+    const emailEl = document.getElementById("studentEmail");
+    const passEl = document.getElementById("newPassword");
+    const confirmEl = document.getElementById("confirmPassword");
+    const roleEl = document.getElementById("studentRole");
+
+    const fields = [emailEl, passEl, confirmEl, roleEl].filter(Boolean);
+
+    fields.forEach((field) => {
+      // Find wrapper container (.form-group or parent)
+      const container = field.closest(".form-group") || field.parentElement;
+
       if (eligible) {
+        if (container) container.style.display = ""; // Reset inline display to CSS default
         field.setAttribute("required", "required");
+
+        // Restore default role value if empty
+        if (field.id === "studentRole" && !field.value) {
+          field.value = "student";
+        }
       } else {
+        if (container) container.style.display = "none";
         field.removeAttribute("required");
-        field.value = "";
+
+        // Reset non-role values when hidden
+        if (field.id !== "studentRole") {
+          field.value = "";
+        }
       }
     });
   }
 
-  if (studentClassSelect) {
-    studentClassSelect.addEventListener("change", updatePasswordVisibility);
+  // Bind change event using dynamic element lookup
+  const classDropdown =
+    studentClassSelect ||
+    document.getElementById("studentClassSelect") ||
+    document.getElementById("studentClass");
+
+  if (classDropdown) {
+    classDropdown.addEventListener("change", updatePasswordVisibility);
   }
 
   function setAdmissionDateToToday() {
@@ -281,24 +418,34 @@ document.addEventListener("DOMContentLoaded", () => {
     studentForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const selectedClassId = studentClassSelect.value;
-      const requiresPassword = isEligibleClass(selectedClassId);
+      const classSelectEl =
+        studentClassSelect ||
+        document.getElementById("studentClassSelect") ||
+        document.getElementById("studentClass");
+      const selectedClassId = classSelectEl ? classSelectEl.value : "";
 
-      const newPassword = document.getElementById("newPassword").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
+      const requiresPassword =
+        typeof isEligibleClass === "function" &&
+        isEligibleClass(selectedClassId);
+
+      const newPassword = document.getElementById("newPassword")?.value || "";
+      const confirmPassword =
+        document.getElementById("confirmPassword")?.value || "";
 
       if (requiresPassword) {
         if (!newPassword) {
-          if (typeof showToast === "function")
+          if (typeof showToast === "function") {
             showToast(
               "Password is required for Grades 10, 11, and 12.",
               "error",
             );
+          }
           return;
         }
         if (newPassword !== confirmPassword) {
-          if (typeof showToast === "function")
+          if (typeof showToast === "function") {
             showToast("Passwords do not match.", "error");
+          }
           return;
         }
       }
@@ -324,36 +471,67 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
-        const firstName = document
-          .getElementById("studentFirstName")
-          .value.trim();
-        const lastName = document
-          .getElementById("studentLastName")
-          .value.trim();
+        // Input extraction targeting HTML IDs
+        const firstName =
+          document.getElementById("studentFirstName")?.value.trim() || "";
+        const lastName =
+          document.getElementById("studentLastName")?.value.trim() || "";
+        const studentId =
+          document.getElementById("studentCustomId")?.value.trim() ||
+          document.getElementById("studentId")?.value.trim() ||
+          "";
+
+        const academicYearEl =
+          document.getElementById("studentAcademicYear") ||
+          document.getElementById("studentAcademicYearSelect");
+        const academicYearId = academicYearEl ? academicYearEl.value : "";
+
+        const dob =
+          document.getElementById("studentDob")?.value ||
+          document.getElementById("studentDateOfBirth")?.value ||
+          "";
+
+        const rawStatus =
+          document.getElementById("studentStatus")?.value || "Active";
+        // Capitalize first letter to match DB Enums ("Active" / "Inactive")
+        const statusValue =
+          rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
+
+        // Determine portal eligibility
+        const isEligible =
+          typeof isEligibleClass === "function" &&
+          isEligibleClass(selectedClassId);
+
+        const emailInput =
+          document.getElementById("studentEmail")?.value.trim() || "";
 
         const payload = {
-          student_custom_id: document
-            .getElementById("studentCustomId")
-            .value.trim(),
-          email: document.getElementById("studentEmail").value.trim(),
+          student_id: studentId,
           first_name: firstName,
           last_name: lastName,
           full_name: `${firstName} ${lastName}`.trim(),
-          gender: document.getElementById("studentGender").value,
-          date_of_birth: document.getElementById("studentDob").value,
           class_id: selectedClassId,
-          academic_year_id: document.getElementById("studentAcademicYear")
-            .value,
-          admission_date: document.getElementById("studentAdmissionDate").value,
-          status: document.getElementById("studentStatus").value,
-          address: document.getElementById("studentAddress").value.trim(),
-          medical_notes: document
-            .getElementById("studentMedicalNotes")
-            .value.trim(),
+          academic_year_id: academicYearId,
+          date_of_birth: dob,
+          gender: document.getElementById("studentGender")?.value || "",
+          admission_date:
+            document.getElementById("studentAdmissionDate")?.value || "",
+          status: statusValue,
+          address:
+            document.getElementById("studentAddress")?.value.trim() || "",
+          medical_notes:
+            document.getElementById("studentMedicalNotes")?.value.trim() || "",
           photo: photoBase64,
-          role: "student",
-          password: requiresPassword ? newPassword : null,
         };
+
+        // Attaching Auth details for eligible grades
+        if (isEligible) {
+          payload.email = emailInput;
+          payload.role = "student";
+          payload.password = newPassword;
+        }
+
+        console.log("PAYLOAD VERIFICATION:", payload);
 
         const { data: sessionData, error: sessionError } =
           await supabaseClient.auth.getSession();
@@ -394,14 +572,16 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(data.message || "Failed to create student.");
         }
 
-        if (typeof showToast === "function")
+        if (typeof showToast === "function") {
           showToast("Student created successfully!", "success");
-        hideStudentModal();
+        }
+        if (typeof hideStudentModal === "function") hideStudentModal();
         if (typeof loadStudents === "function") loadStudents();
       } catch (err) {
         console.error("Error creating student:", err);
-        if (typeof showToast === "function")
+        if (typeof showToast === "function") {
           showToast(err.message || "An error occurred.", "error");
+        }
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -410,4 +590,112 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+});
+
+async function loadStudentsTable() {
+  const tableBody = document.getElementById("studentsTableBody");
+  if (!tableBody) return;
+
+  // Render loading state
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="7" style="text-align: center; padding: 20px;">
+        Loading students...
+      </td>
+    </tr>
+  `;
+
+  try {
+    // Fetch students with joined profile and class data
+    const { data: students, error } = await supabaseClient
+      .from("students")
+      .select(
+        `
+        id,
+        student_id,
+        gender,
+        profiles!inner (
+          full_name,
+          photo_url,
+          status
+        ),
+        classes (
+          name
+        )
+      `,
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!students || students.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 20px;">
+            No students found.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    // Build table rows
+    tableBody.innerHTML = students
+      .map((student) => {
+        const profile = student.profiles || {};
+        const className = student.classes?.name || "N/A";
+        const photoSrc = profile.photo_url || "images/profile.png";
+        const status = (profile.status || "active").toLowerCase();
+        const statusClass =
+          status === "active"
+            ? "students-status-active"
+            : "students-status-inactive";
+
+        return `
+        <tr>
+          <td>
+            <img 
+              src="${photoSrc}" 
+              class="student-photo" 
+              alt="${profile.full_name || "Student"}" 
+              onerror="this.src='images/profile.png'"
+            />
+          </td>
+          <td>${student.student_id || "N/A"}</td>
+          <td>${profile.full_name || "N/A"}</td>
+          <td>${student.gender || "N/A"}</td>
+          <td>${className}</td>
+          <td>
+            <span class="${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+          </td>
+          <td>
+            <button class="students-actions-btn view" onclick="viewStudent('${student.id}')">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button class="students-actions-btn edit" onclick="editStudent('${student.id}')">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="students-actions-btn archive" onclick="archiveStudent('${student.id}')">
+              <i class="fa-solid fa-box-archive"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      })
+      .join("");
+  } catch (err) {
+    console.error("Error fetching students:", err);
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; color: red; padding: 20px;">
+          Failed to load students: ${err.message}
+        </td>
+      </tr>
+    `;
+  }
+}
+
+// Call function on page load
+document.addEventListener("DOMContentLoaded", () => {
+  loadStudentsTable();
 });
