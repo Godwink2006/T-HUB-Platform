@@ -453,6 +453,7 @@ tr {
 .view-student-status {
   background: #dcfce7;
   color: #166534;
+  padding: 10px;
 }
 
 .confirm-modal {

@@ -432,119 +432,125 @@
       </div>
     </div>
 
-    <!---Edit student modal-->
-
+    <!-- Edit Student Modal -->
     <div id="editStudentModal" class="edit-modal-student">
       <div class="edit-student-modal-content">
         <div class="edit-student-modal-header">
           <h2>Edit Student</h2>
-
           <button id="closeEditStudentModal">&times;</button>
         </div>
 
         <div class="edit-student-modal-body">
-          <form id="studentForm">
+          <form id="editStudentForm">
+            <!-- Hidden input to store student profile ID -->
+            <input type="hidden" id="editStudentDbId" name="student_id" />
+
             <div class="form-grid">
+              <!-- First Name -->
               <div class="form-group">
-                <label>Student ID *</label>
-
-                <input type="text" placeholder="Enter student ID" />
+                <label for="editStudentFirstName">First name *</label>
+                <input
+                  type="text"
+                  id="editStudentFirstName"
+                  placeholder="Enter first name"
+                  required
+                />
               </div>
 
+              <!-- Last Name -->
               <div class="form-group">
-                <label>First name *</label>
-
-                <input type="text" placeholder="Enter first name" />
+                <label for="editStudentLastName">Last name *</label>
+                <input
+                  type="text"
+                  id="editStudentLastName"
+                  placeholder="Enter last name"
+                  required
+                />
               </div>
 
+              <!-- Gender -->
               <div class="form-group">
-                <label>Last name *</label>
-
-                <input type="text" placeholder="Enter last name" />
-              </div>
-
-              <div class="form-group">
-                <label>Gender *</label>
-
-                <select>
-                  <option>Select Gender</option>
-                  <option>Male</option>
-                  <option>Female</option>
+                <label for="editStudentGender">Gender *</label>
+                <select id="editStudentGender" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
                 </select>
               </div>
 
+              <!-- Date of Birth -->
               <div class="form-group">
-                <label>Date of birth *</label>
-
-                <input type="date" />
+                <label for="editStudentDob">Date of birth *</label>
+                <input type="date" id="editStudentDob" required />
               </div>
 
+              <!-- Admission Date -->
               <div class="form-group">
-                <label>Class *</label>
+                <label for="editStudentAdmissionDate">Admission date *</label>
+                <input type="date" id="editStudentAdmissionDate" required />
+              </div>
 
-                <select>
-                  <option>Select class</option>
-                  <option>Senior 1</option>
-                  <option>Senior 2</option>
-                  <option>Senior 3</option>
-                  <option>Senior 4</option>
-                  <option>Senior 5</option>
-                  <option>Senior 6</option>
+              <!-- Status -->
+              <div class="form-group">
+                <label for="editStudentStatus">Status *</label>
+                <select id="editStudentStatus" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
 
-              <div class="form-group">
-                <label>Guardian name *</label>
-
-                <input type="text" placeholder="Guardian name" />
-              </div>
-
-              <div class="form-group">
-                <label>Guardian phone *</label>
-
-                <input type="tel" placeholder="+250...." />
-              </div>
-
-              <div class="form-group">
-                <label>Guardian email (Optional)</label>
-
-                <input type="email" placeholder="guardian@gmail.com" />
-              </div>
-
-              <div class="form-group">
-                <label>Admission date *</label>
-
-                <input type="date" />
-              </div>
-
+              <!-- Address -->
               <div class="form-group full-width">
-                <label>Address (Optional)</label>
-
-                <textarea rows="4" placeholder="Student address"></textarea>
-              </div>
-
-              <div class="form-group full-width">
-                <label>Medical notes (Optional)</label>
-
+                <label for="editStudentAddress">Address (Optional)</label>
                 <textarea
+                  id="editStudentAddress"
+                  rows="4"
+                  placeholder="Student address"
+                ></textarea>
+              </div>
+
+              <!-- Medical Notes -->
+              <div class="form-group full-width">
+                <label for="editStudentMedicalNotes"
+                  >Medical notes (Optional)</label
+                >
+                <textarea
+                  id="editStudentMedicalNotes"
                   rows="4"
                   placeholder="Student medical notes"
                 ></textarea>
               </div>
 
-              <div class="form-group">
-                <label>Status *</label>
+              <!-- Profile Photo Upload -->
+              <div class="avatar-upload-group full-width">
+                <label class="form-label">Profile photo (Optional)</label>
+                <div class="avatar-edit-container">
+                  <div class="avatar-preview-wrapper">
+                    <img
+                      id="editStudentPhotoPreview"
+                      src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>"
+                      alt="Student Photo Preview"
+                    />
+                  </div>
 
-                <select>
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Profile photo (Optional)</label>
-
-                <input type="file" />
+                  <div class="avatar-upload-actions">
+                    <label
+                      for="editStudentPhoto"
+                      class="btn-secondary upload-btn"
+                    >
+                      <i class="bx bx-upload"></i> Change Photo
+                    </label>
+                    <input
+                      type="file"
+                      id="editStudentPhoto"
+                      accept="image/*"
+                      hidden
+                    />
+                    <span id="editStudentPhotoFileName" class="file-name-text">
+                      No file chosen
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -556,8 +562,9 @@
               >
                 Cancel
               </button>
-
-              <button type="submit" class="edit-btn">Update Student</button>
+              <button type="submit" class="edit-btn" id="saveEditStudentBtn">
+                Update Student
+              </button>
             </div>
           </form>
         </div>
@@ -568,64 +575,83 @@
       <div class="view-student-modal-content">
         <div class="view-student-modal-header">
           <h2>Student Details</h2>
-
           <button id="closeViewStudentModal">&times;</button>
         </div>
 
         <div class="view-student-body">
           <div class="profile-section">
-            <img src="images/profile.png" class="view-student-photo" />
-
+            <img
+              id="viewStudentPhoto"
+              class="view-student-photo"
+              alt="Student Photo"
+            />
             <h3 id="viewStudentName">John Doe</h3>
-
-            <span class="view-student-status active">Active</span>
+            <span id="viewStudentStatus" class="view-student-status active"
+              >Active</span
+            >
           </div>
 
           <div class="details-grid">
             <div class="details-item">
               <label>Student ID</label>
-              <p>ST001</p>
+              <p id="viewStudentCustomId">-</p>
             </div>
 
             <div class="details-item">
               <label>Gender</label>
-              <p>Male</p>
+              <p id="viewStudentGender">-</p>
             </div>
 
             <div class="details-item">
-              <label>Date of birth</label>
-              <p>12 April 2010</p>
+              <label>Date of Birth</label>
+              <p id="viewStudentDob">-</p>
             </div>
 
             <div class="details-item">
               <label>Class</label>
-              <p>Senior 2</p>
+              <p id="viewStudentClass">-</p>
             </div>
 
             <div class="details-item">
-              <label>Guardian</label>
-              <p>Peter Doe</p>
+              <label>Academic Year</label>
+              <p id="viewStudentAcademicYear">-</p>
+            </div>
+
+            <div class="details-item">
+              <label>Admission Date</label>
+              <p id="viewStudentAdmissionDate">-</p>
             </div>
 
             <div class="details-item">
               <label>Phone</label>
-              <p>+250 788 000 000</p>
+              <p id="viewStudentPhone">-</p>
             </div>
 
             <div class="details-item">
               <label>Email</label>
-              <p>guardian@gmail.com</p>
+              <p id="viewStudentEmail">-</p>
             </div>
 
             <div class="details-item">
-              <label>Admission date</label>
-              <p>15 January 2025</p>
+              <label>Created At</label>
+              <p id="viewStudentCreatedAt">-</p>
             </div>
 
-            <div class="details-item full-width">
-              <label>Address</label>
-              <p>Kigali, Rwanda</p>
+            <div class="details-item">
+              <label>Updated At</label>
+              <p id="viewStudentUpdatedAt">-</p>
             </div>
+          </div>
+          <br />
+
+          <div class="details-item full-width">
+            <label>Address</label>
+            <p id="viewStudentAddress">-</p>
+          </div>
+
+          <div class="details-item full-width">
+            <label>Medical Notes</label>
+            <p id="viewStudentMedicalNotes">-</p>
           </div>
 
           <div class="view-modal-footer">
@@ -635,23 +661,31 @@
       </div>
     </div>
 
-    <div id="archiveStudentModal" class="archive-modal">
+    <!-- Archive Student Modal -->
+    <div id="archiveStudentModal" class="archive-modal" style="display: none">
       <div class="confirm-modal">
-        <div confirm-icon>
+        <div class="confirm-icon">
           <i class="fa-solid fa-box-archive"></i>
         </div>
 
         <h2>Archive Student</h2>
 
         <p>
-          Are you sure you want to archive this student? The student will no
-          longer appear in the active list.
+          Are you sure you want to archive
+          <strong id="archiveStudentName" style="color: green"
+            >this student</strong
+          >? This will mark them as <strong>Inactive</strong> and move them out
+          of the active list.
         </p>
 
-        <div class="archive-modal-footer">
-          <button id="cancelArchive" class="cancel-btn">Cancel</button>
+        <!-- Hidden input to hold student ID -->
+        <input type="hidden" id="archiveStudentId" />
 
-          <button id="confirmArchive" class="archive-confirm-btn">
+        <div class="archive-modal-footer">
+          <button type="button" id="cancelArchive" class="cancel-btn">
+            Cancel
+          </button>
+          <button type="button" id="confirmArchive" class="archive-confirm-btn">
             Archive
           </button>
         </div>

@@ -361,7 +361,7 @@ async function loadSystemUsers() {
       "id, full_name, email, phone_number, role, status, photo_url, is_archived, created_at, updated_at",
     )
     .eq("is_archived", false)
-    .not("role", "in", '("admin","teacher")');
+    .in("role", ["librarian", "accountant", "receptionist"]);
 
   // Apply search across full_name, email, or phone_number
   if (searchTerm) {
