@@ -158,15 +158,28 @@ async function initFormProtection() {
   // 4. Reveal form smoothly
   form.classList.add("auth-ready");
 }
-/**
- * Loads existing school profile from Supabase and fills the form.
- */
+
 async function loadSchoolProfile() {
   try {
+    // 1. Get logged-in user's profile to extract their school_id
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: userProfile } = await supabaseClient
+      .from("profiles")
+      .select("school_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!userProfile?.school_id) return;
+
+    // 2. Fetch ONLY the school record associated with this user
     const { data, error } = await supabaseClient
       .from("schools")
       .select("*")
-      .limit(1)
+      .eq("id", userProfile.school_id)
       .maybeSingle();
 
     if (error) throw error;
@@ -174,11 +187,6 @@ async function loadSchoolProfile() {
     if (data) {
       existingRecordId = data.id;
 
-      // Populate form fields matching your HTML element IDs
-      // Replace line 84:
-      // setValue('schoolLogo', data.logo_url);
-
-      // With this:
       const logoImg = document.getElementById("schoolLogoPreview");
       if (logoImg && data.logo_url) {
         logoImg.src = data.logo_url;
@@ -206,9 +214,7 @@ async function loadSchoolProfile() {
     console.error("Error loading school profile:", err.message);
   }
 }
-/**
- * Validates form inputs, uploads logo if present, and upserts data.
- */
+
 async function handleFormSubmit() {
   const formData = {
     school_name: getValue("schoolName").trim(),
@@ -337,9 +343,11 @@ async function handleFormSubmit() {
       saveBtn.textContent = "Saving...";
     }
 
-    if (logoFile) {
+    if (logoFile && existingRecordId) {
       const compressedBlob = await compressImageToBlob(logoFile, 800, 0.7);
-      const filePath = `school-logos/logo-main.jpg`;
+
+      // Dynamic path unique to each school record
+      const filePath = `school-logos/${existingRecordId}/logo.jpg`;
 
       const { error: uploadError } = await supabaseClient.storage
         .from("avatars")

@@ -125,16 +125,20 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search students..." />
+          <input
+            type="text"
+            id="studentSearchInput"
+            placeholder="Search students..."
+          />
 
-          <select>
-            <option>All Classes</option>
+          <select id="studentClassFilter">
+            <option value="">All Classes</option>
           </select>
 
-          <select>
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+          <select id="studentStatusFilter">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
 
@@ -336,6 +340,18 @@
                   id="hiddenStudentRole"
                   name="role"
                   value="student"
+                />
+              </div>
+
+              <!-- Status -->
+              <div class="form-group">
+                <label for="studentPhone">Phone *</label>
+                <input
+                  type="tel"
+                  id="studentPhone"
+                  name="phone"
+                  placeholder="Enter phone number"
+                  required
                 />
               </div>
 
