@@ -1,3 +1,9 @@
+/* Hide all admin-only sidebar links immediately upon initial HTML load */
+.admin-only,
+.admin-accountant-only {
+  display: none !important;
+}
+
 /* Hide toggle button on desktop */
 .menu-toggle {
   display: none;

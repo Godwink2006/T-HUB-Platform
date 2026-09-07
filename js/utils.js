@@ -1,15 +1,23 @@
 function renderNavigation(userRole) {
   const isAdmin = userRole === "admin";
-  const sidebarLinks = document.querySelectorAll(".menu li a");
+  const isAccountant = userRole === "accountant";
 
-  sidebarLinks.forEach((link) => {
-    const href = link.getAttribute("href");
-    if (ADMIN_ONLY_PAGES.includes(href)) {
-      // Show only if admin, otherwise keep hidden
-      link.parentElement.style.display = isAdmin ? "block" : "none";
-    }
-  });
+  // Reveal Admin-only elements
+  if (isAdmin) {
+    document.querySelectorAll(".admin-only").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
+
+  // Reveal Admin & Accountant elements
+  if (isAdmin || isAccountant) {
+    document.querySelectorAll(".admin-accountant-only").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
 }
+
+const ADMIN_ACCOUNTANT_PAGES = ["students.html", "finance.html"];
 
 // ==========================================
 // CONFIGURATION & HELPERS
@@ -91,17 +99,21 @@ window.forceLogout = async function () {
     window.location.replace("/index.html");
   }
 };
-
 // ==========================================
 // CENTRAL ACCESS GUARD
 // ==========================================
 async function checkPageAccess() {
   const currentPage = window.location.pathname.split("/").pop();
 
-  if (!ADMIN_ONLY_PAGES.includes(currentPage)) {
+  const isAdminOnly = ADMIN_ONLY_PAGES.includes(currentPage);
+  const isAdminOrAccountantOnly = ADMIN_ACCOUNTANT_PAGES.includes(currentPage);
+
+  // If the page has no restrictions, allow access immediately
+  if (!isAdminOnly && !isAdminOrAccountantOnly) {
     return;
   }
 
+  // Prevent flash of unauthorized content while validating authentication
   document.documentElement.style.visibility = "hidden";
 
   if (!window.supabaseClient) {
@@ -109,6 +121,7 @@ async function checkPageAccess() {
     return;
   }
 
+  // Fetch session user
   const {
     data: { user },
     error,
@@ -119,17 +132,28 @@ async function checkPageAccess() {
     return;
   }
 
+  // Fetch user role
   const { data: profile } = await window.supabaseClient
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  const role = profile?.role;
+
+  // 1. Enforce Admin-Only Access
+  if (isAdminOnly && role !== "admin") {
     await window.forceLogout();
     return;
   }
 
+  // 2. Enforce Admin + Accountant Access
+  if (isAdminOrAccountantOnly && role !== "admin" && role !== "accountant") {
+    await window.forceLogout();
+    return;
+  }
+
+  // Reveal page content if authorized
   document.documentElement.style.visibility = "";
 }
 

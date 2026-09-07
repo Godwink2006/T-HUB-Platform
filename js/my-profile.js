@@ -29,6 +29,12 @@ async function loadMyProfile() {
     return;
   }
 
+  // Ensure profile photo url breaks cache if stored without timestamp
+  let avatarUrl = profile.photo_url || DEFAULT_AVATAR;
+  if (profile.photo_url && !profile.photo_url.includes("?t=")) {
+    avatarUrl = `${profile.photo_url}?t=${Date.now()}`;
+  }
+
   // Cache baseline data for reset operations
   currentProfileData = {
     fullName: profile.full_name || "",
@@ -160,7 +166,8 @@ async function handleUpdateProfile(event) {
         .from("avatars")
         .getPublicUrl(filePath);
 
-      photoUrl = urlData.publicUrl;
+      // Append timestamp to prevent browser from loading old cached avatar
+      photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     }
 
     // 2. Request Email Change in Supabase Auth (Sends Confirmation Link)
