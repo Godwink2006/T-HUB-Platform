@@ -9,21 +9,11 @@
 /* Assignment Card */
 .assignment-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-
-.assignment-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 /* Card Header */
@@ -42,8 +32,6 @@
 }
 
 .class-badge {
-  background-color: #eff6ff;
-  color: #2563eb;
   padding: 0.35rem 0.75rem;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -92,32 +80,42 @@
   display: flex;
   gap: 0.5rem;
 }
-
+/* Secondary Action (Attendance) */
 .card-btn {
   flex: 1;
   padding: 0.6rem;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #374151;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc; /* Very soft cool gray fill instead of plain white */
+  color: #334155; /* Dark slate text */
   font-weight: 600;
   cursor: pointer;
   text-align: center;
   text-decoration: none;
   font-size: 0.85rem;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .card-btn:hover {
-  background: #f9fafb;
+  background: #e2e8f0; /* Slightly darker fill on hover */
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
+/* Primary Action (Enter Grades) */
 .card-btn.primary {
-  background: #2563eb;
+  background: #334155; /* Muted dark slate */
   color: #ffffff;
-  border: none;
+  border: 1px solid #334155;
 }
 
 .card-btn.primary:hover {
-  background: #1d4ed8;
+  background: #1e293b; /* Darker charcoal on hover */
+  border-color: #1e293b;
+}
+
+.class-badge {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
