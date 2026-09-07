@@ -1,25 +1,20 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const gridContainer = document.getElementById("assignmentsGrid");
 
+  gridContainer.innerHTML = `
+      <div style="text-align: center; justify-content: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        <p>Loading assignments...</p>
+      </div
+  `;
+
   try {
     const {
       data: { user },
     } = await supabaseClient.auth.getUser();
     if (!user) return;
 
-    // Fetch teacher record linked to user email
-    const { data: teacher } = await supabaseClient
-      .from("teachers")
-      .select("id, full_name")
-      .eq("email", user.email)
-      .single();
-
-    if (!teacher) {
-      gridContainer.innerHTML = `<p class="empty-state">No teacher profile associated with this account.</p>`;
-      return;
-    }
-
-    // Fetch active assignments
+    // Fetch active assignments directly using user.id (which equals teacher_id)
     const { data: assignments, error } = await supabaseClient
       .from("teacher_assignments")
       .select(
@@ -27,28 +22,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         id,
         is_class_teacher,
         description,
+        status,
         subjects (name),
         classes (name),
-        academic_years (name)
+        academic_years (year_label)
       `,
       )
-      .eq("teacher_id", teacher.id)
-      .eq("status", "Active");
+      .eq("teacher_id", user.id)
+      .eq("status", "active");
 
-    if (error) throw error;
+    if (error) {
+      console.error("Assignment fetch error:", error);
+      gridContainer.innerHTML = `<p class="error-state">Error loading assignments.</p>`;
+      return;
+    }
 
     if (!assignments || assignments.length === 0) {
       gridContainer.innerHTML = `<p class="empty-state">You currently have no assigned subjects or classes.</p>`;
       return;
     }
 
-    // Render Cards
+    // Render Cards Grid
     gridContainer.innerHTML = assignments
       .map((item) => {
         const isClassTeacher = item.is_class_teacher;
         const subjectName = item.subjects?.name || "Unassigned Subject";
         const className = item.classes?.name || "N/A";
-        const yearName = item.academic_years?.name || "Current Session";
+        const yearName = item.academic_years?.year_label || "Current Session";
 
         return `
         <div class="assignment-card">
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       })
       .join("");
   } catch (err) {
-    console.error("Error loading assignments:", err);
-    gridContainer.innerHTML = `<p class="error-state">Failed to load assignment schedule.</p>`;
+    console.error("Unexpected error:", err);
+    gridContainer.innerHTML = `<p class="error-state">Failed to load schedule.</p>`;
   }
 });
