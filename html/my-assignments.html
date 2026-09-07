@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Schedule - School Management System</title>
+    <link rel="stylesheet" href="css/my-assignments.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <main class="content-container">
+      <!-- Header Section -->
+      <div class="page-header">
+        <div>
+          <h2>My Teaching Schedule</h2>
+          <p class="subtitle">
+            Overview of your assigned classes, subjects, and roles.
+          </p>
+        </div>
+        <div class="academic-badge" id="academicYearBadge">
+          <i class="fa-solid fa-calendar-days"></i> Academic Year
+        </div>
+      </div>
+
+      <!-- Cards Grid Container -->
+      <div class="assignments-grid" id="assignmentsGrid">
+        <!-- Loading Skeleton / Dynamic Cards -->
+      </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/my-assignments.js"></script>
+  </body>
+</html>

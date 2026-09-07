@@ -46,6 +46,14 @@ async function initAcademicsPage() {
         : ""
     }
 
+    <div id="nav-my-assignments" class="academic-card">
+      <h4>My Assignments</h4>
+      <p>View and manage your assigned tasks.</p>
+      <button onclick="window.location.href = 'my-assignments.html'" class="manage-btn">
+        Manage Assignments <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
     <div id="nav-timetable" class="academic-card">
       <h4>Timetable</h4>
       <p>Create and manage school timetables.</p>
