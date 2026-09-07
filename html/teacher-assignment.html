@@ -14,6 +14,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/teacher-assignment.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -45,34 +46,33 @@
 
           <button id="addAssign" class="add-assigns-btn">
             <i class="fa-solid fa-plus"></i>
-            Assign Teacher
+            Assign
           </button>
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search assignments..." />
+          <input
+            type="text"
+            id="assignSearchInput"
+            placeholder="Search assignments..."
+          />
 
-          <select>
-            <option>Teacher</option>
-            <option>John Doe</option>
+          <select id="filterTeacher">
+            <option value="">All Teachers</option>
           </select>
 
-          <select>
-            <option>Class</option>
-            <option>Grade 7B</option>
+          <select id="filterClass">
+            <option value="">All Classes</option>
           </select>
 
-          <select>
-            <option>Academic Year</option>
-            <option>2026-2027</option>
-            <option>2025-2026</option>
-            <option>2024-2025</option>
+          <select id="filterAcademicYear">
+            <option value="">All Academic Years</option>
           </select>
 
-          <select>
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+          <select id="filterStatus">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
 
@@ -85,133 +85,90 @@
                 <th>Class</th>
                 <th>Academic Year</th>
                 <th>Class Teacher</th>
+                <th>Description</th>
+                <th>Created At</th>
+                <th>Updated At</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>John Doe</td>
-                <td>Mathematics</td>
-                <td>Grade 10A</td>
-                <td>2026-2027</td>
-                <td>Yes</td>
-                <td>
-                  <span class="assigns-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button class="assigns-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="assigns-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="assigns-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Peter Smith</td>
-                <td>Biology</td>
-                <td>Grade 10A</td>
-                <td>2026-2027</td>
-                <td>No</td>
-                <td>
-                  <span class="assigns-status-inactive">Active</span>
-                </td>
-
-                <td>
-                  <button class="assigns-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="assigns-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="assigns-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="assignmentsTableBody"></tbody>
           </table>
         </section>
       </main>
     </div>
 
-    <div id="assignModal" class="modal-assign">
+    <div id="assignModal" class="modal-assign" style="display: none">
       <div class="assign-modal-content">
         <div class="assign-modal-header">
           <h2>Assign Teacher</h2>
-
-          <button id="closeAssignModal">&times;</button>
+          <button id="closeAssignModal" type="button">&times;</button>
         </div>
 
         <div class="assign-modal-body">
           <form id="assignForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Teacher *</label>
-
-                <select>
-                  <option>Select Teacher</option>
+                <label for="assignTeacherId">Teacher *</label>
+                <select id="assignTeacherId" name="teacher_id" required>
+                  <option value="">Select Teacher</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Subject *</label>
-
-                <select>
-                  <option>Select Subject</option>
+                <label for="assignSubjectId">Subject *</label>
+                <select id="assignSubjectId" name="subject_id" required>
+                  <option value="">Select Subject</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Class *</label>
-
-                <select>
-                  <option>Select Class</option>
+                <label for="assignClassId">Class *</label>
+                <select id="assignClassId" name="class_id" required>
+                  <option value="">Select Class</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Academic Year *</label>
-
-                <select>
-                  <option>Select Academic Year</option>
-                  <option>2026-2027</option>
+                <label for="assignAcademicYearId">Academic Year *</label>
+                <select
+                  id="assignAcademicYearId"
+                  name="academic_year_id"
+                  required
+                >
+                  <option value="">Select Academic Year</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Class Teacher *</label>
+                <label for="assignIsClassTeacher">Class Teacher *</label>
+                <select
+                  id="assignIsClassTeacher"
+                  name="is_class_teacher"
+                  required
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
 
-                <select>
-                  <option>Yes</option>
-                  <option>No</option>
+              <div class="form-group">
+                <label for="assignStatus">Status *</label>
+                <select id="assignStatus" name="status" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
 
               <div class="form-group full-width">
-                <label>Description (Optional)</label>
-
-                <textarea rows="4" placeholder="Write description"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
-                </select>
+                <label for="assignDescription">Description (Optional)</label>
+                <textarea
+                  id="assignDescription"
+                  name="description"
+                  rows="4"
+                  placeholder="Write description"
+                ></textarea>
               </div>
             </div>
 
@@ -219,7 +176,6 @@
               <button type="button" class="cancel-btn" id="cancelAssignModal">
                 Cancel
               </button>
-
               <button type="submit" class="save-btn">Save</button>
             </div>
           </form>
@@ -229,72 +185,47 @@
 
     <!---Edit student modal-->
 
-    <div id="editAssignModal" class="edit-modal-assign">
+    <div id="editAssignModal" class="edit-modal-assign" style="display: none">
       <div class="edit-assign-modal-content">
         <div class="edit-assign-modal-header">
           <h2>Edit Assign Teacher</h2>
-
-          <button id="closeEditAssignModal">&times;</button>
+          <button id="closeEditAssignModal" type="button">&times;</button>
         </div>
 
         <div class="edit-assign-modal-body">
-          <form id="assignForm">
+          <form id="editAssignForm">
+            <!-- Hidden input to store active assignment ID -->
+            <input type="hidden" id="editAssignmentId" />
+
             <div class="form-grid">
               <div class="form-group">
-                <label>Teacher *</label>
-
-                <select>
-                  <option>Select Teacher</option>
+                <label for="editIsClassTeacher">Class Teacher *</label>
+                <select
+                  id="editIsClassTeacher"
+                  name="is_class_teacher"
+                  required
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Subject *</label>
-
-                <select>
-                  <option>Select Subject</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Class *</label>
-
-                <select>
-                  <option>Select Class</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Academic Year *</label>
-
-                <select>
-                  <option>Select Academic Year</option>
-                  <option>2026-2027</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Class Teacher *</label>
-
-                <select>
-                  <option>Yes</option>
-                  <option>No</option>
+                <label for="editStatus">Status *</label>
+                <select id="editStatus" name="status" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
 
               <div class="form-group full-width">
-                <label>Description (Optional)</label>
-
-                <textarea rows="4" placeholder="Write description"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
-                </select>
+                <label for="editDescription">Description (Optional)</label>
+                <textarea
+                  id="editDescription"
+                  name="description"
+                  rows="4"
+                  placeholder="Write description"
+                ></textarea>
               </div>
             </div>
 
@@ -306,83 +237,45 @@
               >
                 Cancel
               </button>
-
-              <button type="submit" class="edit-btn">Update</button>
+              <button type="submit" class="edit-btn" id="updateAssignBtn">
+                Update
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <div id="viewAssignModal" class="view-assign-modal">
-      <div class="view-assign-modal-content">
-        <div class="view-assign-modal-header">
-          <h2>Assign Details</h2>
-
-          <button id="closeViewAssignModal">&times;</button>
-        </div>
-
-        <div class="view-assign-body">
-          <div class="profile-section">
-            <h3 id="viewAssignName">John Doe</h3>
-
-            <span class="view-assign-status active">Active</span>
-          </div>
-
-          <div class="details-grid">
-            <div class="details-item">
-              <label>Subject</label>
-              <p>Mathematics</p>
-            </div>
-
-            <div class="details-item">
-              <label>Class</label>
-              <p>Grade 10A</p>
-            </div>
-
-            <div class="details-item">
-              <label>Academic Year</label>
-              <p>2026-2027</p>
-            </div>
-
-            <div class="details-item">
-              <label>Class Teacher</label>
-              <p>Yes</p>
-            </div>
-
-            <div class="details-item">
-              <label>Description</label>
-              <p>Responsible for mathematics in Grade 10A.</p>
-            </div>
-          </div>
-
-          <div class="view-modal-footer">
-            <button id="closeViewBtn" class="cancel-btn">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="archiveAssignModal" class="archive-modal">
+    <div id="archiveAssignModal" class="archive-modal" style="display: none">
       <div class="confirm-modal">
-        <div confirm-icon>
+        <div class="confirm-icon">
           <i class="fa-solid fa-box-archive"></i>
         </div>
 
         <h2>Archive Teacher Assignment</h2>
 
-        <p>Are you sure you want to archive this Teacher Assignment?</p>
+        <p id="archiveTeacherNameClass"></p>
 
         <div class="archive-modal-footer">
-          <button id="cancelArchive" class="cancel-btn">Cancel</button>
+          <button id="cancelArchiveModalBtn" type="button" class="cancel-btn">
+            Cancel
+          </button>
 
-          <button id="confirmArchive" class="archive-confirm-btn">
+          <button
+            id="confirmArchiveModalBtn"
+            type="button"
+            class="archive-confirm-btn"
+          >
             Archive
           </button>
         </div>
       </div>
     </div>
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/teacher-assignment.js"></script>
   </body>
