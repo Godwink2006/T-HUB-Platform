@@ -116,59 +116,40 @@
         <header class="topbar">
           <div>
             <h1>Academics</h1>
-            <p>Confiqure the school's academic structure.</p>
+            <p>Configure the school's academic structure.</p>
           </div>
         </header>
 
-        <section class="academic-cards">
-          <div class="academic-card">
-            <h4>Teacher Assignment</h4>
-            <p>Assign teachers to classes and subjects.</p>
-            <button
-              onclick="window.location.href = 'teacher-assignment.html'"
-              class="manage-btn"
-            >
-              Assign Teachers
-              <i class="fa-solid fa-chevron-right"></i>
-            </button>
+        <!-- Container for Skeletons -->
+        <div id="academicsSkeleton" class="academic-cards">
+          <div class="academic-card skeleton">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-btn"></div>
           </div>
+          <div class="academic-card skeleton">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-btn"></div>
+          </div>
+          <div class="academic-card skeleton">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-btn"></div>
+          </div>
+          <div class="academic-card skeleton">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </div>
 
-          <div class="academic-card">
-            <h4>Timetable</h4>
-            <p>Create and manage school timetables.</p>
-            <button
-              onclick="window.location.href = 'timetable.html'"
-              class="manage-btn"
-            >
-              Manage Timetable
-              <i class="fa-solid fa-chevron-right"></i>
-            </button>
-          </div>
-
-          <div class="academic-card">
-            <h4>Attendance</h4>
-            <p>Take and manage Attendance.</p>
-            <button
-              onclick="window.location.href = 'attendance.html'"
-              class="manage-btn"
-            >
-              Manage Attendance
-              <i class="fa-solid fa-chevron-right"></i>
-            </button>
-          </div>
-
-          <div class="academic-card">
-            <h4>Grades</h4>
-            <p>Add and manage grades.</p>
-            <button
-              onclick="window.location.href = 'grades.html'"
-              class="manage-btn"
-            >
-              Manage grades
-              <i class="fa-solid fa-chevron-right"></i>
-            </button>
-          </div>
-        </section>
+        <!-- Container for Dynamic Content -->
+        <section
+          class="academic-cards"
+          id="academicsContainer"
+          style="display: none"
+        ></section>
       </main>
     </div>
 

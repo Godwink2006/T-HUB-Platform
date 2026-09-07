@@ -355,14 +355,22 @@ async function handleUpdateAssignment(e) {
       .from("teacher_assignments")
       .update(payload)
       .eq("id", assignmentId);
-
     if (error) {
+      // Row Level Security (RLS) permission failure
+      if (
+        error.code === "42501" ||
+        error.message?.toLowerCase().includes("row-level security")
+      ) {
+        throw new Error("Permission denied.");
+      }
+
       // Unique class teacher constraint failure
       if (error.code === "23505") {
         throw new Error(
           "This class already has an assigned Class Teacher for this academic year.",
         );
       }
+
       throw error;
     }
 

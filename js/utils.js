@@ -1,3 +1,16 @@
+function renderNavigation(userRole) {
+  const isAdmin = userRole === "admin";
+  const sidebarLinks = document.querySelectorAll(".menu li a");
+
+  sidebarLinks.forEach((link) => {
+    const href = link.getAttribute("href");
+    if (ADMIN_ONLY_PAGES.includes(href)) {
+      // Show only if admin, otherwise keep hidden
+      link.parentElement.style.display = isAdmin ? "block" : "none";
+    }
+  });
+}
+
 // ==========================================
 // CONFIGURATION & HELPERS
 // ==========================================
@@ -12,6 +25,8 @@ const ADMIN_ONLY_PAGES = [
   "assessments.html",
   "semester.html",
   "system-users.html",
+  "teacher-assignment.html",
+  "teachers.html",
 ];
 
 function isLoginPage() {
