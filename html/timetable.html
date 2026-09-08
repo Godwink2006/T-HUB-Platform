@@ -14,6 +14,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/timetable.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -29,18 +30,27 @@
   <body>
     <div class="timetables-container">
       <main class="timetables-main-content">
-        <header class="topbar">
+        <header>
           <div>
             <h1>Timetable</h1>
             <p>Manage timetables.</p>
 
-            <button
-              onclick="window.location.href = 'academics.html'"
-              class="back-academics-btn"
-            >
-              <i class="fa-solid fa-chevron-left"></i>
-              Back
-            </button>
+            <div class="topbar">
+              <button
+                onclick="window.location.href = 'academics.html'"
+                class="back-academics-btn"
+              >
+                <i class="fa-solid fa-chevron-left"></i>
+                Back
+              </button>
+
+              <div class="top-right">
+                <button id="addTimetable" class="add-timetables-btn">
+                  <i class="fa-solid fa-plus"></i>
+                  Create Timetable
+                </button>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -71,338 +81,233 @@
                 <th>Actions</th>
               </tr>
             </thead>
-
-            <tbody>
-              <tr>
-                <td>Grade 10A</td>
-                <td>2026-2027</td>
-                <td>
-                  <span class="timetables-status-active">Active</span>
-                </td>
-
-                <td>
-                  <button id="addTimetable" class="add-timetables-btn">
-                    <i class="fa-solid fa-plus"></i>
-                    Create Timetable
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Grade 10A</td>
-                <td>2026-2027</td>
-                <td>
-                  <span class="timetables-status-inactive">Inactive</span>
-                </td>
-
-                <td>
-                  <button class="timetables-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-
-                  <button class="timetables-actions-btn edit">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-
-                  <button class="timetables-actions-btn archive">
-                    <i class="fa-solid fa-box-archive"></i>
-                  </button>
-                </td>
-              </tr>
+            <!-- Dynamic table body -->
+            <tbody id="timetablesTableBody">
+              <!-- Loaded dynamically via JavaScript -->
             </tbody>
           </table>
         </section>
       </main>
     </div>
-
-    <!-- Create Timetable modal -->
-
+    <!-- Create Timetable Modal -->
     <div id="timetableModal" class="modal-timetable">
       <div class="timetable-modal-content">
         <div class="timetable-modal-header">
           <h2>Create Timetable</h2>
-
-          <button id="closeTimetableModal">&times;</button>
+          <button type="button" id="closeTimetableModal">&times;</button>
         </div>
 
         <div class="timetable-modal-body">
           <form id="timetableForm">
             <div class="details-grid">
               <div class="details-item">
-                <label>Class</label>
-
-                <p>Grade 8A</p>
+                <label for="timetableClassSelect">Class *</label>
+                <select id="timetableClassSelect" name="class_id" required>
+                  <option value="">Select Class...</option>
+                </select>
               </div>
 
               <div class="details-item">
-                <label>Academic Year</label>
-
-                <p>2026-2027</p>
+                <label for="timetableYearSelect">Academic Year *</label>
+                <select
+                  id="timetableYearSelect"
+                  name="academic_year_id"
+                  required
+                >
+                  <option value="">Select Academic Year...</option>
+                </select>
               </div>
             </div>
 
             <h2>Lessons</h2>
 
             <section class="timetable-table-card">
-              <table>
+              <table id="timetableLessonsTable">
                 <thead>
                   <tr>
                     <th>Day</th>
                     <th>Time</th>
                     <th>Subject</th>
                     <th>Teacher</th>
-                    <th>Room</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-
-                <tbody>
+                <tbody id="timetableLessonsTbody">
                   <tr>
-                    <td>Monday</td>
-                    <td>08:00-09:00</td>
-                    <td>Mathematics</td>
-                    <td>John Doe</td>
-                    <td>Room 8</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="timetables-actions-btn edit-lesson"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="timetables-actions-btn delete-lesson"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>Tuesday</td>
-                    <td>09:00-10:00</td>
-                    <td>English</td>
-                    <td>Sarah Johnson</td>
-                    <td>Room 8</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="timetables-actions-btn edit-lesson"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="timetables-actions-btn delete-lesson"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
+                    <td colspan="6" style="text-align: center">
+                      No lessons added yet.
                     </td>
                   </tr>
                 </tbody>
               </table>
             </section>
 
-            <button type="button" id="addLesson" class="add-lessons-btn">
-              <i class="fa-solid fa-plus"></i>
-              Add Lesson
+            <button type="button" id="addLessonBtn" class="add-lessons-btn">
+              <i class="fa-solid fa-plus"></i> Add Lesson
             </button>
 
             <div class="timetable-modal-footer">
               <button
                 type="button"
                 class="cancel-btn"
-                id="cancelTimetableModal"
+                id="cancelTimetableModalBtn"
               >
                 Cancel
               </button>
-
-              <button type="submit" class="save-btn">Save Timetable</button>
+              <button type="submit" id="saveTimetableBtn" class="save-btn">
+                Save Timetable
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- Create Lesson -->
-
+    <!-- Create Lesson Modal -->
     <div id="lessonModal" class="lesson-modal">
       <div class="lesson-modal-content">
         <div class="lesson-modal-header">
           <h2>Add Lesson</h2>
-
-          <button id="cancelLessonModal">&times;</button>
+          <button type="button" id="closeLessonModalHeaderBtn">&times;</button>
         </div>
 
         <div class="lesson-modal-body">
-          <form id="lessonForm">
+          <form id="addLessonForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Day *</label>
-
-                <select>
-                  <option>Monday</option>
-                  <option>Tuesday</option>
+                <label for="addLessonDay">Day *</label>
+                <select id="addLessonDay" name="day" required>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Subject *</label>
-
-                <select>
-                  <option>Mathematics</option>
-                  <option>English</option>
+                <label for="addLessonSubject">Subject *</label>
+                <select id="addLessonSubject" name="subject_id" required>
+                  <option value="">Select subject...</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Period *</label>
-
-                <select>
-                  <option>Period 1</option>
-                  <option>Break</option>
+                <label for="addLessonPeriod">Period *</label>
+                <select id="addLessonPeriod" name="period_id" required>
+                  <option value="">Select period...</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Time</label>
-
-                <p>08:00-09:00</p>
+                <p id="addLessonTimeDisplay">--:--</p>
               </div>
 
               <div class="form-group">
-                <label>Teacher *</label>
-
-                <select>
-                  <option>John Doe</option>
-                  <option>Peter Johnson</option>
+                <label for="addLessonTeacher">Teacher *</label>
+                <select id="addLessonTeacher" name="teacher_id" required>
+                  <option value="">Select teacher...</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Room *</label>
-
-                <select>
-                  <option>Room 8</option>
-                  <option>Room 7</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
+                <label for="addLessonStatus">Status *</label>
+                <select id="addLessonStatus" name="status" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
 
-            <!-- Lesson form goes here -->
-
             <div class="lesson-modal-footer">
-              <button type="button" class="cancel-btn" id="closeLessonModal">
+              <button
+                type="button"
+                class="cancel-btn"
+                id="cancelLessonModalBtn"
+              >
                 Cancel
               </button>
-
-              <button type="button" class="save-btn">Save Lesson</button>
+              <button type="button" id="saveLessonBtn" class="save-btn">
+                Save Lesson
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!---Edit Lesson modal-->
-
+    <!-- Edit Lesson Modal -->
     <div id="editLessonModal" class="edit-lesson-modal">
       <div class="edit-lesson-modal-content">
         <div class="edit-lesson-modal-header">
           <h2>Edit Lesson</h2>
-
-          <button id="cancelEditLessonModal">&times;</button>
+          <button type="button" id="closeEditLessonModalHeaderBtn">
+            &times;
+          </button>
         </div>
 
         <div class="edit-lesson-modal-body">
-          <form id="edit-lessonForm">
+          <form id="editLessonForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Day *</label>
-
-                <select>
-                  <option>Monday</option>
-                  <option>Tuesday</option>
+                <label for="editLessonDay">Day *</label>
+                <select id="editLessonDay" name="day" required>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Subject *</label>
-
-                <select>
-                  <option>Mathematics</option>
-                  <option>English</option>
+                <label for="editLessonSubject">Subject *</label>
+                <select id="editLessonSubject" name="subject_id" required>
+                  <option value="">Select subject...</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Period *</label>
-
-                <select>
-                  <option>Period 1</option>
-                  <option>Break</option>
+                <label for="editLessonPeriod">Period *</label>
+                <select id="editLessonPeriod" name="period_id" required>
+                  <option value="">Select period...</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Time</label>
-
-                <p>08:00-09:00</p>
+                <p id="editLessonTimeDisplay">--:--</p>
               </div>
 
               <div class="form-group">
-                <label>Teacher *</label>
-
-                <select>
-                  <option>John Doe</option>
-                  <option>Peter Johnson</option>
+                <label for="editLessonTeacher">Teacher *</label>
+                <select id="editLessonTeacher" name="teacher_id" required>
+                  <option value="">Select teacher...</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Room *</label>
-
-                <select>
-                  <option>Room 8</option>
-                  <option>Room 7</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Status *</label>
-
-                <select>
-                  <option>Active</option>
-                  <option>Archive</option>
+                <label for="editLessonStatus">Status *</label>
+                <select id="editLessonStatus" name="status" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
-
-            <!-- Lesson form goes here -->
 
             <div class="edit-lesson-modal-footer">
               <button
                 type="button"
                 class="cancel-btn"
-                id="closeEditLessonModal"
+                id="cancelEditLessonModalBtn"
               >
                 Cancel
               </button>
-
-              <button type="button" class="save-btn">update Lesson</button>
+              <button type="button" id="updateLessonBtn" class="save-btn">
+                Update Lesson
+              </button>
             </div>
           </form>
         </div>
@@ -524,25 +429,29 @@
     </div>
 
     <!---View timetable modal-->
-
-    <div id="viewTimetableModal" class="view-timetable-modal">
+    <div
+      id="viewTimetableModal"
+      class="view-timetable-modal"
+      style="display: none"
+    >
       <div class="view-timetable-modal-content">
         <div class="view-timetable-modal-header">
           <h2>View Timetable</h2>
-
-          <button id="closeViewTimetableModal">&times;</button>
+          <button id="closeViewTimetableModal" class="close-modal-btn">
+            &times;
+          </button>
         </div>
 
         <div class="view-timetable-body">
           <div class="details-grid">
             <div class="details-item">
               <label>Class</label>
-              <p>Grade 8A</p>
+              <p id="viewClassLabel">--</p>
             </div>
 
             <div class="details-item">
               <label>Academic Year</label>
-              <p>2026-2027</p>
+              <p id="viewYearLabel">--</p>
             </div>
           </div>
 
@@ -559,112 +468,8 @@
                 </tr>
               </thead>
 
-              <tbody>
-                <tr>
-                  <td>08:00-09:00</td>
-                  <td>
-                    <h4>Mathematics</h4>
-                    John Doe <br />
-                    Room 8
-                  </td>
-
-                  <td>
-                    <h4>English</h4>
-                    Sarah Johnson <br />
-                    Room 5
-                  </td>
-
-                  <td>
-                    <h4>Biology</h4>
-                    Peter <br />
-                    Lab 1
-                  </td>
-
-                  <td>
-                    <h4>Chemistry</h4>
-                    David <br />
-                    Lab 2
-                  </td>
-
-                  <td>
-                    <h4>Mathematics</h4>
-                    John Doe <br />
-                    Room 8
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>09:00-10:00</td>
-
-                  <td>
-                    <h4>English</h4>
-                    Sarah Johnson <br />
-                    Room 5
-                  </td>
-
-                  <td>
-                    <h4>Mathematics</h4>
-                    John Doe <br />
-                    Room 8
-                  </td>
-
-                  <td>
-                    <h4>Physics</h4>
-                    Peter Smith <br />
-                    Lab 3
-                  </td>
-
-                  <td>
-                    <h4>History</h4>
-                    James Wilson <br />
-                    Room 4
-                  </td>
-
-                  <td>
-                    <h4>ICT</h4>
-                    Michael Lee <br />
-                    Computer Lab
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>10:00-10:30</td>
-
-                  <td colspan="5" class="break-row">Break Time</td>
-                </tr>
-
-                <tr>
-                  <td>10:30-11:30</td>
-
-                  <td>
-                    <h4>Biology</h4>
-                    Peter Smith <br />
-                    Lab 1
-                  </td>
-
-                  <td>
-                    <h4>Geography</h4>
-                    Alice Green <br />
-                    Room 7
-                  </td>
-
-                  <td>
-                    <h4>English</h4>
-                    Sarah Johnson <br />
-                    Room 5
-                  </td>
-
-                  <td>
-                    <h4>Mathematics</h4>
-                    John Doe <br />
-                    Room 8
-                  </td>
-
-                  <td>
-                    <h4>Sports</h4>
-                    Sports Field
-                  </td>
-                </tr>
+              <tbody id="viewTimetableGridBody">
+                <!-- Dynamic periods and lessons rendered via JS -->
               </tbody>
             </table>
           </section>
@@ -721,6 +526,11 @@
       </div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/timetable.js"></script>
   </body>
