@@ -59,7 +59,7 @@ function unLockBodyScroll() {
   document.body.style.overflow = "";
 }
 
-function showToast(message, type = "success", duration = 3000) {
+function showToast(message, type = "success", duration = 5000) {
   let container = document.getElementById("toastContainer");
 
   if (!container) {

@@ -46,10 +46,6 @@
     modal.classList.remove("active");
   }
 
-  function showToast(message, type = "info") {
-    console.log(`[${type.toUpperCase()}] ${message}`);
-  }
-
   function resetForm(formId) {
     const form = getEl(formId);
     if (form) form.reset();
@@ -479,7 +475,6 @@
       hideModal(getEl("editLessonModal"));
       state.editingLessonId = null;
     });
-
     // Save Timetable Form
     const timetableForm = getEl("timetableForm");
     timetableForm?.addEventListener("submit", async (e) => {
@@ -489,8 +484,25 @@
       const yearId = getEl("timetableYearSelect")?.value;
       const statusVal = getEl("timetableStatusSelect")?.value || "Active";
 
+      // 1. Client-Side Validations
+      if (!state.schoolId) {
+        showToast(
+          "School ID context is missing. Please refresh the page.",
+          "error",
+        );
+        return;
+      }
+
       if (!classId || !yearId) {
         showToast("Please select both a class and an academic year.", "error");
+        return;
+      }
+
+      if (!state.lessons || state.lessons.length === 0) {
+        showToast(
+          "Please add at least one lesson before saving the timetable.",
+          "error",
+        );
         return;
       }
 
@@ -508,13 +520,57 @@
         })),
       };
 
+      const submitBtn = timetableForm.querySelector("button[type='submit']");
+      if (submitBtn) submitBtn.disabled = true;
+
       try {
-        const { error } = await supabaseClient.rpc(
+        const supabaseClient = window.supabaseClient || window.supabase;
+        if (!supabaseClient) {
+          throw new Error("Supabase client instance is not initialized.");
+        }
+
+        const { data, error } = await supabaseClient.rpc(
           "save_timetable_with_lessons",
           payload,
         );
-        if (error) throw error;
 
+        // 2. Explicit Supabase Error Handling
+        if (error) {
+          let userFriendlyMessage = error.message;
+
+          // Handle common Postgres / Supabase Error Codes
+          switch (error.code) {
+            case "42501":
+              userFriendlyMessage =
+                "Access Denied: You do not have permission to modify timetables.";
+              break;
+            case "23505":
+              userFriendlyMessage =
+                "A timetable for this class and academic year already exists.";
+              break;
+            case "23503":
+              userFriendlyMessage =
+                "Selected class, teacher, or subject reference was not found.";
+              break;
+            case "P0001":
+              // Custom RAISE EXCEPTION from PL/pgSQL function
+              userFriendlyMessage = error.message;
+              break;
+            default:
+              userFriendlyMessage = `Database error (${error.code || "UNKNOWN"}): ${error.message}`;
+          }
+
+          showToast(userFriendlyMessage, "error");
+          console.error("Supabase RPC Error Details:", {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+          });
+          return;
+        }
+
+        // 3. Success Workflow
         showToast("Timetable saved successfully!", "success");
         hideModal(getEl("timetableModal"));
         state.lessons = [];
@@ -522,11 +578,17 @@
         resetForm("timetableForm");
         await loadTimetables();
       } catch (err) {
-        console.error("Save error:", err.message);
-        showToast("Failed to save timetable: " + err.message, "error");
+        // 4. Catch unexpected runtime / network exceptions
+        console.error("Unexpected Save Error:", err);
+        showToast(
+          "An unexpected error occurred: " +
+            (err.message || "Failed to communicate with the server."),
+          "error",
+        );
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
-
     // Setup dynamic time label behavior
     setupPeriodTimeDisplay("addLessonPeriod", "addLessonTimeDisplay");
     setupPeriodTimeDisplay("editLessonPeriod", "editLessonTimeDisplay");
