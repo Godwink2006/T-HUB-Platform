@@ -19,6 +19,9 @@ function renderNavigation(userRole) {
 
 const ADMIN_ACCOUNTANT_PAGES = ["students.html", "finance.html"];
 
+// 1. Add Teacher-Only pages array
+const TEACHER_ONLY_PAGES = ["my-assignments.html"];
+
 // ==========================================
 // CONFIGURATION & HELPERS
 // ==========================================
@@ -107,9 +110,10 @@ async function checkPageAccess() {
 
   const isAdminOnly = ADMIN_ONLY_PAGES.includes(currentPage);
   const isAdminOrAccountantOnly = ADMIN_ACCOUNTANT_PAGES.includes(currentPage);
+  const isTeacherOnly = TEACHER_ONLY_PAGES.includes(currentPage); // 2. Check if current page is teacher-only
 
   // If the page has no restrictions, allow access immediately
-  if (!isAdminOnly && !isAdminOrAccountantOnly) {
+  if (!isAdminOnly && !isAdminOrAccountantOnly && !isTeacherOnly) {
     return;
   }
 
@@ -149,6 +153,12 @@ async function checkPageAccess() {
 
   // 2. Enforce Admin + Accountant Access
   if (isAdminOrAccountantOnly && role !== "admin" && role !== "accountant") {
+    await window.forceLogout();
+    return;
+  }
+
+  // 3. Enforce Teacher-Only Access
+  if (isTeacherOnly && role !== "teacher") {
     await window.forceLogout();
     return;
   }
