@@ -54,7 +54,6 @@ body {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -91,7 +90,6 @@ body {
 .toolbar select {
   height: 48px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -150,7 +148,6 @@ tr {
 
 .status {
   padding: 6px 14px;
-  border-radius: 30px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -169,7 +166,6 @@ tr {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -219,7 +215,6 @@ tr {
   width: 100%;
   padding: 12px 15px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   outline: none;
   font-size: 15px;
 }
@@ -247,7 +242,6 @@ tr {
   cursor: pointer;
   color: #374151;
   background: #f3f4f6;
-  border-radius: 8px;
   border: none;
   height: 40px;
   width: 40px;
@@ -262,7 +256,9 @@ tr {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
+  background: #15803d;
+  color: #ffffff;
+  border: 2px solid #14532d;
   margin-top: 10px;
 }
 
@@ -287,7 +283,6 @@ tr {
   color: #ffffff;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
-  border-radius: 10px;
 }
 
 /* Align right section */
@@ -310,7 +305,6 @@ tr {
   background: #15803d;
   color: #ffffff;
   border: 2px solid #14532d;
-  border-radius: 10px;
 }
 
 .edit-lesson-modal-footer {
@@ -336,7 +330,6 @@ tr {
   cursor: pointer;
   color: #374151;
   background: #f3f4f6;
-  border-radius: 8px;
   border: none;
   height: 40px;
   width: 40px;
@@ -367,7 +360,6 @@ tr {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -375,7 +367,6 @@ tr {
 .confirm-modal {
   width: 430px;
   background: #ffff;
-  border-radius: 18px;
   padding: 35px;
   text-align: center;
   animation: modalShow 0.25s ease;
@@ -386,7 +377,6 @@ tr {
   height: 70px;
   background: #fee2e2;
   color: #dc2626;
-  border-radius: 50%;
   margin: auto;
   display: flex;
   align-items: center;
@@ -404,41 +394,9 @@ tr {
   color: #6b7280;
 }
 
-.delete-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 10px;
-  background: #dc2626;
-  color: #ffff;
-  cursor: pointer;
-}
-
-.delete-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.delete-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
 .archive-timetable-confirm-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #dc2626;
   color: #ffff;
   cursor: pointer;
@@ -486,7 +444,6 @@ tr {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -507,7 +464,6 @@ tr {
   cursor: pointer;
   color: #374151;
   background: #f3f4f6;
-  border-radius: 8px;
   border: none;
   height: 40px;
   width: 40px;
@@ -528,7 +484,6 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #e5e7eb;
   cursor: pointer;
 }
@@ -536,7 +491,6 @@ tr {
 .save-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -558,7 +512,6 @@ tr {
   cursor: pointer;
   color: #374151;
   background: #f3f4f6;
-  border-radius: 8px;
   border: none;
   height: 40px;
   width: 40px;
@@ -596,7 +549,6 @@ tr {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -604,7 +556,6 @@ tr {
 .view-timetable-modal-content {
   width: 850px;
   background: #ffff;
-  border-radius: 18px;
   overflow: auto;
   height: 445px;
   animation: modalShow 0.25s ease;
@@ -648,51 +599,51 @@ tr {
   cursor: pointer;
   color: #374151;
   background: #f3f4f6;
-  border-radius: 8px;
   border: none;
   height: 40px;
   width: 40px;
   font-size: 22px;
 }
 
+/* ==========================================
+   Mobile Responsive Layout (<= 768px)
+   ========================================== */
+
 @media screen and (max-width: 768px) {
-  /* --- Reset & Global --- */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
+  /* --- Global Reset & Typography Mobile Adjustments --- */
+  th,
+  td {
+    padding: 12px 14px !important;
+    font-size: 14px !important;
   }
 
-  body {
-    background: rgb(231, 226, 226);
+  .timetables-status-active,
+  .timetables-status-inactive,
+  .timetables-actions-btn,
+  .confirm-icon,
+  .archive-timetable-confirm-btn {
+    border-radius: 10px;
   }
 
-  /* --- Topbar & Header Buttons --- */
+  /* --- Topbar & Navigation Layout --- */
   .topbar {
-    align-items: center !important;
     display: grid !important;
     grid-template-columns: 1fr auto !important;
     gap: 10px 12px !important;
+    align-items: center !important;
     margin-bottom: 20px;
-    width: 100%;
-  }
-
-  .topbar h1,
-  .topbar p {
-    grid-column: 1 / -1;
-    margin: 0;
   }
 
   .topbar h1 {
+    grid-column: 1 / -1;
     font-size: 24px;
-    color: #1f2937;
+    margin: 0;
   }
 
   .topbar p {
-    color: #6b7280;
-    margin-top: 2px;
+    grid-column: 1 / -1;
     font-size: 13px;
+    margin-top: 2px;
   }
 
   .top-right {
@@ -701,6 +652,7 @@ tr {
     align-items: center !important;
     gap: 10px !important;
     width: 100% !important;
+    margin-left: 0 !important;
   }
 
   .back-academics-btn {
@@ -711,19 +663,14 @@ tr {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    border: 1px solid rgb(219, 215, 215);
-    background: #1f2937;
-    color: #f9fafb;
     font-size: 13px;
     white-space: nowrap;
     border-radius: 10px;
   }
 
-  .add-timetables-btn {
+  .add-timetables-btn,
+  .add-lessons-btn {
     grid-column: 2;
-    background: #15803d;
-    color: #ffffff;
     flex: 1 !important;
     height: 40px !important;
     padding: 0 16px;
@@ -731,15 +678,13 @@ tr {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    cursor: pointer;
-    border: 2px solid #14532d;
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
     border-radius: 10px;
   }
 
-  /* --- Toolbar Inputs in a Single Horizontal Row --- */
+  /* --- Toolbar Controls --- */
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -761,7 +706,7 @@ tr {
     border-radius: 10px;
   }
 
-  /* --- Table Card & Layout --- */
+  /* --- Responsive Table Handling --- */
   .timetables-table-card {
     background: #ffffff;
     overflow-x: auto;
@@ -782,75 +727,60 @@ tr {
 
   th,
   td {
-    padding: 12px 14px !important;
-    font-size: 14px !important;
+    padding: 8px 10px;
+    font-size: 12px;
     border: 1.5px solid rgb(219, 215, 215);
     white-space: nowrap;
-  }
-
-  th {
-    text-align: left;
-    font-weight: 600;
-    color: #6b7280;
   }
 
   tr {
     border: 1.5px solid rgb(219, 215, 215);
   }
 
-  /* --- Badges & Actions --- */
-  .timetables-status-active {
-    background: #dcfce7;
-    color: #166534;
-    padding: 10px;
-    border-radius: 10px;
-  }
-
-  .timetables-status-inactive {
-    background: #fcdcdc;
-    color: #651616;
-    padding: 10px;
-    border-radius: 10px;
-  }
-
-  .timetables-actions-btn {
-    width: 38px;
-    height: 38px;
-    border: none;
-    cursor: pointer;
-    margin-right: 6px;
-    border-radius: 10px;
-  }
-
-  /* --- Timetable Modals --- */
+  /* --- Timetable Modals Container & Card Setup --- */
   .timetable-modal-content,
   .edit-timetable-modal-content,
-  .view-timetable-modal-content,
   .lesson-modal-content,
   .edit-lesson-modal-content {
     display: flex;
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 590px;
+    height: 650px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
-    overflow: auto;
+    overflow: hidden;
   }
 
-  @keyframes modalShow {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+  .view-timetable-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 550px;
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 10px;
+    animation: modalShow 0.25s ease;
+    overflow: hidden;
   }
 
+  .confirm-modal {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+    height: 350px;
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: 10px;
+    animation: modalShow 0.25s ease;
+    overflow: hidden;
+  }
+
+  /* --- Modal Header --- */
   .timetable-modal-header,
   .edit-timetable-modal-header,
   .view-timetable-modal-header,
@@ -861,6 +791,7 @@ tr {
     align-items: center;
     padding: 14px 20px;
     border-bottom: 1.5px solid rgb(219, 215, 215);
+    flex-shrink: 0;
   }
 
   .timetable-modal-header h2,
@@ -873,21 +804,20 @@ tr {
 
   .timetable-modal-header button,
   .edit-timetable-modal-header button,
-  .view-timetable-modal-header button,
   .lesson-modal-header button,
   .edit-lesson-modal-header button,
   #closeViewTimetableModal {
     cursor: pointer;
     color: #f9fafb;
-    border: none;
+    border: 1px solid rgb(219, 215, 215);
     height: 34px;
-    border-radius: 10px !important;
     width: 34px;
     font-size: 16px;
     background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
+    border-radius: 10px !important;
   }
 
+  /* --- Modal Body & Scrollable Content --- */
   .timetable-modal-body,
   .edit-timetable-modal-body,
   .view-timetable-body,
@@ -895,24 +825,11 @@ tr {
   .edit-lesson-modal-body {
     padding: 20px;
     overflow-y: auto;
+    overflow-x: auto;
     flex: 1;
   }
 
-  .timetable-modal-footer,
-  .edit-timetable-modal-footer,
-  .view-timetable-modal-footer,
-  .lesson-modal-footer,
-  .edit-lesson-modal-footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
-  }
-
-  /* --- Forms & Grid Layouts --- */
+  /* --- Modal Form Layouts --- */
   .form-grid,
   .details-grid {
     display: grid;
@@ -920,14 +837,7 @@ tr {
     gap: 12px;
   }
 
-  .form-group,
-  .details-item {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .form-group label,
-  .details-item label {
+  .form-group label {
     margin-bottom: 4px;
     font-size: 12px;
     font-weight: 500;
@@ -935,8 +845,7 @@ tr {
   }
 
   .form-group input,
-  .form-group select,
-  .form-group textarea {
+  .form-group select {
     width: 100%;
     padding: 10px;
     border: 1.5px solid rgb(219, 215, 215);
@@ -945,18 +854,27 @@ tr {
     border-radius: 10px;
   }
 
-  .form-group textarea {
-    resize: none;
+  /* --- Modal Footer & Action Buttons --- */
+  .timetable-modal-footer,
+  .edit-timetable-modal-footer,
+  .view-timetable-modal-footer,
+  .lesson-modal-footer,
+  .edit-lesson-modal-footer,
+  .archive-timetable-modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1.5px solid rgb(219, 215, 215);
+    margin-top: 0;
+    flex-shrink: 0;
   }
 
-  .full-width {
-    grid-column: 1 / -1;
-  }
-
-  /* --- Buttons & Modal Actions --- */
   .cancel-btn,
   .save-btn,
-  .edit-btn {
+  .archive-timetable-confirm-btn {
     flex: 1;
     padding: 10px 16px;
     border: none;
@@ -964,7 +882,7 @@ tr {
     border-radius: 10px;
     font-size: 13px;
     font-weight: 500;
-    justify-content: space-between;
+    text-align: center;
   }
 
   .cancel-btn {
@@ -976,34 +894,5 @@ tr {
   .save-btn {
     background: #2563eb;
     color: #ffffff;
-  }
-
-  /* --- Confirmation / Archive Modal --- */
-  .confirm-modal {
-    display: flex;
-    flex-direction: column;
-    max-width: 350px;
-    height: 390px;
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
-  }
-
-  .confirm-icon {
-    border-radius: 10px;
-    padding: 10px;
-  }
-
-  .archive-confirm-btn,
-  .archive-timetable-confirm-btn,
-  .delete-confirm-btn {
-    padding: 12px 22px;
-    border: none;
-    background: #dc2626;
-    color: #ffffff;
-    cursor: pointer;
-    border-radius: 10px;
   }
 }
