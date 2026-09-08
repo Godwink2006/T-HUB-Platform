@@ -73,17 +73,18 @@ h1 {
   padding: 0.3rem 0.6rem;
   border-radius: 6px;
   margin-bottom: 1rem;
-  border: 2px solid rgb(219, 215, 215);
 }
 
 .role-tag.class-teacher {
   background-color: #dcfce7;
   color: #15803d;
+  border: 2px solid #15803d; /* Matches the text color */
 }
 
 .role-tag.subject-teacher {
   background-color: #f3f4f6;
   color: #4b5563;
+  border: 2px solid rgb(219, 215, 215);
 }
 
 /* Details Section */
@@ -140,7 +141,6 @@ h1 {
 .card-btn.primary:hover {
   background: #1e293b; /* Darker charcoal on hover */
   border-color: #1e293b;
-  border: 2px solid rgb(219, 215, 215);
 }
 
 .class-badge {
