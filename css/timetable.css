@@ -240,8 +240,9 @@ tr {
 
 .lesson-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+    color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -328,8 +329,9 @@ tr {
 
 .edit-lesson-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+  background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+    color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -462,8 +464,9 @@ tr {
 
 .timetable-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+ background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+    color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -484,7 +487,9 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  background: #e5e7eb;
+ background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+    color: #f9fafb;
   cursor: pointer;
 }
 
@@ -510,8 +515,9 @@ tr {
 
 .edit-timetable-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+  background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+    color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -597,8 +603,9 @@ tr {
 
 #closeViewTimetableModal {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+  background: #1f2937;
+    border: 1px solid rgb(219, 215, 215);
+    color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
