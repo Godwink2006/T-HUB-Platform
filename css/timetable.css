@@ -155,11 +155,13 @@ tr {
 .timetables-status-active {
   background: #dcfce7;
   color: #166534;
+  padding: 10px;
 }
 
 .timetables-status-inactive {
   background: #fcdcdc;
   color: #651616;
+  padding: 10px;
 }
 
 .timetables-actions-btn {
@@ -240,9 +242,9 @@ tr {
 
 .lesson-modal-header button {
   cursor: pointer;
-background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -330,8 +332,8 @@ background: #1f2937;
 .edit-lesson-modal-header button {
   cursor: pointer;
   background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
+  border: 1px solid rgb(219, 215, 215);
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -464,9 +466,9 @@ background: #1f2937;
 
 .timetable-modal-header button {
   cursor: pointer;
- background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -487,9 +489,9 @@ background: #1f2937;
 .cancel-btn {
   padding: 12px 22px;
   border: none;
- background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  color: #f9fafb;
   cursor: pointer;
 }
 
@@ -516,8 +518,8 @@ background: #1f2937;
 .edit-timetable-modal-header button {
   cursor: pointer;
   background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
+  border: 1px solid rgb(219, 215, 215);
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -604,8 +606,8 @@ background: #1f2937;
 #closeViewTimetableModal {
   cursor: pointer;
   background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
+  border: 1px solid rgb(219, 215, 215);
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
