@@ -225,11 +225,17 @@
               </div>
 
               <div class="form-group">
-                <label for="addLessonStatus">Status *</label>
-                <select id="addLessonStatus" name="status" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    cursor: pointer;
+                  "
+                >
+                  <input type="checkbox" id="addLessonIsBreak" /> Is Break /
+                  Interval
+                </label>
               </div>
             </div>
 
@@ -301,11 +307,17 @@
               </div>
 
               <div class="form-group">
-                <label for="editLessonStatus">Status *</label>
-                <select id="editLessonStatus" name="status" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    cursor: pointer;
+                  "
+                >
+                  <input type="checkbox" id="addLessonIsBreak" /> Is Break /
+                  Interval
+                </label>
               </div>
             </div>
 
@@ -326,14 +338,12 @@
       </div>
     </div>
 
-    <!---Edit timetable modal-->
-
+    <!-- Edit Timetable Modal -->
     <div id="editTimetableModal" class="edit-modal-timetable">
       <div class="edit-timetable-modal-content">
         <div class="edit-timetable-modal-header">
           <h2>Edit Timetable</h2>
-
-          <button id="closeEditTimetableModal">&times;</button>
+          <button type="button" id="closeEditTimetableModal">&times;</button>
         </div>
 
         <div class="edit-timetable-modal-body">
@@ -341,14 +351,20 @@
             <div class="details-grid">
               <div class="details-item">
                 <label>Class</label>
-
-                <p>Grade 8A</p>
+                <span id="editModalClassName" class="read-only-field">--</span>
               </div>
 
               <div class="details-item">
                 <label>Academic Year</label>
+                <span id="editModalYearLabel" class="read-only-field">--</span>
+              </div>
 
-                <p>2026-2027</p>
+              <div class="form-group">
+                <label for="editTimetableStatusSelect">Status</label>
+                <select id="editTimetableStatusSelect">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
               </div>
             </div>
 
@@ -362,66 +378,18 @@
                     <th>Time</th>
                     <th>Subject</th>
                     <th>Teacher</th>
-                    <th>Room</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-
-                <tbody>
-                  <tr>
-                    <td>Monday</td>
-                    <td>08:00-09:00</td>
-                    <td>Mathematics</td>
-                    <td>John Doe</td>
-                    <td>Room 8</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="timetables-actions-btn edit-lesson"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="timetables-actions-btn delete-lesson"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>Tuesday</td>
-                    <td>09:00-10:00</td>
-                    <td>English</td>
-                    <td>Sarah Johnson</td>
-                    <td>Room 8</td>
-
-                    <td>
-                      <button
-                        type="button"
-                        class="timetables-actions-btn edit-lesson"
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-
-                      <button
-                        type="button"
-                        class="timetables-actions-btn delete-lesson"
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </td>
-                  </tr>
+                <tbody id="editTimetableLessonsTbody">
+                  <!-- Lessons rendered dynamically -->
                 </tbody>
               </table>
             </section>
 
-            <button type="button" id="addLessonEdit" class="add-lessons-btn">
-              <i class="fa-solid fa-plus"></i>
-              Add Lesson
+            <button type="button" id="addLessonEditBtn" class="add-lessons-btn">
+              <i class="fa-solid fa-plus"></i> Add Lesson
             </button>
 
             <div class="edit-timetable-modal-footer">
@@ -432,7 +400,6 @@
               >
                 Cancel
               </button>
-
               <button type="submit" class="save-btn">Update Timetable</button>
             </div>
           </form>
@@ -493,8 +460,7 @@
       </div>
     </div>
 
-    <!---Archive timetable modal-->
-
+    <!-- Archive timetable modal -->
     <div id="archiveTimetableModal" class="archive-timetable-modal">
       <div class="confirm-modal">
         <div confirm-icon>
@@ -503,7 +469,11 @@
 
         <h2>Archive Timetable</h2>
 
-        <p>Are you sure you want to archive this Timetable?</p>
+        <!-- Added span with id editArchiveClassName -->
+        <p>
+          Are you sure you want to archive the timetable for
+          <strong id="editArchiveClassName" style="color: green">...</strong>?
+        </p>
 
         <div class="archive-timetable-modal-footer">
           <button id="cancelArchiveTimetable" class="cancel-btn">Cancel</button>

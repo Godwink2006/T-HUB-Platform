@@ -1,10 +1,21 @@
+function hideModal(modal) {
+  if (!modal) return;
+  modal.style.display = "none";
+  modal.style.visibility = "hidden";
+  modal.style.opacity = "0";
+  modal.classList.remove("active");
+}
+
 (() => {
   // Application State
   const state = {
     lessons: [],
+    editLessons: [],
     timetableId: null,
+    editingTimetableId: null,
     schoolId: null,
     editingLessonId: null,
+    isEditModalContext: false,
     lookups: {
       classes: [],
       years: [],
@@ -36,14 +47,6 @@
     modal.style.visibility = "visible";
     modal.style.opacity = "1";
     modal.classList.add("active");
-  }
-
-  function hideModal(modal) {
-    if (!modal) return;
-    modal.style.display = "none";
-    modal.style.visibility = "hidden";
-    modal.style.opacity = "0";
-    modal.classList.remove("active");
   }
 
   function resetForm(formId) {
@@ -210,17 +213,38 @@
   }
 
   function extractLessonFormData(prefix) {
+    const isBreak = getEl(`${prefix}IsBreak`)?.checked || false;
+    const periodId = getEl(`${prefix}Period`)?.value || "";
+    const periodObj = state.lookups.periods.find((p) => p.id === periodId);
+
+    // If "Is Break" is checked, bypass day, subject, and teacher selections
+    if (isBreak) {
+      return {
+        day: "All",
+        is_break: true,
+        subject_id: null,
+        subject_name: "BREAK",
+        period_id: periodId,
+        time: periodObj
+          ? `${periodObj.start_time} - ${periodObj.end_time}`
+          : "N/A",
+        teacher_id: null,
+        teacher_name: "-",
+        status: "Active",
+      };
+    }
+
+    // Regular lesson extraction
     const day = getEl(`${prefix}Day`)?.value || "";
     const subjectId = getEl(`${prefix}Subject`)?.value || "";
-    const periodId = getEl(`${prefix}Period`)?.value || "";
     const teacherId = getEl(`${prefix}Teacher`)?.value || "";
 
     const subjectObj = state.lookups.subjects.find((s) => s.id === subjectId);
     const teacherObj = state.lookups.teachers.find((t) => t.id === teacherId);
-    const periodObj = state.lookups.periods.find((p) => p.id === periodId);
 
     return {
       day,
+      is_break: false,
       subject_id: subjectId,
       subject_name: subjectObj ? subjectObj.name : "N/A",
       period_id: periodId,
@@ -251,7 +275,7 @@
   function renderLessonsTable() {
     const tbody =
       getEl("timetableLessonsTbody") ||
-      document.querySelector(".timetables-table-card tbody");
+      document.querySelector("#timetableModal .timetables-table-card tbody");
     if (!tbody) return;
 
     tbody.innerHTML = "";
@@ -281,6 +305,114 @@
       `;
       tbody.appendChild(tr);
     });
+  }
+
+  function renderEditLessonsTable() {
+    const tbody = getEl("editTimetableLessonsTbody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    if (state.editLessons.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No lessons available.</td></tr>`;
+      return;
+    }
+
+    state.editLessons.forEach((lesson) => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = lesson.id;
+      tr.innerHTML = `
+        <td>${escapeHTML(lesson.day || "N/A")}</td>
+        <td>${escapeHTML(lesson.time || "N/A")}</td>
+        <td>${escapeHTML(lesson.subject_name || "N/A")}</td>
+        <td>${escapeHTML(lesson.teacher_name || "N/A")}</td>
+        <td><span class="timetables-status-active">${escapeHTML(lesson.status || "Active")}</span></td>
+        <td>
+          <button type="button" class="timetables-actions-btn edit-lesson" title="Edit">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button type="button" class="timetables-actions-btn delete-lesson" title="Delete">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function openEditTimetableModal(timetableId) {
+    try {
+      state.editingTimetableId = timetableId;
+
+      // 1. Fetch Timetable metadata from 'timetables'
+      const { data: timetable, error: ttErr } = await supabaseClient
+        .from("timetables")
+        .select("id, status, class_id, academic_year_id")
+        .eq("id", timetableId)
+        .single();
+
+      if (ttErr) throw ttErr;
+
+      // Map Class Name and Academic Year Label from preloaded lookups
+      const classObj = state.lookups.classes.find(
+        (c) => c.id === timetable.class_id,
+      );
+      const yearObj = state.lookups.years.find(
+        (y) => y.id === timetable.academic_year_id,
+      );
+
+      const classEl = getEl("editModalClassName");
+      const yearEl = getEl("editModalYearLabel");
+      const statusSelect = getEl("editTimetableStatusSelect");
+
+      if (classEl) classEl.textContent = classObj ? classObj.name : "N/A";
+      if (yearEl) yearEl.textContent = yearObj ? yearObj.year_label : "N/A";
+      if (statusSelect) statusSelect.value = timetable.status || "Active";
+
+      // 2. Query 'timetable_lessons' without selecting 'status'
+      const { data: lessons, error: lessonsErr } = await supabaseClient
+        .from("timetable_lessons")
+        .select("id, day_of_week, subject_id, period_id, teacher_id")
+        .eq("timetable_id", timetableId);
+
+      if (lessonsErr) throw lessonsErr;
+
+      // Map lessons with lookup data
+      state.editLessons = (lessons || []).map((l) => {
+        const subjectObj = state.lookups.subjects.find(
+          (s) => s.id === l.subject_id,
+        );
+        const periodObj = state.lookups.periods.find(
+          (p) => p.id === l.period_id,
+        );
+        const teacherObj = state.lookups.teachers.find(
+          (t) => t.id === l.teacher_id,
+        );
+
+        return {
+          id: l.id,
+          day: l.day_of_week,
+          subject_id: l.subject_id,
+          subject_name: subjectObj ? subjectObj.name : "N/A",
+          period_id: l.period_id,
+          time: periodObj
+            ? `${periodObj.start_time} - ${periodObj.end_time}`
+            : "N/A",
+          teacher_id: l.teacher_id,
+          teacher_name: teacherObj ? teacherObj.full_name : "N/A",
+          status: timetable.status || "Active",
+        };
+      });
+
+      renderEditLessonsTable();
+      showModal(getEl("editTimetableModal"));
+    } catch (err) {
+      console.error("Error opening edit modal:", err);
+      showToast(
+        `Failed: ${err.message || "Could not load timetable details."}`,
+        "error",
+      );
+    }
   }
 
   async function loadTimetables() {
@@ -350,12 +482,11 @@
       tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#dc2626;">Failed to load data. ${escapeHTML(err.message)}</td></tr>`;
     }
   }
-
   /* ==========================================================================
      5. EVENT BINDINGS & INITIALIZATION
      ========================================================================== */
   function bindEvents() {
-    // Open Main Timetable Modal
+    // Open Main Timetable Creation Modal
     document.addEventListener("click", (e) => {
       const createTrigger = e.target.closest(
         "#createTimetableBtn, .create-timetable-btn, #addTimetable, .add-timetables-btn",
@@ -368,17 +499,54 @@
         renderLessonsTable();
         showModal(getEl("timetableModal"));
       }
+
+      const editTrigger = e.target.closest(".timetables-actions-btn.edit");
+      if (editTrigger) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const timetableId =
+          editTrigger.dataset.id ||
+          editTrigger.closest("tr")?.dataset?.timetableId;
+
+        if (timetableId && timetableId !== "undefined") {
+          openEditTimetableModal(timetableId);
+        }
+      }
+
+      // 2. Archive Button Handler
+      const archiveTrigger = e.target.closest(
+        ".timetables-actions-btn.archive",
+      );
+      if (archiveTrigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        const timetableId =
+          archiveTrigger.dataset.id ||
+          archiveTrigger.closest("tr")?.dataset?.timetableId;
+        if (timetableId && timetableId !== "undefined") {
+          openArchiveTimetableModal(timetableId);
+        }
+        return;
+      }
     });
 
-    // Open Add Lesson Modal
-    const addLessonBtn = getEl("addLessonBtn");
-    addLessonBtn?.addEventListener("click", (e) => {
+    // Add Lesson Triggers
+    getEl("addLessonBtn")?.addEventListener("click", (e) => {
       e.preventDefault();
+      state.isEditModalContext = false;
       resetForm("addLessonForm");
       showModal(getEl("lessonModal"));
     });
 
-    // Close Timetable Modal
+    getEl("addLessonEditBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      state.isEditModalContext = true;
+      resetForm("addLessonForm");
+      showModal(getEl("lessonModal"));
+    });
+
+    // Close Timetable Creation Modal
     [getEl("closeTimetableModal"), getEl("cancelTimetableModalBtn")].forEach(
       (btn) => {
         btn?.addEventListener("click", () =>
@@ -387,14 +555,23 @@
       },
     );
 
-    // Close Add Lesson Modal
+    // Close Edit Timetable Modal
+    [
+      getEl("closeEditTimetableModal"),
+      getEl("cancelEditTimetableModal"),
+    ].forEach((btn) => {
+      btn?.addEventListener("click", () =>
+        hideModal(getEl("editTimetableModal")),
+      );
+    });
+
+    // Close Add/Edit Lesson Secondary Modals
     [getEl("closeLessonModalHeaderBtn"), getEl("cancelLessonModalBtn")].forEach(
       (btn) => {
         btn?.addEventListener("click", () => hideModal(getEl("lessonModal")));
       },
     );
 
-    // Close Edit Lesson Modal
     [
       getEl("closeEditLessonModalHeaderBtn"),
       getEl("cancelEditLessonModalBtn"),
@@ -402,32 +579,50 @@
       btn?.addEventListener("click", () => hideModal(getEl("editLessonModal")));
     });
 
-    // Save Lesson Button
-    const saveLessonBtn = getEl("saveLessonBtn");
-    saveLessonBtn?.addEventListener("click", () => {
+    // Save Lesson Button (Adds to local state)
+    getEl("saveLessonBtn")?.addEventListener("click", () => {
       const lessonData = extractLessonFormData("addLesson");
 
-      if (
-        !lessonData.day ||
-        !lessonData.subject_id ||
-        !lessonData.period_id ||
-        !lessonData.teacher_id
-      ) {
+      // FIX 1: If it's a break, only period_id is strictly required
+      const isValid = lessonData.is_break
+        ? Boolean(lessonData.period_id)
+        : Boolean(
+            lessonData.day &&
+            lessonData.subject_id &&
+            lessonData.period_id &&
+            lessonData.teacher_id,
+          );
+
+      if (!isValid) {
         showToast("Please fill out all required fields.", "error");
         return;
       }
 
-      state.lessons.push({ id: crypto.randomUUID(), ...lessonData });
-      renderLessonsTable();
+      const newLesson = { id: crypto.randomUUID(), ...lessonData };
+
+      if (state.isEditModalContext) {
+        state.editLessons.push(newLesson);
+        renderEditLessonsTable();
+      } else {
+        state.lessons.push(newLesson);
+        renderLessonsTable();
+      }
+
       hideModal(getEl("lessonModal"));
       resetForm("addLessonForm");
     });
 
-    // Lessons Table Actions (Edit & Delete)
-    const tbody =
-      getEl("timetableLessonsTbody") ||
-      document.querySelector(".timetables-table-card tbody");
-    tbody?.addEventListener("click", (e) => {
+    // Lesson Table Row Actions - Create Modal
+    getEl("timetableLessonsTbody")?.addEventListener("click", (e) => {
+      handleLessonTableActions(e, state.lessons, renderLessonsTable);
+    });
+
+    // Lesson Table Row Actions - Edit Modal
+    getEl("editTimetableLessonsTbody")?.addEventListener("click", (e) => {
+      handleLessonTableActions(e, state.editLessons, renderEditLessonsTable);
+    });
+
+    function handleLessonTableActions(e, lessonList, renderFn) {
       const editBtn = e.target.closest(".edit-lesson");
       const deleteBtn = e.target.closest(".delete-lesson");
       const tr = e.target.closest("tr");
@@ -436,76 +631,81 @@
       const lessonId = tr.dataset.id;
 
       if (deleteBtn) {
-        state.lessons = state.lessons.filter((l) => l.id !== lessonId);
-        renderLessonsTable();
+        const index = lessonList.findIndex((l) => l.id === lessonId);
+        if (index !== -1) {
+          lessonList.splice(index, 1);
+          renderFn();
+        }
       }
 
       if (editBtn) {
         state.editingLessonId = lessonId;
-        const lesson = state.lessons.find((l) => l.id === lessonId);
+        const lesson = lessonList.find((l) => l.id === lessonId);
         if (lesson) {
           populateEditFormValues(lesson);
           showModal(getEl("editLessonModal"));
         }
       }
-    });
+    }
 
-    // Update Lesson Button
-    const updateLessonBtn = getEl("updateLessonBtn");
-    updateLessonBtn?.addEventListener("click", () => {
+    // Update Individual Lesson Item Modal
+    getEl("updateLessonBtn")?.addEventListener("click", () => {
       if (!state.editingLessonId) return;
 
       const updatedData = extractLessonFormData("editLesson");
 
-      if (
-        !updatedData.day ||
-        !updatedData.subject_id ||
-        !updatedData.period_id ||
-        !updatedData.teacher_id
-      ) {
+      // FIX 2: Check validation based on whether it is marked as a break
+      const isValid = updatedData.is_break
+        ? Boolean(updatedData.period_id)
+        : Boolean(
+            updatedData.day &&
+            updatedData.subject_id &&
+            updatedData.period_id &&
+            updatedData.teacher_id,
+          );
+
+      if (!isValid) {
         showToast("Please fill out all required fields.", "error");
         return;
       }
 
-      state.lessons = state.lessons.map((l) =>
-        l.id === state.editingLessonId ? { ...l, ...updatedData } : l,
-      );
+      let targetList = state.lessons.some((l) => l.id === state.editingLessonId)
+        ? state.lessons
+        : state.editLessons;
+
+      const index = targetList.findIndex((l) => l.id === state.editingLessonId);
+      if (index !== -1) {
+        targetList[index] = { ...targetList[index], ...updatedData };
+      }
 
       renderLessonsTable();
+      renderEditLessonsTable();
       hideModal(getEl("editLessonModal"));
       state.editingLessonId = null;
     });
-    // Save Timetable Form
-    const timetableForm = getEl("timetableForm");
-    timetableForm?.addEventListener("submit", async (e) => {
+
+    // Submit Create Timetable Form
+    getEl("timetableForm")?.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const classId = getEl("timetableClassSelect")?.value;
       const yearId = getEl("timetableYearSelect")?.value;
       const statusVal = getEl("timetableStatusSelect")?.value || "Active";
 
-      // 1. Client-Side Validations
-      if (!state.schoolId) {
+      if (
+        !state.schoolId ||
+        !classId ||
+        !yearId ||
+        state.lessons.length === 0
+      ) {
         showToast(
-          "School ID context is missing. Please refresh the page.",
+          "Please complete all required fields and add at least one lesson.",
           "error",
         );
         return;
       }
 
-      if (!classId || !yearId) {
-        showToast("Please select both a class and an academic year.", "error");
-        return;
-      }
-
-      if (!state.lessons || state.lessons.length === 0) {
-        showToast(
-          "Please add at least one lesson before saving the timetable.",
-          "error",
-        );
-        return;
-      }
-
+      // FIX 3: Update payload for create form to properly format break entries
       const payload = {
         p_timetable_id: state.timetableId || null,
         p_school_id: state.schoolId,
@@ -513,87 +713,93 @@
         p_academic_year_id: yearId,
         p_status: statusVal,
         p_lessons: state.lessons.map((l) => ({
-          day_of_week: l.day,
-          subject_id: l.subject_id,
+          day_of_week: l.is_break ? "All" : l.day,
           period_id: l.period_id,
-          teacher_id: l.teacher_id,
+          is_break: l.is_break || false,
+          subject_id: l.is_break ? null : l.subject_id,
+          teacher_id: l.is_break ? null : l.teacher_id,
         })),
       };
 
-      const submitBtn = timetableForm.querySelector("button[type='submit']");
-      if (submitBtn) submitBtn.disabled = true;
-
       try {
-        const supabaseClient = window.supabaseClient || window.supabase;
-        if (!supabaseClient) {
-          throw new Error("Supabase client instance is not initialized.");
-        }
-
-        const { data, error } = await supabaseClient.rpc(
+        const { error } = await supabaseClient.rpc(
           "save_timetable_with_lessons",
           payload,
         );
+        if (error) throw error;
 
-        // 2. Explicit Supabase Error Handling
-        if (error) {
-          let userFriendlyMessage = error.message;
-
-          // Handle common Postgres / Supabase Error Codes
-          switch (error.code) {
-            case "42501":
-              userFriendlyMessage =
-                "Access Denied: You do not have permission to modify timetables.";
-              break;
-            case "23505":
-              userFriendlyMessage =
-                "A timetable for this class and academic year already exists.";
-              break;
-            case "23503":
-              userFriendlyMessage =
-                "Selected class, teacher, or subject reference was not found.";
-              break;
-            case "P0001":
-              // Custom RAISE EXCEPTION from PL/pgSQL function
-              userFriendlyMessage = error.message;
-              break;
-            default:
-              userFriendlyMessage = `Database error (${error.code || "UNKNOWN"}): ${error.message}`;
-          }
-
-          showToast(userFriendlyMessage, "error");
-          console.error("Supabase RPC Error Details:", {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-          });
-          return;
-        }
-
-        // 3. Success Workflow
-        showToast("Timetable saved successfully!", "success");
+        showToast("Timetable created successfully!", "success");
         hideModal(getEl("timetableModal"));
         state.lessons = [];
-        state.timetableId = null;
         resetForm("timetableForm");
         await loadTimetables();
       } catch (err) {
-        // 4. Catch unexpected runtime / network exceptions
-        console.error("Unexpected Save Error:", err);
-        showToast(
-          "An unexpected error occurred: " +
-            (err.message || "Failed to communicate with the server."),
-          "error",
+        showToast(err.message || "Failed to save timetable.", "error");
+      }
+    });
+
+    // Submit Edit Timetable Form
+    getEl("editTimetableForm")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!state.editingTimetableId || !state.schoolId) {
+        showToast("Context missing. Cannot update timetable.", "error");
+        return;
+      }
+
+      if (state.editLessons.length === 0) {
+        showToast("Please add at least one lesson before updating.", "error");
+        return;
+      }
+
+      const statusVal = getEl("editTimetableStatusSelect")?.value || "Active";
+
+      const payload = {
+        p_timetable_id: state.editingTimetableId,
+        p_school_id: state.schoolId,
+        p_status: statusVal,
+        p_lessons: state.editLessons.map((l) => ({
+          id: l.id && l.id.includes("-") ? l.id : null,
+          day_of_week: l.is_break ? "All" : l.day,
+          period_id: l.period_id,
+          is_break: l.is_break || false,
+          subject_id: l.is_break ? null : l.subject_id,
+          teacher_id: l.is_break ? null : l.teacher_id,
+          status: l.status || "Active",
+        })),
+      };
+
+      const submitBtn = getEl("editTimetableForm").querySelector(
+        "button[type='submit']",
+      );
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const { error } = await supabaseClient.rpc(
+          "update_timetable_with_lessons",
+          payload,
         );
+
+        if (error) {
+          showToast(`Error (${error.code}): ${error.message}`, "error");
+          return;
+        }
+
+        showToast("Timetable updated successfully!", "success");
+        hideModal(getEl("editTimetableModal"));
+        state.editLessons = [];
+        state.editingTimetableId = null;
+        await loadTimetables();
+      } catch (err) {
+        showToast("Unexpected error while updating timetable.", "error");
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
     });
-    // Setup dynamic time label behavior
+
     setupPeriodTimeDisplay("addLessonPeriod", "addLessonTimeDisplay");
     setupPeriodTimeDisplay("editLessonPeriod", "editLessonTimeDisplay");
   }
-
   async function initApp() {
     bindEvents();
     await fetchUserProfileAndSchool();
@@ -608,7 +814,99 @@
   } else {
     initApp();
   }
+
+  // State variables to track target timetable
+  let archivingTimetableId = null;
+
+  /**
+   * Open Archive Modal & Display Class Name
+   */
+  async function openArchiveTimetableModal(timetableId) {
+    try {
+      archivingTimetableId = timetableId;
+
+      // 1. Fetch timetable record to get class_id
+      const { data: timetable, error } = await supabaseClient
+        .from("timetables")
+        .select("id, class_id")
+        .eq("id", timetableId)
+        .single();
+
+      if (error) throw error;
+
+      // 2. Resolve class name from lookups
+      const classObj = state.lookups.classes.find(
+        (c) => c.id === timetable.class_id,
+      );
+      const className = classObj ? classObj.name : "this class";
+
+      // 3. Update modal text
+      const classSpan = document.getElementById("editArchiveClassName");
+      if (classSpan) {
+        classSpan.textContent = className;
+      }
+
+      // 4. Show modal
+      showModal(document.getElementById("archiveTimetableModal"));
+    } catch (err) {
+      console.error("Error opening archive modal:", err);
+      showToast(
+        `Failed: ${err.message || "Could not open archive dialog."}`,
+        "error",
+      );
+    }
+  }
+
+  /**
+   * Perform Archive & Set Status to 'Inactive'
+   */
+  async function handleConfirmArchive() {
+    if (!archivingTimetableId) return;
+
+    const confirmBtn = document.getElementById("confirmArchiveTimetable");
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    try {
+      // Update timetable status to 'Inactive' and flag is_archived as true
+      const { error } = await supabaseClient
+        .from("timetables")
+        .update({
+          status: "Inactive",
+          is_archived: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", archivingTimetableId);
+
+      if (error) throw error;
+
+      showToast("Timetable archived successfully!", "success");
+      hideModal(getEl("archiveTimetableModal"));
+
+      // Reload list to reflect changes
+      if (typeof loadTimetables === "function") {
+        await loadTimetables();
+      }
+    } catch (err) {
+      console.error("Error archiving timetable:", err);
+      showToast(`Failed to archive: ${err.message}`, "error");
+    } finally {
+      if (confirmBtn) confirmBtn.disabled = false;
+      archivingTimetableId = null;
+    }
+  }
+
+  // Attach Event Listeners
+  document
+    .getElementById("confirmArchiveTimetable")
+    ?.addEventListener("click", handleConfirmArchive);
+  document
+    .getElementById("cancelArchiveTimetable")
+    ?.addEventListener("click", () => {
+      hideModal(getEl("archiveTimetableModal"));
+      archivingTimetableId = null;
+    });
 })();
+
 async function getActiveSchoolId() {
   try {
     const supabaseClient = window.supabaseClient || window.supabase;
@@ -633,6 +931,7 @@ async function getActiveSchoolId() {
     return null;
   }
 }
+
 async function handleViewTimetable(timetableId) {
   const modal = document.getElementById("viewTimetableModal");
   if (!modal) return;
@@ -663,14 +962,16 @@ async function handleViewTimetable(timetableId) {
         .eq("id", timetableId)
         .single(),
 
+      // UPDATE 1: Added is_break to the query payload
       supabaseClient
         .from("timetable_lessons")
         .select(
           `
       id,
       day_of_week,
+      is_break,
       period_id,
-      periods ( id, name, start_time, end_time ),
+      periods ( id, name, start_time, end_time),
       subjects ( name ),
       teacher:profiles!teacher_id ( full_name )
     `,
@@ -711,8 +1012,19 @@ async function handleViewTimetable(timetableId) {
     if (gridBody) {
       gridBody.innerHTML = activePeriods
         .map((period) => {
+          // UPDATE 2: Check for break record in lessonList or period structure
+          const breakLesson = lessonList.find(
+            (l) =>
+              l.period_id === period.id &&
+              (l.is_break || l.day_of_week === "All"),
+          );
+
           const isBreak =
-            (period.period_type || period.type || "").toLowerCase() === "break";
+            Boolean(breakLesson) ||
+            (period.period_type || period.type || "").toLowerCase() ===
+              "break" ||
+            (period.name || "").toLowerCase().includes("break");
+
           const startTime = period.start_time
             ? period.start_time.slice(0, 5)
             : "--:--";
@@ -722,11 +1034,13 @@ async function handleViewTimetable(timetableId) {
           const timeLabel = `${startTime} - ${endTime}`;
 
           if (isBreak) {
+            const breakTitle =
+              breakLesson?.subjects?.name || period.name || "BREAK";
             return `
-              <tr>
-                <td>${escapeHTML(timeLabel)}</td>
-                <td colspan="5" class="break-row" style="text-align:center; font-weight:bold; background-color: #f1f5f9;">
-                  ${escapeHTML(period.name || "Break Time")}
+              <tr class="break-row">
+                <td style="font-weight:600; background-color:#f8fafc;">${escapeHTML(timeLabel)}</td>
+                <td colspan="5" style="text-align:center; font-weight:bold; background-color: #f1f5f9; color:#475569; letter-spacing:1.5px; text-transform:uppercase;">
+                  ${escapeHTML(breakTitle)}
                 </td>
               </tr>
             `;
@@ -771,6 +1085,7 @@ async function handleViewTimetable(timetableId) {
     }
   }
 }
+
 function closeViewModal() {
   const modal = document.getElementById("viewTimetableModal");
   if (modal) {
@@ -787,12 +1102,27 @@ document
   .getElementById("closeViewBtn")
   ?.addEventListener("click", closeViewModal);
 
-// Close on Backdrop/Overlay Click
+// Close on Backdrop/Overlay Click for all modals
 window.addEventListener("click", (e) => {
-  const modal = document.getElementById("viewTimetableModal");
-  if (e.target === modal) {
-    closeViewModal();
-  }
+  const modalIds = [
+    "viewTimetableModal",
+    "timetableModal",
+    "editTimetableModal",
+    "lessonModal",
+    "editLessonModal",
+    "archiveTimetableModal",
+  ];
+
+  modalIds.forEach((id) => {
+    const modal = document.getElementById(id);
+    if (modal && e.target === modal) {
+      if (id === "viewTimetableModal" && typeof closeViewModal === "function") {
+        closeViewModal();
+      } else {
+        hideModal(modal);
+      }
+    }
+  });
 });
 
 // Delegate Table Actions
