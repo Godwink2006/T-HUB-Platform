@@ -35,6 +35,47 @@
           <h2>My Teaching Schedule</h2>
           <p>Overview of your assigned classes, subjects, and roles.</p>
         </div>
+
+        <button
+          onclick="window.location.href = 'academics.html'"
+          class="back-academic-settings-btn"
+        >
+          <i class="fa-solid fa-chevron-left"></i>
+          Back
+        </button>
+      </div>
+
+      <!-- Filters Bar -->
+      <div
+        class="filters-bar"
+        style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap"
+      >
+        <div style="flex: 1; min-width: 200px">
+          <input
+            type="text"
+            id="teacherSearchInput"
+            class="form-control"
+            placeholder="Search schedule..."
+          />
+        </div>
+
+        <div style="min-width: 160px">
+          <select id="filterAcademicYear" class="form-control">
+            <option value="">All Academic Years</option>
+          </select>
+        </div>
+
+        <div style="min-width: 160px">
+          <select id="filterSubject" class="form-control">
+            <option value="">All Subjects</option>
+          </select>
+        </div>
+
+        <div style="min-width: 160px">
+          <select id="filterClass" class="form-control">
+            <option value="">All Classes</option>
+          </select>
+        </div>
       </div>
 
       <!-- Cards Grid Container -->

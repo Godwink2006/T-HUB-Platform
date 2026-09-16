@@ -144,8 +144,32 @@ async function handleCreateAssignment(e) {
   e.preventDefault();
 
   const form = e.target;
-  // Selects the submit button directly inside the active form
   const saveBtn = form.querySelector("button[type='submit']");
+
+  // 1. Fetch current logged-in user from Supabase session
+  const {
+    data: { user },
+    error: authError,
+  } = await window.supabaseClient.auth.getUser();
+
+  if (authError || !user) {
+    showToast("Session expired. Please log in again.", "error");
+    return;
+  }
+
+  // 2. Query the user's profile to get their school_id
+  const { data: profile, error: profileError } = await window.supabaseClient
+    .from("profiles")
+    .select("school_id")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile?.school_id) {
+    showToast("Could not retrieve school profile for this user.", "error");
+    return;
+  }
+
+  const schoolId = profile.school_id;
 
   // Read Values
   const teacherId = document.getElementById("assignTeacherId").value;
@@ -163,45 +187,51 @@ async function handleCreateAssignment(e) {
   }
 
   const payload = {
+    school_id: schoolId,
     teacher_id: teacherId,
     subject_id: subjectId,
     class_id: classId,
     academic_year_id: academicYearId,
     is_class_teacher: isClassTeacher,
-    status: status,
+    status: status ? status.toLowerCase() : "active",
     description: description || null,
   };
 
   try {
+    // Run validation BEFORE attempting insertion
+    const isValid = await validateTeacherAssignment(payload);
+    if (!isValid) return;
+
     if (saveBtn) {
       saveBtn.disabled = true;
       saveBtn.textContent = "Saving...";
     }
 
+    // Insert record
     const { error } = await window.supabaseClient
       .from("teacher_assignments")
       .insert([payload]);
 
     if (error) {
-      // Catch specific duplicate key error
       if (error.code === "23505") {
-        if (error.message.includes("unique_class_teacher_per_class_year")) {
+        const constraintName = error.details || error.message || "";
+
+        if (constraintName.includes("idx_unique_class_teacher_per_class")) {
           throw new Error(
-            "This class already has a assigned Class Teacher for this academic year.",
+            "This class already has an assigned Class Teacher for this academic year.",
           );
         }
+
         throw new Error(
-          "This teacher is already assigned to this subject/class combination.",
+          "This class already has an assigned Class Teacher for this academic year.",
         );
       }
       throw error;
     }
 
-    // Reset and Close
     form.reset();
     closeModal(document.getElementById("assignModal"));
     showToast("Teacher assignment added successfully!", "success");
-    // Add this inside handleCreateAssignment after successful insert:
     await loadAssignmentsTable();
   } catch (err) {
     console.error("Error creating assignment:", err.message);
@@ -212,6 +242,43 @@ async function handleCreateAssignment(e) {
       saveBtn.textContent = "Save";
     }
   }
+}
+
+async function validateTeacherAssignment({
+  school_id,
+  class_id,
+  academic_year_id,
+  subject_id,
+  currentAssignmentId = null,
+}) {
+  const client = window.supabaseClient || supabaseClient;
+
+  const { data: existing, error } = await client
+    .from("teacher_assignments")
+    .select("id, profiles(full_name)")
+    .eq("school_id", school_id)
+    .eq("class_id", class_id)
+    .eq("academic_year_id", academic_year_id)
+    .eq("subject_id", subject_id)
+    .eq("status", "active") // Matched lowercase status
+    .neq("id", currentAssignmentId);
+
+  if (error) {
+    console.error("Validation error:", error);
+    return true; // Pass through to allow DB constraint catch if RPC/RLS issue occurs
+  }
+
+  if (existing && existing.length > 0) {
+    const assignedTeacher =
+      existing[0].profiles?.full_name || "Another teacher";
+    showToast(
+      `${assignedTeacher} is already assigned to teach this subject for the selected class and academic year.`,
+      "error",
+    );
+    return false; // Conflict found
+  }
+
+  return true; // Valid to proceed
 }
 
 let originalEditData = null;

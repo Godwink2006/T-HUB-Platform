@@ -1,21 +1,29 @@
+let myAssignments = [];
+
 document.addEventListener("DOMContentLoaded", async () => {
   const gridContainer = document.getElementById("assignmentsGrid");
 
   gridContainer.innerHTML = `
-      <div style="text-align: center; justify-content: center; padding: 2rem; color: #64748b;">
-        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
-        <p>Loading assignments...</p>
-      </div
+    <div style="text-align: center; justify-content: center; padding: 2rem; color: #64748b;">
+      <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+      <p>Loading assignments...</p>
+    </div>
   `;
 
   try {
+    const client = window.supabaseClient || supabaseClient;
     const {
       data: { user },
-    } = await supabaseClient.auth.getUser();
-    if (!user) return;
+      error: authError,
+    } = await client.auth.getUser();
 
-    // Fetch active assignments directly using user.id (which equals teacher_id)
-    const { data: assignments, error } = await supabaseClient
+    if (authError || !user) {
+      gridContainer.innerHTML = `<p class="error-state">Authentication required.</p>`;
+      return;
+    }
+
+    // Fetch assignments using year_label
+    const { data: assignments, error } = await client
       .from("teacher_assignments")
       .select(
         `
@@ -23,9 +31,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         is_class_teacher,
         description,
         status,
-        subjects (name),
-        classes (name),
-        academic_years (year_label)
+        subjects (id, name),
+        classes (id, name),
+        academic_years (id, year_label)
       `,
       )
       .eq("teacher_id", user.id)
@@ -37,20 +45,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (!assignments || assignments.length === 0) {
-      gridContainer.innerHTML = `<p class="empty-state">You currently have no assigned subjects or classes.</p>`;
-      return;
-    }
+    myAssignments = assignments || [];
 
-    // Render Cards Grid
-    gridContainer.innerHTML = assignments
-      .map((item) => {
-        const isClassTeacher = item.is_class_teacher;
-        const subjectName = item.subjects?.name || "Unassigned Subject";
-        const className = item.classes?.name || "N/A";
-        const yearName = item.academic_years?.year_label || "Current Session";
+    // Setup filter options and initial render
+    populateFilterDropdowns(myAssignments);
+    renderScheduleCards(myAssignments);
+    bindFilterEvents();
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    gridContainer.innerHTML = `<p class="error-state">Failed to load schedule.</p>`;
+  }
+});
 
-        return `
+function renderScheduleCards(assignments) {
+  const gridContainer = document.getElementById("assignmentsGrid");
+
+  if (!assignments || assignments.length === 0) {
+    gridContainer.innerHTML = `<p class="empty-state">You currently have no assigned subjects or classes.</p>`;
+    return;
+  }
+
+  gridContainer.innerHTML = assignments
+    .map((item) => {
+      const isClassTeacher = item.is_class_teacher;
+      const subjectName = item.subjects?.name || "Unassigned Subject";
+      const className = item.classes?.name || "N/A";
+      const yearName = item.academic_years?.year_label || "Current Session";
+
+      return `
         <div class="assignment-card">
           <div>
             <div class="card-top">
@@ -91,10 +113,73 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       `;
-      })
-      .join("");
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    gridContainer.innerHTML = `<p class="error-state">Failed to load schedule.</p>`;
-  }
-});
+    })
+    .join("");
+}
+
+function populateFilterDropdowns(assignments) {
+  const yearSelect = document.getElementById("filterAcademicYear");
+  const subjectSelect = document.getElementById("filterSubject");
+  const classSelect = document.getElementById("filterClass");
+
+  if (!yearSelect || !subjectSelect || !classSelect) return;
+
+  const years = new Map();
+  const subjects = new Map();
+  const classes = new Map();
+
+  assignments.forEach((item) => {
+    if (item.academic_years)
+      years.set(item.academic_years.id, item.academic_years.year_label);
+    if (item.subjects) subjects.set(item.subjects.id, item.subjects.name);
+    if (item.classes) classes.set(item.classes.id, item.classes.name);
+  });
+
+  populateOptions(yearSelect, years, "All Academic Years");
+  populateOptions(subjectSelect, subjects, "All Subjects");
+  populateOptions(classSelect, classes, "All Classes");
+}
+
+function populateOptions(selectElem, mapData, defaultText) {
+  selectElem.innerHTML = `<option value="">${defaultText}</option>`;
+  mapData.forEach((label, id) => {
+    selectElem.innerHTML += `<option value="${id}">${label}</option>`;
+  });
+}
+
+function bindFilterEvents() {
+  const searchInput = document.getElementById("teacherSearchInput");
+  const yearSelect = document.getElementById("filterAcademicYear");
+  const subjectSelect = document.getElementById("filterSubject");
+  const classSelect = document.getElementById("filterClass");
+
+  const applyFilters = () => {
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    const selectedYear = yearSelect ? yearSelect.value : "";
+    const selectedSubject = subjectSelect ? subjectSelect.value : "";
+    const selectedClass = classSelect ? classSelect.value : "";
+
+    const filtered = myAssignments.filter((item) => {
+      const matchQuery =
+        !query ||
+        item.subjects?.name?.toLowerCase().includes(query) ||
+        item.classes?.name?.toLowerCase().includes(query) ||
+        item.academic_years?.year_label?.toLowerCase().includes(query);
+
+      const matchYear =
+        !selectedYear || item.academic_years?.id === selectedYear;
+      const matchSubject =
+        !selectedSubject || item.subjects?.id === selectedSubject;
+      const matchClass = !selectedClass || item.classes?.id === selectedClass;
+
+      return matchQuery && matchYear && matchSubject && matchClass;
+    });
+
+    renderScheduleCards(filtered);
+  };
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (yearSelect) yearSelect.addEventListener("change", applyFilters);
+  if (subjectSelect) subjectSelect.addEventListener("change", applyFilters);
+  if (classSelect) classSelect.addEventListener("change", applyFilters);
+}

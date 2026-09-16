@@ -6,9 +6,46 @@
   margin-top: 1.5rem;
 }
 
-.content-container {
+/* Input & Select Shared Styles */
+.filters-bar .form-control {
   width: 100%;
-  min-height: 100vh;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #1e293b;
+  background-color: #f8fafc;
+  border: 2px solid rgb(219, 215, 215);
+  outline: none;
+  margin-top: 10px;
+}
+
+/* Hover & Focus States */
+.filters-bar .form-control:hover {
+  background-color: #ffffff;
+  border-color: #94a3b8;
+}
+
+.back-academic-settings-btn {
+  width: auto;
+  height: 30px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 5px;
+  width: auto;
+  justify-content: space-between;
+  color: #ffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+}
+
+/* Placeholder Styling */
+.filters-bar input.form-control::placeholder {
+  color: #94a3b8;
+}
+
+.content-container {
   padding: 10px;
 }
 
@@ -21,7 +58,6 @@ p {
 .assignment-card {
   background: #ffff;
   overflow: hidden;
-  border-radius: 12px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -57,7 +93,6 @@ h1 {
 
 .class-badge {
   padding: 0.35rem 0.75rem;
-  border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
   border: 2px solid rgb(219, 215, 215);
@@ -71,7 +106,6 @@ h1 {
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.3rem 0.6rem;
-  border-radius: 6px;
   margin-bottom: 1rem;
 }
 
@@ -111,7 +145,6 @@ h1 {
 .card-btn {
   flex: 1;
   padding: 0.6rem;
-  border-radius: 8px;
   border: 1px solid #e2e8f0;
   background: #f8fafc; /* Very soft cool gray fill instead of plain white */
   color: #334155; /* Dark slate text */
@@ -134,7 +167,6 @@ h1 {
 .card-btn.primary {
   background: #334155; /* Muted dark slate */
   color: #ffffff;
-  border: 1px solid #334155;
   border: 2px solid rgb(219, 215, 215);
 }
 
@@ -146,6 +178,33 @@ h1 {
 .class-badge {
   background-color: #f1f5f9;
   color: #475569;
-  border: 1px solid #e2e8f0;
   border: 2px solid rgb(219, 215, 215);
+}
+
+@media screen and (max-width: 768px) {
+  .filters-bar .form-control,
+  .card-btn,
+  .role-tag,
+  .class-badge,
+  .assignment-card,
+  .filters-bar .form-control {
+    border-radius: 10px;
+  }
+
+  .back-academic-settings-btn {
+    grid-column: 1;
+    width: auto !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid rgb(219, 215, 215);
+    background: #1f2937;
+    color: #f9fafb;
+    font-size: 13px;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
 }

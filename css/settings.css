@@ -70,7 +70,6 @@
 .menu li.active a {
   background: #fff;
   color: #1d4ed8;
-  border-radius: 10px;
 }
 
 .menu li a i {
@@ -204,7 +203,8 @@
   }
 
   .setting-card .manage-btn,
-  .setting-card {
+  .setting-card,
+  .menu li.active a {
     border-radius: 10px;
   }
 
