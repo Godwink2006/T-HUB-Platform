@@ -6,6 +6,24 @@ function hideModal(modal) {
   modal.classList.remove("active");
 }
 
+const DRAFT_KEY = "draft_timetable_lessons";
+
+function saveDraftToStorage(lessons) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(lessons));
+  } catch (e) {
+    console.error("Failed to write to LocalStorage:", e);
+  }
+}
+
+function clearDraftStorage() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch (e) {
+    console.error("Failed to clear LocalStorage:", e);
+  }
+}
+
 (() => {
   // Application State
   const state = {
@@ -84,16 +102,17 @@ function hideModal(modal) {
   }
 
   /* ==========================================================================
-     3. DROPDOWNS & FORM HELPERS
-     ========================================================================== */
+   1. LOAD DROPDOWNS & ASSIGNMENT DATA
+   ========================================================================== */
   async function loadDropdownData() {
     try {
       const [
         { data: classes },
         { data: years },
-        { data: subjects },
         { data: periods },
         { data: teachers },
+        { data: subjects },
+        { data: teacherAssignments },
       ] = await Promise.all([
         supabaseClient
           .from("classes")
@@ -104,12 +123,6 @@ function hideModal(modal) {
         supabaseClient
           .from("academic_years")
           .select("id, year_label")
-          .eq("school_id", state.schoolId)
-          .eq("status", "Active"),
-
-        supabaseClient
-          .from("subjects")
-          .select("id, name")
           .eq("school_id", state.schoolId)
           .eq("status", "Active"),
 
@@ -125,19 +138,42 @@ function hideModal(modal) {
           .eq("school_id", state.schoolId)
           .eq("role", "teacher")
           .eq("status", "active"),
+
+        supabaseClient
+          .from("subjects")
+          .select("id, name")
+          .eq("school_id", state.schoolId)
+          .eq("status", "Active"),
+
+        // Source of truth: Fetch teacher assignments with relationships
+        supabaseClient
+          .from("teacher_assignments")
+          .select("id, teacher_id, class_id, subject_id")
+          .eq("school_id", state.schoolId)
+          .eq("status", "active"),
       ]);
 
+      // Save lookups & raw assignments in state
+      state.teacherAssignments = teacherAssignments || [];
       state.lookups = {
         classes: classes || [],
         years: years || [],
-        subjects: subjects || [],
         periods: periods || [],
         teachers: teachers || [],
+        subjects: subjects || [],
       };
+
+      // 1. Only show classes that exist in the teacher_assignments table
+      const assignedClassIds = new Set(
+        state.teacherAssignments.map((ta) => ta.class_id),
+      );
+      const assignedClasses = state.lookups.classes.filter((c) =>
+        assignedClassIds.has(c.id),
+      );
 
       populateSelectOptions(
         "timetableClassSelect",
-        state.lookups.classes,
+        assignedClasses,
         "id",
         "name",
       );
@@ -147,30 +183,6 @@ function hideModal(modal) {
         "id",
         "year_label",
       );
-      populateSelectOptions(
-        "addLessonSubject",
-        state.lookups.subjects,
-        "id",
-        "name",
-      );
-      populateSelectOptions(
-        "editLessonSubject",
-        state.lookups.subjects,
-        "id",
-        "name",
-      );
-      populateSelectOptions(
-        "addLessonTeacher",
-        state.lookups.teachers,
-        "id",
-        "full_name",
-      );
-      populateSelectOptions(
-        "editLessonTeacher",
-        state.lookups.teachers,
-        "id",
-        "full_name",
-      );
 
       populatePeriodOptions("addLessonPeriod", state.lookups.periods);
       populatePeriodOptions("editLessonPeriod", state.lookups.periods);
@@ -178,6 +190,110 @@ function hideModal(modal) {
       console.error("Failed loading dropdowns:", err);
       showToast("Error loading interface dropdowns.", "error");
     }
+  }
+
+  function getSelectedClassId() {
+    if (state.isEditModalContext && state.editingTimetableClassId) {
+      return state.editingTimetableClassId;
+    }
+    return getEl("timetableClassSelect")?.value || null;
+  }
+
+  function updateCascadingDropdowns(prefix) {
+    const classId = getSelectedClassId();
+    const teacherSelect = getEl(`${prefix}Teacher`);
+    const subjectSelect = getEl(`${prefix}Subject`);
+
+    if (!teacherSelect || !subjectSelect) return;
+
+    const currentTeacherId = teacherSelect.value;
+    const currentSubjectId = subjectSelect.value;
+
+    if (!classId) {
+      // Clear options if no class is chosen
+      populateSelectOptions(`${prefix}Teacher`, [], "id", "full_name");
+      populateSelectOptions(`${prefix}Subject`, [], "id", "name");
+      return;
+    }
+
+    // Get all assignments for the selected class
+    const classAssignments = state.teacherAssignments.filter(
+      (ta) => ta.class_id === classId,
+    );
+
+    // 1. Determine valid Teachers for this class (filtered by selected subject if present)
+    let validAssignmentsForTeachers = classAssignments;
+    if (currentSubjectId) {
+      validAssignmentsForTeachers = classAssignments.filter(
+        (ta) => ta.subject_id === currentSubjectId,
+      );
+    }
+
+    const validTeacherIds = new Set(
+      validAssignmentsForTeachers.map((ta) => ta.teacher_id),
+    );
+    const availableTeachers = state.lookups.teachers.filter((t) =>
+      validTeacherIds.has(t.id),
+    );
+
+    // 2. Determine valid Subjects for this class (filtered by selected teacher if present)
+    let validAssignmentsForSubjects = classAssignments;
+    if (currentTeacherId) {
+      validAssignmentsForSubjects = classAssignments.filter(
+        (ta) => ta.teacher_id === currentTeacherId,
+      );
+    }
+
+    const validSubjectIds = new Set(
+      validAssignmentsForSubjects.map((ta) => ta.subject_id),
+    );
+    const availableSubjects = state.lookups.subjects.filter((s) =>
+      validSubjectIds.has(s.id),
+    );
+
+    // 3. Re-populate select elements while maintaining active values if still valid
+    populateSelectOptions(
+      `${prefix}Teacher`,
+      availableTeachers,
+      "id",
+      "full_name",
+    );
+    teacherSelect.value = validTeacherIds.has(currentTeacherId)
+      ? currentTeacherId
+      : "";
+
+    populateSelectOptions(`${prefix}Subject`, availableSubjects, "id", "name");
+    subjectSelect.value = validSubjectIds.has(currentSubjectId)
+      ? currentSubjectId
+      : "";
+  }
+
+  /* ==========================================================================
+   3. EVENT LISTENERS
+   ========================================================================== */
+
+  function bindCascadingEvents() {
+    // Reset lesson fields when main timetable class changes
+    getEl("timetableClassSelect")?.addEventListener("change", () => {
+      updateCascadingDropdowns("addLesson");
+      updateCascadingDropdowns("editLesson");
+    });
+
+    // Add Lesson Modal Listeners
+    getEl("addLessonTeacher")?.addEventListener("change", () =>
+      updateCascadingDropdowns("addLesson"),
+    );
+    getEl("addLessonSubject")?.addEventListener("change", () =>
+      updateCascadingDropdowns("addLesson"),
+    );
+
+    // Edit Lesson Modal Listeners
+    getEl("editLessonTeacher")?.addEventListener("change", () =>
+      updateCascadingDropdowns("editLesson"),
+    );
+    getEl("editLessonSubject")?.addEventListener("change", () =>
+      updateCascadingDropdowns("editLesson"),
+    );
   }
 
   function populateSelectOptions(elementId, items, valueKey, labelKey) {
@@ -353,6 +469,8 @@ function hideModal(modal) {
 
       if (ttErr) throw ttErr;
 
+      state.editingTimetableClassId = timetable.class_id;
+
       // Map Class Name and Academic Year Label from preloaded lookups
       const classObj = state.lookups.classes.find(
         (c) => c.id === timetable.class_id,
@@ -365,8 +483,8 @@ function hideModal(modal) {
       const yearEl = getEl("editModalYearLabel");
       const statusSelect = getEl("editTimetableStatusSelect");
 
-      if (classEl) classEl.textContent = classObj ? classObj.name : "N/A";
-      if (yearEl) yearEl.textContent = yearObj ? yearObj.year_label : "N/A";
+      if (classEl) classEl.textContent = classObj ? classObj.name : "-";
+      if (yearEl) yearEl.textContent = yearObj ? yearObj.year_label : "-";
       if (statusSelect) statusSelect.value = timetable.status || "Active";
 
       // 2. Query 'timetable_lessons' without selecting 'status'
@@ -393,13 +511,13 @@ function hideModal(modal) {
           id: l.id,
           day: l.day_of_week,
           subject_id: l.subject_id,
-          subject_name: subjectObj ? subjectObj.name : "N/A",
+          subject_name: subjectObj ? subjectObj.name : "-",
           period_id: l.period_id,
           time: periodObj
             ? `${periodObj.start_time} - ${periodObj.end_time}`
-            : "N/A",
+            : "-",
           teacher_id: l.teacher_id,
-          teacher_name: teacherObj ? teacherObj.full_name : "N/A",
+          teacher_name: teacherObj ? teacherObj.full_name : "-",
           status: timetable.status || "Active",
         };
       });
@@ -448,8 +566,8 @@ function hideModal(modal) {
 
       tbody.innerHTML = timetables
         .map((item) => {
-          const className = item.classes?.name || "N/A";
-          const yearLabel = item.academic_years?.year_label || "N/A";
+          const className = item.classes?.name || "-";
+          const yearLabel = item.academic_years?.year_label || "-";
           const isStatusActive = (item.status || "").toLowerCase() === "active";
           const statusClass = isStatusActive
             ? "timetables-status-active"
@@ -495,6 +613,7 @@ function hideModal(modal) {
         e.preventDefault();
         state.timetableId = null;
         state.lessons = [];
+        clearDraftStorage();
         resetForm("timetableForm");
         renderLessonsTable();
         showModal(getEl("timetableModal"));
@@ -536,6 +655,12 @@ function hideModal(modal) {
       e.preventDefault();
       state.isEditModalContext = false;
       resetForm("addLessonForm");
+      // 2. Explicitly wipe selected values so cascading logic doesn't pre-filter
+      if (getEl("addLessonTeacher")) getEl("addLessonTeacher").value = "";
+      if (getEl("addLessonSubject")) getEl("addLessonSubject").value = "";
+
+      // 3. Re-run cascading to populate ALL teachers/subjects for the class
+      updateCascadingDropdowns("addLesson");
       showModal(getEl("lessonModal"));
     });
 
@@ -543,6 +668,11 @@ function hideModal(modal) {
       e.preventDefault();
       state.isEditModalContext = true;
       resetForm("addLessonForm");
+
+      if (getEl("addLessonTeacher")) getEl("addLessonTeacher").value = "";
+      if (getEl("addLessonSubject")) getEl("addLessonSubject").value = "";
+
+      updateCascadingDropdowns("addLesson");
       showModal(getEl("lessonModal"));
     });
 
@@ -606,10 +736,15 @@ function hideModal(modal) {
       } else {
         state.lessons.push(newLesson);
         renderLessonsTable();
+        saveDraftToStorage(state.lessons);
       }
 
       hideModal(getEl("lessonModal"));
+
+      // Clean up form & dropdown selection states
       resetForm("addLessonForm");
+      if (getEl("addLessonTeacher")) getEl("addLessonTeacher").value = "";
+      if (getEl("addLessonSubject")) getEl("addLessonSubject").value = "";
     });
 
     // Lesson Table Row Actions - Create Modal
@@ -635,6 +770,11 @@ function hideModal(modal) {
         if (index !== -1) {
           lessonList.splice(index, 1);
           renderFn();
+
+          // Keep draft storage updated if modifying create lessons
+          if (lessonList === state.lessons) {
+            saveDraftToStorage(state.lessons);
+          }
         }
       }
 
@@ -729,8 +869,11 @@ function hideModal(modal) {
         if (error) throw error;
 
         showToast("Timetable created successfully!", "success");
-        hideModal(getEl("timetableModal"));
+
         state.lessons = [];
+        clearDraftStorage();
+
+        hideModal(getEl("timetableModal"));
         resetForm("timetableForm");
         await loadTimetables();
       } catch (err) {
@@ -786,9 +929,12 @@ function hideModal(modal) {
         }
 
         showToast("Timetable updated successfully!", "success");
-        hideModal(getEl("editTimetableModal"));
+
         state.editLessons = [];
         state.editingTimetableId = null;
+        clearDraftStorage();
+
+        hideModal(getEl("editTimetableModal"));
         await loadTimetables();
       } catch (err) {
         showToast("Unexpected error while updating timetable.", "error");
@@ -806,6 +952,7 @@ function hideModal(modal) {
     if (state.schoolId) {
       await loadDropdownData();
       await loadTimetables();
+      bindCascadingEvents();
     }
   }
 
@@ -982,9 +1129,9 @@ async function handleViewTimetable(timetableId) {
     if (ttError) throw ttError;
     if (lError) throw lError;
 
-    if (classLabel) classLabel.textContent = timetable.classes?.name || "N/A";
+    if (classLabel) classLabel.textContent = timetable.classes?.name || "-";
     if (yearLabel)
-      yearLabel.textContent = timetable.academic_years?.year_label || "N/A";
+      yearLabel.textContent = timetable.academic_years?.year_label || "-";
 
     const lessonList = lessons || [];
 
