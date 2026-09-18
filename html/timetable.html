@@ -55,19 +55,21 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search timetables..." />
+          <input
+            type="text"
+            id="timetableSearchInput"
+            placeholder="Search timetables..."
+          />
 
-          <select>
-            <option>Academic Year</option>
-            <option>2026-2027</option>
-            <option>2025-2026</option>
-            <option>2024-2025</option>
+          <select id="academicYearFilter">
+            <option value="">All Academic Years</option>
+            <!-- Dynamic options populated from lookups or backend -->
           </select>
 
-          <select>
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+          <select id="statusFilter">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
 

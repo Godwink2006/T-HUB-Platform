@@ -438,10 +438,10 @@ function clearDraftStorage() {
       const tr = document.createElement("tr");
       tr.dataset.id = lesson.id;
       tr.innerHTML = `
-        <td>${escapeHTML(lesson.day || "N/A")}</td>
-        <td>${escapeHTML(lesson.time || "N/A")}</td>
-        <td>${escapeHTML(lesson.subject_name || "N/A")}</td>
-        <td>${escapeHTML(lesson.teacher_name || "N/A")}</td>
+        <td>${escapeHTML(lesson.day || "-")}</td>
+        <td>${escapeHTML(lesson.time || "-")}</td>
+        <td>${escapeHTML(lesson.subject_name || "-")}</td>
+        <td>${escapeHTML(lesson.teacher_name || "-")}</td>
         <td><span class="timetables-status-active">${escapeHTML(lesson.status || "Active")}</span></td>
         <td>
           <button type="button" class="timetables-actions-btn edit-lesson" title="Edit">
@@ -522,6 +522,10 @@ function clearDraftStorage() {
         };
       });
 
+      // Example step when opening the modal / populating data
+      state.initialEditStatus = timetable.status;
+      state.initialEditLessons = JSON.parse(JSON.stringify(state.editLessons));
+
       renderEditLessonsTable();
       showModal(getEl("editTimetableModal"));
     } catch (err) {
@@ -558,6 +562,14 @@ function clearDraftStorage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+
+      cachedTimetables = timetables || [];
+
+      // Populate academic year dropdown options dynamically
+      populateAcademicYearFilterOptions(cachedTimetables);
+
+      // Render initial list
+      renderTimetablesTable(cachedTimetables);
 
       if (!timetables || timetables.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No timetables found.</td></tr>`;
@@ -845,7 +857,18 @@ function clearDraftStorage() {
         return;
       }
 
-      // FIX 3: Update payload for create form to properly format break entries
+      // Target submit button to show loading state
+      const submitBtn = getEl("timetableForm")?.querySelector(
+        'button[type="submit"]',
+      );
+      const originalBtnText = submitBtn ? submitBtn.innerHTML : "Save";
+
+      // Disable button and change label
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `Saving...`;
+      }
+
       const payload = {
         p_timetable_id: state.timetableId || null,
         p_school_id: state.schoolId,
@@ -878,6 +901,12 @@ function clearDraftStorage() {
         await loadTimetables();
       } catch (err) {
         showToast(err.message || "Failed to save timetable.", "error");
+      } finally {
+        // Restore button state
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
       }
     });
 
@@ -897,6 +926,18 @@ function clearDraftStorage() {
 
       const statusVal = getEl("editTimetableStatusSelect")?.value || "Active";
 
+      // Check if form data or lessons have changed against initial state
+      const hasStatusChanged =
+        statusVal !== (state.initialEditStatus || "Active");
+      const currentLessonsJSON = JSON.stringify(state.editLessons);
+      const initialLessonsJSON = JSON.stringify(state.initialEditLessons || []);
+      const hasLessonsChanged = currentLessonsJSON !== initialLessonsJSON;
+
+      if (!hasStatusChanged && !hasLessonsChanged) {
+        showToast("No changes detected.", "info");
+        return;
+      }
+
       const payload = {
         p_timetable_id: state.editingTimetableId,
         p_school_id: state.schoolId,
@@ -912,10 +953,15 @@ function clearDraftStorage() {
         })),
       };
 
-      const submitBtn = getEl("editTimetableForm").querySelector(
+      const submitBtn = getEl("editTimetableForm")?.querySelector(
         "button[type='submit']",
       );
-      if (submitBtn) submitBtn.disabled = true;
+      const originalBtnText = submitBtn ? submitBtn.innerHTML : "Update";
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Updating...";
+      }
 
       try {
         const { error } = await supabaseClient.rpc(
@@ -931,6 +977,7 @@ function clearDraftStorage() {
         showToast("Timetable updated successfully!", "success");
 
         state.editLessons = [];
+        state.initialEditLessons = [];
         state.editingTimetableId = null;
         clearDraftStorage();
 
@@ -939,7 +986,10 @@ function clearDraftStorage() {
       } catch (err) {
         showToast("Unexpected error while updating timetable.", "error");
       } finally {
-        if (submitBtn) submitBtn.disabled = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
       }
     });
 
@@ -1052,6 +1102,127 @@ function clearDraftStorage() {
       hideModal(getEl("archiveTimetableModal"));
       archivingTimetableId = null;
     });
+
+  // Global scope variable to store raw records for filtering
+  let cachedTimetables = [];
+
+  /**
+   * Filter cached records and render matched rows
+   */
+  function applyTimetableFilters() {
+    const searchQuery = (getEl("timetableSearchInput")?.value || "")
+      .toLowerCase()
+      .trim();
+    const selectedYearId = getEl("academicYearFilter")?.value || "";
+    const selectedStatus = (getEl("statusFilter")?.value || "")
+      .toLowerCase()
+      .trim();
+
+    const filtered = cachedTimetables.filter((item) => {
+      const className = (item.classes?.name || "").toLowerCase();
+      const yearLabel = (item.academic_years?.year_label || "").toLowerCase();
+      const yearId = item.academic_years?.id || "";
+      const status = (item.status || "inactive").toLowerCase();
+
+      // Search input matches Class Name or Academic Year label
+      const matchesSearch =
+        !searchQuery ||
+        className.includes(searchQuery) ||
+        yearLabel.includes(searchQuery);
+
+      // Academic Year filter matches ID
+      const matchesYear = !selectedYearId || yearId === selectedYearId;
+
+      // Status filter matches status state
+      const matchesStatus = !selectedStatus || status === selectedStatus;
+
+      return matchesSearch && matchesYear && matchesStatus;
+    });
+
+    renderTimetablesTable(filtered);
+  }
+
+  /**
+   * Render array of timetables to the table DOM
+   */
+  function renderTimetablesTable(list) {
+    const tbody = getEl("timetablesTableBody");
+    if (!tbody) return;
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No timetables found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list
+      .map((item) => {
+        const className = item.classes?.name || "-";
+        const yearLabel = item.academic_years?.year_label || "-";
+        const isStatusActive = (item.status || "").toLowerCase() === "active";
+        const statusClass = isStatusActive
+          ? "timetables-status-active"
+          : "timetables-status-inactive";
+
+        return `
+        <tr data-timetable-id="${escapeHTML(item.id)}">
+          <td>${escapeHTML(className)}</td>
+          <td>${escapeHTML(yearLabel)}</td>
+          <td>
+            <span class="${statusClass}">${escapeHTML(item.status || "Inactive")}</span>
+          </td>
+          <td>
+            <button class="timetables-actions-btn view" data-id="${escapeHTML(item.id)}" title="View">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button class="timetables-actions-btn edit" data-id="${escapeHTML(item.id)}" title="Edit">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="timetables-actions-btn archive" data-id="${escapeHTML(item.id)}" title="Archive">
+              <i class="fa-solid fa-box-archive"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      })
+      .join("");
+  }
+
+  /**
+   * Extract unique academic years from cached timetables and populate dropdown
+   */
+  function populateAcademicYearFilterOptions(timetables) {
+    const yearSelect = getEl("academicYearFilter");
+    if (!yearSelect) return;
+
+    const currentSelection = yearSelect.value;
+
+    // Extract unique academic years
+    const yearMap = new Map();
+    timetables.forEach((item) => {
+      if (item.academic_years?.id) {
+        yearMap.set(item.academic_years.id, item.academic_years.year_label);
+      }
+    });
+
+    let optionsHTML = `<option value="">All Academic Years</option>`;
+    yearMap.forEach((label, id) => {
+      optionsHTML += `<option value="${escapeHTML(id)}">${escapeHTML(label)}</option>`;
+    });
+
+    yearSelect.innerHTML = optionsHTML;
+    yearSelect.value = currentSelection;
+  }
+
+  // Bind input and change event listeners
+  getEl("timetableSearchInput")?.addEventListener(
+    "input",
+    applyTimetableFilters,
+  );
+  getEl("academicYearFilter")?.addEventListener(
+    "change",
+    applyTimetableFilters,
+  );
+  getEl("statusFilter")?.addEventListener("change", applyTimetableFilters);
 })();
 
 async function getActiveSchoolId() {
