@@ -85,20 +85,55 @@ function formatDateTime(isoString) {
   });
 }
 
+function convert12to24(timeStr) {
+  if (!timeStr) return "";
+
+  // If already in 24-hour format (e.g., "12:00" or "12:00:00")
+  if (
+    !timeStr.toLowerCase().includes("am") &&
+    !timeStr.toLowerCase().includes("pm")
+  ) {
+    return timeStr.length === 5 ? `${timeStr}:00` : timeStr;
+  }
+
+  const [time, modifier] = timeStr.trim().split(" ");
+  let [hours, minutes] = time.split(":");
+
+  if (hours === "12") {
+    hours = "00";
+  }
+
+  if (modifier.toUpperCase() === "PM") {
+    hours = parseInt(hours, 10) + 12;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${minutes}:00`;
+}
+
 async function handleSavePeriod(event) {
   event.preventDefault();
 
-  const periodId = document.getElementById("editPeriodId").value;
-  const schoolLevel = document.getElementById("schoolLevelSelect").value;
-  const name = document.getElementById("periodNameInput").value.trim();
-  const startTime = document.getElementById("startTimeInput").value;
-  const endTime = document.getElementById("endTimeInput").value;
-  const status = document.getElementById("periodStatusSelect").value;
+  const periodId = document.getElementById("editPeriodId")?.value;
+  const schoolLevelSelect = document.getElementById("schoolLevelSelect");
+  const schoolLevel = schoolLevelSelect?.value;
 
-  if (!schoolLevel || !name || !startTime || !endTime || !status) {
+  const selectedOption =
+    schoolLevelSelect?.options[schoolLevelSelect.selectedIndex];
+  const schoolId = selectedOption?.dataset?.schoolId || null;
+
+  const name = document.getElementById("periodNameInput")?.value.trim();
+  let rawStartTime = document.getElementById("startTimeInput")?.value;
+  let rawEndTime = document.getElementById("endTimeInput")?.value;
+  const status = document.getElementById("periodStatusSelect")?.value;
+
+  if (!schoolLevel || !name || !rawStartTime || !rawEndTime || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
   }
+
+  // Convert "12:00 PM" -> "12:00:00" and "12:45 PM" -> "12:45:00"
+  const startTime = convert12to24(rawStartTime);
+  const endTime = convert12to24(rawEndTime);
 
   if (startTime >= endTime) {
     showToast("Start time must be strictly before end time.", "error");
@@ -115,17 +150,32 @@ async function handleSavePeriod(event) {
       saveBtn.textContent = "Saving...";
     }
 
-    const { data, error } = await supabaseClient
-      .from("periods")
-      .insert({
-        school_level: schoolLevel,
-        name: name,
-        start_time: startTime,
-        end_time: endTime,
-        status: status,
-        is_archived: false,
-      })
-      .select();
+    const payload = {
+      school_level: schoolLevel,
+      name: name,
+      start_time: startTime,
+      end_time: endTime,
+      status: status,
+      is_archived: false,
+    };
+
+    if (schoolId) {
+      payload.school_id = schoolId;
+    }
+
+    let query;
+
+    if (periodId) {
+      query = supabaseClient
+        .from("periods")
+        .update(payload)
+        .eq("id", periodId)
+        .select();
+    } else {
+      query = supabaseClient.from("periods").insert(payload).select();
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       if (error.code === "42501") {
@@ -150,8 +200,14 @@ async function handleSavePeriod(event) {
       return;
     }
 
-    showToast("Period created successfully!", "success");
+    showToast(
+      periodId
+        ? "Period updated successfully!"
+        : "Period created successfully!",
+      "success",
+    );
     closePeriodModal();
+
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
     if (typeof populatePeriodFilterDropdowns === "function") {
       await populatePeriodFilterDropdowns();
@@ -166,7 +222,6 @@ async function handleSavePeriod(event) {
     }
   }
 }
-
 async function handleTableActions(event) {
   const editBtn = event.target.closest(".edit-Period");
   const archiveBtn = event.target.closest(".archive-Period");

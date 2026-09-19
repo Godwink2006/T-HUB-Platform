@@ -318,76 +318,63 @@ function clearDraftStorage() {
     select.innerHTML = html;
   }
 
-  function setupPeriodTimeDisplay(selectId, displayId) {
-    const select = getEl(selectId);
-    const display = getEl(displayId);
-    select?.addEventListener("change", (e) => {
-      const selectedOption = e.target.options[e.target.selectedIndex];
-      const timeRange = selectedOption?.dataset?.time || "--:--";
-      if (display) display.textContent = timeRange;
-    });
-  }
+  /* ==========================================================================
+   4. DATA RENDERING & TABLES
+   ========================================================================== */
 
-  function extractLessonFormData(prefix) {
-    const isBreak = getEl(`${prefix}IsBreak`)?.checked || false;
-    const periodId = getEl(`${prefix}Period`)?.value || "";
-    const periodObj = state.lookups.periods.find((p) => p.id === periodId);
+  /**
+   * Helper to resolve lookup names and format table cells safely
+   */
+  function resolveLessonDisplayData(lesson) {
+    if (lesson.is_break) {
+      const period = state.lookups?.periods?.find(
+        (p) => p.id === lesson.period_id,
+      );
+      const timeStr = period
+        ? `${period.start_time.slice(0, 5)} - ${period.end_time.slice(0, 5)}`
+        : lesson.time || "-";
 
-    // If "Is Break" is checked, bypass day, subject, and teacher selections
-    if (isBreak) {
       return {
         day: "All",
-        is_break: true,
-        subject_id: null,
-        subject_name: "BREAK",
-        period_id: periodId,
-        time: periodObj
-          ? `${periodObj.start_time} - ${periodObj.end_time}`
-          : "N/A",
-        teacher_id: null,
-        teacher_name: "-",
-        status: "Active",
+        time: timeStr,
+        subject: `<span class="badge bg-secondary">Break / Recess</span>`,
+        teacher: "-",
+        isBreak: true,
       };
     }
 
-    // Regular lesson extraction
-    const day = getEl(`${prefix}Day`)?.value || "";
-    const subjectId = getEl(`${prefix}Subject`)?.value || "";
-    const teacherId = getEl(`${prefix}Teacher`)?.value || "";
+    // Resolve Normal Lesson Foreign Keys
+    const period = state.lookups?.periods?.find(
+      (p) => p.id === lesson.period_id,
+    );
+    const subject = state.lookups?.subjects?.find(
+      (s) => s.id === lesson.subject_id,
+    );
+    const teacher = state.lookups?.teachers?.find(
+      (t) => t.id === lesson.teacher_id,
+    );
 
-    const subjectObj = state.lookups.subjects.find((s) => s.id === subjectId);
-    const teacherObj = state.lookups.teachers.find((t) => t.id === teacherId);
+    const timeStr = period
+      ? `${period.start_time.slice(0, 5)} - ${period.end_time.slice(0, 5)}`
+      : lesson.time || "N/A";
+
+    const subjectName = subject
+      ? subject.name
+      : lesson.subject_name || lesson.subject || "N/A";
+
+    const teacherName = teacher
+      ? teacher.full_name || teacher.name
+      : lesson.teacher_name || lesson.teacher || "N/A";
 
     return {
-      day,
-      is_break: false,
-      subject_id: subjectId,
-      subject_name: subjectObj ? subjectObj.name : "N/A",
-      period_id: periodId,
-      time: periodObj
-        ? `${periodObj.start_time} - ${periodObj.end_time}`
-        : "N/A",
-      teacher_id: teacherId,
-      teacher_name: teacherObj ? teacherObj.full_name : "N/A",
-      status: "Active",
+      day: lesson.day || "N/A",
+      time: timeStr,
+      subject: escapeHTML(subjectName),
+      teacher: escapeHTML(teacherName),
+      isBreak: false,
     };
   }
 
-  function populateEditFormValues(lesson) {
-    const setVal = (id, val) => {
-      const el = getEl(id);
-      if (el) el.value = val || "";
-    };
-
-    setVal("editLessonDay", lesson.day);
-    setVal("editLessonSubject", lesson.subject_id);
-    setVal("editLessonPeriod", lesson.period_id);
-    setVal("editLessonTeacher", lesson.teacher_id);
-  }
-
-  /* ==========================================================================
-     4. DATA RENDERING & TABLES
-     ========================================================================== */
   function renderLessonsTable() {
     const tbody =
       getEl("timetableLessonsTbody") ||
@@ -396,29 +383,31 @@ function clearDraftStorage() {
 
     tbody.innerHTML = "";
 
-    if (state.lessons.length === 0) {
+    if (!state.lessons || state.lessons.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No lessons added yet.</td></tr>`;
       return;
     }
 
     state.lessons.forEach((lesson) => {
+      const display = resolveLessonDisplayData(lesson);
       const tr = document.createElement("tr");
       tr.dataset.id = lesson.id;
+
       tr.innerHTML = `
-        <td>${escapeHTML(lesson.day || "N/A")}</td>
-        <td>${escapeHTML(lesson.time || "N/A")}</td>
-        <td>${escapeHTML(lesson.subject_name || "N/A")}</td>
-        <td>${escapeHTML(lesson.teacher_name || "N/A")}</td>
-        <td><span class="timetables-status-active">${escapeHTML(lesson.status || "Active")}</span></td>
-        <td>
-          <button type="button" class="timetables-actions-btn edit-lesson" title="Edit">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button type="button" class="timetables-actions-btn delete-lesson" title="Delete">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
-        </td>
-      `;
+      <td>${escapeHTML(display.day)}</td>
+      <td>${escapeHTML(display.time)}</td>
+      <td>${display.subject}</td>
+      <td>${display.teacher}</td>
+      <td><span class="timetables-status-active">${escapeHTML(lesson.status || "Active")}</span></td>
+      <td>
+        <button type="button" class="timetables-actions-btn edit-lesson" title="Edit">
+          <i class="fa-solid fa-pen"></i>
+        </button>
+        <button type="button" class="timetables-actions-btn delete-lesson" title="Delete">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>
+    `;
       tbody.appendChild(tr);
     });
   }
@@ -429,33 +418,34 @@ function clearDraftStorage() {
 
     tbody.innerHTML = "";
 
-    if (state.editLessons.length === 0) {
+    if (!state.editLessons || state.editLessons.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No lessons available.</td></tr>`;
       return;
     }
 
     state.editLessons.forEach((lesson) => {
+      const display = resolveLessonDisplayData(lesson);
       const tr = document.createElement("tr");
       tr.dataset.id = lesson.id;
+
       tr.innerHTML = `
-        <td>${escapeHTML(lesson.day || "-")}</td>
-        <td>${escapeHTML(lesson.time || "-")}</td>
-        <td>${escapeHTML(lesson.subject_name || "-")}</td>
-        <td>${escapeHTML(lesson.teacher_name || "-")}</td>
-        <td><span class="timetables-status-active">${escapeHTML(lesson.status || "Active")}</span></td>
-        <td>
-          <button type="button" class="timetables-actions-btn edit-lesson" title="Edit">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button type="button" class="timetables-actions-btn delete-lesson" title="Delete">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
-        </td>
-      `;
+      <td>${escapeHTML(display.day)}</td>
+      <td>${escapeHTML(display.time)}</td>
+      <td>${display.subject}</td>
+      <td>${display.teacher}</td>
+      <td><span class="timetables-status-active">${escapeHTML(lesson.status || "Active")}</span></td>
+      <td>
+        <button type="button" class="timetables-actions-btn edit-lesson" title="Edit">
+          <i class="fa-solid fa-pen"></i>
+        </button>
+        <button type="button" class="timetables-actions-btn delete-lesson" title="Delete">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </td>
+    `;
       tbody.appendChild(tr);
     });
   }
-
   async function openEditTimetableModal(timetableId) {
     try {
       state.editingTimetableId = timetableId;
@@ -769,44 +759,57 @@ function clearDraftStorage() {
       handleLessonTableActions(e, state.editLessons, renderEditLessonsTable);
     });
 
-    function handleLessonTableActions(e, lessonList, renderFn) {
+    function handleLessonTableActions(e, lessonList, renderFn, isEditContext) {
       const editBtn = e.target.closest(".edit-lesson");
       const deleteBtn = e.target.closest(".delete-lesson");
       const tr = e.target.closest("tr");
       if (!tr) return;
 
       const lessonId = tr.dataset.id;
+      const rowIndex = Array.from(tr.parentNode.children).indexOf(tr);
+
+      // Find index by ID or row position fallback
+      const targetIndex = lessonList.findIndex((l) => l.id === lessonId);
+      const index = targetIndex !== -1 ? targetIndex : rowIndex;
+
+      if (index === -1 || !lessonList[index]) return;
 
       if (deleteBtn) {
-        const index = lessonList.findIndex((l) => l.id === lessonId);
-        if (index !== -1) {
-          lessonList.splice(index, 1);
-          renderFn();
-
-          // Keep draft storage updated if modifying create lessons
-          if (lessonList === state.lessons) {
-            saveDraftToStorage(state.lessons);
-          }
+        lessonList.splice(index, 1);
+        renderFn();
+        if (lessonList === state.lessons) {
+          saveDraftToStorage(state.lessons);
         }
       }
 
       if (editBtn) {
-        state.editingLessonId = lessonId;
-        const lesson = lessonList.find((l) => l.id === lessonId);
-        if (lesson) {
-          populateEditFormValues(lesson);
-          showModal(getEl("editLessonModal"));
+        const lesson = lessonList[index];
+
+        // Store active context
+        state.editingLessonIndex = index;
+        state.editingLessonId = lesson.id || null;
+        state.isEditModalContext = isEditContext;
+
+        // Repopulate options before assigning values if options are dynamic
+        if (typeof updateCascadingDropdowns === "function") {
+          updateCascadingDropdowns("editLesson");
         }
+
+        populateEditFormValues(lesson);
+        showModal(getEl("editLessonModal"));
       }
     }
 
-    // Update Individual Lesson Item Modal
+    // Update Individual Lesson Item Modal Handler
     getEl("updateLessonBtn")?.addEventListener("click", () => {
-      if (!state.editingLessonId) return;
+      if (
+        state.editingLessonIndex === null ||
+        state.editingLessonIndex === undefined
+      )
+        return;
 
       const updatedData = extractLessonFormData("editLesson");
 
-      // FIX 2: Check validation based on whether it is marked as a break
       const isValid = updatedData.is_break
         ? Boolean(updatedData.period_id)
         : Boolean(
@@ -821,21 +824,189 @@ function clearDraftStorage() {
         return;
       }
 
-      let targetList = state.lessons.some((l) => l.id === state.editingLessonId)
-        ? state.lessons
-        : state.editLessons;
+      const targetList = state.isEditModalContext
+        ? state.editLessons
+        : state.lessons;
 
-      const index = targetList.findIndex((l) => l.id === state.editingLessonId);
-      if (index !== -1) {
-        targetList[index] = { ...targetList[index], ...updatedData };
+      if (targetList[state.editingLessonIndex]) {
+        targetList[state.editingLessonIndex] = {
+          ...targetList[state.editingLessonIndex],
+          ...updatedData,
+        };
       }
 
-      renderLessonsTable();
-      renderEditLessonsTable();
+      if (state.isEditModalContext) {
+        renderEditLessonsTable();
+      } else {
+        renderLessonsTable();
+        saveDraftToStorage(state.lessons);
+      }
+
       hideModal(getEl("editLessonModal"));
+      state.editingLessonIndex = null;
       state.editingLessonId = null;
     });
 
+    /**
+     * Populate the Edit Lesson Modal fields
+     */
+    /**
+     * Synchronize period dropdown selection with the `--:--` label text directly
+     */
+    function updatePeriodTimeLabel(selectEl, displayEl) {
+      if (!selectEl || !displayEl) return;
+
+      const selectedOption = selectEl.options[selectEl.selectedIndex];
+      if (!selectedOption || !selectedOption.value) {
+        displayEl.textContent = "--:--";
+        return;
+      }
+
+      // 1. Try reading dataset attribute (e.g., data-time="08:30 - 09:30")
+      let timeText = selectedOption.dataset?.time;
+
+      // 2. Fallback: Parse time inside parenthesized option text e.g., "Period 1 (08:30:00 - 09:30:00)"
+      if (!timeText) {
+        const match = selectedOption.textContent.match(/\((.*?)\)/);
+        if (match && match[1]) {
+          timeText = match[1];
+        }
+      }
+
+      displayEl.textContent = timeText || "--:--";
+    }
+
+    /**
+     * Ensures Period dropdown change events keep the label updated
+     */
+    function setupPeriodTimeDisplay(selectId, displayId) {
+      const select = getEl(selectId);
+      const display = getEl(displayId);
+
+      if (!select || !display) return;
+
+      select.addEventListener("change", () => {
+        updatePeriodTimeLabel(select, display);
+      });
+    }
+
+    /**
+     * Populate options for Subject and Teacher dropdowns if cascading didn't fill them
+     */
+    function ensureDropdownOptionsExist(prefix) {
+      const subjectSelect =
+        getEl(`${prefix}SubjectSelect`) || getEl(`${prefix}Subject`);
+      const teacherSelect =
+        getEl(`${prefix}TeacherSelect`) || getEl(`${prefix}Teacher`);
+
+      if (
+        subjectSelect &&
+        subjectSelect.options.length <= 1 &&
+        state.lookups?.subjects
+      ) {
+        subjectSelect.innerHTML =
+          `<option value="">Select option...</option>` +
+          state.lookups.subjects
+            .map(
+              (s) =>
+                `<option value="${escapeHTML(s.id)}">${escapeHTML(s.name)}</option>`,
+            )
+            .join("");
+      }
+
+      if (
+        teacherSelect &&
+        teacherSelect.options.length <= 1 &&
+        state.lookups?.teachers
+      ) {
+        teacherSelect.innerHTML =
+          `<option value="">Select option...</option>` +
+          state.lookups.teachers
+            .map(
+              (t) =>
+                `<option value="${escapeHTML(t.id)}">${escapeHTML(t.full_name || t.name)}</option>`,
+            )
+            .join("");
+      }
+    }
+
+    /**
+     * Populate the Edit Lesson Modal fields
+     */
+    function populateEditFormValues(lesson) {
+      const isBreak = Boolean(lesson.is_break);
+
+      // Fallback populator if updateCascadingDropdowns yields empty lists
+      ensureDropdownOptionsExist("editLesson");
+
+      const daySelect = getEl("editLessonDaySelect") || getEl("editLessonDay");
+      const periodSelect =
+        getEl("editLessonPeriodSelect") || getEl("editLessonPeriod");
+      const subjectSelect =
+        getEl("editLessonSubjectSelect") || getEl("editLessonSubject");
+      const teacherSelect =
+        getEl("editLessonTeacherSelect") || getEl("editLessonTeacher");
+      const isBreakCheckbox =
+        getEl("editLessonIsBreakCheckbox") || getEl("editLessonIsBreak");
+
+      // Populate Checkbox & Period
+      if (isBreakCheckbox) isBreakCheckbox.checked = isBreak;
+      if (periodSelect) periodSelect.value = lesson.period_id || "";
+
+      // Populate Day, Subject, Teacher
+      if (daySelect) {
+        daySelect.disabled = isBreak;
+        daySelect.value = isBreak ? "All" : lesson.day || "Monday";
+      }
+
+      if (subjectSelect) {
+        subjectSelect.disabled = isBreak;
+        subjectSelect.value = isBreak ? "" : lesson.subject_id || "";
+      }
+
+      if (teacherSelect) {
+        teacherSelect.disabled = isBreak;
+        teacherSelect.value = isBreak ? "" : lesson.teacher_id || "";
+      }
+
+      // Calculate & render Period time string instantly
+      const editTimeDisplay =
+        getEl("editLessonTimeDisplay") || getEl("editTimeDisplay");
+      updatePeriodTimeLabel(periodSelect, editTimeDisplay);
+    }
+
+    /**
+     * Extract data directly from Edit Lesson Form
+     */
+    function extractLessonFormData(prefix) {
+      const isBreak =
+        getEl(`${prefix}IsBreakCheckbox`)?.checked ||
+        getEl(`${prefix}IsBreak`)?.checked ||
+        false;
+
+      return {
+        day: isBreak
+          ? "All"
+          : getEl(`${prefix}DaySelect`)?.value ||
+            getEl(`${prefix}Day`)?.value ||
+            "",
+        period_id:
+          getEl(`${prefix}PeriodSelect`)?.value ||
+          getEl(`${prefix}Period`)?.value ||
+          "",
+        subject_id: isBreak
+          ? null
+          : getEl(`${prefix}SubjectSelect`)?.value ||
+            getEl(`${prefix}Subject`)?.value ||
+            null,
+        teacher_id: isBreak
+          ? null
+          : getEl(`${prefix}TeacherSelect`)?.value ||
+            getEl(`${prefix}Teacher`)?.value ||
+            null,
+        is_break: isBreak,
+      };
+    }
     // Submit Create Timetable Form
     getEl("timetableForm")?.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1356,8 +1527,8 @@ async function handleViewTimetable(timetableId) {
               breakLesson?.subjects?.name || period.name || "BREAK";
             return `
               <tr class="break-row">
-                <td style="font-weight:600; background-color:#f8fafc;">${escapeHTML(timeLabel)}</td>
-                <td colspan="5" style="text-align:center; font-weight:bold; background-color: #f1f5f9; color:#475569; letter-spacing:1.5px; text-transform:uppercase;">
+                <td style="font-weight:600; background-color: #f1f5f9;">${escapeHTML(timeLabel)}</td>
+                <td colspan="5" style="text-align:center; font-size: 20px; font-weight:bold; background-color: green; color: white; letter-spacing: 24px; text-transform:uppercase;">
                   ${escapeHTML(breakTitle)}
                 </td>
               </tr>

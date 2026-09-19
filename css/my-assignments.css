@@ -22,7 +22,7 @@
 /* Hover & Focus States */
 .filters-bar .form-control:hover {
   background-color: #ffffff;
-  border-color: #94a3b8;
+  border-color: rgb(219, 215, 215);
 }
 
 .back-academic-settings-btn {

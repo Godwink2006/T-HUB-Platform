@@ -230,7 +230,6 @@ async function handleCreateAssignment(e) {
     }
 
     form.reset();
-    closeModal(document.getElementById("assignModal"));
     showToast("Teacher assignment added successfully!", "success");
     await loadAssignmentsTable();
   } catch (err) {

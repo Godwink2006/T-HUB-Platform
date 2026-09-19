@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Timetable - High School Management System</title>
+    <link rel="stylesheet" href="/css/my-timetable.css" />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="timetable-container">
+      <!-- Header Section -->
+      <header class="timetable-header">
+        <div class="header-titles">
+          <h1 id="timetableTitle">My Timetable</h1>
+          <p id="timetableSubtitle" class="text-muted">Loading schedule...</p>
+        </div>
+        <div class="header-actions">
+          <button id="printTimetableBtn" class="btn btn-secondary">
+            <i class="fa-solid fa-print"></i> Print Schedule
+          </button>
+        </div>
+      </header>
+
+      <!-- Student Info Banner (Class & Class Teacher) -->
+      <div id="classMetaBanner" class="card meta-banner hidden">
+        <div class="meta-item">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <div>
+            <span class="meta-label">Class</span>
+            <strong id="classNameDisplay">--</strong>
+          </div>
+        </div>
+        <div class="meta-item">
+          <i class="fa-solid fa-user-tie"></i>
+          <div>
+            <span class="meta-label">Class Teacher</span>
+            <strong id="classTeacherDisplay">--</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Schedule Cards Container -->
+      <main class="timetable-cards-grid" id="timetableCardsGrid">
+        <!-- Loading Placeholder -->
+        <div class="loading-state">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <p>Loading schedule cards...</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/my-timetable.js"></script>
+  </body>
+</html>
