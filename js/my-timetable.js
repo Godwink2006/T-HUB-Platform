@@ -116,6 +116,7 @@ async function loadStudentClassSchedule(classId, schoolId) {
     .select("teacher_id")
     .eq("class_id", classId)
     .eq("is_class_teacher", true)
+    .eq("status", "active")
     .maybeSingle();
 
   let teacherName = "Not Assigned";
@@ -244,7 +245,8 @@ async function loadTeacherPersonalSchedule(teacherId) {
       timetable:timetables (class:classes(name))
     `,
     )
-    .eq("teacher_id", teacherId);
+    .eq("teacher_id", teacherId)
+    .eq("status", "active");
 
   if (error || !lessons || lessons.length === 0) {
     renderEmptyState("You have no assigned teaching periods.");
