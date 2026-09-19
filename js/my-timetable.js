@@ -145,7 +145,7 @@ async function loadStudentClassSchedule(classId, schoolId) {
     .from("timetables")
     .select("id, status, academic_year_id")
     .eq("class_id", classId)
-    .eq("status", "active");
+    .eq("status", "Active");
 
   if (schoolId) {
     ttQuery = ttQuery.eq("school_id", schoolId);
