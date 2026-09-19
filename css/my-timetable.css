@@ -2,6 +2,37 @@
    MY TIMETABLE CARD LAYOUT
    ========================================================================== */
 
+.back-academic-settings-btn {
+  width: auto;
+  height: 30px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 5px;
+  width: auto;
+  justify-content: space-between;
+  color: #ffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+}
+
+.topbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.topbar h1 {
+  font-size: 32px;
+  color: #1f2937;
+}
+
+.topbar p {
+  color: #6b7280;
+  margin-top: 5px;
+}
+
 .timetable-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -50,8 +81,8 @@
 
 .meta-item i {
   font-size: 1.4rem;
-  color: #2563eb;
-  background: #eff6ff;
+  color: rgb(176, 171, 171);
+  background: rgb(241, 238, 238);
   padding: 10px;
 }
 
@@ -119,12 +150,6 @@
   gap: 6px;
 }
 
-/* Break / Interval Card Styling */
-.lesson-card-item.is-break {
-  border-left-color: #94a3b8;
-  background: #f1f5f9;
-}
-
 .lesson-time {
   font-size: 0.8rem;
   font-weight: 600;
@@ -175,7 +200,9 @@
     border-radius: 10px;
   }
 
-  .day-card {
+  .day-card,
+  .back-academic-settings-btn,
+  .topbar-filters .form-control {
     border-radius: 10px;
   }
 
@@ -186,4 +213,32 @@
   .day-card-header .lesson-count {
     border-radius: 10px;
   }
+}
+
+.topbar-title h1 {
+  font-size: 32px;
+  color: #1f2937;
+  margin: 0;
+}
+
+.topbar-title p {
+  color: #6b7280;
+  margin-top: 5px;
+  margin-bottom: 0;
+}
+
+/* Align filters neatly on the right */
+.topbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.topbar-filters .form-control {
+  padding: 8px 12px;
+  border: 2px solid rgb(219, 215, 215);
+  background-color: #ffffff;
+  color: #374151;
+  font-size: 0.9rem;
 }

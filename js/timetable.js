@@ -1141,7 +1141,39 @@ function clearDraftStorage() {
         );
 
         if (error) {
-          showToast(`Error (${error.code}): ${error.message}`, "error");
+          let customMessage = error.message;
+
+          // Clean up RPC exception wrapping if present
+          if (customMessage.includes("Failed to update timetable:")) {
+            customMessage = customMessage
+              .replace("Failed to update timetable:", "")
+              .trim();
+          }
+
+          // Specific error code overrides
+          if (
+            error.code === "23P02" ||
+            customMessage.includes("Teacher Conflict")
+          ) {
+            showToast(
+              "Teacher Conflict: A selected teacher is already booked for another class during this period.",
+              "error",
+            );
+            return;
+          }
+
+          if (
+            error.code === "23P03" ||
+            customMessage.includes("Invalid lesson")
+          ) {
+            showToast(
+              "Assignment Error: Teacher is not actively assigned to teach this subject for this class.",
+              "error",
+            );
+            return;
+          }
+
+          showToast(`Error: ${customMessage}`, "error");
           return;
         }
 
@@ -1163,7 +1195,6 @@ function clearDraftStorage() {
         }
       }
     });
-
     setupPeriodTimeDisplay("addLessonPeriod", "addLessonTimeDisplay");
     setupPeriodTimeDisplay("editLessonPeriod", "editLessonTimeDisplay");
   }

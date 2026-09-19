@@ -1,6 +1,8 @@
 function renderNavigation(userRole) {
   const isAdmin = userRole === "admin";
   const isAccountant = userRole === "accountant";
+  const isTeacher = userRole === "teacher";
+   const isStudent = userRole === "student";
 
   // Reveal Admin-only elements
   if (isAdmin) {
@@ -15,12 +17,21 @@ function renderNavigation(userRole) {
       el.style.setProperty("display", "list-item", "important");
     });
   }
+
+   // Reveal Admin & Accountant elements
+  if (isTeacher || isStudent) {
+    document.querySelectorAll(".teacher-student-only").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
 }
 
 const ADMIN_ACCOUNTANT_PAGES = ["students.html", "finance.html"];
 
 // 1. Add Teacher-Only pages array
 const TEACHER_ONLY_PAGES = ["my-assignments.html"];
+
+const TEACHER_Student_ONLY_PAGES = ["my-timetable.html"];
 
 // ==========================================
 // CONFIGURATION & HELPERS
@@ -38,6 +49,7 @@ const ADMIN_ONLY_PAGES = [
   "system-users.html",
   "teacher-assignment.html",
   "teachers.html",
+  "timetable.html",
 ];
 
 function isLoginPage() {

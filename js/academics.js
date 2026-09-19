@@ -28,7 +28,9 @@ async function initAcademicsPage() {
 
     const userRole = profile?.role;
     const isAdmin = userRole === "admin";
-    const isTeacher = userRole === "teacher"; // Check for teacher role
+    const isTeacher = userRole === "teacher";
+    // Checks if the user is EITHER a teacher OR a student
+    const isTeacherOrStudent = userRole === "teacher" || userRole === "student";
 
     // 3. Build HTML conditionally
     if (containerEl) {
@@ -41,6 +43,14 @@ async function initAcademicsPage() {
       <p>Assign teachers to classes and subjects.</p>
       <button onclick="window.location.href = 'teacher-assignment.html'" class="manage-btn">
         Assign Teachers <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+      <div id="nav-timetable" class="academic-card">
+      <h4>Timetable</h4>
+      <p>Create and manage school timetables.</p>
+      <button onclick="window.location.href = 'timetable.html'" class="manage-btn">
+        Manage Timetable <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
     `
@@ -61,6 +71,9 @@ async function initAcademicsPage() {
         : ""
     }
 
+    ${
+      isTeacherOrStudent
+        ? `
     <div id="nav-timetable" class="academic-card">
       <h4>My Timetable</h4>
       <p>View and manage your assigned tasks.</p>
@@ -68,14 +81,9 @@ async function initAcademicsPage() {
         Manage Timetable <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
-
-    <div id="nav-timetable" class="academic-card">
-      <h4>Timetable</h4>
-      <p>Create and manage school timetables.</p>
-      <button onclick="window.location.href = 'timetable.html'" class="manage-btn">
-        Manage Timetable <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
+    `
+        : ""
+    }
 
     <div id="nav-attendance" class="academic-card">
       <h4>Attendance</h4>
