@@ -142,8 +142,9 @@ async function loadStudentClassSchedule(classId, schoolId) {
   // 3. Fetch Active Timetable record scoped by class_id and school_id
   let ttQuery = supabaseClient
     .from("timetables")
-    .select("id, status")
-    .eq("class_id", classId);
+    .select("id, status, academic_year_id")
+    .eq("class_id", classId)
+    .eq("status", "active");
 
   if (schoolId) {
     ttQuery = ttQuery.eq("school_id", schoolId);
