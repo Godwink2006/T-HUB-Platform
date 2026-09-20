@@ -81,6 +81,14 @@ async function initAcademicsPage() {
         Manage Timetable <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
+
+    <div id="nav-attendance" class="academic-card">
+      <h4>My Attendance</h4>
+      <p>View and manage your attendance.</p>
+      <button onclick="window.location.href = 'my-attendance.html'" class="manage-btn">
+        Manage attendance <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
     `
         : ""
     }

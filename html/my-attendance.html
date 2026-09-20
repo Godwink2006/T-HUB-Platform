@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>My Attendance</title>
+    <link rel="stylesheet" href="/css/my-attendance.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="topbar">
+        <div>
+          <button class="back-academics-btn" onclick="history.back()">
+            Back
+          </button>
+          <h1>My Attendance</h1>
+          <p>Track your class attendance and attendance rates for this term.</p>
+        </div>
+      </div>
+
+      <!-- Top Summary Stat Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Overall Rate</span>
+          <div class="stat-value text-green" id="overallRate">0%</div>
+          <span class="stat-sub">2nd Semester</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Present</span>
+          <div class="stat-value text-green" id="totalPresent">0</div>
+          <span class="stat-sub">Total Classes</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Absent</span>
+          <div class="stat-value text-red" id="totalAbsent">0</div>
+          <span class="stat-sub">Total Classes</span>
+        </div>
+      </div>
+
+      <!-- Subject Breakdown Section -->
+      <h2 class="section-title">Subject Summary</h2>
+      <div class="subject-cards-grid" id="subjectCardsContainer">
+        <!-- Subject Cards populated by JavaScript -->
+      </div>
+
+      <!-- Filter Toolbar -->
+      <div class="toolbar">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by subject or teacher..."
+        />
+        <select id="subjectFilter">
+          <option value="all">All Subjects</option>
+        </select>
+        <select id="statusFilter">
+          <option value="all">All Statuses</option>
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
+        </select>
+      </div>
+
+      <!-- Recent History Log Card -->
+      <div class="history-card">
+        <div class="card-header">
+          <h3>Attendance History</h3>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Teacher</th>
+                <th>Period</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceHistoryTable">
+              <!-- Rows dynamically loaded -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/my-attendance.js"></script>
+  </body>
+</html>
