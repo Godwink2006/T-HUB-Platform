@@ -245,8 +245,7 @@ async function loadTeacherPersonalSchedule(teacherId) {
       timetable:timetables (class:classes(name))
     `,
     )
-    .eq("teacher_id", teacherId)
-    .eq("status", "active");
+    .eq("teacher_id", teacherId);
 
   if (error || !lessons || lessons.length === 0) {
     renderEmptyState("You have no assigned teaching periods.");

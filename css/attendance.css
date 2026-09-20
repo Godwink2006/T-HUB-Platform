@@ -1,400 +1,881 @@
 /* Subject modal */
 
-.modal-studentAttendance{
-    position: fixed;
-    top: 0;
-    left: 0;
+.modal-studentAttendance {
+  position: fixed;
+  top: 0;
+  left: 0;
 
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, .45);
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
 
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.studentAttendance-modal-footer{
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
+/* Base Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  text-transform: capitalize;
 }
 
-.studentAttendance-modal-content{
-    overflow: auto;
-    width: 850px;
-    max-width: 95%;
-    background: #ffff;
-    border-radius: 18px;
-    animation: modalShow .25s ease;
-    height: 500px;
+/* Drafted Status (Amber/Yellow Theme) */
+.status-badge.status-drafted {
+  background-color: #fffbebf3;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 
-.studentAttendance-modal-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    border: 2px solid rgb(219, 215, 215);
+/* Submitted Status (Green Theme) */
+.status-badge.status-submitted {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
 }
 
-.studentAttendance-modal-header h2{
-    font-size: 22px;
+/* Status Badge Container Base Styles */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.studentAttendance-modal-header button{
-    cursor: pointer;
-    color: #374151;
-    background: #f3f4f6;
-    border-radius: 8px;
-    border: none;
-    height: 40px;
-    width: 40px;
-    font-size: 22px;
+/* Present - Green Theme */
+.status-badge.status-present {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
-.studentAttendance-modal-body{
-    padding: 25px;
+/* Absent - Red Theme */
+.status-badge.status-absent {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins',sans-serif;
+.studentAttendance-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
 }
 
-body{
-    background: rgb(231, 226, 226);
+.studentAttendance-modal-content {
+  overflow: auto;
+  width: 850px;
+  max-width: 95%;
+  background: #ffff;
+  animation: modalShow 0.25s ease;
+  height: 500px;
 }
 
-.attendances-container{
-    display: flex;
+.studentAttendance-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+.studentAttendance-modal-header h2 {
+  font-size: 22px;
+}
+
+.studentAttendance-modal-header button {
+  cursor: pointer;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  border: none;
+  height: 40px;
+  width: 40px;
+  font-size: 22px;
+}
+
+.studentAttendance-modal-body {
+  padding: 25px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: rgb(231, 226, 226);
+}
+
+.attendances-container {
+  display: flex;
 }
 
 /* Main Content */
 
-.attendances-main-content{
-    width: 100% ;
-    min-height: 100vh;
-    padding: 20px;
+.attendances-main-content {
+  width: 100%;
+  min-height: 100vh;
+  padding: 10px;
 }
 
 /* Topbar */
 
-.topbar{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
-.topbar h1{
-    font-size: 32px;
-    color: #1f2937;
+.topbar h1 {
+  font-size: 32px;
+  color: #1f2937;
 }
 
-.topbar p{
-    color: #6b7280;
-    margin-top: 5px;
+.topbar p {
+  color: #6b7280;
+  margin-top: 5px;
 }
 
-.top-right{
-    display: flex;
-    align-items: center;
-    gap: 25px;
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 25px;
 }
 
-.add-attendances-btn{
-    width: auto;
-    height: 48px;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    border: 2px solid rgb(219, 215, 215);
+.add-attendances-btn {
+  width: auto;
+  height: 48px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: #15803d;
+  color: #ffffff;
+  border: 2px solid #14532d;
 }
 
-.back-academics-btn{
-    width: auto;
-    height: 30px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    margin-top: 5px;
-    border: 2px solid rgb(219, 215, 215);
-    width: 50%;
-    justify-content: space-between;
+.back-academics-btn {
+  width: auto;
+  height: 30px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 5px;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  width: 50%;
+  justify-content: space-between;
 }
 
-.toolbar{
-    display: flex;
-    gap: 15px;
-    margin: 25px 0;
+.toolbar {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
 }
 
 .toolbar input,
-.toolbar select{
-    height: 48px;
-    border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
-    padding: 0 15px;
-    outline: none;
-    background: #ffff;
+.toolbar select {
+  height: 48px;
+  border: 2px solid rgb(219, 215, 215);
+  padding: 0 15px;
+  outline: none;
+  background: #ffff;
 }
 
-.toolbar input{
-   width: 320px;
+.toolbar input {
+  width: 320px;
 }
 
-.studentAttendance-table-card{
-    background: #ffff;
-    overflow: hidden;
+.studentAttendance-table-card {
+  background: #ffff;
+  overflow: hidden;
 }
 
-table{
-    width: 100%;
-    border-collapse: collapse;
+table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-thead{
-    background: #f8fafc;
-    border: 2px solid rgb(219, 215, 215);
+thead {
+  background: #f8fafc;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-th{
-    padding: 18px;
-    text-align: left;
-    font-size: 14px;
-    color: #6b7280;
-    border: 2px solid rgb(219, 215, 215);
+th {
+  padding: 18px;
+  text-align: left;
+  font-size: 14px;
+  color: #6b7280;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-td{
-    padding: 18px;
+td {
+  padding: 18px;
 }
 
-tr{
-    border: 2px solid rgb(219, 215, 215);
+tr {
+  border: 2px solid rgb(219, 215, 215);
 }
 
-.attendances-actions-btn{
-    width: 38px;
-    height: 38px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-right: 6px;
+.attendances-actions-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  cursor: pointer;
+  margin-right: 6px;
 }
 
-.view{
-    background: #dbeafe;
-    color: #2563eb;
+.view-attendance-btn {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.edit-attendance-btn {
+  background: #fef3c7;
+  color: #d97706;
 }
 
 /* Subject modal */
 
-.modal-attendance{
-    position: fixed;
-    top: 0;
-    left: 0;
+.modal-attendance {
+  position: fixed;
+  top: 0;
+  left: 0;
 
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, .45);
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
 
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.attendance-modal-content{
-    overflow: auto;
-    width: 600px;
-    max-width: 95%;
-    background: #ffff;
-    border-radius: 18px;
-    animation: modalShow .25s ease;
-    height: 290px;
+.attendance-modal-content {
+  overflow: auto;
+  width: 600px;
+  max-width: 95%;
+  background: #ffff;
+  animation: modalShow 0.25s ease;
+  height: 290px;
 }
 
-@keyframes modalShow{
-    from{
-        opacity: 0;
-        transform: scale(.95);
-    }
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 
-    to{
-        opacity: 1;
-        transform: scale(1);
-    }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.attendance-modal-header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    border: 2px solid rgb(219, 215, 215);
+.attendance-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-.attendance-modal-header h2{
-    font-size: 22px;
+.attendance-modal-header h2 {
+  font-size: 22px;
 }
 
-.attendance-modal-header button{
-    cursor: pointer;
-    color: #374151;
-    background: #f3f4f6;
-    border-radius: 8px;
-    border: none;
-    height: 40px;
-    width: 40px;
-    font-size: 22px;
+.attendance-modal-header button {
+  cursor: pointer;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  border: none;
+  height: 40px;
+  width: 40px;
+  font-size: 22px;
 }
 
-.attendance-modal-body{
-    padding: 25px;
+.attendance-modal-body {
+  padding: 25px;
 }
 
-.form-grid{
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 20px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
-.form-group{
-    display: flex;
-    flex-direction: column;
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 
-.form-group label{
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
+.form-group label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea{
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
-    outline: none;
-    font-size: 15px;
+.form-group textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid rgb(219, 215, 215);
+  outline: none;
+  font-size: 15px;
 }
 
-.form-group textarea{
-    resize: none;
+.form-group textarea {
+  resize: none;
 }
 
-.full-width{
-    grid-column: 1 / -1;
+.full-width {
+  grid-column: 1 / -1;
 }
 
-.attendance-modal-footer{
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
+.attendance-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
 }
 
-.cancel-btn{
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
-    background: #e5e7eb;
-    cursor: pointer;
+.cancel-btn {
+  padding: 12px 22px;
+  border: none;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  cursor: pointer;
 }
 
-.save-btn{
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
-    background: #2563eb;
-    color: #ffff;
-    cursor: pointer;
+.save-btn {
+  padding: 12px 22px;
+  border: none;
+  background: #2563eb;
+  color: #ffff;
+  cursor: pointer;
 }
 
-.view-attendance-modal-content{
-    width: 850px;
-    background: #ffff;
-    border-radius: 18px;
-    overflow: auto;
-    height: 445px;
-     animation: modalShow .25s ease;
+.view-attendance-modal-content {
+  width: 850px;
+  background: #ffff;
+  overflow: auto;
+  height: 445px;
+  animation: modalShow 0.25s ease;
 }
 
-.view-attendance-modal{
-    position: fixed;
-    top: 0;
-    left: 0;
+.view-attendance-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
 
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, .45);
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
 
-    display: none;
-    justify-content: center;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.view-attendance-body {
+  padding: 30px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.details-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.details-item label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.details-item p {
+  font-weight: 500;
+  color: #111827;
+}
+
+.view-attendance-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+.view-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+#closeViewAttendanceModal {
+  cursor: pointer;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  border: none;
+  height: 40px;
+  width: 40px;
+  font-size: 22px;
+}
+
+/* Styled Select Dropdown */
+#attendanceWorkflowStatus {
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border: 2px solid rgb(219, 215, 215);
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 5px;
+}
+
+/* ==========================================
+   EDIT ATTENDANCE MODAL & COMPONENTS
+   ========================================== */
+
+/* Modal Container & Content Card */
+#editAttendanceModal.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+#editAttendanceModal.modal.active,
+#editAttendanceModal.modal[style*="display: block"] {
+  display: flex !important;
+}
+
+#editAttendanceModal .modal-content {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+/* Modal Header */
+#editAttendanceModal .modal-header {
+  padding: 16px 20px;
+  border: 2px solid rgb(219, 215, 215);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+}
+
+#editAttendanceModal .modal-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+#editAttendanceModal .close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+/* Modal Body & Form Elements */
+#editAttendanceModal .modal-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#editAttendanceModal .form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 6px;
+}
+
+#editAttendanceModal #editWorkflowStatus {
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-weight: 500;
+  font-size: 0.925rem;
+}
+
+/* Student Roster Table Card */
+#editAttendanceModal .studentAttendance-table-card {
+  margin-top: 15px;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+#editAttendanceModal table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+#editAttendanceModal thead {
+  background-color: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+#editAttendanceModal th {
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#editAttendanceModal td {
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+#editAttendanceModal tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#editAttendanceModal tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Status Dropdowns Inside Table */
+#editAttendanceModal .edit-status-dropdown {
+  padding: 6px 10px;
+  border: 2px solid rgb(219, 215, 215);
+  background-color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Modal Footer & Buttons */
+#editAttendanceModal .modal-footer {
+  padding-top: 15px;
+  border-top: 2px solid rgb(219, 215, 215);
+}
+
+#editAttendanceModal .cancel-btn {
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  padding: 8px 16px;
+
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+#editAttendanceModal .save-btn {
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+#editAttendanceModal .save-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Entrance Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  /* Back Button */
+  .back-academics-btn {
+    grid-column: 1;
+    width: auto !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
     align-items: center;
-    z-index: 1000;
-}
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid rgb(219, 215, 215);
+    background: #1f2937;
+    color: #f9fafb;
+    font-size: 13px;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
 
-.view-attendance-body{
-    padding: 30px;
-}
+  /* Responsive Topbar */
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px 12px !important;
+    align-items: center !important;
+  }
 
-.details-grid{
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 20px;
-}
+  .topbar h1,
+  .topbar p {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
 
-.details-item{
+  .topbar h1 {
+    font-size: 24px;
+  }
+
+  .topbar p {
+    margin-top: 2px;
+    font-size: 13px;
+  }
+
+  .top-right {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .add-attendances-btn {
+    grid-column: 2;
+    background: #15803d;
+    color: #ffffff;
+    flex: 1 !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    border: 2px solid #14532d;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin: 10px 0;
+    width: 100%;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    height: 40px;
+    border: 1.5px solid rgb(219, 215, 215);
+    padding: 0 8px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+    border-radius: 10px;
+  }
+
+  /* Responsive Table Card */
+  .studentAttendance-table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  table {
+    min-width: 500px;
+  }
+
+  thead {
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  th,
+  td {
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    border: 1.5px solid rgb(219, 215, 215);
+    white-space: nowrap;
+  }
+
+  tr {
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  /* Status Badges & Buttons */
+  .status-badge {
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .attendances-actions-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  /* Attendance Modals (Take Attendance & Student List Modals) */
+  .attendance-modal-content,
+  .studentAttendance-modal-content,
+  .view-attendance-modal-content,
+  #editAttendanceModal .modal-content {
     display: flex;
     flex-direction: column;
-}
+    width: 100%;
+    max-width: 350px;
+    height: 520px;
+    max-height: 85vh;
+    border-radius: 10px;
+    overflow: auto;
+  }
 
-.details-item label{
-    font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 6px;
-}
+  .attendance-modal-header,
+  .studentAttendance-modal-header,
+  .view-attendance-modal-header,
+  #editAttendanceModal .modal-header {
+    padding: 14px 20px;
+    border-bottom: 1.5px solid rgb(219, 215, 215);
+  }
 
-.details-item p{
-    font-weight: 500;
-    color: #111827;
-}
+  .attendance-modal-header h2,
+  .studentAttendance-modal-header h2,
+  .view-attendance-modal-header h2,
+  #editAttendanceModal .modal-header h2 {
+    font-size: 18px;
+  }
 
-.view-attendance-modal-header{
+  .attendance-modal-header button,
+  .studentAttendance-modal-header button,
+  #closeViewAttendanceModal,
+  #editAttendanceModal .close-btn {
+    height: 34px;
+    width: 34px;
+    font-size: 16px;
+    border-radius: 10px !important;
+  }
+
+  .attendance-modal-body,
+  .studentAttendance-modal-body,
+  .view-attendance-body,
+  #editAttendanceModal .modal-body {
+    padding: 10px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .attendance-modal-footer,
+  .studentAttendance-modal-footer,
+  .view-modal-footer,
+  #editAttendanceModal .modal-footer {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 25px;
-    border: 2px solid rgb(219, 215, 215);
-}
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1.5px solid rgb(219, 215, 215);
+  }
 
-.view-modal-footer{
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
-}
+  /* Form & Grid Layouts */
+  .form-grid,
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 
-#closeViewAttendanceModal{
-    cursor: pointer;
-    color: #374151;
-    background: #f3f4f6;
-    border-radius: 8px;
-    border: none;
-    height: 40px;
-    width: 40px;
-    font-size: 22px;
+  .form-group label,
+  .details-item label {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  #attendanceWorkflowStatus,
+  #editAttendanceModal .edit-status-dropdown {
+    border: 1.5px solid rgb(219, 215, 215);
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  /* Modal Action Buttons */
+  .cancel-btn,
+  .save-btn,
+  #editAttendanceModal .cancel-btn,
+  #editAttendanceModal .save-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+  }
 }

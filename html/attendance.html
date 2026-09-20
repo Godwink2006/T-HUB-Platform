@@ -14,6 +14,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/attendance.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -67,51 +68,16 @@
               <tr>
                 <th>Class</th>
                 <th>Subject</th>
+                <th>Academic Year</th>
+                <th>Semester</th>
                 <th>Date</th>
                 <th>Students</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
-
-            <tbody>
-              <tr>
-                <td>Grade 8A</td>
-                <td>Mathematics</td>
-                <td>12 Aug</td>
-                <td>32</td>
-
-                <td>
-                  <button class="attendances-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Grade 9A</td>
-                <td>Physics</td>
-                <td>13 Aug</td>
-                <td>28</td>
-
-                <td>
-                  <button class="attendances-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Grade 7B</td>
-                <td>English</td>
-                <td>12 Aug</td>
-                <td>30</td>
-
-                <td>
-                  <button class="attendances-actions-btn view">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
+            <tbody id="attendanceTableBody">
+              <!-- Dynamic rows rendered here -->
             </tbody>
           </table>
         </section>
@@ -122,7 +88,6 @@
       <div class="attendance-modal-content">
         <div class="attendance-modal-header">
           <h2>Take Attendance</h2>
-
           <button id="closeAttendanceModal">&times;</button>
         </div>
 
@@ -130,20 +95,16 @@
           <form id="attendanceForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Class *</label>
-
-                <select>
-                  <option>Grade 8A</option>
-                  <option>Grade 9B</option>
+                <label for="attendanceClassSelect">Class *</label>
+                <select id="attendanceClassSelect" required>
+                  <option value="">Select Class</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Period *</label>
-
-                <select>
-                  <option>Period 1</option>
-                  <option>Period 2</option>
+                <label for="attendancePeriodSelect">Period *</label>
+                <select id="attendancePeriodSelect" disabled required>
+                  <option value="">Select Period</option>
                 </select>
               </div>
             </div>
@@ -170,7 +131,6 @@
       <div class="view-attendance-modal-content">
         <div class="view-attendance-modal-header">
           <h2>Attendance Details</h2>
-
           <button id="closeViewAttendanceModal">&times;</button>
         </div>
 
@@ -178,22 +138,42 @@
           <div class="details-grid">
             <div class="details-item">
               <label>Class</label>
-              <p>Grade 8A</p>
+              <p id="viewModalClassName">-</p>
             </div>
 
             <div class="details-item">
               <label>Subject</label>
-              <p>Mathematics</p>
+              <p id="viewModalSubjectName">-</p>
+            </div>
+
+            <div class="details-item">
+              <label>Academic Year</label>
+              <p id="viewModalAcademicYear">-</p>
+            </div>
+
+            <div class="details-item">
+              <label>Semester</label>
+              <p id="viewModalTermName">-</p>
             </div>
 
             <div class="details-item">
               <label>Teacher</label>
-              <p>John Doe</p>
+              <p id="viewModalTeacherName">-</p>
             </div>
 
             <div class="details-item">
               <label>Date</label>
-              <p>12 Aug 2026</p>
+              <p id="viewModalDate">-</p>
+            </div>
+
+            <div class="details-item">
+              <label>Assessment Period</label>
+              <p id="viewModalAssessmentName">-</p>
+            </div>
+
+            <div class="details-item">
+              <label>Workflow Status</label>
+              <p id="viewModalWorkflowStatus">-</p>
             </div>
           </div>
 
@@ -206,20 +186,8 @@
                 </tr>
               </thead>
 
-              <tbody>
-                <tr>
-                  <td>John Doe</td>
-                  <td>
-                    <p>Present</p>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Sarah Johnson</td>
-                  <td>
-                    <p>Absent</p>
-                  </td>
-                </tr>
+              <tbody id="viewAttendanceRosterBody">
+                <!-- Dynamic student attendance records will be populated here -->
               </tbody>
             </table>
           </section>
@@ -235,8 +203,9 @@
       <div class="studentAttendance-modal-content">
         <div class="studentAttendance-modal-header">
           <h2>Take Attendance</h2>
-
-          <button id="closeStudentAttendanceModal">&times;</button>
+          <button type="button" id="closeStudentAttendanceModal">
+            &times;
+          </button>
         </div>
 
         <div class="studentAttendance-modal-body">
@@ -244,32 +213,44 @@
             <div class="details-grid">
               <div class="details-item">
                 <label>Class</label>
-
-                <p>Grade 8A</p>
+                <p id="stModalClassName">-</p>
               </div>
 
               <div class="details-item">
                 <label>Subject</label>
-
-                <p>Mathematics</p>
+                <p id="stModalSubjectName">-</p>
               </div>
 
               <div class="details-item">
                 <label>Date</label>
-
-                <p>Today</p>
+                <p id="stModalDateDisplay">Today</p>
               </div>
 
               <div class="details-item">
                 <label>Period</label>
-
-                <p>Period 1</p>
+                <p id="stModalPeriodName">-</p>
               </div>
 
               <div class="details-item">
                 <label>Teacher</label>
+                <p id="stModalTeacherName">-</p>
+              </div>
 
-                <p>John Doe</p>
+              <div class="details-item">
+                <label for="attendanceWorkflowStatus">Workflow Status</label>
+                <select
+                  id="attendanceWorkflowStatus"
+                  class="form-control"
+                  style="
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    border: 1px solid #d1d5db;
+                    width: 100%;
+                  "
+                >
+                  <option value="drafted">Drafted</option>
+                  <option value="submitted" selected>Submitted</option>
+                </select>
               </div>
             </div>
 
@@ -281,27 +262,8 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-
-                <tbody>
-                  <tr>
-                    <td>John Doe</td>
-                    <td class="form-group">
-                      <select>
-                        <option>Present</option>
-                        <option>Absent</option>
-                      </select>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>Sarah Johnson</td>
-                    <td class="form-group">
-                      <select>
-                        <option>Present</option>
-                        <option>Absent</option>
-                      </select>
-                    </td>
-                  </tr>
+                <tbody id="studentAttendanceRosterBody">
+                  <!-- Student rows dynamically injected here -->
                 </tbody>
               </table>
             </section>
@@ -315,12 +277,83 @@
                 Cancel
               </button>
 
-              <button type="submit" class="save-btn">Save Attendance</button>
+              <button type="submit" class="save-btn" id="submitAttendanceBtn">
+                Save Attendance
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+
+    <div id="editAttendanceModal" class="modal">
+      <div class="modal-content" style="max-width: 500px">
+        <div class="modal-header">
+          <h2>Edit Drafted Attendance</h2>
+          <button type="button" id="closeEditAttendanceModal" class="close-btn">
+            &times;
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <form id="editAttendanceForm">
+            <!-- Workflow Status Switcher -->
+            <div class="form-group">
+              <label for="editWorkflowStatus"> Workflow Status </label>
+              <select id="editWorkflowStatus" class="form-control">
+                <option value="drafted">Drafted</option>
+                <option value="submitted">Submitted</option>
+              </select>
+            </div>
+
+            <!-- Editable Student Roster Table -->
+            <section class="studentAttendance-table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="editAttendanceRosterBody">
+                  <!-- Dynamically populated roster rows -->
+                </tbody>
+              </table>
+            </section>
+
+            <!-- Footer Actions -->
+            <div
+              class="modal-footer"
+              style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 15px;
+              "
+            >
+              <button
+                type="button"
+                id="cancelEditAttendanceModal"
+                class="cancel-btn"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                id="saveEditAttendanceBtn"
+                class="save-btn"
+                style="padding: 8px 16px"
+              >
+                Update Attendance
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase.js"></script>
