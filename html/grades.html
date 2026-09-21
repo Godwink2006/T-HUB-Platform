@@ -14,6 +14,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/grades.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -145,32 +146,28 @@
 
           <button id="closeGradeModal">&times;</button>
         </div>
-
         <div class="grade-modal-body">
           <form id="gradeForm">
             <div class="form-grid">
               <div class="form-group">
                 <label>Class *</label>
-
-                <select>
-                  <option>Grade 8A</option>
-                  <option>Grade 9B</option>
+                <select id="gradesClassSelect">
+                  <option value="">Select Class</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Subject *</label>
-
-                <select>
-                  <option>Mathematics</option>
-                  <option>English</option>
+                <select id="gradeSubjectSelect" disabled>
+                  <option value="">Select Subject</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Assessment *</label>
-
-                <input type="text" placeholder="Enter assessment name" />
+                <label>Assessment Category *</label>
+                <select id="gradeAssessmentCategorySelect">
+                  <option>Select Assessment</option>
+                </select>
               </div>
             </div>
 
@@ -446,6 +443,10 @@
       </div>
     </div>
 
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/grades.js"></script>
   </body>

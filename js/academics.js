@@ -26,8 +26,10 @@ async function initAcademicsPage() {
     const userRole = profile?.role;
     const isAdmin = userRole === "admin";
     const isTeacher = userRole === "teacher";
+    const isStudent = userRole === "student";
 
-    const isTeacherOrStudent = userRole === "teacher" || userRole === "student";
+    const isAdminOrTeacher = isAdmin || isTeacher;
+    const isTeacherOrStudent = isTeacher || isStudent;
 
     if (containerEl) {
       const allCardsHTML = `
@@ -68,17 +70,9 @@ async function initAcademicsPage() {
     }
 
     ${
-      isTeacherOrStudent
+      isStudent
         ? `
-    <div id="nav-timetable" class="academic-card">
-      <h4>My Timetable</h4>
-      <p>View and manage your assigned tasks.</p>
-      <button onclick="window.location.href = 'my-timetable.html'" class="manage-btn">
-        Manage Timetable <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
-
-    <div id="nav-attendance" class="academic-card">
+   <div id="nav-attendance" class="academic-card">
       <h4>My Attendance</h4>
       <p>View and manage your attendance.</p>
       <button onclick="window.location.href = 'my-attendance.html'" class="manage-btn">
@@ -89,6 +83,9 @@ async function initAcademicsPage() {
         : ""
     }
 
+    ${
+      isAdminOrTeacher
+        ? `
     <div id="nav-attendance" class="academic-card">
       <h4>Attendance</h4>
       <p>Take and manage Attendance.</p>
@@ -97,13 +94,30 @@ async function initAcademicsPage() {
       </button>
     </div>
 
-    <div id="nav-grades" class="academic-card">
+       <div id="nav-grades" class="academic-card">
       <h4>Grades</h4>
       <p>Add and manage grades.</p>
       <button onclick="window.location.href = 'grades.html'" class="manage-btn">
         Manage Grades <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
+    `
+        : ""
+    }
+
+    ${
+      isTeacherOrStudent
+        ? `
+    <div id="nav-timetable" class="academic-card">
+      <h4>My Timetable</h4>
+      <p>View and manage your assigned tasks.</p>
+      <button onclick="window.location.href = 'my-timetable.html'" class="manage-btn">
+        Manage Timetable <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+    `
+        : ""
+    }
   `;
 
       containerEl.innerHTML = allCardsHTML;
@@ -121,4 +135,3 @@ async function initAcademicsPage() {
 }
 
 document.addEventListener("DOMContentLoaded", initAcademicsPage);
-

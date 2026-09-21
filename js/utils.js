@@ -16,18 +16,30 @@ function renderNavigation(userRole) {
     });
   }
 
+  if (isAdmin || isTeacher) {
+    document.querySelectorAll(".admin-teacher-only").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
+
+  if (isTeacher) {
+    document.querySelectorAll(".teacher-only").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
+
+  if (isStudent) {
+    document.querySelectorAll(".student-only").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
+
   if (isTeacher || isStudent) {
     document.querySelectorAll(".teacher-student-only").forEach((el) => {
       el.style.setProperty("display", "list-item", "important");
     });
   }
 }
-
-const ADMIN_ACCOUNTANT_PAGES = ["students.html", "finance.html"];
-
-const TEACHER_ONLY_PAGES = ["my-assignments.html"];
-
-const TEACHER_Student_ONLY_PAGES = ["my-timetable.html"];
 
 const ADMIN_ONLY_PAGES = [
   "subjects.html",
@@ -44,6 +56,16 @@ const ADMIN_ONLY_PAGES = [
   "teachers.html",
   "timetable.html",
 ];
+
+const ADMIN_ACCOUNTANT_PAGES = ["students.html", "finance.html"];
+
+const ADMIN_TEACHER_PAGES = ["attendance.html", "grades.html"];
+
+const TEACHER_ONLY_PAGES = ["my-assignments.html"];
+
+const STUDENT_ONLY_PAGES = ["my-attendance.html"];
+
+const TEACHER_STUDENT_ONLY_PAGES = ["my-timetable.html"];
 
 function isLoginPage() {
   const path = window.location.pathname.toLowerCase();
@@ -106,15 +128,26 @@ window.forceLogout = async function () {
     window.location.replace("/index.html");
   }
 };
-
 async function checkPageAccess() {
   const currentPage = window.location.pathname.split("/").pop();
 
   const isAdminOnly = ADMIN_ONLY_PAGES.includes(currentPage);
   const isAdminOrAccountantOnly = ADMIN_ACCOUNTANT_PAGES.includes(currentPage);
+  const isAdminOrTeacherOnly = ADMIN_TEACHER_PAGES.includes(currentPage);
   const isTeacherOnly = TEACHER_ONLY_PAGES.includes(currentPage);
+  const isStudentOnly = STUDENT_ONLY_PAGES.includes(currentPage);
+  const isTeacherOrStudentOnly =
+    TEACHER_STUDENT_ONLY_PAGES.includes(currentPage);
 
-  if (!isAdminOnly && !isAdminOrAccountantOnly && !isTeacherOnly) {
+  const isProtectedPage =
+    isAdminOnly ||
+    isAdminOrAccountantOnly ||
+    isAdminOrTeacherOnly ||
+    isTeacherOnly ||
+    isStudentOnly ||
+    isTeacherOrStudentOnly;
+
+  if (!isProtectedPage) {
     return;
   }
 
@@ -153,7 +186,22 @@ async function checkPageAccess() {
     return;
   }
 
+  if (isAdminOrTeacherOnly && role !== "admin" && role !== "teacher") {
+    await window.forceLogout();
+    return;
+  }
+
   if (isTeacherOnly && role !== "teacher") {
+    await window.forceLogout();
+    return;
+  }
+
+  if (isStudentOnly && role !== "student") {
+    await window.forceLogout();
+    return;
+  }
+
+  if (isTeacherOrStudentOnly && role !== "teacher" && role !== "student") {
     await window.forceLogout();
     return;
   }
@@ -249,7 +297,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderNavigation(profile?.role || null);
   }
 });
-
 
 async function loadHeaderSchoolLogo() {
   const logoImg = document.getElementById("appHeaderLogo");
@@ -478,4 +525,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
