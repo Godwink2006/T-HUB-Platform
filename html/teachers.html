@@ -29,17 +29,14 @@
   </head>
   <body>
     <div class="teachers-container">
-      <!-- Mobile Toggle Button -->
       <button
         class="menu-toggle"
         id="menuToggle"
         aria-label="Toggle Navigation"
       >
         <i class="fa-solid fa-bars"></i>
-        <!-- Or use "☰" text if not using FontAwesome -->
       </button>
 
-      <!-- Overlay background to tap outside and close -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
       <aside class="sidebar">
@@ -277,7 +274,6 @@
               <div class="avatar-upload-group">
                 <label class="form-label">Profile photo (Optional)</label>
                 <div class="avatar-edit-container">
-                  <!-- Current Avatar Preview -->
                   <div class="avatar-preview-wrapper">
                     <img
                       id="teacherPhotoPreview"
@@ -286,7 +282,6 @@
                     />
                   </div>
 
-                  <!-- Upload Controls -->
                   <div class="avatar-upload-actions">
                     <label for="teacherPhoto" class="btn-secondary upload-btn">
                       <i class="bx bx-upload"></i> Add Photo
@@ -392,7 +387,6 @@
       </div>
     </div>
 
-    <!-- Edit Teacher Modal -->
     <div id="editTeacherModal" class="edit-modal-teacher">
       <div class="edit-teacher-modal-content">
         <div class="edit-teacher-modal-header">
@@ -636,7 +630,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

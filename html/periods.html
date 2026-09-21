@@ -51,14 +51,12 @@
         </header>
 
         <section class="toolbar">
-          <!-- Search Input ID for JavaScript debounce filtering -->
           <input
             type="text"
             id="searchPeriodInput"
             placeholder="Search periods..."
           />
 
-          <!-- Filter Dropdown IDs -->
           <select id="filterLevelSelect">
             <option value="">All School Levels</option>
           </select>
@@ -85,10 +83,7 @@
               </tr>
             </thead>
 
-            <!-- Table Body ID targeted by renderPeriodsTable() -->
-            <tbody id="periodsTableBody">
-              <!-- Dynamic rows populated by JavaScript -->
-            </tbody>
+            <tbody id="periodsTableBody"></tbody>
           </table>
         </section>
       </main>
@@ -271,7 +266,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

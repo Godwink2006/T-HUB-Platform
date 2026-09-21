@@ -170,17 +170,15 @@ body {
 
 .my-profile-upload {
   display: flex;
-  flex-direction: row; /* Arranges the preview image and actions side-by-side */
-  align-items: center; /* Centers the button vertically alongside the image */
-  gap: 1.5rem; /* Adds spacing between the image and the button */
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-/* Optional: If you want the button on the left and image on the right */
 .avatar-upload-actions {
-  order: 1; /* Moves the upload button box to the left side of the image */
+  order: 1;
 }
 
-/* Column for Upload Button + File Name */
 .avatar-upload-actions {
   display: flex;
   flex-direction: column;
@@ -188,7 +186,6 @@ body {
   gap: 0.4rem;
 }
 
-/* Custom Upload Button Styling */
 .upload-btn {
   display: inline-flex;
   align-items: center;
@@ -212,14 +209,12 @@ body {
   font-size: 1.1rem;
 }
 
-/* Selected File Name Text */
 .file-name-text {
   font-size: 0.75rem;
   color: #64748b;
   word-break: break-all;
 }
 
-/* Avatar Section Wrapper */
 .avatar-upload-group {
   display: flex;
   flex-direction: column;
@@ -232,7 +227,6 @@ body {
   color: #334155;
 }
 
-/* Flex Row for Preview + Actions */
 .avatar-edit-container {
   display: flex;
   align-items: center;
@@ -242,7 +236,6 @@ body {
   border: 1px solid #e2e8f0;
 }
 
-/* Circular Avatar Frame */
 .avatar-preview-wrapper {
   width: 70px;
   height: 70px;
@@ -258,7 +251,6 @@ body {
   object-fit: cover;
 }
 
-/* Mobile Only: Applies 10px border-radius on small screens */
 @media (max-width: 768px) {
   .form-section,
   .form-section h3,

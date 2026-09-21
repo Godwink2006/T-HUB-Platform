@@ -14,7 +14,7 @@
     />
     <title>My Timetable - High School Management System</title>
     <link rel="stylesheet" href="/css/my-timetable.css" />
-    <!-- Font Awesome -->
+
     <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -30,7 +30,6 @@
   </head>
   <body>
     <div class="timetable-container">
-      <!-- Header Section -->
       <header class="timetable-header">
         <div class="header-titles">
           <div class="topbar">
@@ -61,7 +60,7 @@
           </select>
         </div>
       </div>
-      <!-- Student Info Banner (Class & Class Teacher) -->
+
       <div id="classMetaBanner" class="card meta-banner hidden">
         <div class="meta-item">
           <i class="fa-solid fa-graduation-cap"></i>
@@ -79,9 +78,7 @@
         </div>
       </div>
 
-      <!-- Weekly Schedule Cards Container -->
       <main class="timetable-cards-grid" id="timetableCardsGrid">
-        <!-- Loading Placeholder -->
         <div class="loading-state">
           <i class="fa-solid fa-spinner fa-spin"></i>
           <p>Loading schedule cards...</p>
@@ -89,7 +86,6 @@
       </main>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

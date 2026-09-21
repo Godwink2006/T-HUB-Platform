@@ -2,23 +2,20 @@ function renderNavigation(userRole) {
   const isAdmin = userRole === "admin";
   const isAccountant = userRole === "accountant";
   const isTeacher = userRole === "teacher";
-   const isStudent = userRole === "student";
+  const isStudent = userRole === "student";
 
-  // Reveal Admin-only elements
   if (isAdmin) {
     document.querySelectorAll(".admin-only").forEach((el) => {
       el.style.setProperty("display", "list-item", "important");
     });
   }
 
-  // Reveal Admin & Accountant elements
   if (isAdmin || isAccountant) {
     document.querySelectorAll(".admin-accountant-only").forEach((el) => {
       el.style.setProperty("display", "list-item", "important");
     });
   }
 
-   // Reveal Admin & Accountant elements
   if (isTeacher || isStudent) {
     document.querySelectorAll(".teacher-student-only").forEach((el) => {
       el.style.setProperty("display", "list-item", "important");
@@ -28,14 +25,10 @@ function renderNavigation(userRole) {
 
 const ADMIN_ACCOUNTANT_PAGES = ["students.html", "finance.html"];
 
-// 1. Add Teacher-Only pages array
 const TEACHER_ONLY_PAGES = ["my-assignments.html"];
 
 const TEACHER_Student_ONLY_PAGES = ["my-timetable.html"];
 
-// ==========================================
-// CONFIGURATION & HELPERS
-// ==========================================
 const ADMIN_ONLY_PAGES = [
   "subjects.html",
   "department.html",
@@ -97,7 +90,6 @@ function showToast(message, type = "success", duration = 5000) {
   }, duration);
 }
 
-// Safe Logout Action
 window.forceLogout = async function () {
   if (window.supabaseClient) {
     try {
@@ -114,22 +106,18 @@ window.forceLogout = async function () {
     window.location.replace("/index.html");
   }
 };
-// ==========================================
-// CENTRAL ACCESS GUARD
-// ==========================================
+
 async function checkPageAccess() {
   const currentPage = window.location.pathname.split("/").pop();
 
   const isAdminOnly = ADMIN_ONLY_PAGES.includes(currentPage);
   const isAdminOrAccountantOnly = ADMIN_ACCOUNTANT_PAGES.includes(currentPage);
-  const isTeacherOnly = TEACHER_ONLY_PAGES.includes(currentPage); // 2. Check if current page is teacher-only
+  const isTeacherOnly = TEACHER_ONLY_PAGES.includes(currentPage);
 
-  // If the page has no restrictions, allow access immediately
   if (!isAdminOnly && !isAdminOrAccountantOnly && !isTeacherOnly) {
     return;
   }
 
-  // Prevent flash of unauthorized content while validating authentication
   document.documentElement.style.visibility = "hidden";
 
   if (!window.supabaseClient) {
@@ -137,7 +125,6 @@ async function checkPageAccess() {
     return;
   }
 
-  // Fetch session user
   const {
     data: { user },
     error,
@@ -148,7 +135,6 @@ async function checkPageAccess() {
     return;
   }
 
-  // Fetch user role
   const { data: profile } = await window.supabaseClient
     .from("profiles")
     .select("role")
@@ -157,36 +143,27 @@ async function checkPageAccess() {
 
   const role = profile?.role;
 
-  // 1. Enforce Admin-Only Access
   if (isAdminOnly && role !== "admin") {
     await window.forceLogout();
     return;
   }
 
-  // 2. Enforce Admin + Accountant Access
   if (isAdminOrAccountantOnly && role !== "admin" && role !== "accountant") {
     await window.forceLogout();
     return;
   }
 
-  // 3. Enforce Teacher-Only Access
   if (isTeacherOnly && role !== "teacher") {
     await window.forceLogout();
     return;
   }
 
-  // Reveal page content if authorized
   document.documentElement.style.visibility = "";
 }
 
-// Run role validation immediately on script execution
 checkPageAccess();
 
-// ==========================================
-// DOM & SESSION LIFECYCLE LISTENERS
-// ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
-  // Mobile menu setup
   const menuToggle = document.getElementById("menuToggle");
   const sidebar = document.querySelector(".sidebar");
   const overlay = document.getElementById("sidebarOverlay");
@@ -208,7 +185,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     link.addEventListener("click", closeMenu);
   });
 
-  // Modal Backdrop Click Handler
   const modalIds = [
     "periodModal",
     "editPeriodModal",
@@ -247,7 +223,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // Dynamic Content Loading & Navigation Rendering
   if (!window.supabaseClient) return;
 
   await loadHeaderSchoolLogo();
@@ -275,9 +250,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-/**
- * Loads the school logo into the header/sidebar for authenticated users.
- */
+
 async function loadHeaderSchoolLogo() {
   const logoImg = document.getElementById("appHeaderLogo");
   if (!logoImg || !window.supabaseClient) return;
@@ -309,7 +282,6 @@ async function loadHeaderSchoolLogo() {
   }
 }
 
-// Prevent BFCache execution & back-button bypasses
 window.addEventListener("pageshow", async (event) => {
   if (
     event.persisted ||
@@ -322,13 +294,11 @@ window.addEventListener("pageshow", async (event) => {
       error,
     } = await window.supabaseClient.auth.getUser();
 
-    // 2. If session died on protected pages, kick to login
     if (!isLoginPage() && (error || !user)) {
       await window.forceLogout();
       return;
     }
 
-    // 3. Re-verify admin page permission on cached navigation
     const currentPage = window.location.pathname.split("/").pop();
     if (ADMIN_ONLY_PAGES.includes(currentPage)) {
       if (!user) {
@@ -349,12 +319,7 @@ window.addEventListener("pageshow", async (event) => {
   }
 });
 
-// ==========================================
-// CENTRAL PAGE GUARD & AUTO-SESSION CHECK
-// Runs automatically on every page load
-// ==========================================
 (async function initPageGuard() {
-  // Wait for DOM to load
   if (document.readyState === "loading") {
     await new Promise((resolve) =>
       document.addEventListener("DOMContentLoaded", resolve),
@@ -370,19 +335,11 @@ window.addEventListener("pageshow", async (event) => {
     return;
   }
 
-  // Actively validate token against Supabase Auth (Detects expired JWTs)
   const {
     data: { user },
     error,
   } = await window.supabaseClient.auth.getUser();
 
-  // If on login page with an active session, redirect to main application
-  //if (isLogin && user && !error) {
-  //window.location.replace("/html/dashboard.html"); // Adjust path to your main home/dashboard page
-  //return;
-  //}
-
-  // Redirect immediately if no user or token expired on protected pages
   if (!isLogin && (error || !user)) {
     console.warn("Session expired or invalid user. Redirecting to login...");
     await window.supabaseClient.auth.signOut();
@@ -392,7 +349,6 @@ window.addEventListener("pageshow", async (event) => {
     return;
   }
 
-  // Real-time listener for signouts/timeouts during active session
   window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if ((event === "SIGNED_OUT" || !session) && !isLogin) {
       localStorage.clear();
@@ -431,7 +387,6 @@ window.initAuthListener = async function (supabase) {
   });
 };
 window.addEventListener("pageshow", async (event) => {
-  // Triggers when page is restored from Back-Forward cache
   if (
     event.persisted ||
     (window.performance && window.performance.navigation.type === 2)
@@ -443,13 +398,11 @@ window.addEventListener("pageshow", async (event) => {
       error,
     } = await window.supabaseClient.auth.getUser();
 
-    // 1. If on login page but user session is active, push them forward to dashboard
     if (isLoginPage() && user && !error) {
-      window.location.replace("/html/dashboard.html"); // Set your standard dashboard path
+      window.location.replace("/html/dashboard.html");
       return;
     }
 
-    // 2. If on protected app pages but user is logged out, kick them to login
     if (!isLoginPage() && (error || !user)) {
       await window.supabaseClient.auth.signOut();
       localStorage.clear();
@@ -458,7 +411,6 @@ window.addEventListener("pageshow", async (event) => {
       return;
     }
 
-    // 3. If on an admin-only page, re-validate role safely
     const currentPage = window.location.pathname.split("/").pop();
     if (ADMIN_ONLY_PAGES.includes(currentPage)) {
       if (!user) {
@@ -504,7 +456,6 @@ function escapeAttribute(str) {
 document.addEventListener("DOMContentLoaded", () => {
   if (window.supabaseClient?.auth) {
     window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      // 1. Skip running automatic sign-out logic on the index/login page
       const isLoginPage =
         window.location.pathname.endsWith("index.html") ||
         window.location.pathname === "/";
@@ -517,7 +468,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("id", session.user.id)
           .maybeSingle();
 
-        // Sign out if profile query fails (due to RLS), profile is missing, or status is not active
         if (error || !profile || profile.status !== "active") {
           await window.supabaseClient.auth.signOut();
           localStorage.clear();
@@ -528,3 +478,4 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+

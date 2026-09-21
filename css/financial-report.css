@@ -1,129 +1,125 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins',sans-serif;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
 }
 
-body{
-    background: rgb(231, 226, 226);
+body {
+  background: rgb(231, 226, 226);
 }
 
-.financials-record-container{
-    display: flex;
+.financials-record-container {
+  display: flex;
 }
 
-/* Main Content */
-
-.financials-record-main-content{
-    width: 100% ;
-    min-height: 100vh;
-    padding: 20px;
+.financials-record-main-content {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
 }
 
-/* Topbar */
-
-.topbar{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
-.topbar h1{
-    font-size: 32px;
-    color: #1f2937;
+.topbar h1 {
+  font-size: 32px;
+  color: #1f2937;
 }
 
-.topbar p{
-    color: #6b7280;
-    margin-top: 5px;
+.topbar p {
+  color: #6b7280;
+  margin-top: 5px;
 }
 
-.top-right{
-    display: flex;
-    align-items: center;
-    gap: 25px;
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 25px;
 }
 
-.back-financials-record-btn{
-    width: auto;
-    height: 30px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    margin-top: 5px;
-    border: 2px solid rgb(219, 215, 215);
-    width: 50%;
-    justify-content: space-between;
+.back-financials-record-btn {
+  width: auto;
+  height: 30px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 5px;
+  border: 2px solid rgb(219, 215, 215);
+  width: 50%;
+  justify-content: space-between;
 }
 
-.toolbar{
-    display: flex;
-    gap: 15px;
-    margin: 25px 0;
+.toolbar {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
 }
 
 .toolbar input,
-.toolbar select{
-    height: 48px;
-    border: 2px solid rgb(219, 215, 215);
-    border-radius: 10px;
-    padding: 0 15px;
-    outline: none;
-    background: #ffff;
+.toolbar select {
+  height: 48px;
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 10px;
+  padding: 0 15px;
+  outline: none;
+  background: #ffff;
 }
 
-.toolbar input{
-   width: 320px;
+.toolbar input {
+  width: 320px;
 }
 
-.financials-record-table-card{
-    background: #ffff;
-    overflow: hidden;
+.financials-record-table-card {
+  background: #ffff;
+  overflow: hidden;
 }
 
-table{
-    width: 100%;
-    border-collapse: collapse;
+table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-thead{
-    background: #f8fafc;
-    border: 2px solid rgb(219, 215, 215);
+thead {
+  background: #f8fafc;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-th{
-    padding: 18px;
-    text-align: left;
-    font-size: 14px;
-    color: #6b7280;
-    border: 2px solid rgb(219, 215, 215);
+th {
+  padding: 18px;
+  text-align: left;
+  font-size: 14px;
+  color: #6b7280;
+  border: 2px solid rgb(219, 215, 215);
 }
 
-td{
-    padding: 18px;
+td {
+  padding: 18px;
 }
 
-tr{
-    border: 2px solid rgb(219, 215, 215);
+tr {
+  border: 2px solid rgb(219, 215, 215);
 }
 
-.financials-record-actions-btn{
-    width: 100px;
-    height: 70px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-right: 6px;
+.financials-record-actions-btn {
+  width: 100px;
+  height: 70px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-right: 6px;
 }
 
-.save-btn{
-    padding: 12px 22px;
-    border: none;
-    border-radius: 10px;
-    background: #2563eb;
-    color: #ffff;
-    cursor: pointer;
+.save-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffff;
+  cursor: pointer;
 }

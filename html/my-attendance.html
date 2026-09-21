@@ -29,7 +29,6 @@
   </head>
   <body>
     <div class="container">
-      <!-- Header -->
       <div class="topbar">
         <div>
           <button class="back-academics-btn" onclick="history.back()">
@@ -40,12 +39,11 @@
         </div>
       </div>
 
-      <!-- Top Summary Stat Cards -->
       <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-label">Overall Rate</span>
           <div class="stat-value text-green" id="overallRate">0%</div>
-          <span class="stat-sub">2nd Semester</span>
+          <span class="stat-sub">Total</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">Present</span>
@@ -59,13 +57,9 @@
         </div>
       </div>
 
-      <!-- Subject Breakdown Section -->
       <h2 class="section-title">Subject Summary</h2>
-      <div class="subject-cards-grid" id="subjectCardsContainer">
-        <!-- Subject Cards populated by JavaScript -->
-      </div>
+      <div class="subject-cards-grid" id="subjectCardsContainer"></div>
 
-      <!-- Filter Toolbar -->
       <div class="toolbar">
         <input
           type="text"
@@ -82,7 +76,6 @@
         </select>
       </div>
 
-      <!-- Recent History Log Card -->
       <div class="history-card">
         <div class="card-header">
           <h3>Attendance History</h3>
@@ -98,15 +91,12 @@
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody id="attendanceHistoryTable">
-              <!-- Rows dynamically loaded -->
-            </tbody>
+            <tbody id="attendanceHistoryTable"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

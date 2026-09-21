@@ -70,7 +70,6 @@ window.addEventListener("click", (e) => {
   }
 });
 
-// 1. Populate Department Dropdown (Active only)
 async function populateDepartmentDropdown() {
   const departmentSelect = document.getElementById("departmentSelect");
   if (!departmentSelect) return;
@@ -94,7 +93,6 @@ async function populateDepartmentDropdown() {
   }
 }
 
-// 2. Handle Add/Create Subject Form Submission
 async function handleAddSubject(event) {
   event.preventDefault();
 
@@ -104,7 +102,6 @@ async function handleAddSubject(event) {
   const status = document.getElementById("statusSelect").value;
   const description = document.getElementById("descriptionInput").value.trim();
 
-  // Client-side Validation
   if (!name || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
@@ -121,7 +118,6 @@ async function handleAddSubject(event) {
       saveBtn.textContent = "Saving...";
     }
 
-    // Insert into Supabase
     const { data, error } = await supabaseClient
       .from("subjects")
       .insert([
@@ -156,7 +152,6 @@ async function handleAddSubject(event) {
     showToast("Subject created successfully!", "success");
     form.reset();
 
-    // Refresh UI using the correct function name & refresh filters
     if (typeof populateSubjectFilterDropdowns === "function") {
       await populateSubjectFilterDropdowns();
     }
@@ -174,7 +169,6 @@ async function handleAddSubject(event) {
 
 let searchDebounceTimeout = null;
 
-// Utility for safe HTML escaping to prevent XSS vulnerabilities
 function escapeHTML(str) {
   if (!str) return "";
   return String(str)
@@ -185,7 +179,6 @@ function escapeHTML(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Utility to format timestamps nicely
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -196,7 +189,6 @@ function formatDateTime(isoString) {
   });
 }
 
-// 1. Fetch Filtered & Searchable Subjects
 async function fetchFilteredSubjects() {
   const searchQuery =
     document.getElementById("searchSubjectInput")?.value.trim() || "";
@@ -205,10 +197,8 @@ async function fetchFilteredSubjects() {
   const statusFilter =
     document.getElementById("filterStatusSelect")?.value?.toLowerCase() || "";
 
-  // Show loading indicator in table
   renderSubjectsTable([], true);
 
-  // Perform targeted relational JOIN selecting only columns needed for rendering
   let query = supabaseClient.from("subjects").select(`
     id,
     name,
@@ -220,10 +210,8 @@ async function fetchFilteredSubjects() {
     departments ( id, name )
   `);
 
-  // Hard exclusion of archived rows at the query level
   query = query.eq("is_archived", false);
 
-  // Database-level Foreign Key & Status Filtering
   if (departmentId) {
     query = query.eq("department_id", departmentId);
   }
@@ -234,9 +222,7 @@ async function fetchFilteredSubjects() {
     query = query.eq("status", "Inactive");
   }
 
-  // Server-side text search filter
   if (searchQuery) {
-    // Correct format: name.ilike.%term%,description.ilike.%term% (NO extra parentheses around the whole string)
     query = query.or(
       `name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`,
     );
@@ -257,12 +243,10 @@ async function fetchFilteredSubjects() {
   renderSubjectsTable(subjects || []);
 }
 
-// 2. High-Performance Batch DOM Renderer
 function renderSubjectsTable(subjects, isLoading = false) {
   const tbody = document.getElementById("subjectsTableBody");
   if (!tbody) return;
 
-  // 1. Loading State UI
   if (isLoading) {
     tbody.innerHTML = `
       <tr>
@@ -286,10 +270,8 @@ function renderSubjectsTable(subjects, isLoading = false) {
     return;
   }
 
-  // Build HTML fragment in-memory to prevent browser layout thrashing
   const rowsHTML = subjects
     .map((subject) => {
-      // With this line:
       const departmentName = subject.departments?.name
         ? escapeHTML(subject.departments.name)
         : "—";
@@ -330,12 +312,10 @@ function renderSubjectsTable(subjects, isLoading = false) {
   tbody.innerHTML = rowsHTML;
 }
 
-// Populate Department Filter using only departments assigned in subjects
 async function populateSubjectFilterDropdowns() {
   const deptSelect = document.getElementById("filterDepartmentSelect");
   if (!deptSelect) return;
 
-  // Query subjects to extract only assigned, non-archived department relationships
   const { data: subjects, error } = await supabaseClient
     .from("subjects")
     .select(
@@ -354,7 +334,6 @@ async function populateSubjectFilterDropdowns() {
     return;
   }
 
-  // Deduplicate departments using a Map
   const uniqueDepartments = new Map();
 
   subjects?.forEach((item) => {
@@ -363,7 +342,6 @@ async function populateSubjectFilterDropdowns() {
     }
   });
 
-  // Preserve current selection
   const selectedDept = deptSelect.value;
   deptSelect.innerHTML = `<option value="">All Departments</option>`;
 
@@ -371,16 +349,13 @@ async function populateSubjectFilterDropdowns() {
     deptSelect.add(new Option(name, id));
   });
 
-  // Restore previous user choice if it still exists in the map
   if (uniqueDepartments.has(selectedDept)) {
     deptSelect.value = selectedDept;
   }
 }
 
-// Variable to hold initial values for change detection
 let initialSubjectData = null;
 
-// 1. Populate Edit Modal Department Dropdown
 async function populateEditDepartmentDropdown() {
   const deptSelect = document.getElementById("editDepartmentSelect");
   if (!deptSelect) return;
@@ -403,13 +378,10 @@ async function populateEditDepartmentDropdown() {
   });
 }
 
-// 2. Load Subject Data into Edit Modal
 async function openEditSubjectModal(subjectId) {
   try {
-    // Populate active departments first
     await populateEditDepartmentDropdown();
 
-    // Fetch existing subject details
     const { data: subject, error } = await supabaseClient
       .from("subjects")
       .select("id, name, department_id, status, description")
@@ -421,7 +393,6 @@ async function openEditSubjectModal(subjectId) {
       return;
     }
 
-    // Set hidden ID and form input values
     document.getElementById("editSubjectId").value = subject.id;
     document.getElementById("editSubjectNameInput").value = subject.name || "";
     document.getElementById("editDepartmentSelect").value =
@@ -431,7 +402,6 @@ async function openEditSubjectModal(subjectId) {
     document.getElementById("editDescriptionInput").value =
       subject.description || "";
 
-    // Store current state snapshot to detect changes later
     initialSubjectData = {
       name: subject.name || "",
       department_id: subject.department_id || "",
@@ -439,7 +409,6 @@ async function openEditSubjectModal(subjectId) {
       description: subject.description || "",
     };
 
-    // Show modal (or call your UI toggle function)
     const modal = document.getElementById("editSubjectModal");
     if (modal) modal.style.display = "flex";
     if (typeof lockBodyScroll === "function") lockBodyScroll();
@@ -448,7 +417,6 @@ async function openEditSubjectModal(subjectId) {
   }
 }
 
-// 3. Handle Edit Form Submission with Change Detection
 async function handleUpdateSubject(event) {
   event.preventDefault();
 
@@ -461,13 +429,11 @@ async function handleUpdateSubject(event) {
     .getElementById("editDescriptionInput")
     .value.trim();
 
-  // Client-side Validation
   if (!name || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
   }
 
-  // Change Detection Check
   const currentData = {
     name,
     department_id: departmentId || "",
@@ -497,7 +463,6 @@ async function handleUpdateSubject(event) {
       updateBtn.innerHTML = `Updating...`;
     }
 
-    // Update in Supabase
     const { data, error } = await supabaseClient
       .from("subjects")
       .update({
@@ -522,7 +487,6 @@ async function handleUpdateSubject(event) {
       return;
     }
 
-    // If data array is empty, RLS blocked the update silently
     if (!data || data.length === 0) {
       showToast("You do not have permission to update this subject.", "error");
       return;
@@ -534,7 +498,6 @@ async function handleUpdateSubject(event) {
       unLockBodyScroll();
     }
 
-    // Refresh UI using the correct function name & refresh filters
     if (typeof populateSubjectFilterDropdowns === "function") {
       await populateSubjectFilterDropdowns();
     }
@@ -552,7 +515,6 @@ async function handleUpdateSubject(event) {
   }
 }
 
-// Utility to close edit modal
 function closeEditModal() {
   const modal = document.getElementById("editSubjectModal");
   if (modal) modal.style.display = "none";
@@ -560,13 +522,11 @@ function closeEditModal() {
   initialSubjectData = null;
 }
 
-// 4. Initializer & Event Listeners
 document.addEventListener("DOMContentLoaded", async () => {
   const searchInput = document.getElementById("searchSubjectInput");
   const filterDept = document.getElementById("filterDepartmentSelect");
   const filterStatus = document.getElementById("filterStatusSelect");
 
-  // Debounced input search
   searchInput?.addEventListener("input", () => {
     clearTimeout(searchDebounceTimeout);
     searchDebounceTimeout = setTimeout(() => {
@@ -574,11 +534,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 300);
   });
 
-  // Instant filtering on select change
   filterDept?.addEventListener("change", fetchFilteredSubjects);
   filterStatus?.addEventListener("change", fetchFilteredSubjects);
 
-  // Load dropdown choices first, then execute data query
   await populateSubjectFilterDropdowns();
   await fetchFilteredSubjects();
 
@@ -587,7 +545,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await populateDepartmentDropdown();
 
-  // Modal Event Listeners
   document
     .getElementById("confirmArchiveBtn")
     ?.addEventListener("click", handleConfirmArchive);
@@ -595,7 +552,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     .getElementById("cancelArchiveModal")
     ?.addEventListener("click", closeArchiveModal);
 
-  // Event Listeners for Modal Controls
   document
     .getElementById("editSubjectForm")
     ?.addEventListener("submit", handleUpdateSubject);
@@ -609,7 +565,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 let targetSubjectIdToArchive = null;
 
-// 1. Open Archive Modal & Set Target ID
 function openArchiveModal(subjectId, subjectName = "") {
   targetSubjectIdToArchive = subjectId;
 
@@ -627,7 +582,6 @@ function openArchiveModal(subjectId, subjectName = "") {
   if (typeof lockBodyScroll === "function") lockBodyScroll();
 }
 
-// 2. Close Archive Modal
 function closeArchiveModal() {
   const modal = document.getElementById("archiveSubjectModal");
   if (modal) modal.style.display = "none";
@@ -635,7 +589,6 @@ function closeArchiveModal() {
   targetSubjectIdToArchive = null;
 }
 
-// 3. Confirm Archive Database Mutation
 async function handleConfirmArchive() {
   if (!targetSubjectIdToArchive) return;
 
@@ -647,7 +600,6 @@ async function handleConfirmArchive() {
       confirmBtn.innerHTML = `Archiving...`;
     }
 
-    // Soft delete / archive in Supabase
     const { data, error } = await supabaseClient
       .from("subjects")
       .update({
@@ -661,7 +613,6 @@ async function handleConfirmArchive() {
       return;
     }
 
-    // If data array is empty, RLS blocked the update silently
     if (!data || data.length === 0) {
       showToast("You do not have permission to archive this subject.", "error");
       return;
@@ -670,7 +621,6 @@ async function handleConfirmArchive() {
     showToast("Subject archived successfully!", "success");
     closeArchiveModal();
 
-    // Refresh table and dropdown filters dynamically
     if (typeof populateSubjectFilterDropdowns === "function") {
       await populateSubjectFilterDropdowns();
     }
@@ -687,7 +637,6 @@ async function handleConfirmArchive() {
   }
 }
 
-// 4. Combined Table Event Delegation (Edit & Archive)
 document.getElementById("subjectsTableBody")?.addEventListener("click", (e) => {
   const editBtn = e.target.closest(".subjects-actions-btn.edit");
   const archiveBtn = e.target.closest(".subjects-actions-btn.archive");
@@ -701,7 +650,6 @@ document.getElementById("subjectsTableBody")?.addEventListener("click", (e) => {
     const subjectId = archiveBtn.dataset.id;
     const row = archiveBtn.closest("tr");
 
-    // Robust extraction: Checks data-name -> <strong> tag -> first table cell text
     const subjectName =
       archiveBtn.dataset.name ||
       row?.querySelector("td strong")?.textContent?.trim() ||
@@ -711,3 +659,4 @@ document.getElementById("subjectsTableBody")?.addEventListener("click", (e) => {
     openArchiveModal(subjectId, subjectName);
   }
 });
+

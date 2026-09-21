@@ -51,15 +51,21 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search attendance..." />
+          <input
+            type="text"
+            id="attendanceSearchInput"
+            placeholder="Search class or subject..."
+          />
 
-          <select>
-            <option>Class</option>
+          <select id="attendanceClassFilter">
+            <option value="all">All Classes</option>
           </select>
 
-          <select>
-            <option>Date</option>
-          </select>
+          <input type="date" id="attendanceDateFilter" />
+
+          <button type="button" id="clearDateFilterBtn" title="Clear Date">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </section>
 
         <section class="studentAttendance-table-card">
@@ -76,9 +82,7 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="attendanceTableBody">
-              <!-- Dynamic rows rendered here -->
-            </tbody>
+            <tbody id="attendanceTableBody"></tbody>
           </table>
         </section>
       </main>
@@ -186,9 +190,7 @@
                 </tr>
               </thead>
 
-              <tbody id="viewAttendanceRosterBody">
-                <!-- Dynamic student attendance records will be populated here -->
-              </tbody>
+              <tbody id="viewAttendanceRosterBody"></tbody>
             </table>
           </section>
 
@@ -262,9 +264,7 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody id="studentAttendanceRosterBody">
-                  <!-- Student rows dynamically injected here -->
-                </tbody>
+                <tbody id="studentAttendanceRosterBody"></tbody>
               </table>
             </section>
 
@@ -297,7 +297,6 @@
 
         <div class="modal-body">
           <form id="editAttendanceForm">
-            <!-- Workflow Status Switcher -->
             <div class="form-group">
               <label for="editWorkflowStatus"> Workflow Status </label>
               <select id="editWorkflowStatus" class="form-control">
@@ -306,7 +305,6 @@
               </select>
             </div>
 
-            <!-- Editable Student Roster Table -->
             <section class="studentAttendance-table-card">
               <table>
                 <thead>
@@ -315,13 +313,10 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody id="editAttendanceRosterBody">
-                  <!-- Dynamically populated roster rows -->
-                </tbody>
+                <tbody id="editAttendanceRosterBody"></tbody>
               </table>
             </section>
 
-            <!-- Footer Actions -->
             <div
               class="modal-footer"
               style="
@@ -352,7 +347,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

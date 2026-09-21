@@ -13,15 +13,11 @@ body {
   display: flex;
 }
 
-/* Main Content */
-
 .assigns-main-content {
   width: 100%;
   min-height: 100vh;
   padding: 10px;
 }
-
-/* Topbar */
 
 .topbar {
   display: flex;
@@ -162,8 +158,6 @@ tr {
   background: #fee2e2;
   color: #dc2626;
 }
-
-/* Subject modal */
 
 .modal-assign {
   position: fixed;
@@ -454,7 +448,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Responsive Topbar */
   .topbar {
     display: grid !important;
     grid-template-columns: 1fr auto !important;
@@ -504,7 +497,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Toolbar */
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -524,7 +516,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Responsive Table */
   .assigns-table-card {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

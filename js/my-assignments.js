@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Fetch assignments using year_label
     const { data: assignments, error } = await client
       .from("teacher_assignments")
       .select(
@@ -47,7 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     myAssignments = assignments || [];
 
-    // Setup filter options and initial render
     populateFilterDropdowns(myAssignments);
     renderScheduleCards(myAssignments);
     bindFilterEvents();
@@ -183,3 +181,4 @@ function bindFilterEvents() {
   if (subjectSelect) subjectSelect.addEventListener("change", applyFilters);
   if (classSelect) classSelect.addEventListener("change", applyFilters);
 }
+

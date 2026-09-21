@@ -103,8 +103,6 @@ body {
   display: flex;
 }
 
-/* Main Content */
-
 .timetables-main-content {
   width: 100%;
   min-height: 100vh;
@@ -265,7 +263,6 @@ tr {
   margin-top: 10px;
 }
 
-/* Ensure the parent header aligns children across left and right */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -274,7 +271,6 @@ tr {
   width: 100%;
 }
 
-/* Fix back button width & alignment */
 .back-academics-btn {
   width: auto;
   height: 48px;
@@ -288,15 +284,13 @@ tr {
   border: 1px solid rgb(219, 215, 215);
 }
 
-/* Align right section */
 .top-right {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-left: auto; /* Guarantees right alignment */
+  margin-left: auto;
 }
 
-/* Standardize create button dimensions */
 .add-timetables-btn {
   width: auto;
   height: 48px;
@@ -619,7 +613,6 @@ tr {
    ========================================== */
 
 @media screen and (max-width: 768px) {
-  /* --- Global Reset & Typography Mobile Adjustments --- */
   th,
   td {
     padding: 12px 14px !important;
@@ -634,7 +627,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* --- Topbar & Navigation Layout --- */
   .topbar {
     display: grid !important;
     grid-template-columns: 1fr auto !important;
@@ -693,7 +685,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* --- Toolbar Controls --- */
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -715,7 +706,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* --- Responsive Table Handling --- */
   .timetables-table-card {
     background: #ffffff;
     overflow-x: auto;
@@ -746,7 +736,6 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
   }
 
-  /* --- Timetable Modals Container & Card Setup --- */
   .timetable-modal-content,
   .edit-timetable-modal-content,
   .lesson-modal-content,
@@ -789,7 +778,6 @@ tr {
     overflow: hidden;
   }
 
-  /* --- Modal Header --- */
   .timetable-modal-header,
   .edit-timetable-modal-header,
   .view-timetable-modal-header,
@@ -826,7 +814,6 @@ tr {
     border-radius: 10px !important;
   }
 
-  /* --- Modal Body & Scrollable Content --- */
   .timetable-modal-body,
   .edit-timetable-modal-body,
   .view-timetable-body,
@@ -838,7 +825,6 @@ tr {
     flex: 1;
   }
 
-  /* --- Modal Form Layouts --- */
   .form-grid,
   .details-grid {
     display: grid;
@@ -863,7 +849,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* --- Modal Footer & Action Buttons --- */
   .timetable-modal-footer,
   .edit-timetable-modal-footer,
   .view-timetable-modal-footer,

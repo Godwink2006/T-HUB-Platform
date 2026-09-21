@@ -1,10 +1,7 @@
-// Global Constants & State
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
-/**
- * Renders an array of student objects into the DOM table
- */
+
 function renderStudentsTable(studentsToRender) {
   const tableBody = document.getElementById("studentsTableBody");
   if (!tableBody) return;
@@ -81,7 +78,6 @@ function populateClassFilterDropdown() {
     }
   });
 
-  // Sort class names alphabetically
   const sortedClasses = Array.from(uniqueClasses).sort((a, b) =>
     a.localeCompare(b),
   );
@@ -98,9 +94,7 @@ function populateClassFilterDropdown() {
   }
 }
 
-/**
- * Filters the students based on search input, class selection, and status selection
- */
+
 function filterStudents() {
   const searchVal = (document.getElementById("studentSearchInput")?.value || "")
     .trim()
@@ -120,28 +114,24 @@ function filterStudents() {
     const fullName = (profile.full_name || "").toLowerCase();
     const studentCustomId = (student.student_id || "").toLowerCase();
 
-    // 1. Search Query Match (Name or Student Custom ID)
     const matchesSearch =
       !searchVal ||
       fullName.includes(searchVal) ||
       studentCustomId.includes(searchVal);
 
-    // 2. Class Filter Match
     const studentClassName = student.classes?.name || "";
     const matchesClass =
       !selectedClassName || studentClassName === selectedClassName;
 
-    // 3. Status Filter Match
     const studentStatus = (profile.status || "active").toLowerCase();
     const matchesStatus = !selectedStatus || studentStatus === selectedStatus;
 
     return matchesSearch && matchesClass && matchesStatus;
   });
 
-  // Render the filtered subset
   renderStudentsTable(filtered);
 }
-// Attach event listeners to toolbar inputs
+
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("studentSearchInput");
   const classFilter = document.getElementById("studentClassFilter");
@@ -155,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
 let cachedClasses = [];
 let cachedAcademicYears = [];
 
-// Helper to determine if a class is eligible for portal access (Grades 10, 11, 12)
 function isEligibleClass(classId) {
   const selectedClass = cachedClasses.find((c) => c.id === classId);
   if (!selectedClass) return false;
@@ -163,10 +152,8 @@ function isEligibleClass(classId) {
   return /(?:10|11|12|Grade\s*(?:10|11|12))/i.test(name);
 }
 
-// Compress file and return compressed Base64 String
 function compressToBase64(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
-    // Guard against null, undefined, or non-file values
     if (!file || !(file instanceof Blob || file instanceof File)) {
       return resolve(null);
     }
@@ -205,10 +192,8 @@ function compressToBase64(file, maxWidth = 800, quality = 0.7) {
   });
 }
 
-// Updated helper: returns a compressed Blob ready for Supabase Storage
 function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
-    // Guard against null, undefined, or non-file values
     if (!file || !(file instanceof Blob || file instanceof File)) {
       return resolve(null);
     }
@@ -257,7 +242,6 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // DOM Elements
   const addStudentBtn =
     document.getElementById("addStudent") ||
     document.getElementById("addStudentBtn");
@@ -293,12 +277,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const studentPhotoPreview = document.getElementById("studentPhotoPreview");
   const studentPhotoFileName = document.getElementById("studentPhotoFileName");
 
-  // Load static or initial dropdowns on page load
   loadStudentDropdowns();
 
-  // ------------------------------------------------------------------
-  // 1. Static Event Listeners for Modals & Action Buttons
-  // ------------------------------------------------------------------
   document.querySelectorAll(".edit").forEach((button) => {
     button.addEventListener("click", () => {
       if (editStudentModal) editStudentModal.style.display = "flex";
@@ -355,7 +335,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Backdrop click handler for all modals
   window.addEventListener("click", (e) => {
     if (e.target === editStudentModal) {
       editStudentModal.style.display = "none";
@@ -381,7 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("studentClassSelect") ||
         document.getElementById("studentClass");
 
-      // Get current logged in user's profile to retrieve school_id
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
@@ -395,7 +373,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!profile || !profile.school_id) return;
 
-      // Query ONLY classes matching the user's school_id
       const { data: classes, error } = await supabaseClient
         .from("classes")
         .select("id, name")
@@ -416,11 +393,9 @@ document.addEventListener("DOMContentLoaded", () => {
           classSelectEl.appendChild(option);
         });
 
-        // Sync field visibility as soon as classes load
         updatePasswordVisibility();
       }
 
-      // Fetch Active Academic Years
       const { data: yearData, error: yearError } = await supabaseClient
         .from("academic_years")
         .select("id, year_label, status")
@@ -448,9 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Dynamic Email, Password & Role Visibility Handler
   function updatePasswordVisibility() {
-    // Get the current DOM element dynamically every execution
     const classSelectEl =
       studentClassSelect ||
       document.getElementById("studentClassSelect") ||
@@ -458,11 +431,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const selectedClassId = classSelectEl ? classSelectEl.value : "";
 
-    // Check eligibility using cachedClasses lookup
     const eligible =
       typeof isEligibleClass === "function" && isEligibleClass(selectedClassId);
 
-    // Explicitly select form fields
     const emailEl = document.getElementById("studentEmail");
     const passEl = document.getElementById("newPassword");
     const confirmEl = document.getElementById("confirmPassword");
@@ -474,14 +445,12 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     fields.forEach((field) => {
-      // Find wrapper container (.form-group or parent)
       const container = field.closest(".form-group") || field.parentElement;
 
       if (eligible) {
-        if (container) container.style.display = ""; // Reset inline display to CSS default
+        if (container) container.style.display = "";
         field.setAttribute("required", "required");
 
-        // Restore default role value if empty
         if (field.id === "studentRole" && !field.value) {
           field.value = "student";
         }
@@ -489,7 +458,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (container) container.style.display = "none";
         field.removeAttribute("required");
 
-        // Reset non-role values when hidden
         if (field.id !== "studentRole") {
           field.value = "";
         }
@@ -497,7 +465,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Bind change event using dynamic element lookup
   const classDropdown =
     studentClassSelect ||
     document.getElementById("studentClassSelect") ||
@@ -542,9 +509,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (cancelStudentModal)
     cancelStudentModal.addEventListener("click", hideStudentModal);
 
-  // ------------------------------------------------------------------
-  // 4. Photo Upload Preview Handler
-  // ------------------------------------------------------------------
   if (studentPhotoInput) {
     studentPhotoInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
@@ -565,9 +529,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ------------------------------------------------------------------
-  // 5. Submit Form
-  // ------------------------------------------------------------------
   if (studentForm) {
     studentForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -625,7 +586,6 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
-        // Input extraction targeting HTML IDs
         const firstName =
           document.getElementById("studentFirstName")?.value.trim() || "";
         const lastName =
@@ -647,11 +607,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const rawStatus =
           document.getElementById("studentStatus")?.value || "Active";
-        // Capitalize first letter to match DB Enums ("Active" / "Inactive")
+
         const statusValue =
           rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
 
-        // Determine portal eligibility
         const isEligible =
           typeof isEligibleClass === "function" &&
           isEligibleClass(selectedClassId);
@@ -682,7 +641,6 @@ document.addEventListener("DOMContentLoaded", () => {
           photo: photoBase64,
         };
 
-        // Attaching Auth details for eligible grades
         if (isEligible) {
           payload.email = emailInput;
           payload.role = "student";
@@ -757,7 +715,6 @@ async function loadStudentsTable() {
   const tableBody = document.getElementById("studentsTableBody");
   if (!tableBody) return;
 
-  // Render loading state
   tableBody.innerHTML = `
     <tr>
      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
@@ -768,7 +725,6 @@ async function loadStudentsTable() {
   `;
 
   try {
-    // Fetch students with joined profile and class data
     const { data: students, error } = await supabaseClient
       .from("students")
       .select(
@@ -816,18 +772,16 @@ async function loadStudentsTable() {
       return;
     }
 
-    // Cache students globally so openViewStudentModal can locate them by ID
     window.allStudentsCache = students;
 
     populateClassFilterDropdown();
     filterStudents();
 
-    // Build table rows
     tableBody.innerHTML = students
       .map((student) => {
         const profile = student.profiles || {};
         const className = student.classes?.name || "N/A";
-        // Determine the primary source
+
         const photoSrc = profile.photo_url ? profile.photo_url : DEFAULT_AVATAR;
         const status = (profile.status || "active").toLowerCase();
         const statusClass =
@@ -879,7 +833,6 @@ async function loadStudentsTable() {
   }
 }
 
-// Helper function to format ISO timestamps
 const formatDate = (dateString) => {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -903,7 +856,6 @@ function viewStudent(id) {
 function openViewStudentModal(student) {
   const profile = student.profiles || {};
 
-  // Profile Header Elements
   document.getElementById("viewStudentName").textContent =
     profile.full_name || "-";
 
@@ -916,7 +868,6 @@ function openViewStudentModal(student) {
     };
   }
 
-  // Status Badge Handling
   const statusElement = document.getElementById("viewStudentStatus");
   const rawStatus = (profile.status || "active").toLowerCase();
 
@@ -924,14 +875,12 @@ function openViewStudentModal(student) {
     statusElement.textContent =
       rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
 
-    // Map status to designated CSS badge classes
     const badgeClass =
       rawStatus === "active" ? "status-active" : "status-inactive";
 
     statusElement.className = `view-student-status ${badgeClass}`;
   }
 
-  // Grid Details Elements
   document.getElementById("viewStudentCustomId").textContent =
     student.student_id || "-";
   document.getElementById("viewStudentGender").textContent =
@@ -955,7 +904,6 @@ function openViewStudentModal(student) {
   document.getElementById("viewStudentMedicalNotes").textContent =
     student.medical_notes || "-";
 
-  // Created At and Updated At Timestamps
   document.getElementById("viewStudentCreatedAt").textContent = formatDate(
     student.created_at || profile.created_at,
   );
@@ -963,7 +911,6 @@ function openViewStudentModal(student) {
     student.updated_at || profile.updated_at,
   );
 
-  // Display Modal
   const viewStudentModal = document.getElementById("viewStudentModal");
   if (viewStudentModal) {
     viewStudentModal.style.display = "flex";
@@ -971,7 +918,6 @@ function openViewStudentModal(student) {
   }
 }
 
-// Modal Close Handlers
 function closeViewStudentModal() {
   const viewStudentModal = document.getElementById("viewStudentModal");
   if (viewStudentModal) {
@@ -989,11 +935,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", closeViewStudentModal);
 });
 
-// ------------------------------------------------------------------
-// Edit Student Logic
-// ------------------------------------------------------------------
 let initialStudentData = {};
-// 1. Open Edit Modal and Populate Fields
+
 function editStudent(id) {
   const student = (window.allStudentsCache || []).find((s) => s.id === id);
   if (!student) {
@@ -1003,7 +946,6 @@ function editStudent(id) {
 
   const profile = student.profiles || {};
 
-  // AFTER
   const fullName = (profile.full_name || "").trim();
   const spaceIndex = fullName.indexOf(" ");
   let firstName = fullName;
@@ -1021,7 +963,6 @@ function editStudent(id) {
   document.getElementById("editStudentAdmissionDate").value =
     student.admission_date || "";
 
-  // Normalize Status
   const status = (profile.status || "active").toLowerCase();
   const statusFormatted = status === "active" ? "Active" : "Inactive";
   document.getElementById("editStudentStatus").value = statusFormatted;
@@ -1030,7 +971,6 @@ function editStudent(id) {
   document.getElementById("editStudentMedicalNotes").value =
     student.medical_notes || "";
 
-  // Set Profile Photo Preview
   const previewImg = document.getElementById("editStudentPhotoPreview");
   if (previewImg) {
     previewImg.src = profile.photo_url || DEFAULT_AVATAR;
@@ -1041,7 +981,6 @@ function editStudent(id) {
     photoFileName.textContent = "No file chosen";
   }
 
-  // ADD THIS: Save initial values for change checking
   initialStudentData = {
     firstName: firstName,
     lastName: lastName,
@@ -1060,7 +999,6 @@ function editStudent(id) {
   }
 }
 
-// 2. Close Modal Helper
 function closeEditStudentModal() {
   const modal = document.getElementById("editStudentModal");
   if (modal) {
@@ -1071,7 +1009,6 @@ function closeEditStudentModal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Modal Event Listeners
   document
     .getElementById("closeEditStudentModal")
     ?.addEventListener("click", closeEditStudentModal);
@@ -1079,14 +1016,13 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("cancelEditStudentModal")
     ?.addEventListener("click", closeEditStudentModal);
 
-  // Profile Photo Live Preview
   const editPhotoInput = document.getElementById("editStudentPhoto");
   editPhotoInput?.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (file) {
       document.getElementById("editStudentPhotoFileName").textContent =
         file.name;
-      // AFTER
+
       const previewEl = document.getElementById("editStudentPhotoPreview");
       if (previewEl) {
         previewEl.src = URL.createObjectURL(file);
@@ -1094,7 +1030,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 3. Form Submit Event Handler
   const editForm = document.getElementById("editStudentForm");
   if (editForm) {
     editForm.addEventListener("submit", async (e) => {
@@ -1120,7 +1055,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .value.trim();
       const hasNewPhoto = editPhotoInput && editPhotoInput.files.length > 0;
 
-      // Check if any field or photo has actually changed
       const hasChanges =
         hasNewPhoto ||
         firstName !== initialStudentData.firstName ||
@@ -1132,7 +1066,6 @@ document.addEventListener("DOMContentLoaded", () => {
         address !== initialStudentData.address ||
         medicalNotes !== initialStudentData.medicalNotes;
 
-      // Exit early if no changes are detected
       if (!hasChanges) {
         if (typeof showToast === "function") {
           showToast("No changes detected.", "info");
@@ -1170,7 +1103,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .value.trim();
 
         const payload = {
-          student_id: studentDbId, // Table primary key / profile UUID
+          student_id: studentDbId,
           first_name: firstName,
           last_name: lastName,
           full_name: `${firstName} ${lastName}`.trim(),
@@ -1260,10 +1193,8 @@ function populateEditStudentModal(student) {
   document.getElementById("editStudentMedicalNotes").value =
     student.medical_notes || "";
 
-  // Reset photo input file selector
   if (editPhotoInput) editPhotoInput.value = "";
 
-  // Snapshot initial values for change detection
   initialStudentData = {
     firstName: (student.first_name || "").trim(),
     lastName: (student.last_name || "").trim(),
@@ -1276,11 +1207,6 @@ function populateEditStudentModal(student) {
   };
 }
 
-// ------------------------------------------------------------------
-// Direct Database Archive Student Logic
-// ------------------------------------------------------------------
-
-// 1. Open Archive Modal & Set Name
 window.archiveStudent = function (studentId) {
   const student = (window.allStudentsCache || []).find(
     (s) => s.id === studentId,
@@ -1302,7 +1228,6 @@ window.archiveStudent = function (studentId) {
   }
 };
 
-// 2. Close Modal Helper
 function closeArchiveStudentModal() {
   const modal = document.getElementById("archiveStudentModal");
   if (modal) {
@@ -1313,12 +1238,10 @@ function closeArchiveStudentModal() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Modal Action Listeners
   document
     .getElementById("cancelArchive")
     ?.addEventListener("click", closeArchiveStudentModal);
 
-  // 3. Perform Direct Database Update
   const confirmBtn = document.getElementById("confirmArchive");
   confirmBtn?.addEventListener("click", async () => {
     const studentId = document.getElementById("archiveStudentId").value;
@@ -1328,7 +1251,6 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmBtn.textContent = "Archiving...";
 
     try {
-      // Step A: Update status to 'inactive' in profiles
       const { error: profileError } = await supabaseClient
         .from("profiles")
         .update({ status: "inactive" })
@@ -1336,7 +1258,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (profileError) throw profileError;
 
-      // Step B: Set is_archived = true in students
       const { error: studentError } = await supabaseClient
         .from("students")
         .update({ is_archived: true })
@@ -1344,7 +1265,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (studentError) throw studentError;
 
-      // Verification Step: Check if local cache reflects update
       if (Array.isArray(window.allStudentsCache)) {
         window.allStudentsCache = window.allStudentsCache.filter(
           (s) => s.id !== studentId,
@@ -1357,14 +1277,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       closeArchiveStudentModal();
 
-      // Refresh table UI
       if (typeof loadStudentsTable === "function") {
         loadStudentsTable();
       }
     } catch (err) {
       console.error("Archive operation failed:", err);
 
-      // Handle RLS permission rejection (42501 code or standard message)
       if (
         err.code === "42501" ||
         (err.message &&
@@ -1392,3 +1310,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+

@@ -1,4 +1,3 @@
-// --- STATE MANAGEMENT & DOM REFS ---
 let terms = [];
 let selectedTermId = null;
 let originalTermData = {};
@@ -7,15 +6,13 @@ const termModal = document.getElementById("termModal");
 const editTermModal = document.getElementById("editTermModal");
 const archiveTermModal = document.getElementById("archiveTermModal");
 
-// --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
   loadTerms();
-  populateAcademicYearDropdowns(); // Populate dropdowns dynamically
-  setupAcademicYearRealtime(); // Start real-time listener
+  populateAcademicYearDropdowns();
+  setupAcademicYearRealtime();
   setupModalListeners();
 });
 
-// --- Backdrop Click Handler ---
 window.addEventListener("click", (e) => {
   const modals = [termModal, editTermModal, archiveTermModal];
   modals.forEach((modal) => {
@@ -25,7 +22,6 @@ window.addEventListener("click", (e) => {
   });
 });
 
-// --- NEW REUSABLE VALIDATION HELPER ---
 function validateTermDates(
   academicYearId,
   name,
@@ -55,12 +51,11 @@ function validateTermDates(
   return null;
 }
 
-// --- 1. FETCH & RENDER ---
 async function loadTerms() {
   renderTableLoading();
 
   const { data, error } = await supabaseClient
-    .from("terms") // DB Table name
+    .from("terms")
     .select(
       `
       *,
@@ -138,7 +133,6 @@ function renderTermsTable() {
     .join("");
 }
 
-// 2. For ISO timestamps (created_at, updated_at)
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -154,7 +148,6 @@ function formatDateTime(isoString) {
 function formatDate(dateString) {
   if (!dateString) return "N/A";
 
-  // Parse YYYY-MM-DD components directly to avoid UTC timezone offset issues
   const [year, month, day] = dateString.split("-");
   const date = new Date(year, month - 1, day);
 
@@ -165,7 +158,6 @@ function formatDate(dateString) {
   });
 }
 
-// --- 2. SINGLE ACTIVE SEMESTER ENFORCEMENT ---
 async function handleSingleActiveStatus(
   requestedStatus,
   currentRecordId = null,
@@ -185,19 +177,17 @@ async function handleSingleActiveStatus(
   }
 }
 
-// --- REALTIME SUBSCRIPTION FOR ACADEMIC YEARS ---
 function setupAcademicYearRealtime() {
   supabaseClient
     .channel("public:academic_years")
     .on(
       "postgres_changes",
       {
-        event: "*", // Listen to INSERT, UPDATE, and DELETE
+        event: "*",
         schema: "public",
         table: "academic_years",
       },
       (payload) => {
-        // Re-fetch active academic years whenever any change happens
         populateAcademicYearDropdowns();
       },
     )
@@ -207,7 +197,6 @@ function setupAcademicYearRealtime() {
     });
 }
 
-// --- 3. CREATE (ADD) ---
 async function handleAddTerm(event) {
   event.preventDefault();
 
@@ -215,17 +204,16 @@ async function handleAddTerm(event) {
   const name = document.getElementById("addSemesterNameSelect").value;
   const startDate = document.getElementById("addStartDate").value;
   const endDate = document.getElementById("addEndDate").value;
-  // Example inside handleAddTerm:
+
   const rawStatus = document.getElementById("addStatusSelect").value;
   const status =
-    rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase(); // Ensures "Active" or "Inactive"
+    rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase();
 
   if (!academicYearId || !name || !startDate || !endDate || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
   }
 
-  // Add this right before try {} block in handleAddTerm:
   const validationError = validateTermDates(
     academicYearId,
     name,
@@ -300,21 +288,18 @@ async function openEditModal(id) {
   const editSelect = document.getElementById("editAcademicYearSelect");
   const nameSelect = document.getElementById("editSemesterNameSelect");
 
-  // 1. Populate only the item's original Academic Year option
   if (editSelect) {
     const yearLabel = item.academic_years?.year_label || "N/A";
     editSelect.innerHTML = `<option value="${item.academic_year_id}">${yearLabel}</option>`;
     editSelect.value = item.academic_year_id || "";
-    editSelect.disabled = true; // Lock dropdown
+    editSelect.disabled = true;
   }
 
-  // 2. Set and lock Semester Name
   if (nameSelect) {
     nameSelect.value = item.name || "";
-    nameSelect.disabled = true; // Lock dropdown
+    nameSelect.disabled = true;
   }
 
-  // 3. Populate editable fields
   document.getElementById("editStartDate").value = item.start_date || "";
   document.getElementById("editEndDate").value = item.end_date || "";
   document.getElementById("editStatusSelect").value = item.status || "Inactive";
@@ -358,7 +343,6 @@ async function handleEditTerm(event) {
     return;
   }
 
-  // Replace inline date checks in handleEditTerm with:
   const validationError = validateTermDates(
     academicYearId,
     name,
@@ -415,7 +399,6 @@ async function handleEditTerm(event) {
   }
 }
 
-// --- 5. ARCHIVE ---
 function openArchiveModal(id, termName) {
   selectedTermId = id;
 
@@ -467,7 +450,6 @@ async function handleConfirmArchive() {
   }
 }
 
-// --- 6. MODAL HELPERS & LISTENERS ---
 function lockBodyScroll() {
   document.body.style.overflow = "hidden";
 }
@@ -482,13 +464,11 @@ function openModal(modalId) {
   lockBodyScroll();
 }
 
-// --- FIX ---
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "none";
   unLockBodyScroll();
 
-  // Reset global state on close
   if (modalId === "editTermModal") {
     originalTermData = null;
     selectedTermId = null;
@@ -496,7 +476,6 @@ function closeModal(modalId) {
 }
 
 function setupModalListeners() {
-  // Add Modal
   document
     .getElementById("addTerm")
     ?.addEventListener("click", () => openModal("termModal"));
@@ -510,7 +489,6 @@ function setupModalListeners() {
     .getElementById("termForm")
     ?.addEventListener("submit", handleAddTerm);
 
-  // Edit Modal
   document
     .getElementById("closeEditTermModal")
     ?.addEventListener("click", () => closeModal("editTermModal"));
@@ -521,7 +499,6 @@ function setupModalListeners() {
     .getElementById("editTermForm")
     ?.addEventListener("submit", handleEditTerm);
 
-  // Archive Modal
   document
     .getElementById("cancelTermArchive")
     ?.addEventListener("click", () => closeModal("archiveTermModal"));
@@ -531,7 +508,6 @@ function setupModalListeners() {
 }
 
 async function populateAcademicYearDropdowns() {
-  // 1. Include 'status' in select so addSelect filtering works
   const { data, error } = await supabaseClient
     .from("academic_years")
     .select("id, year_label, status")
@@ -556,7 +532,6 @@ async function populateAcademicYearDropdowns() {
     return;
   }
 
-  // 2. ADD MODAL: Filter for ACTIVE years only
   if (addSelect) {
     const activeYears = data.filter((item) => item.status === "Active");
     addSelect.innerHTML = activeYears.length
@@ -568,12 +543,10 @@ async function populateAcademicYearDropdowns() {
       : `<option value="">No Active Academic Years Available</option>`;
   }
 
-  // Check if edit modal is visible before overwriting
   if (editSelect && editTermModal?.style.display !== "flex") {
     editSelect.innerHTML = data
       .map((item) => `<option value="${item.id}">${item.year_label}</option>`)
       .join("");
   }
-
-  // NOTE: REMOVED the optionsHTML block from the bottom because it was overwriting addSelect!
 }
+

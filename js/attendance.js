@@ -1,4 +1,3 @@
-// Global State
 let activeAcademicYearId = null;
 let activeTermId = null;
 let activeAssessmentId = null;
@@ -19,7 +18,6 @@ let currentAttendanceSession = {
   dateStr: getLocalDateString(),
 };
 
-// Helper for local YYYY-MM-DD date representation
 function getLocalDateString() {
   const d = new Date();
   const year = d.getFullYear();
@@ -28,7 +26,6 @@ function getLocalDateString() {
   return `${year}-${month}-${day}`;
 }
 
-// Modal Helper Functions
 function openModal(modal) {
   if (!modal) return;
   modal.style.display = "flex";
@@ -49,9 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAcademicContext();
 });
 
-/**
- * Global Modal Event Listeners
- */
 function initModalEventListeners() {
   const attendanceModal = document.getElementById("attendanceModal");
   const studentAttendanceModal = document.getElementById(
@@ -60,7 +54,6 @@ function initModalEventListeners() {
   const viewAttendanceModal = document.getElementById("viewAttendanceModal");
   const editAttendanceModal = document.getElementById("editAttendanceModal");
 
-  // Take Attendance Modal Controls
   document
     .getElementById("addAttendance")
     ?.addEventListener("click", async () => {
@@ -76,7 +69,6 @@ function initModalEventListeners() {
     .getElementById("cancelAttendanceModal")
     ?.addEventListener("click", () => closeModal(attendanceModal));
 
-  // Student Attendance Modal Controls
   document
     .getElementById("closeStudentAttendanceModal")
     ?.addEventListener("click", () => closeModal(studentAttendanceModal));
@@ -84,7 +76,6 @@ function initModalEventListeners() {
     .getElementById("cancelStudentAttendanceModal")
     ?.addEventListener("click", () => closeModal(studentAttendanceModal));
 
-  // View Attendance Modal Controls
   document.querySelectorAll(".view").forEach((button) => {
     button.addEventListener("click", () => openModal(viewAttendanceModal));
   });
@@ -96,7 +87,6 @@ function initModalEventListeners() {
     .getElementById("closeViewBtn")
     ?.addEventListener("click", () => closeModal(viewAttendanceModal));
 
-  // Outside click listeners
   window.addEventListener("click", (e) => {
     if (e.target === attendanceModal) closeModal(attendanceModal);
     if (e.target === studentAttendanceModal) closeModal(studentAttendanceModal);
@@ -123,7 +113,7 @@ async function loadAcademicContext() {
       supabaseClient
         .from("assessments")
         .select("id")
-        .ilike("status", "Active") // Fetch active period (e.g. 1st Period) in background
+        .ilike("status", "Active")
         .limit(1)
         .maybeSingle(),
     ]);
@@ -162,7 +152,6 @@ function initAttendanceModalLogic() {
     await handleClassSelectChange(e.target.value);
   });
 
-  // Load Students -> Switch from Modal 1 to Modal 2
   loadStudentsBtn?.addEventListener("click", async () => {
     const classId = classSelect.value;
     const className = classSelect.options[classSelect.selectedIndex]?.text;
@@ -174,12 +163,10 @@ function initAttendanceModalLogic() {
       return;
     }
 
-    // Check if timetable lesson exists
     let lesson = currentTodayLessons.find((l) => l.period_id === periodId);
     let subjectId = lesson ? lesson.subject_id : null;
     let subjectName = lesson?.subjects?.name || null;
 
-    // Fallback: fetch subject assigned to this teacher & class
     const user = (await supabaseClient.auth.getUser()).data?.user;
     let profile = null;
 
@@ -206,10 +193,8 @@ function initAttendanceModalLogic() {
       }
     }
 
-    // Close Modal 1
     closeModal(document.getElementById("attendanceModal"));
 
-    // Open Modal 2 with context (including activeAssessmentId in background)
     openStudentAttendanceModal({
       classId: classId,
       className: className,
@@ -222,26 +207,21 @@ function initAttendanceModalLogic() {
       schoolId: profile?.school_id || null,
       academicYearId: activeAcademicYearId || window.activeAcademicYearId,
       termId: activeTermId || window.activeTermId,
-      assessmentId: activeAssessmentId || window.activeAssessmentId, // Background active assessment
+      assessmentId: activeAssessmentId || window.activeAssessmentId,
       dateStr: getLocalDateString(),
     });
   });
 
-  // Submit Action -> Save with status = 'submitted'
   studentForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     await handleSaveAttendance("submitted");
   });
 
-  // Draft Action -> Save with status = 'drafted'
   draftBtn?.addEventListener("click", async () => {
     await handleSaveAttendance("drafted");
   });
 }
 
-/**
- * Fetch Assigned Classes for Current User
- */
 async function populateClassOptions() {
   const classSelect = document.getElementById("attendanceClassSelect");
   if (!classSelect) return;
@@ -276,9 +256,6 @@ async function populateClassOptions() {
   });
 }
 
-/**
- * Populate Period dropdown based on Class timetable filtered by active Teacher
- */
 async function handleClassSelectChange(classId) {
   const periodSelect = document.getElementById("attendancePeriodSelect");
   if (!periodSelect) return;
@@ -289,7 +266,6 @@ async function handleClassSelectChange(classId) {
 
   if (!classId) return;
 
-  // Set to true while testing on weekends, set to false for production
   const IS_DEV_MODE = true;
 
   const days = [
@@ -310,14 +286,12 @@ async function handleClassSelectChange(classId) {
   console.log(`Checking timetable for Class: ${classId} on Day: ${todayName}`);
 
   try {
-    // Get logged-in user ID (which matches teachers.id and profiles.id directly)
     const user = (await supabaseClient.auth.getUser()).data?.user;
     if (!user) {
       await loadDefaultPeriods(periodSelect);
       return;
     }
 
-    // 2. Query active timetable for the selected class
     const { data: timetable, error: ttError } = await supabaseClient
       .from("timetables")
       .select("id")
@@ -332,7 +306,6 @@ async function handleClassSelectChange(classId) {
       return;
     }
 
-    // 3. Query lessons directly using user.id as teacher_id
     const { data: lessons, error: lError } = await supabaseClient
       .from("timetable_lessons")
       .select(
@@ -346,7 +319,7 @@ async function handleClassSelectChange(classId) {
       `,
       )
       .eq("timetable_id", timetable.id)
-      .eq("teacher_id", user.id) // 👈 Directly matches teacher ID
+      .eq("teacher_id", user.id)
       .ilike("day_of_week", todayName);
 
     if (lError) {
@@ -363,7 +336,6 @@ async function handleClassSelectChange(classId) {
       return;
     }
 
-    // 4. Filter out breaks and populate periods with start/end times & subjects
     currentTodayLessons = lessons;
 
     lessons.forEach((l) => {
@@ -395,9 +367,6 @@ async function handleClassSelectChange(classId) {
   }
 }
 
-/**
- * Enhanced Fallback helper (includes start/end times)
- */
 async function loadDefaultPeriods(periodSelect) {
   if (!periodSelect) return;
 
@@ -439,15 +408,11 @@ async function loadDefaultPeriods(periodSelect) {
   }
 }
 
-/**
- * Open Modal 2 & Populate Metadata + Student Roster
- */
 async function openStudentAttendanceModal(sessionData) {
   currentAttendanceSession = { ...currentAttendanceSession, ...sessionData };
 
   const modal = document.getElementById("studentAttendanceModal");
 
-  // Inject Text Labels
   const elClass = document.getElementById("stModalClassName");
   const elSubject = document.getElementById("stModalSubjectName");
   const elPeriod = document.getElementById("stModalPeriodName");
@@ -468,9 +433,6 @@ async function openStudentAttendanceModal(sessionData) {
   await loadRosterIntoModal(currentAttendanceSession.classId);
 }
 
-/**
- * Render Student Rows into Modal 2
- */
 async function loadRosterIntoModal(classId) {
   const tbody = document.getElementById("studentAttendanceRosterBody");
   if (!tbody) return;
@@ -481,7 +443,6 @@ async function loadRosterIntoModal(classId) {
     const cleanClassId = classId ? classId.trim() : "";
     console.log("Querying students for class_id:", cleanClassId);
 
-    // 1. Fetch students directly using class_id column
     const { data: students, error: studentErr } = await supabaseClient
       .from("students")
       .select("id, student_id, class_id")
@@ -500,7 +461,6 @@ async function loadRosterIntoModal(classId) {
       return;
     }
 
-    // 2. Fetch display names safely from profiles
     const studentIds = students.map((s) => s.id);
     let profileMap = new Map();
 
@@ -513,7 +473,6 @@ async function loadRosterIntoModal(classId) {
       profileMap = new Map(profiles.map((p) => [p.id, p.full_name]));
     }
 
-    // 3. Render student rows
     tbody.innerHTML = "";
     students.forEach((student) => {
       const displayName =
@@ -540,10 +499,6 @@ async function loadRosterIntoModal(classId) {
   }
 }
 
-/**
- * Handle Save Attendance Form Submission using RPC
- * @param {'drafted' | 'submitted'} passedWorkflowStatus
- */
 async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
   const saveBtn = document.querySelector(
     "#studentAttendanceForm button[type='submit']",
@@ -566,7 +521,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
-    // Determine workflow status from dropdown or parameter
     const workflowStatusSelect = document.getElementById(
       "attendanceWorkflowStatus",
     );
@@ -574,7 +528,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       ? workflowStatusSelect.value
       : passedWorkflowStatus;
 
-    // 1. Fetch School ID
     let schoolId = activeContext.schoolId;
     if (!schoolId) {
       const { data: profile } = await supabaseClient
@@ -591,7 +544,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
-    // 2. Fetch Active Academic Year
     let academicYearId =
       activeContext.academicYearId ||
       activeAcademicYearId ||
@@ -614,7 +566,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
-    // 3. Fetch Active Term
     let termId = activeContext.termId || activeTermId || window.activeTermId;
 
     if (!termId) {
@@ -634,7 +585,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
-    // 4. Fetch Active Assessment Period (Background Check)
     let assessmentId =
       activeContext.assessmentId ||
       activeAssessmentId ||
@@ -660,7 +610,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
-    // 5. Collect individual student status rows into JSON payload
     const statusDropdowns = document.querySelectorAll(
       ".attendance-status-dropdown",
     );
@@ -683,7 +632,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
-    // 6. Call the RPC function to save attendance and records atomically
     const { data: savedAttendanceId, error: rpcError } =
       await supabaseClient.rpc("save_attendance_with_records", {
         p_school_id: schoolId,
@@ -724,9 +672,7 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
     if (draftBtn) draftBtn.disabled = false;
   }
 }
-/**
- * Reset Form Fields
- */
+
 function resetAttendanceModal() {
   document.getElementById("attendanceForm")?.reset();
   const periodSelect = document.getElementById("attendancePeriodSelect");
@@ -734,9 +680,8 @@ function resetAttendanceModal() {
   currentTodayLessons = [];
 }
 
-/**
- * Load and render attendance logs into the main UI table
- */
+let allAttendanceList = [];
+
 async function loadAttendanceTable() {
   const tbody = document.getElementById("attendanceTableBody");
   if (!tbody) return;
@@ -747,26 +692,46 @@ async function loadAttendanceTable() {
     const user = (await supabaseClient.auth.getUser()).data?.user;
     if (!user) return;
 
-    // Fetch master attendance records joined with relational details + workflow status
-    const { data: attendanceList, error } = await supabaseClient
-      .from("attendance")
-      .select(
-        `
-        id,
-        date,
-        status,
-        class_id,
-        subject_id,
-        academic_year_id,
-        term_id,
-        classes(id, name),
-        subjects(id, name),
-        academic_years(id, year_label),
-        terms(id, name)
-      `,
-      )
-      .eq("teacher_id", user.id)
-      .order("date", { ascending: false });
+    // 1. Fetch user role
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching profile role:", profileError);
+    }
+
+    // 2. Build the query
+    let query = supabaseClient.from("attendance").select(
+      `
+    id,
+    date,
+    status,
+    class_id,
+    subject_id,
+    academic_year_id,
+    term_id,
+    classes(id, name),
+    subjects(id, name),
+    academic_years(id, year_label),
+    terms(id, name)
+  `,
+    );
+
+    if (profile?.role === "teacher") {
+      // Teachers see all their own records (drafts & submitted)
+      query = query.eq("teacher_id", user.id);
+    } else {
+      // Admins & other roles ONLY see submitted records
+      query = query.eq("status", "submitted");
+    }
+
+    // Execute query
+    const { data: attendanceList, error } = await query.order("date", {
+      ascending: false,
+    });
 
     if (error) {
       console.error("Error loading attendance table:", error);
@@ -779,7 +744,6 @@ async function loadAttendanceTable() {
       return;
     }
 
-    // Fetch total student counts per attendance ID from attendance_records
     const attendanceIds = attendanceList.map((a) => a.id);
     const { data: recordsData, error: countErr } = await supabaseClient
       .from("attendance_records")
@@ -796,7 +760,6 @@ async function loadAttendanceTable() {
       });
     }
 
-    // Render table rows
     tbody.innerHTML = "";
     attendanceList.forEach((item) => {
       const className = item.classes?.name || "N/A";
@@ -815,12 +778,10 @@ async function loadAttendanceTable() {
       const formattedDate = formatDate(item.date);
       const isDraft = item.status === "drafted";
 
-      // Status Badge Styling
       const statusBadge = isDraft
         ? `<span class="status-badge status-drafted">Drafted</span>`
         : `<span class="status-badge status-submitted">Submitted</span>`;
 
-      // Conditional Action Button (Edit for draft, View for submitted)
       const actionButton = isDraft
         ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${item.id}" title="Edit Draft">
              <i class="fa-solid fa-pen-to-square"></i>
@@ -831,7 +792,6 @@ async function loadAttendanceTable() {
 
       const tr = document.createElement("tr");
 
-      // Attach data attributes for IDs to the table row
       tr.dataset.attendanceId = item.id;
       tr.dataset.classId = classId;
       tr.dataset.subjectId = subjectId;
@@ -852,7 +812,14 @@ async function loadAttendanceTable() {
       tbody.appendChild(tr);
     });
 
-    // Re-attach dynamic view/edit modal button listeners
+    allAttendanceList = attendanceList || [];
+
+    populateClassFilter(allAttendanceList);
+
+    renderFilteredAttendanceTable(allAttendanceList);
+
+    setupAttendanceFilterListeners();
+
     attachTableActionListeners();
   } catch (err) {
     console.error("Attendance table exception:", err);
@@ -860,11 +827,158 @@ async function loadAttendanceTable() {
   }
 }
 
-/**
- * Event Listener Handler for Dynamic 'View' and 'Edit' Buttons
- */
+function populateClassFilter(records) {
+  const classFilter = document.getElementById("attendanceClassFilter");
+  if (!classFilter) return;
+
+  classFilter.innerHTML = `<option value="all">All Classes</option>`;
+
+  const uniqueClasses = new Map();
+  records.forEach((item) => {
+    if (item.classes?.id && item.classes?.name) {
+      uniqueClasses.set(item.classes.id, item.classes.name);
+    }
+  });
+
+  uniqueClasses.forEach((className, classId) => {
+    const option = document.createElement("option");
+    option.value = classId;
+    option.textContent = className;
+    classFilter.appendChild(option);
+  });
+}
+
+function setupAttendanceFilterListeners() {
+  const searchInput = document.getElementById("attendanceSearchInput");
+  const classFilter = document.getElementById("attendanceClassFilter");
+  const dateFilter = document.getElementById("attendanceDateFilter");
+  const clearDateBtn = document.getElementById("clearDateFilterBtn");
+
+  if (searchInput)
+    searchInput.addEventListener("input", applyAttendanceFilters);
+  if (classFilter)
+    classFilter.addEventListener("change", applyAttendanceFilters);
+  if (dateFilter) dateFilter.addEventListener("change", applyAttendanceFilters);
+
+  if (clearDateBtn && dateFilter) {
+    clearDateBtn.addEventListener("click", () => {
+      dateFilter.value = "";
+      applyAttendanceFilters();
+    });
+  }
+}
+
+function applyAttendanceFilters() {
+  const searchTerm = (
+    document.getElementById("attendanceSearchInput")?.value || ""
+  )
+    .toLowerCase()
+    .trim();
+  const selectedClassId =
+    document.getElementById("attendanceClassFilter")?.value || "all";
+  const selectedDate =
+    document.getElementById("attendanceDateFilter")?.value || "";
+
+  const filtered = allAttendanceList.filter((item) => {
+    const className = (item.classes?.name || "").toLowerCase();
+    const subjectName = (item.subjects?.name || "").toLowerCase();
+    const itemDate = item.date ? item.date.split("T")[0] : "";
+
+    const matchesSearch =
+      !searchTerm ||
+      className.includes(searchTerm) ||
+      subjectName.includes(searchTerm);
+
+    const matchesClass =
+      selectedClassId === "all" || item.class_id === selectedClassId;
+
+    const matchesDate = !selectedDate || itemDate === selectedDate;
+
+    return matchesSearch && matchesClass && matchesDate;
+  });
+
+  renderFilteredAttendanceTable(filtered);
+}
+
+async function renderFilteredAttendanceTable(attendanceList) {
+  const tbody = document.getElementById("attendanceTableBody");
+  if (!tbody) return;
+
+  if (!attendanceList || attendanceList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
+    return;
+  }
+
+  const attendanceIds = attendanceList.map((a) => a.id);
+  const { data: recordsData, error: countErr } = await supabaseClient
+    .from("attendance_records")
+    .select("attendance_id")
+    .in("attendance_id", attendanceIds);
+
+  const countsMap = new Map();
+  if (!countErr && recordsData) {
+    recordsData.forEach((rec) => {
+      countsMap.set(
+        rec.attendance_id,
+        (countsMap.get(rec.attendance_id) || 0) + 1,
+      );
+    });
+  }
+
+  tbody.innerHTML = "";
+  attendanceList.forEach((item) => {
+    const className = item.classes?.name || "N/A";
+    const classId = item.classes?.id || item.class_id || "";
+    const subjectName = item.subjects?.name || "General";
+    const subjectId = item.subjects?.id || item.subject_id || "";
+    const yearName = item.academic_years?.year_label || "N/A";
+    const yearId = item.academic_years?.id || item.academic_year_id || "";
+    const termName = item.terms?.name || "N/A";
+    const termId = item.terms?.id || item.term_id || "";
+
+    const studentCount = countsMap.get(item.id) || 0;
+    const formattedDate = formatDate(item.date);
+    const isDraft = item.status === "drafted";
+
+    const statusBadge = isDraft
+      ? `<span class="status-badge status-drafted">Drafted</span>`
+      : `<span class="status-badge status-submitted">Submitted</span>`;
+
+    const actionButton = isDraft
+      ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${item.id}" title="Edit Draft">
+           <i class="fa-solid fa-pen-to-square"></i>
+         </button>`
+      : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${item.id}" title="View Details">
+           <i class="fa-solid fa-eye"></i>
+         </button>`;
+
+    const tr = document.createElement("tr");
+    tr.dataset.attendanceId = item.id;
+    tr.dataset.classId = classId;
+    tr.dataset.subjectId = subjectId;
+    tr.dataset.academicYearId = yearId;
+    tr.dataset.termId = termId;
+
+    tr.innerHTML = `
+      <td>${escapeHtml(className)}</td>
+      <td>${escapeHtml(subjectName)}</td>
+      <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
+      <td data-term-id="${termId}">${escapeHtml(termName)}</td>
+      <td>${formattedDate}</td>
+      <td>${studentCount}</td>
+      <td>${statusBadge}</td>
+      <td>${actionButton}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  if (typeof attachTableActionListeners === "function") {
+    attachTableActionListeners();
+  }
+}
+
 function attachTableActionListeners() {
-  // Edit Button Listener (Drafted records)
   document.querySelectorAll(".edit-attendance-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const attendanceId = e.currentTarget.getAttribute("data-attendance-id");
@@ -874,7 +988,6 @@ function attachTableActionListeners() {
     });
   });
 
-  // View Button Listener (Submitted records)
   document.querySelectorAll(".view-attendance-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const attendanceId = e.currentTarget.getAttribute("data-attendance-id");
@@ -884,9 +997,7 @@ function attachTableActionListeners() {
     });
   });
 }
-/**
- * Event Listener Handler for Dynamic 'View' Buttons
- */
+
 function attachViewButtonListeners() {
   const viewModal = document.getElementById("viewAttendanceModal");
   document.querySelectorAll(".attendances-actions-btn.view").forEach((btn) => {
@@ -901,9 +1012,6 @@ function attachViewButtonListeners() {
   });
 }
 
-/**
- * Helper Utility to Format Date Strings (e.g. 2026-08-12 -> 12 Aug)
- */
 function formatDate(dateStr) {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
@@ -911,9 +1019,6 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-/**
- * Basic XSS Prevention Helper
- */
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -923,15 +1028,10 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-/**
- * Opens and populates the View Attendance Modal for a specific attendance ID
- * @param {string} attendanceId
- */
 async function openViewAttendanceModal(attendanceId) {
   const modal = document.getElementById("viewAttendanceModal");
   if (!modal || !attendanceId) return;
 
-  // 1. Reset / Set Loading state
   const elClass = document.getElementById("viewModalClassName");
   const elSubject = document.getElementById("viewModalSubjectName");
   const elYear = document.getElementById("viewModalAcademicYear");
@@ -954,11 +1054,9 @@ async function openViewAttendanceModal(attendanceId) {
     tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px;">Loading student records...</td></tr>`;
   }
 
-  // Open the modal container immediately
   openModal(modal);
 
   try {
-    // 2. Query parent attendance record with assessments & workflow status
     const { data: attendance, error: parentErr } = await supabaseClient
       .from("attendance")
       .select(
@@ -985,7 +1083,6 @@ async function openViewAttendanceModal(attendanceId) {
       return;
     }
 
-    // Populate Header Grid Fields
     if (elClass) elClass.textContent = attendance.classes?.name || "N/A";
     if (elSubject)
       elSubject.textContent = attendance.subjects?.name || "General";
@@ -998,7 +1095,6 @@ async function openViewAttendanceModal(attendanceId) {
       elTeacher.textContent = attendance.profiles?.full_name || "Teacher";
     if (elDate) elDate.textContent = formatDate(attendance.date);
 
-    // Format & Render Workflow Status Badge (Drafted vs Submitted)
     if (elWorkflowStatus) {
       const rawStatus = attendance.status || "drafted";
       const statusLabel =
@@ -1015,7 +1111,6 @@ async function openViewAttendanceModal(attendanceId) {
       `;
     }
 
-    // 3. Query individual student records for this attendance session
     const { data: records, error: recordsErr } = await supabaseClient
       .from("attendance_records")
       .select("student_id, status")
@@ -1036,7 +1131,6 @@ async function openViewAttendanceModal(attendanceId) {
       return;
     }
 
-    // 4. Fetch display names for students from profiles table
     const studentIds = records.map((r) => r.student_id);
     const { data: profiles, error: profileErr } = await supabaseClient
       .from("profiles")
@@ -1048,7 +1142,6 @@ async function openViewAttendanceModal(attendanceId) {
       profiles.forEach((p) => profileMap.set(p.id, p.full_name));
     }
 
-    // 5. Render Student Roster Rows
     if (tbody) {
       tbody.innerHTML = "";
       records.forEach((record) => {
@@ -1059,7 +1152,6 @@ async function openViewAttendanceModal(attendanceId) {
           ? record.status.charAt(0).toUpperCase() + record.status.slice(1)
           : "N/A";
 
-        // Dynamic badge color styling based on student status
         const statusClass = getStatusBadgeStyle(record.status);
 
         const tr = document.createElement("tr");
@@ -1082,23 +1174,17 @@ async function openViewAttendanceModal(attendanceId) {
   }
 }
 
-/**
- * Helper to map status to inline CSS badge classes
- */
 function getStatusBadgeStyle(status) {
   switch (status?.toLowerCase()) {
     case "present":
-      return "status-present"; // Add matching CSS rule (e.g. green bg)
+      return "status-present";
     case "absent":
-      return "status-absent"; // Add matching CSS rule (e.g. red bg)
+      return "status-absent";
   }
 }
 
 let currentEditingAttendanceId = null;
 
-/**
- * Global Event Listeners for Edit Modal Controls
- */
 document
   .getElementById("closeEditAttendanceModal")
   ?.addEventListener("click", () => {
@@ -1118,14 +1204,9 @@ document
     await handleSaveEditAttendance();
   });
 
-/**
- * Checks whether form inputs differ from initialEditState
- * @returns {boolean}
- */
 function hasFormChanged() {
   if (!initialEditState) return true;
 
-  // 1. Check if workflow status changed (e.g. drafted -> submitted)
   const workflowSelect = document.getElementById("editWorkflowStatus");
   const currentWorkflowStatus = workflowSelect
     ? workflowSelect.value
@@ -1134,7 +1215,6 @@ function hasFormChanged() {
     return true;
   }
 
-  // 2. Check if any student attendance status dropdown changed
   const dropdowns = document.querySelectorAll(".edit-status-dropdown");
   for (const dd of dropdowns) {
     const studentId = dd.getAttribute("data-student-id");
@@ -1142,18 +1222,15 @@ function hasFormChanged() {
     const initialStatus = initialEditState.studentStatuses[studentId];
 
     if (currentStatus !== initialStatus) {
-      return true; // Found a change!
+      return true;
     }
   }
 
-  return false; // No changes detected
+  return false;
 }
 
-let initialEditState = null; // Snapshot of initial modal values
+let initialEditState = null;
 
-/**
- * Open Simple Edit Modal & Capture Initial State
- */
 async function openEditAttendanceModal(attendanceId) {
   const modal = document.getElementById("editAttendanceModal");
   const tbody = document.getElementById("editAttendanceRosterBody");
@@ -1169,7 +1246,6 @@ async function openEditAttendanceModal(attendanceId) {
   openModal(modal);
 
   try {
-    // 1. Fetch parent attendance workflow status
     const { data: attendance, error: parentErr } = await supabaseClient
       .from("attendance")
       .select("status")
@@ -1187,7 +1263,6 @@ async function openEditAttendanceModal(attendanceId) {
       workflowSelect.value = initialWorkflowStatus;
     }
 
-    // 2. Fetch student records
     const { data: records, error: recordsErr } = await supabaseClient
       .from("attendance_records")
       .select("student_id, status")
@@ -1199,7 +1274,6 @@ async function openEditAttendanceModal(attendanceId) {
       return;
     }
 
-    // 3. Fetch student names
     const studentIds = records.map((r) => r.student_id);
     const { data: profiles } = await supabaseClient
       .from("profiles")
@@ -1209,7 +1283,6 @@ async function openEditAttendanceModal(attendanceId) {
     const profileMap = new Map();
     if (profiles) profiles.forEach((p) => profileMap.set(p.id, p.full_name));
 
-    // 4. Render Editable Rows & Build Initial State Object
     const initialStudentStatuses = {};
     if (tbody) {
       tbody.innerHTML = "";
@@ -1233,7 +1306,6 @@ async function openEditAttendanceModal(attendanceId) {
       });
     }
 
-    // 5. Store snapshot of initial form state for comparison
     initialEditState = {
       workflowStatus: initialWorkflowStatus,
       studentStatuses: initialStudentStatuses,
@@ -1243,13 +1315,9 @@ async function openEditAttendanceModal(attendanceId) {
   }
 }
 
-/**
- * Save Updated Attendance via Database RPC
- */
 async function handleSaveEditAttendance() {
   if (!currentEditingAttendanceId) return;
 
-  // 🛑 Step 1: Validate if anything actually changed
   if (!hasFormChanged()) {
     showToast("No changes detected.", "info");
     return;
@@ -1268,7 +1336,6 @@ async function handleSaveEditAttendance() {
       return;
     }
 
-    // 1. Resolve school_id
     let schoolId = currentAttendanceSession?.schoolId;
     if (!schoolId) {
       const { data: profile } = await supabaseClient
@@ -1285,7 +1352,6 @@ async function handleSaveEditAttendance() {
       return;
     }
 
-    // 2. Read workflow status & roster
     const workflowSelect = document.getElementById("editWorkflowStatus");
     const newWorkflowStatus = workflowSelect
       ? workflowSelect.value
@@ -1309,7 +1375,6 @@ async function handleSaveEditAttendance() {
       return;
     }
 
-    // 3. Call RPC with exact parameter list
     const { error: rpcError } = await supabaseClient.rpc(
       "update_attendance_records",
       {

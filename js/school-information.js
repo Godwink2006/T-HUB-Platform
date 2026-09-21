@@ -1,4 +1,3 @@
-// Add this global variable at the very top of your JS file
 let originalSchoolData = {};
 
 async function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
@@ -68,13 +67,11 @@ async function checkAdminAuth() {
 function enableFormInputs(form) {
   if (!form) return;
 
-  // 1. Re-enable all inputs & textareas
   const inputs = form.querySelectorAll("input, select, textarea, button");
   inputs.forEach((input) => {
     input.disabled = false;
   });
 
-  // 2. Show Save & Reset buttons
   const buttonsToShow = form.querySelectorAll(
     '.save-btn, .reset-btn, button[type="submit"], button[type="reset"]',
   );
@@ -82,13 +79,11 @@ function enableFormInputs(form) {
     btn.style.display = "";
   });
 
-  // 3. Show the Change Logo wrapper container (#changeSchoolLogo)
   const logoWrapper = document.getElementById("changeSchoolLogo");
   if (logoWrapper) {
     logoWrapper.style.display = "";
   }
 
-  // 4. Show the Change Logo label button (.upload-btn)
   const changeLogoBtn = document.querySelector(
     '.upload-btn, label[for="schoolLogo"]',
   );
@@ -100,13 +95,11 @@ function enableFormInputs(form) {
 function disableFormInputs(form) {
   if (!form) return;
 
-  // 1. Disable inputs
   const inputs = form.querySelectorAll("input, select, textarea, button");
   inputs.forEach((input) => {
     input.disabled = true;
   });
 
-  // 2. Hide Save & Reset buttons
   const buttonsToHide = form.querySelectorAll(
     '.save-btn, .reset-btn, button[type="submit"], button[type="reset"]',
   );
@@ -114,13 +107,11 @@ function disableFormInputs(form) {
     btn.style.display = "none";
   });
 
-  // 3. Hide the Change Logo container
   const logoWrapper = document.getElementById("changeSchoolLogo");
   if (logoWrapper) {
     logoWrapper.style.display = "none";
   }
 
-  // 4. Hide the Change Logo label button
   const changeLogoBtn = document.querySelector(
     '.upload-btn, label[for="schoolLogo"]',
   );
@@ -129,39 +120,32 @@ function disableFormInputs(form) {
   }
 }
 
-/**
- * Initializes form permissions and reveals the form smoothly.
- */
+
 async function initFormProtection() {
   const form =
     document.getElementById("schoolProfileForm") ||
     document.querySelector("form");
   const loader = document.getElementById("formLoader");
-  // Find your target form automatically by ID or tag
+
   if (!form) return;
 
-  // 1. Run auth check
   const { isAdmin } = await checkAdminAuth();
 
-  // 2. Apply field restrictions based on role
   if (isAdmin) {
     enableFormInputs(form);
   } else {
     disableFormInputs(form);
   }
 
-  // 3. Hide loading indicator
   if (loader) {
     loader.style.display = "none";
   }
 
-  // 4. Reveal form smoothly
   form.classList.add("auth-ready");
 }
 
 async function loadSchoolProfile() {
   try {
-    // 1. Get logged-in user's profile to extract their school_id
     const {
       data: { user },
     } = await supabaseClient.auth.getUser();
@@ -175,7 +159,6 @@ async function loadSchoolProfile() {
 
     if (!userProfile?.school_id) return;
 
-    // 2. Fetch ONLY the school record associated with this user
     const { data, error } = await supabaseClient
       .from("schools")
       .select("*")
@@ -239,7 +222,6 @@ async function handleFormSubmit() {
   const logoInput = document.getElementById("schoolLogo");
   const logoFile = logoInput?.files[0];
 
-  // --- 1. CHANGE DETECTION VALIDATION ---
   let hasChanges = Boolean(logoFile);
 
   if (!hasChanges) {
@@ -259,7 +241,6 @@ async function handleFormSubmit() {
     return;
   }
 
-  // --- CLIENT-SIDE VALIDATION ---
   if (
     !formData.school_name ||
     !formData.email ||
@@ -276,7 +257,6 @@ async function handleFormSubmit() {
     return;
   }
 
-  // --- 3. GMAIL DOMAIN VALIDATION ---
   const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
   if (!gmailRegex.test(formData.email)) {
     showToast("School email must end with @gmail.com", "error");
@@ -300,7 +280,6 @@ async function handleFormSubmit() {
     return;
   }
 
-  // --- PHONE NUMBER VALIDATION ---
   const phoneRegex = /^(077|088)\d{7}$/;
   if (
     formData.alternative_phone &&
@@ -321,13 +300,11 @@ async function handleFormSubmit() {
     return;
   }
 
-  // --- COUNTRY VALIDATION ---
   if (formData.country.toLowerCase() !== "liberia") {
     showToast("Country must be Liberia.", "error");
     return;
   }
 
-  // --- WEBSITE VALIDATION ---
   if (formData.website && !formData.website.startsWith("https://")) {
     showToast("School website URL must start with https://", "error");
     return;
@@ -346,7 +323,6 @@ async function handleFormSubmit() {
     if (logoFile && existingRecordId) {
       const compressedBlob = await compressImageToBlob(logoFile, 800, 0.7);
 
-      // Dynamic path unique to each school record
       const filePath = `school-logos/${existingRecordId}/logo.jpg`;
 
       const { error: uploadError } = await supabaseClient.storage
@@ -365,12 +341,10 @@ async function handleFormSubmit() {
       formData.logo_url = `${publicUrlData.publicUrl}?t=${Date.now()}`;
     }
 
-    // --- INSERT OR UPDATE WITH SELECT ---
     let savedRecord;
     let error;
 
     if (existingRecordId) {
-      // Update existing record and return updated row
       const { data, error: updateErr } = await supabaseClient
         .from("schools")
         .update({ ...formData, updated_at: new Date().toISOString() })
@@ -381,7 +355,6 @@ async function handleFormSubmit() {
       error = updateErr;
       savedRecord = data;
     } else {
-      // Insert new record and return created row
       const { data, error: insertErr } = await supabaseClient
         .from("schools")
         .insert([formData])
@@ -396,11 +369,10 @@ async function handleFormSubmit() {
 
     if (savedRecord) {
       existingRecordId = savedRecord.id;
-      // Sync baseline to exact row returned by Supabase
+
       originalSchoolData = { ...savedRecord };
     }
 
-    // Clear file selection state post-upload
     if (logoInput) {
       logoInput.value = "";
     }
@@ -417,7 +389,6 @@ async function handleFormSubmit() {
   }
 }
 
-// Helper utilities
 function getValue(id) {
   const el = document.getElementById(id);
   return el ? el.value : "";
@@ -430,15 +401,12 @@ function setValue(id, val) {
   }
 }
 
-/**
- * Restores the form fields and logo preview back to the saved database state.
- */
+
 function resetToOriginalData() {
   if (!originalSchoolData || Object.keys(originalSchoolData).length === 0) {
     return;
   }
 
-  // Restore Text / Select Inputs
   setValue("schoolName", originalSchoolData.school_name);
   setValue("schoolMotto", originalSchoolData.school_motto);
   setValue("schoolEmail", originalSchoolData.email);
@@ -455,13 +423,11 @@ function resetToOriginalData() {
   setValue("schoolType", originalSchoolData.school_type);
   setValue("educationLevel", originalSchoolData.education_level);
 
-  // Clear File Input selection
   const logoInput = document.getElementById("schoolLogo");
   if (logoInput) {
     logoInput.value = "";
   }
 
-  // Restore original logo preview image
   const logoImg = document.getElementById("schoolLogoPreview");
   if (logoImg && originalSchoolData.logo_url) {
     logoImg.src = originalSchoolData.logo_url;
@@ -474,7 +440,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelector("form");
   const loader = document.getElementById("formLoader");
 
-  // 1. Authenticate & Secure Controls
   const { isAdmin } = await checkAdminAuth();
   if (isAdmin) {
     enableFormInputs(form);
@@ -482,14 +447,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     disableFormInputs(form);
   }
 
-  // 2. Fetch Existing Profile Records
   await loadSchoolProfile();
 
-  // 3. Reveal Form UI
   if (loader) loader.style.display = "none";
   if (form) form.classList.add("auth-ready");
 
-  // 4. Bind Form Event Handlers
   if (form && isAdmin) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -502,7 +464,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 5. Image Preview Listener
   const logoInput = document.getElementById("schoolLogo");
   const logoPreview = document.getElementById("schoolLogoPreview");
 
@@ -516,9 +477,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
         reader.readAsDataURL(file);
       } else {
-        // Fallback to original saved logo if user cancels file picker
         logoPreview.src = originalSchoolData.logo_url || "";
       }
     });
   }
 });
+

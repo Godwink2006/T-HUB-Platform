@@ -36,7 +36,6 @@ form.addEventListener("submit", async (e) => {
       throw new Error("No session found.");
     }
 
-    // Fetch user profile
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
       .select("*")
@@ -48,18 +47,14 @@ form.addEventListener("submit", async (e) => {
       throw new Error(profileError.message || "Failed to fetch user profile.");
     }
 
-    // Check if profile exists and status is active
     if (!profile || profile.status !== "active") {
-      // Sign out immediately to clear local session
       await window.supabaseClient.auth.signOut();
 
-      // Throw error message to be handled by catch block
       throw new Error(
         "Your account has been deactivated. Contact the system administrator.",
       );
     }
 
-    // Success flow
     showToast("Login successful!", "success");
 
     setTimeout(() => {
@@ -73,3 +68,4 @@ form.addEventListener("submit", async (e) => {
     loginButton.textContent = "Login";
   }
 });
+

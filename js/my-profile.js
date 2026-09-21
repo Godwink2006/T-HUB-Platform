@@ -6,9 +6,8 @@ function togglePassword(id) {
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
-let currentProfileData = null; // Store fetched data for form resets
+let currentProfileData = null;
 
-// 1. Fetch user data and populate form
 async function loadMyProfile() {
   const {
     data: { user },
@@ -29,23 +28,20 @@ async function loadMyProfile() {
     return;
   }
 
-  // Ensure profile photo url breaks cache if stored without timestamp
   let avatarUrl = profile.photo_url || DEFAULT_AVATAR;
   if (profile.photo_url && !profile.photo_url.includes("?t=")) {
     avatarUrl = `${profile.photo_url}?t=${Date.now()}`;
   }
 
-  // Cache baseline data for reset operations
   currentProfileData = {
     fullName: profile.full_name || "",
-    email: user.email || profile.email || "", // Fallback to auth.users email
+    email: user.email || profile.email || "",
     phone: profile.phone_number || "",
     photoUrl: profile.photo_url || DEFAULT_AVATAR,
   };
 
   populateProfileForm(currentProfileData);
 
-  // Add as the last line inside loadMyProfile():
   checkProfileChanges();
 }
 
@@ -56,7 +52,6 @@ function populateProfileForm(data) {
   document.getElementById("profileAvatar").src = data.photoUrl;
 }
 
-// 2. Compress images client-side before storage upload
 function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -114,7 +109,6 @@ async function handleUpdateProfile(event) {
 
   const avatarFile = fileInput && fileInput.files ? fileInput.files[0] : null;
 
-  // 1. Change detection
   const origName = currentProfileData?.fullName ?? "";
   const origEmail = currentProfileData?.email ?? "";
   const origPhone = currentProfileData?.phone ?? "";
@@ -129,7 +123,6 @@ async function handleUpdateProfile(event) {
     return;
   }
 
-  // Place this right above "try {"
   const validationError = validateProfileInputs(fullName, email, phoneInput);
   if (validationError) {
     showToast(validationError, "error");
@@ -144,33 +137,28 @@ async function handleUpdateProfile(event) {
   try {
     let photoUrl = currentProfileData?.photoUrl;
 
-    // 1. Handle Photo (Use fixed file name so it overwrites, and ONLY run if a new file was chosen)
     if (fileInput && fileInput.files[0]) {
       const file = fileInput.files[0];
       const compressedBlob = await compressImageToBlob(file, 800, 0.7);
 
-      // Fixed path per user: Always overwrites 'avatar.jpg' instead of adding Date.now()
       const filePath = `${user.id}/avatar.jpg`;
 
       const { error: uploadError } = await supabaseClient.storage
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
-          upsert: true, // Overwrites existing file with the same name
+          upsert: true,
         });
 
       if (uploadError) throw uploadError;
 
-      // Add a timestamp query parameter to bypass browser caching when updated
       const { data: urlData } = supabaseClient.storage
         .from("avatars")
         .getPublicUrl(filePath);
 
-      // Append timestamp to prevent browser from loading old cached avatar
       photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     }
 
-    // 2. Request Email Change in Supabase Auth (Sends Confirmation Link)
     const isEmailChanging = email !== user.email;
     if (isEmailChanging) {
       const { error: authError } = await supabaseClient.auth.updateUser({
@@ -179,7 +167,6 @@ async function handleUpdateProfile(event) {
       if (authError) throw authError;
     }
 
-    // 3. Update Your Database Table ('profiles')
     const { error: updateError } = await supabaseClient
       .from("profiles")
       .update({
@@ -190,9 +177,7 @@ async function handleUpdateProfile(event) {
       .eq("id", user.id);
 
     if (updateError) {
-      // Code 23505 is PostgreSQL's Unique Constraint Violation
       if (updateError.code === "23505") {
-        // Check if the error message/details mention the phone field
         if (
           updateError.message?.includes("phone_number") ||
           updateError.details?.includes("phone_number")
@@ -204,7 +189,6 @@ async function handleUpdateProfile(event) {
           return;
         }
 
-        // Fallback for email or other unique field collisions
         showToast("An account with these details already exists.", "error");
         return;
       }
@@ -212,7 +196,6 @@ async function handleUpdateProfile(event) {
       throw updateError;
     }
 
-    // 4. Feedback
     if (isEmailChanging) {
       showToast(
         "Profile saved! Check your new email address to confirm the change.",
@@ -224,7 +207,6 @@ async function handleUpdateProfile(event) {
 
     await loadMyProfile();
 
-    // Add these lines right after: await loadMyProfile();
     if (fileInput) fileInput.value = "";
     checkProfileChanges();
   } catch (err) {
@@ -241,12 +223,10 @@ function checkProfileChanges() {
   const saveBtn = document.getElementById("saveProfileInfo");
   if (!saveBtn) return;
 
-  // Always keep button clickable so form submit can trigger the toast
   saveBtn.disabled = false;
 }
 
 function validateProfileInputs(fullName, email, phone) {
-  // 1. Full Name Validation (2-4 words, 3-100 characters)
   if (!fullName || fullName.length < 3 || fullName.length > 100) {
     return "Invalid full name length (must be 3-100 characters).";
   }
@@ -255,21 +235,18 @@ function validateProfileInputs(fullName, email, phone) {
     return "Full name must contain between 2 and 4 words.";
   }
 
-  // 2. Email Validation (Must end with @gmail.com)
   const emailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
   if (!email || !emailRegex.test(email)) {
     return "Email must be a valid @gmail.com address.";
   }
 
-  // 3. Phone Validation (Must start with 077 or 088 and be 10 digits)
   if (!phone || !/^(077|088)\d{7}$/.test(phone)) {
     return "Invalid phone number. Must start with 077 or 088 and contain 10 digits.";
   }
 
-  return null; // Passes validation
+  return null;
 }
 
-// 4. Single DOM Initialization Block
 document.addEventListener("DOMContentLoaded", () => {
   loadMyProfile();
 
@@ -279,7 +256,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (profileForm) {
     profileForm.addEventListener("submit", handleUpdateProfile);
 
-    // Form Reset Listener
     profileForm.addEventListener("reset", (e) => {
       e.preventDefault();
       if (currentProfileData) populateProfileForm(currentProfileData);
@@ -292,7 +268,6 @@ document.addEventListener("DOMContentLoaded", () => {
     passwordForm.addEventListener("submit", handleChangePassword);
   }
 
-  // Live Image Preview
   if (fileInput) {
     fileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
@@ -306,7 +281,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Add inside DOMContentLoaded:
   document
     .getElementById("fullName")
     ?.addEventListener("input", checkProfileChanges);
@@ -339,7 +313,6 @@ async function handleChangePassword(event) {
     return;
   }
 
-  // Execute password complexity validation
   const validation = validatePasswordRequirements(newPassword);
   if (!validation.isValid) {
     showToast(validation.message, "error");
@@ -352,7 +325,6 @@ async function handleChangePassword(event) {
   }
 
   try {
-    // ✅ CORRECT (Combine into one single object):
     const { error } = await supabaseClient.auth.updateUser({
       password: newPassword,
       current_password: currentPassword,
@@ -376,7 +348,6 @@ function validatePasswordRequirements(password) {
     return { isValid: false, message: "Password is required." };
   }
 
-  // Length must be between 12 and 20 characters
   if (password.length < 12 || password.length > 20) {
     return {
       isValid: false,
@@ -384,12 +355,10 @@ function validatePasswordRequirements(password) {
     };
   }
 
-  // Must not contain whitespace
   if (/\s/.test(password)) {
     return { isValid: false, message: "Password must not contain spaces." };
   }
 
-  // Must contain at least one uppercase letter
   if (!/[A-Z]/.test(password)) {
     return {
       isValid: false,
@@ -397,7 +366,6 @@ function validatePasswordRequirements(password) {
     };
   }
 
-  // Must contain at least one lowercase letter
   if (!/[a-z]/.test(password)) {
     return {
       isValid: false,
@@ -405,7 +373,6 @@ function validatePasswordRequirements(password) {
     };
   }
 
-  // Must contain at least one special character
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
     return {
       isValid: false,
@@ -415,3 +382,4 @@ function validatePasswordRequirements(password) {
 
   return { isValid: true, message: "" };
 }
+

@@ -29,17 +29,14 @@
   </head>
   <body>
     <div class="students-container">
-      <!-- Mobile Toggle Button -->
       <button
         class="menu-toggle"
         id="menuToggle"
         aria-label="Toggle Navigation"
       >
         <i class="fa-solid fa-bars"></i>
-        <!-- Or use "☰" text if not using FontAwesome -->
       </button>
 
-      <!-- Overlay background to tap outside and close -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
       <aside class="sidebar">
@@ -155,9 +152,7 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="studentsTableBody">
-              <!-- Rows will be dynamically rendered here -->
-            </tbody>
+            <tbody id="studentsTableBody"></tbody>
           </table>
         </section>
       </main>
@@ -173,7 +168,6 @@
         <div class="student-modal-body">
           <form id="studentForm">
             <div class="form-grid">
-              <!-- Student ID -->
               <div class="form-group">
                 <label for="studentCustomId">Student ID *</label>
                 <input
@@ -185,7 +179,6 @@
                 />
               </div>
 
-              <!-- First Name -->
               <div class="form-group">
                 <label for="studentFirstName">First name *</label>
                 <input
@@ -197,7 +190,6 @@
                 />
               </div>
 
-              <!-- Last Name -->
               <div class="form-group">
                 <label for="studentLastName">Last name *</label>
                 <input
@@ -209,7 +201,6 @@
                 />
               </div>
 
-              <!-- Gender -->
               <div class="form-group">
                 <label for="studentGender">Gender *</label>
                 <select id="studentGender" name="gender" required>
@@ -219,7 +210,6 @@
                 </select>
               </div>
 
-              <!-- Date of Birth -->
               <div class="form-group">
                 <label for="studentDob">Date of birth *</label>
                 <input
@@ -230,7 +220,6 @@
                 />
               </div>
 
-              <!-- Recommended HTML Markup -->
               <div class="form-group">
                 <label for="studentClassSelect">Class *</label>
                 <select
@@ -243,7 +232,6 @@
                 </select>
               </div>
 
-              <!-- Academic Year -->
               <div class="form-group">
                 <label for="studentAcademicYear">Academic year *</label>
                 <select id="studentAcademicYear" name="academicYearId" required>
@@ -251,7 +239,6 @@
                 </select>
               </div>
 
-              <!-- Admission Date -->
               <div class="form-group">
                 <label for="studentAdmissionDate">Admission date *</label>
                 <input
@@ -262,7 +249,6 @@
                 />
               </div>
 
-              <!-- Status -->
               <div class="form-group">
                 <label for="studentStatus">Status *</label>
                 <select id="studentStatus" name="status" required>
@@ -271,7 +257,6 @@
                 </select>
               </div>
 
-              <!-- Address -->
               <div class="form-group full-width">
                 <label for="studentAddress">Address (Optional)</label>
                 <textarea
@@ -282,7 +267,6 @@
                 ></textarea>
               </div>
 
-              <!-- Medical Notes -->
               <div class="form-group full-width">
                 <label for="studentMedicalNotes"
                   >Medical notes (Optional)</label
@@ -295,7 +279,6 @@
                 ></textarea>
               </div>
 
-              <!-- Profile Photo Upload -->
               <div class="avatar-upload-group full-width">
                 <label class="form-label">Profile photo (Optional)</label>
                 <div class="avatar-edit-container">
@@ -325,7 +308,6 @@
                 </div>
               </div>
 
-              <!-- Role -->
               <div class="form-group">
                 <label for="studentRole">Role *</label>
                 <select
@@ -343,7 +325,6 @@
                 />
               </div>
 
-              <!-- Status -->
               <div class="form-group">
                 <label for="studentPhone">Phone *</label>
                 <input
@@ -355,7 +336,6 @@
                 />
               </div>
 
-              <!-- Email (Required for Supabase Auth/Profile) -->
               <div class="form-group">
                 <label for="studentEmail">Email *</label>
                 <input
@@ -367,7 +347,6 @@
                 />
               </div>
 
-              <!-- Password -->
               <div class="form-group">
                 <label for="newPassword">Password *</label>
                 <div class="password-field">
@@ -401,7 +380,6 @@
                 </div>
               </div>
 
-              <!-- Confirm Password -->
               <div class="form-group">
                 <label for="confirmPassword">Confirm Password *</label>
                 <div class="password-field">
@@ -448,7 +426,6 @@
       </div>
     </div>
 
-    <!-- Edit Student Modal -->
     <div id="editStudentModal" class="edit-modal-student">
       <div class="edit-student-modal-content">
         <div class="edit-student-modal-header">
@@ -458,11 +435,9 @@
 
         <div class="edit-student-modal-body">
           <form id="editStudentForm">
-            <!-- Hidden input to store student profile ID -->
             <input type="hidden" id="editStudentDbId" name="student_id" />
 
             <div class="form-grid">
-              <!-- First Name -->
               <div class="form-group">
                 <label for="editStudentFirstName">First name *</label>
                 <input
@@ -473,7 +448,6 @@
                 />
               </div>
 
-              <!-- Last Name -->
               <div class="form-group">
                 <label for="editStudentLastName">Last name *</label>
                 <input
@@ -484,7 +458,6 @@
                 />
               </div>
 
-              <!-- Gender -->
               <div class="form-group">
                 <label for="editStudentGender">Gender *</label>
                 <select id="editStudentGender" required>
@@ -494,19 +467,16 @@
                 </select>
               </div>
 
-              <!-- Date of Birth -->
               <div class="form-group">
                 <label for="editStudentDob">Date of birth *</label>
                 <input type="date" id="editStudentDob" required />
               </div>
 
-              <!-- Admission Date -->
               <div class="form-group">
                 <label for="editStudentAdmissionDate">Admission date *</label>
                 <input type="date" id="editStudentAdmissionDate" required />
               </div>
 
-              <!-- Status -->
               <div class="form-group">
                 <label for="editStudentStatus">Status *</label>
                 <select id="editStudentStatus" required>
@@ -515,7 +485,6 @@
                 </select>
               </div>
 
-              <!-- Address -->
               <div class="form-group full-width">
                 <label for="editStudentAddress">Address (Optional)</label>
                 <textarea
@@ -525,7 +494,6 @@
                 ></textarea>
               </div>
 
-              <!-- Medical Notes -->
               <div class="form-group full-width">
                 <label for="editStudentMedicalNotes"
                   >Medical notes (Optional)</label
@@ -537,7 +505,6 @@
                 ></textarea>
               </div>
 
-              <!-- Profile Photo Upload -->
               <div class="avatar-upload-group full-width">
                 <label class="form-label">Profile photo (Optional)</label>
                 <div class="avatar-edit-container">
@@ -677,7 +644,6 @@
       </div>
     </div>
 
-    <!-- Archive Student Modal -->
     <div id="archiveStudentModal" class="archive-modal" style="display: none">
       <div class="confirm-modal">
         <div class="confirm-icon">
@@ -694,7 +660,6 @@
           of the active list.
         </p>
 
-        <!-- Hidden input to hold student ID -->
         <input type="hidden" id="archiveStudentId" />
 
         <div class="archive-modal-footer">
@@ -708,7 +673,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

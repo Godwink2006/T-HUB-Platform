@@ -51,24 +51,20 @@
         </header>
 
         <section class="toolbar">
-          <!-- Search Input -->
           <input
             type="text"
             id="searchStructureInput"
             placeholder="Search structures..."
           />
 
-          <!-- Semester Select -->
           <select id="filterSemesterSelect">
             <option value="">All Semesters</option>
           </select>
 
-          <!-- Class Select -->
           <select id="filterClassSelect">
             <option value="">All Classes</option>
           </select>
 
-          <!-- Academic Year Select -->
           <select id="filterAcademicYearSelect">
             <option value="">All Academic Years</option>
           </select>
@@ -109,7 +105,6 @@
 
         <div class="structure-modal-body">
           <form id="structureForm">
-            <!-- Grid for dropdown controls -->
             <div class="form-grid">
               <div class="form-group">
                 <label for="academicYearSelect">Academic Year *</label>
@@ -140,9 +135,7 @@
                 </select>
               </div>
             </div>
-            <!-- Properly closed form-grid -->
 
-            <!-- Fee items table section -->
             <section class="structure-table-card">
               <label>Fee Items</label>
               <table id="feeItemsTable">
@@ -151,16 +144,12 @@
                     <th>Fee Name</th>
                     <th>Amount</th>
                     <th style="text-align: right">Actions</th>
-                    <!-- Fixed column count alignment -->
                   </tr>
                 </thead>
-                <tbody id="feeItemsBody">
-                  <!-- Dynamically populated by JS -->
-                </tbody>
+                <tbody id="feeItemsBody"></tbody>
               </table>
             </section>
 
-            <!-- Trigger Button inside Structure Modal -->
             <button type="button" id="addFeeItemBtn" class="add-structure-btn">
               <i class="fa-solid fa-plus"></i> Add Fee Item
             </button>
@@ -194,7 +183,6 @@
       </div>
     </div>
 
-    <!-- Edit Structure modal -->
     <div id="editStructureModal" class="modal-editstructure">
       <div class="editstructure-modal-content">
         <div class="editstructure-modal-header">
@@ -204,7 +192,6 @@
 
         <div class="editstructure-modal-body">
           <form id="editstructureForm">
-            <!-- Hidden input to track current structure ID -->
             <input type="hidden" id="editStructureId" />
 
             <div class="form-grid">
@@ -253,7 +240,6 @@
               </div>
             </div>
 
-            <!-- Inside #editStructureModal form -->
             <section class="structure-table-card">
               <label>Fee Items</label>
               <table>
@@ -268,7 +254,6 @@
               </table>
             </section>
 
-            <!-- Direct input fields for Edit Modal -->
             <div class="form-grid" style="margin-top: 1rem">
               <div class="form-group">
                 <label>Item Name</label>
@@ -303,7 +288,7 @@
 
             <div class="form-group">
               <h4>Total</h4>
-              <!-- Target element for dynamically updated sum -->
+
               <p id="editTotalFeeAmount">$0.00</p>
             </div>
 
@@ -332,15 +317,12 @@
         </div>
       </div>
     </div>
-    <!-- Create Item -->
 
-    <!-- Add Item Modal -->
     <div id="addItemModal" class="addItem-modal">
       <div class="addItem-modal-content">
         <div class="addItem-modal-header">
           <h2>Add Fee Item</h2>
           <button id="closeAddItemModal">&times;</button>
-          <!-- Updated ID to close button -->
         </div>
 
         <div class="addItem-modal-body">
@@ -375,14 +357,12 @@
                 Cancel
               </button>
               <button type="submit" class="save-btn">Save Item</button>
-              <!-- Changed to type="submit" -->
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- Edit Item -->
     <div id="viewStructureModal" class="view-structure-modal">
       <div class="view-structure-modal-content">
         <div class="view-structure-modal-header">
@@ -416,9 +396,7 @@
                   <th>Amount</th>
                 </tr>
               </thead>
-              <tbody id="viewFeeItemsBody">
-                <!-- Dynamically populated -->
-              </tbody>
+              <tbody id="viewFeeItemsBody"></tbody>
             </table>
           </section>
 
@@ -443,8 +421,6 @@
         </div>
       </div>
     </div>
-
-    <!---Archive Structure modal-->
 
     <div id="archiveStructureModal" class="archive-structure-modal">
       <div class="confirm-modal">
@@ -476,7 +452,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -1,10 +1,8 @@
-// Single initialization function to handle fetching, rendering, and visibility swap
 async function initAcademicsPage() {
   const skeletonEl = document.getElementById("academicsSkeleton");
   const containerEl = document.getElementById("academicsContainer");
 
   try {
-    // 1. Fetch user authentication
     const {
       data: { user },
       error: userError,
@@ -15,7 +13,6 @@ async function initAcademicsPage() {
       return;
     }
 
-    // 2. Fetch user profile and role BEFORE altering the UI
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("role")
@@ -29,10 +26,9 @@ async function initAcademicsPage() {
     const userRole = profile?.role;
     const isAdmin = userRole === "admin";
     const isTeacher = userRole === "teacher";
-    // Checks if the user is EITHER a teacher OR a student
+
     const isTeacherOrStudent = userRole === "teacher" || userRole === "student";
 
-    // 3. Build HTML conditionally
     if (containerEl) {
       const allCardsHTML = `
     ${
@@ -112,7 +108,6 @@ async function initAcademicsPage() {
 
       containerEl.innerHTML = allCardsHTML;
 
-      // Apply any additional element visibility checks from your utils
       if (typeof renderNavigation === "function") {
         renderNavigation(userRole);
       }
@@ -120,11 +115,10 @@ async function initAcademicsPage() {
   } catch (err) {
     console.error("Initialization error:", err);
   } finally {
-    // 4. Reveal final content only after processing finishes
     if (skeletonEl) skeletonEl.style.display = "none";
     if (containerEl) containerEl.style.display = "grid";
   }
 }
 
-// Single listener call
 document.addEventListener("DOMContentLoaded", initAcademicsPage);
+

@@ -86,7 +86,6 @@ async function handleConfirmArchive() {
       confirmBtn.textContent = "Archiving...";
     }
 
-    // Archiving is an UPDATE operation in Supabase
     const { data, error } = await supabaseClient
       .from("classes")
       .update({
@@ -95,9 +94,8 @@ async function handleConfirmArchive() {
         updated_at: new Date().toISOString(),
       })
       .eq("id", classToArchiveId)
-      .select(); // <--- ADD .select() to return the updated row
+      .select();
 
-    // 1. Handle hard database errors
     if (error) {
       showToast(
         "Permission denied: Only active admins can archive classes.",
@@ -106,7 +104,6 @@ async function handleConfirmArchive() {
       return;
     }
 
-    // 2. Handle RLS silent block (0 rows modified)
     if (!data || data.length === 0) {
       showToast(
         "Permission denied: Only active admins can archive classes.",
@@ -115,12 +112,11 @@ async function handleConfirmArchive() {
       return;
     }
 
-    // 3. True success
     showToast("Class archived successfully!", "success");
 
     closeModal("archiveClassModal");
     classToArchiveId = null;
-    await loadClasses(); // Reload active classes table
+    await loadClasses();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -131,7 +127,6 @@ async function handleConfirmArchive() {
   }
 }
 
-// Attach Confirm Event Listener
 document
   .getElementById("confirmArchive")
   ?.addEventListener("click", handleConfirmArchive);
@@ -157,24 +152,20 @@ function getSchoolLevelFromClass(className) {
 
   if (["ABC", "K1", "K2"].includes(className)) return "nursery";
 
-  // 1. Check Senior Secondary FIRST so "Grade 10", "Grade 11", "Grade 12" aren't caught by "Grade 1"
   if (
     ["Grade 10", "Grade 11", "Grade 12"].some((g) => className.startsWith(g))
   ) {
     return "senior_secondary";
   }
 
-  // 2. Check Junior Secondary (Grade 7, 8, 9)
   if (["Grade 7", "Grade 8", "Grade 9"].some((g) => className.startsWith(g))) {
     return "junior_secondary";
   }
 
-  // 3. Check Senior Primary (Grade 4, 5, 6)
   if (["Grade 4", "Grade 5", "Grade 6"].some((g) => className.startsWith(g))) {
     return "senior_primary";
   }
 
-  // 4. Check Junior Primary (Grade 1, 2, 3)
   if (["Grade 1", "Grade 2", "Grade 3"].some((g) => className.startsWith(g))) {
     return "junior_primary";
   }
@@ -182,7 +173,6 @@ function getSchoolLevelFromClass(className) {
   return "other";
 }
 
-// 2. Event listener to update the level dropdown automatically
 document.addEventListener("DOMContentLoaded", () => {
   const classSelect = document.getElementById("className");
   const levelSelect = document.getElementById("schoolLevel");
@@ -193,10 +183,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedClass = e.target.value;
       const autoLevel = getSchoolLevelFromClass(selectedClass);
 
-      // Update the disabled select view
       levelSelect.value = autoLevel;
 
-      // Update the hidden input value (useful for JS form extractions/Supabase)
       if (hiddenLevelInput) {
         hiddenLevelInput.value = autoLevel;
       }
@@ -206,7 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let currentClassesData = [];
 
-// Helper to display clean school level names
 function formatSchoolLevel(level) {
   const levels = {
     nursery: "Nursery",
@@ -218,14 +205,11 @@ function formatSchoolLevel(level) {
   return levels[level] || level;
 }
 
-// 1. Fetch Classes from Supabase
 async function loadClasses() {
   const tbody = document.getElementById("classesTableBody");
 
-  // Guard clause: stop execution ONLY if the element is missing
   if (!tbody) return;
 
-  // Loading indicator
   tbody.innerHTML = `
     <tr>
       <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">
@@ -252,7 +236,6 @@ async function loadClasses() {
   }
 }
 
-// 2. Render Rows to Table
 function renderClassesTable(classes) {
   const tbody = document.getElementById("classesTableBody");
   tbody.innerHTML = "";
@@ -296,7 +279,6 @@ function renderClassesTable(classes) {
   });
 }
 
-// 2. For ISO timestamps (created_at, updated_at)
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -355,7 +337,6 @@ async function openEditModal(classId) {
   }
 }
 
-// 2. Form Submit Handler for Updating
 async function handleEditClass(event) {
   event.preventDefault();
 
@@ -366,7 +347,6 @@ async function handleEditClass(event) {
   const status = document.getElementById("editStatus").value;
   const description = document.getElementById("editDescription").value.trim();
 
-  // Basic validation
   if (!name || !schoolLevel || isNaN(capacity) || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
@@ -377,7 +357,6 @@ async function handleEditClass(event) {
     return;
   }
 
-  // Check if any value changed
   const isUnchanged =
     originalClassData &&
     originalClassData.name === name &&
@@ -409,8 +388,8 @@ async function handleEditClass(event) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", classId)
-      .select(); // <--- ADD .select() to return the updated row
-    // 1. Handle database errors (duplicate names, RLS permission blocks)
+      .select();
+
     if (error) {
       if (error.code === "23505") {
         showToast("This class name already exists.", "error");
@@ -427,7 +406,6 @@ async function handleEditClass(event) {
       return;
     }
 
-    // 2. Handle RLS silent block (0 rows modified)
     if (!data || data.length === 0) {
       showToast(
         "Permission denied: Only active admins can edit classes.",
@@ -438,7 +416,7 @@ async function handleEditClass(event) {
 
     showToast("Class updated successfully!", "success");
     closeModal("editClassModal");
-    await loadClasses(); // Refresh main table
+    await loadClasses();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -449,7 +427,6 @@ async function handleEditClass(event) {
   }
 }
 
-// 3. Client-Side Search & Filter Handler
 function filterClasses() {
   const searchVal = document
     .getElementById("classSearchInput")
@@ -474,7 +451,6 @@ async function handleAddClass(event) {
   const status = document.getElementById("status").value;
   const description = document.getElementById("description").value.trim();
 
-  // 1. Client-side Validation
   if (!name || !schoolLevel || isNaN(capacity) || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
@@ -494,7 +470,6 @@ async function handleAddClass(event) {
       saveBtn.textContent = "Saving...";
     }
 
-    // 2. Insert into Supabase
     const { data, error } = await supabaseClient
       .from("classes")
       .insert([
@@ -517,7 +492,7 @@ async function handleAddClass(event) {
         );
         return;
       }
-      // Catch capacity or check constraint failures
+
       if (error.code === "23514") {
         showToast(
           "Invalid data submitted. Check capacity and selected level.",
@@ -537,7 +512,7 @@ async function handleAddClass(event) {
     showToast("Class created successfully!", "success");
     form.reset();
     closeModal("classModal");
-    await loadClasses(); // Function to reload your table data
+    await loadClasses();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -548,7 +523,6 @@ async function handleAddClass(event) {
   }
 }
 
-// Safe Event Listener Registrations
 document
   .getElementById("editClassForm")
   ?.addEventListener("submit", handleEditClass);
@@ -571,3 +545,4 @@ document
   ?.addEventListener("submit", handleAddClass);
 
 document.addEventListener("DOMContentLoaded", loadClasses);
+

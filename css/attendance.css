@@ -1,5 +1,3 @@
-/* Subject modal */
-
 .modal-studentAttendance {
   position: fixed;
   top: 0;
@@ -15,7 +13,6 @@
   z-index: 1000;
 }
 
-/* Base Status Badge */
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -25,21 +22,18 @@
   text-transform: capitalize;
 }
 
-/* Drafted Status (Amber/Yellow Theme) */
 .status-badge.status-drafted {
   background-color: #fffbebf3;
   color: #b45309;
   border: 1px solid #fde68a;
 }
 
-/* Submitted Status (Green Theme) */
 .status-badge.status-submitted {
   background-color: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
 }
 
-/* Status Badge Container Base Styles */
 .status-badge {
   display: inline-block;
   padding: 4px 10px;
@@ -50,14 +44,12 @@
   white-space: nowrap;
 }
 
-/* Present - Green Theme */
 .status-badge.status-present {
   background-color: #dcfce7;
   color: #15803d;
   border: 1px solid #bbf7d0;
 }
 
-/* Absent - Red Theme */
 .status-badge.status-absent {
   background-color: #fee2e2;
   color: #b91c1c;
@@ -122,15 +114,11 @@ body {
   display: flex;
 }
 
-/* Main Content */
-
 .attendances-main-content {
   width: 100%;
   min-height: 100vh;
   padding: 10px;
 }
-
-/* Topbar */
 
 .topbar {
   display: flex;
@@ -250,8 +238,6 @@ tr {
   background: #fef3c7;
   color: #d97706;
 }
-
-/* Subject modal */
 
 .modal-attendance {
   position: fixed;
@@ -451,7 +437,6 @@ tr {
   font-size: 22px;
 }
 
-/* Styled Select Dropdown */
 #attendanceWorkflowStatus {
   font-weight: 600;
   font-size: 0.95rem;
@@ -466,7 +451,6 @@ tr {
    EDIT ATTENDANCE MODAL & COMPONENTS
    ========================================== */
 
-/* Modal Container & Content Card */
 #editAttendanceModal.modal {
   display: none;
   position: fixed;
@@ -494,7 +478,6 @@ tr {
   max-height: 90vh;
 }
 
-/* Modal Header */
 #editAttendanceModal .modal-header {
   padding: 16px 20px;
   border: 2px solid rgb(219, 215, 215);
@@ -523,7 +506,6 @@ tr {
   padding: 4px 8px;
 }
 
-/* Modal Body & Form Elements */
 #editAttendanceModal .modal-body {
   padding: 20px;
   overflow-y: auto;
@@ -545,7 +527,6 @@ tr {
   font-size: 0.925rem;
 }
 
-/* Student Roster Table Card */
 #editAttendanceModal .studentAttendance-table-card {
   margin-top: 15px;
   border-radius: 8px;
@@ -591,7 +572,6 @@ tr {
   background-color: #f8fafc;
 }
 
-/* Status Dropdowns Inside Table */
 #editAttendanceModal .edit-status-dropdown {
   padding: 6px 10px;
   border: 2px solid rgb(219, 215, 215);
@@ -603,13 +583,13 @@ tr {
   cursor: pointer;
 }
 
-/* Modal Footer & Buttons */
 #editAttendanceModal .modal-footer {
   padding-top: 15px;
   border-top: 2px solid rgb(219, 215, 215);
 }
 
-#editAttendanceModal .cancel-btn {
+#editAttendanceModal .cancel-btn,
+#clearDateFilterBtn {
   color: #ffffff;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
@@ -631,7 +611,6 @@ tr {
   cursor: not-allowed;
 }
 
-/* Entrance Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -653,7 +632,6 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
-  /* Back Button */
   .back-academics-btn {
     grid-column: 1;
     width: auto !important;
@@ -671,7 +649,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Responsive Topbar */
   .topbar {
     display: grid !important;
     grid-template-columns: 1fr auto !important;
@@ -721,7 +698,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Toolbar */
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -741,7 +717,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Responsive Table Card */
   .studentAttendance-table-card {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -769,7 +744,6 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
   }
 
-  /* Status Badges & Buttons */
   .status-badge {
     border-radius: 10px;
     padding: 6px 10px;
@@ -782,7 +756,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Attendance Modals (Take Attendance & Student List Modals) */
   .attendance-modal-content,
   .studentAttendance-modal-content,
   .view-attendance-modal-content,
@@ -844,7 +817,6 @@ tr {
     border-top: 1.5px solid rgb(219, 215, 215);
   }
 
-  /* Form & Grid Layouts */
   .form-grid,
   .details-grid {
     grid-template-columns: 1fr;
@@ -867,7 +839,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Modal Action Buttons */
   .cancel-btn,
   .save-btn,
   #editAttendanceModal .cancel-btn,

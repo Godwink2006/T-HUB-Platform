@@ -13,15 +13,11 @@ body {
   display: flex;
 }
 
-/* Main Content */
-
 .structures-main-content {
   width: 100%;
   min-height: 100vh;
   padding: 10px;
 }
-
-/* Topbar */
 
 .topbar {
   display: flex;
@@ -164,8 +160,6 @@ tr {
   background: #fee2e2;
   color: #dc2626;
 }
-
-/* Subject modal */
 
 .modal-structure {
   position: fixed;
@@ -624,7 +618,7 @@ tr {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 290px; /* Fixed height requirement */
+    height: 290px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
@@ -667,7 +661,6 @@ tr {
     font-size: 13px;
   }
 
-  /* Back and Add User Buttons on the Same Line */
   .top-right {
     display: flex !important;
     flex-direction: row !important;
@@ -713,8 +706,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* --- Toolbar Inputs in a Single Horizontal Row --- */
-
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -732,7 +723,7 @@ tr {
     background: #ffffff;
     font-size: 12px;
     flex: 1;
-    min-width: 0; /* Prevents overflow inside flex containers */
+    min-width: 0;
     border-radius: 10px;
   }
 
@@ -753,7 +744,7 @@ tr {
   table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 500px; /* Ensures table doesn't shrink too much on small screens */
+    min-width: 500px;
   }
 
   thead {
@@ -794,12 +785,12 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 650px; /* Fixed height requirement */
+    height: 650px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
-    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow: hidden;
   }
 
   .confirm-modal {
@@ -807,12 +798,12 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 350px; /* Fixed height requirement */
+    height: 350px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
-    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow: hidden;
   }
 
   .addItem-modal-content {
@@ -820,12 +811,12 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 350px; /* Fixed height requirement */
+    height: 350px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
-    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow: hidden;
   }
 
   .view-structure-modal-content {
@@ -833,12 +824,12 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 550px; /* Fixed height requirement */
+    height: 550px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
-    overflow: hidden; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow: hidden;
   }
 
   @keyframes modalShow {
@@ -890,11 +881,10 @@ tr {
   .editstructure-modal-body,
   .addItem-modal-body {
     padding: 20px;
-    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow-y: auto;
     flex: 1;
   }
 
-  /* Horizontal Modal Action Buttons with Space Between */
   .view-structure-modal-footer,
   .editstructure-modal-footer,
   .structure-modal-footer,

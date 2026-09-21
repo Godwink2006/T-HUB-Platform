@@ -6,7 +6,6 @@ const archiveAcademicYearModal = document.getElementById(
   "archiveAcademicYearModal",
 );
 
-// --- FIX ---
 window.addEventListener("click", (e) => {
   const modals = [
     academicYearModal,
@@ -23,21 +22,18 @@ window.addEventListener("click", (e) => {
 let academicYears = [];
 let selectedYearId = null;
 
-// Initialize on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
   loadAcademicYears();
   setupModalListeners();
 });
 
-// --- 1. FETCH & RENDER ---
 async function loadAcademicYears() {
-  // Show the loading indicator immediately
   renderTableLoading();
 
   const { data, error } = await supabaseClient
     .from("academic_years")
     .select("*")
-    .eq("is_archived", false) // Exclude soft-deleted records
+    .eq("is_archived", false)
     .order("year_label", { ascending: false });
 
   if (error) {
@@ -102,7 +98,6 @@ function renderAcademicYearsTable() {
     .join("");
 }
 
-// 2. For ISO timestamps (created_at, updated_at)
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -115,8 +110,6 @@ function formatDateTime(isoString) {
   });
 }
 
-// --- CLIENT-SIDE SAFE SEQUENCING FIX ---
-// Instead of inactivating first, insert/update first, then deactivate others if set to Active:
 async function handleSingleActiveStatus(requestedStatus, currentRecordId) {
   if (requestedStatus === "Active" && currentRecordId) {
     const { error } = await supabaseClient
@@ -129,7 +122,6 @@ async function handleSingleActiveStatus(requestedStatus, currentRecordId) {
   }
 }
 
-// --- 3. CREATE (ADD) ---
 async function handleAddAcademicYear(event) {
   event.preventDefault();
 
@@ -150,7 +142,6 @@ async function handleAddAcademicYear(event) {
       saveBtn.textContent = "Saving...";
     }
 
-    // Attempt status update cleanly
     if (status === "Active") {
       const { error: updateErr } = await supabaseClient
         .from("academic_years")
@@ -167,7 +158,6 @@ async function handleAddAcademicYear(event) {
       }
     }
 
-    // Perform Insert
     const { data, error } = await supabaseClient
       .from("academic_years")
       .insert([{ year_label: yearLabel, status, is_archived: false }])
@@ -203,10 +193,8 @@ async function handleAddAcademicYear(event) {
   }
 }
 
-// Variable to store original values for comparison
 let originalYearData = {};
 
-// --- 4. UPDATE (EDIT) ---
 function openEditModal(id) {
   selectedYearId = id;
   const item = academicYears.find((y) => y.id === id);
@@ -219,7 +207,6 @@ function openEditModal(id) {
   const statusSelect = document.getElementById("editStatusSelect");
   statusSelect.value = item.status;
 
-  // Store current state for change detection
   originalYearData = {
     year_label: item.year_label,
     status: item.status,
@@ -234,8 +221,7 @@ async function handleEditAcademicYear(event) {
   const yearLabel = document.getElementById("editYearSelect").value;
   const status = document.getElementById("editStatusSelect").value;
 
-  // --- 1. CHANGE DETECTION VALIDATION ---
-  const hasChanges = status !== originalYearData.status; // Since year is disabled, only status can change
+  const hasChanges = status !== originalYearData.status;
 
   if (!hasChanges) {
     showToast("No changes detected.", "info");
@@ -247,27 +233,23 @@ async function handleEditAcademicYear(event) {
     return;
   }
 
-  // 2. Select submit button scoped to THIS form/modal
   const form = event.target;
   const updateBtn = form.querySelector('button[type="submit"]');
 
   try {
-    // 3. Set loading state
     if (updateBtn) {
       updateBtn.disabled = true;
       updateBtn.textContent = "Updating...";
     }
 
-    // Rule: Ensure only one Active year
     await handleSingleActiveStatus(status, selectedYearId);
 
     const { data, error } = await supabaseClient
       .from("academic_years")
       .update({ status })
       .eq("id", selectedYearId)
-      .select(); // Optional: Fetch updated record if needed
+      .select();
 
-    // Handle Supabase Database Errors
     if (error) {
       if (error.code === "23505") {
         showToast("This Academic Year has already been created.", "error");
@@ -277,28 +259,24 @@ async function handleEditAcademicYear(event) {
       return;
     }
 
-    // Handle RLS / Permission Denied (No rows updated)
     if (!data || data.length === 0) {
       showToast("Permission denied.", "error");
       return;
     }
 
-    // Success Case
     showToast("Academic Year updated successfully!", "success");
     closeModal("editAcademicYearModal");
     await loadAcademicYears();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
-    // 5. Always restore button state
     if (updateBtn) {
       updateBtn.disabled = false;
-      updateBtn.textContent = "Update"; // Replace with your original text
+      updateBtn.textContent = "Update";
     }
   }
 }
 
-// --- 5. SOFT DELETE (ARCHIVE) ---
 function openArchiveModal(id, yearName) {
   selectedYearId = id;
 
@@ -313,11 +291,9 @@ function openArchiveModal(id, yearName) {
 async function handleConfirmArchive() {
   if (!selectedYearId) return;
 
-  // 2. Select submit button scoped to THIS form/modal
   const archiveBtn = document.getElementById("confirmArchive");
 
   try {
-    // 3. Set loading state
     if (archiveBtn) {
       archiveBtn.disabled = true;
       archiveBtn.textContent = "Archiving...";
@@ -325,38 +301,33 @@ async function handleConfirmArchive() {
 
     const { data, error } = await supabaseClient
       .from("academic_years")
-      .update({ is_archived: true, status: "Inactive" }) // Soft delete flag
+      .update({ is_archived: true, status: "Inactive" })
       .eq("id", selectedYearId)
       .select();
 
-    // 2. Handle database execution errors
     if (error) {
       showToast("Error archiving academic year: " + error.message, "error");
       return;
     }
 
-    // 3. Handle RLS / Permission issues (query succeeds, but 0 rows are modified)
     if (!data || data.length === 0) {
       showToast("Permission denied.", "error");
       return;
     }
 
-    // 4. Success flow
     showToast("Academic year archived successfully!", "success");
     closeModal("archiveAcademicYearModal");
     await loadAcademicYears();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
-    // 5. Always restore button state
     if (archiveBtn) {
       archiveBtn.disabled = false;
-      archiveBtn.textContent = "Archive"; // Replace with your original text
+      archiveBtn.textContent = "Archive";
     }
   }
 }
 
-// --- 6. MODAL HELPERS & LISTENERS ---
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "flex";
@@ -364,14 +335,12 @@ function openModal(modalId) {
   lockBodyScroll();
 }
 
-// --- FIX ---
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "none";
 
   unLockBodyScroll();
 
-  // Reset state on modal close
   if (
     modalId === "editAcademicYearModal" ||
     modalId === "archiveAcademicYearModal"
@@ -381,7 +350,6 @@ function closeModal(modalId) {
   }
 }
 function setupModalListeners() {
-  // Add Modal
   document
     .getElementById("addAcademicYear")
     ?.addEventListener("click", () => openModal("academicYearModal"));
@@ -395,7 +363,6 @@ function setupModalListeners() {
     .getElementById("academicYearForm")
     ?.addEventListener("submit", handleAddAcademicYear);
 
-  // Edit Modal
   document
     .getElementById("closeEditAcademicYearModal")
     ?.addEventListener("click", () => closeModal("editAcademicYearModal"));
@@ -406,7 +373,6 @@ function setupModalListeners() {
     .getElementById("editAcademicYearForm")
     ?.addEventListener("submit", handleEditAcademicYear);
 
-  // Archive Modal
   document
     .getElementById("cancelArchive")
     ?.addEventListener("click", () => closeModal("archiveAcademicYearModal"));
@@ -414,3 +380,4 @@ function setupModalListeners() {
     .getElementById("confirmArchive")
     ?.addEventListener("click", handleConfirmArchive);
 }
+

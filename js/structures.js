@@ -19,12 +19,11 @@ async function updateFeeStructure(shouldPrint = false) {
     0,
   );
 
-  // --- ADD THIS CHANGE CHECK ---
   const originalStatus =
     document.getElementById("editStructureModal")?.dataset.originalStatus;
   const originalItemsJson =
     document.getElementById("editStructureModal")?.dataset.originalItems;
-  // Normalize current memory state for comparison
+
   const currentItemsJson = normalizeItems(tempEditFeeItems);
 
   if (status === originalStatus && currentItemsJson === originalItemsJson) {
@@ -33,7 +32,6 @@ async function updateFeeStructure(shouldPrint = false) {
     return;
   }
 
-  // Preserve button UI states
   const btnUpdate = document.getElementById("btnUpdateStructure");
   const btnUpdateAndPrint = document.getElementById(
     "btnUpdateAndPrintStructure",
@@ -44,7 +42,6 @@ async function updateFeeStructure(shouldPrint = false) {
     ? btnUpdateAndPrint.innerHTML
     : "";
 
-  // Set loading states
   if (btnUpdate) {
     btnUpdate.disabled = true;
     if (!shouldPrint) btnUpdate.innerHTML = `Updating...`;
@@ -55,7 +52,6 @@ async function updateFeeStructure(shouldPrint = false) {
   }
 
   try {
-    // Single Atomic Call via RPC (Replaces manual update, delete, insert)
     const { error: rpcErr } = await supabaseClient.rpc(
       "update_fee_structure_atomic",
       {
@@ -66,30 +62,25 @@ async function updateFeeStructure(shouldPrint = false) {
       },
     );
 
-    // ✅ REPLACE WITH THIS 1 LINE
     if (rpcErr) throw rpcErr;
 
     if (typeof showToast === "function") {
       showToast("Fee Structure updated successfully!", "success");
     }
 
-    // Close Modal & Unlock UI scroll immediately
     const modal = document.getElementById("editStructureModal");
     if (modal) modal.style.display = "none";
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 
-    // Refresh main data table
     if (typeof loadFeeStructures === "function") {
       await loadFeeStructures();
     }
 
-    // Trigger Print asynchronously
     if (shouldPrint) {
       setTimeout(() => {
         window.print();
       }, 100);
     }
-    // ✅ REPLACE WITH THIS
   } catch (err) {
     console.error("Error updating structure:", err);
 
@@ -104,7 +95,6 @@ async function updateFeeStructure(shouldPrint = false) {
       showToast(message, "error");
     }
   } finally {
-    // Restore button states
     if (btnUpdate) {
       btnUpdate.disabled = false;
       btnUpdate.innerHTML = originalUpdateText;
@@ -116,15 +106,12 @@ async function updateFeeStructure(shouldPrint = false) {
   }
 }
 
-// Expose to window scope in case of inline HTML onclicks
 window.updateFeeStructure = updateFeeStructure;
 
-// Global helper to normalize items array for exact string comparison
 const normalizeItems = (arr) =>
   JSON.stringify(
     (arr || [])
       .map((i) => {
-        // Fallback checks both JS property (.name) and Supabase DB property (.fee_name)
         const rawName = i?.name || i?.fee_name || "";
         return {
           name: rawName.trim().toLowerCase(),
@@ -134,26 +121,22 @@ const normalizeItems = (arr) =>
       .sort((a, b) => a.name.localeCompare(b.name)),
   );
 
-// 1. Fixed close logic helper
 function closeCreateModal() {
-  const modal = document.getElementById("structureModal"); // Fixed ID mismatch
+  const modal = document.getElementById("structureModal");
   if (modal) modal.style.display = "none";
   tempFeeItems = [];
   renderTempFeeItems();
   if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 }
 
-// Array to hold fee items locally before saving to the database
 let tempFeeItems = [];
 
-// DOM References for Add Item Modal
-const addItemForm = document.getElementById("addItemForm"); // Ensure your form inside addItemModal has this ID
-const feeItemNameInput = document.getElementById("feeItemName"); // Input for item name (e.g., Tuition)
-const feeItemAmountInput = document.getElementById("feeItemAmount"); // Input for amount (e.g., 400)
-const feeItemsBody = document.getElementById("feeItemsBody"); // <tbody> of the items table
-const totalFeeAmountEl = document.getElementById("totalFeeAmount"); // Text element displaying total
+const addItemForm = document.getElementById("addItemForm");
+const feeItemNameInput = document.getElementById("feeItemName");
+const feeItemAmountInput = document.getElementById("feeItemAmount");
+const feeItemsBody = document.getElementById("feeItemsBody");
+const totalFeeAmountEl = document.getElementById("totalFeeAmount");
 
-// Render function to redraw items table & update total
 function renderTempFeeItems() {
   if (!feeItemsBody) return;
 
@@ -194,7 +177,6 @@ function renderTempFeeItems() {
   }
 }
 
-// Handle adding a new fee item from addItemModal
 if (addItemForm) {
   addItemForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -211,7 +193,6 @@ if (addItemForm) {
       return;
     }
 
-    // Replace inside addItemForm listener:
     const exists = tempFeeItems.some(
       (item) => item.name.toLowerCase() === name.toLowerCase(),
     );
@@ -219,19 +200,16 @@ if (addItemForm) {
       showToast(`"${name}" is already in the list.`, "error");
       return;
     }
-    // Push item to in-memory state
+
     tempFeeItems.push({ name, amount });
 
-    // Refresh table & total
     renderTempFeeItems();
 
-    // Reset inputs and close modal
     addItemForm.reset();
     addItemModal.style.display = "none";
   });
 }
 
-// Event delegation for Edit and Delete buttons on table rows
 if (feeItemsBody) {
   feeItemsBody.addEventListener("click", (e) => {
     const deleteBtn = e.target.closest(".delete-addItem");
@@ -243,13 +221,11 @@ if (feeItemsBody) {
   });
 }
 
-// Populate Academic Years and Classes on load
 async function populateInitialDropdowns() {
   const academicYearSelect = document.getElementById("academicYearSelect");
   const classSelect = document.getElementById("classSelect");
 
   try {
-    // 1. Fetch Active Academic Years
     if (academicYearSelect) {
       const { data: years, error: yearsErr } = await supabaseClient
         .from("academic_years")
@@ -265,7 +241,6 @@ async function populateInitialDropdowns() {
       });
     }
 
-    // 2. Fetch Active Classes
     if (classSelect) {
       const { data: classes, error: classErr } = await supabaseClient
         .from("classes")
@@ -285,19 +260,16 @@ async function populateInitialDropdowns() {
   }
 }
 
-// Populate Semesters dynamically based on the selected Academic Year
 async function fetchSemestersForYear(academicYearId) {
   const semesterSelect = document.getElementById("semesterSelect");
   if (!semesterSelect) return;
 
-  // Reset dropdown if no year is selected
   if (!academicYearId) {
     semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
     return;
   }
 
   try {
-    // Query ONLY terms that belong to the selected academic_year_id
     const { data: terms, error } = await supabaseClient
       .from("terms")
       .select("id, name")
@@ -323,14 +295,12 @@ async function fetchSemestersForYear(academicYearId) {
 
 const academicYearSelect = document.getElementById("academicYearSelect");
 
-// Function to handle database insertion
 async function saveFeeStructure(shouldPrint = false) {
   const academicYearId = document.getElementById("academicYearSelect")?.value;
   const termId = document.getElementById("semesterSelect")?.value;
   const classId = document.getElementById("classSelect")?.value;
   const status = document.getElementById("statusSelect")?.value || "Active";
 
-  // 1. Validation
   if (!academicYearId || !termId || !classId) {
     showToast("Please select Academic Year, Semester, and Class.", "error");
     return;
@@ -341,28 +311,23 @@ async function saveFeeStructure(shouldPrint = false) {
     return;
   }
 
-  // Calculate total amount from local items
   const totalAmount = tempFeeItems.reduce(
     (sum, item) => sum + Number(item.amount),
     0,
   );
 
-  // Disable save buttons to prevent duplicate submissions
   const saveBtn = document.getElementById("saveStructureBtn");
   const saveAndPrintBtn = document.getElementById("saveAndPrintBtn");
   if (saveBtn) saveBtn.disabled = true;
   if (saveAndPrintBtn) saveAndPrintBtn.disabled = true;
 
-  // Store original button labels
   const originalSaveText = saveBtn ? saveBtn.innerHTML : "";
   const originalPrintText = saveAndPrintBtn ? saveAndPrintBtn.innerHTML : "";
 
-  // Set active loading text based on which action was triggered
   if (saveBtn && !shouldPrint) saveBtn.innerHTML = "Saving...";
   if (saveAndPrintBtn && shouldPrint) saveAndPrintBtn.innerHTML = "Saving...";
 
   try {
-    // Single Atomic Database Transaction
     const { data: newStructureId, error } = await supabaseClient.rpc(
       "create_fee_structure_atomic",
       {
@@ -385,7 +350,6 @@ async function saveFeeStructure(shouldPrint = false) {
 
     if (typeof loadFeeStructures === "function") await loadFeeStructures();
 
-    // Reset Form & UI State
     tempFeeItems = [];
     renderTempFeeItems();
     document.getElementById("structureForm")?.reset();
@@ -395,8 +359,7 @@ async function saveFeeStructure(shouldPrint = false) {
       semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
     }
 
-    // Close Modal & Unlock Scroll safely
-    const modal = document.getElementById("createStructureModal"); // adjust ID to your modal element
+    const modal = document.getElementById("createStructureModal");
     if (modal) modal.style.display = "none";
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   } catch (err) {
@@ -419,7 +382,6 @@ async function saveFeeStructure(shouldPrint = false) {
 
     showToast(message, "error");
   } finally {
-    // Re-enable buttons
     if (saveBtn) saveBtn.disabled = false;
     if (saveAndPrintBtn) saveAndPrintBtn.disabled = false;
 
@@ -434,7 +396,6 @@ async function saveFeeStructure(shouldPrint = false) {
   }
 }
 
-// Event Listener for Main Form Submit ("Save" button)
 const structureForm = document.getElementById("structureForm");
 if (structureForm) {
   structureForm.addEventListener("submit", (e) => {
@@ -443,7 +404,6 @@ if (structureForm) {
   });
 }
 
-// Event Listener for "Save & Print" button
 const saveAndPrintBtn = document.getElementById("saveAndPrintBtn");
 if (saveAndPrintBtn) {
   saveAndPrintBtn.addEventListener("click", () => {
@@ -451,10 +411,8 @@ if (saveAndPrintBtn) {
   });
 }
 
-// Global variable to store loaded structures for client-side filtering
 let allFeeStructures = [];
 
-// Fetch and render fee structures
 async function loadFeeStructures() {
   const tbody = document.getElementById("feeStructuresBody");
   if (!tbody) return;
@@ -502,7 +460,6 @@ async function loadFeeStructures() {
   }
 }
 
-// 2. For ISO timestamps (created_at, updated_at)
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -515,7 +472,6 @@ function formatDateTime(isoString) {
   });
 }
 
-// Render structures to HTML table
 function renderFeeStructuresTable(structures) {
   const tbody = document.getElementById("feeStructuresBody");
   if (!tbody) return;
@@ -537,8 +493,7 @@ function renderFeeStructuresTable(structures) {
     const className = struct.classes?.name || "N/A";
     const academicYear = struct.academic_years?.year_label || "N/A";
     const termName = struct.terms?.name || "N/A";
-    // Evaluate status strictly via is_archived
-    // Read the text status column directly from the database row
+
     const currentStatus =
       struct.status || (struct.is_archived ? "Inactive" : "Active");
     const isInactive = currentStatus.toLowerCase() === "inactive";
@@ -575,13 +530,11 @@ function renderFeeStructuresTable(structures) {
   });
 }
 
-// Function to fetch fee structure details and open the View Modal
 async function openViewStructureModal(structureId) {
   const viewModal = document.getElementById("viewStructureModal");
   const itemsBody = document.getElementById("viewFeeItemsBody");
   if (!viewModal || !itemsBody) return;
 
-  // Clear previous items and show loading state
   itemsBody.innerHTML = `<tr>  <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading Details.........
@@ -590,7 +543,6 @@ async function openViewStructureModal(structureId) {
   viewModal.style.display = "flex";
 
   try {
-    // 1. Fetch parent fee structure with join references
     const { data: struct, error: structError } = await supabaseClient
       .from("fee_structures")
       .select(
@@ -608,7 +560,6 @@ async function openViewStructureModal(structureId) {
 
     if (structError) throw structError;
 
-    // 2. Fetch child fee structure items
     const { data: items, error: itemsError } = await supabaseClient
       .from("fee_structure_items")
       .select("fee_name, amount")
@@ -616,7 +567,6 @@ async function openViewStructureModal(structureId) {
 
     if (itemsError) throw itemsError;
 
-    // 3. Populate Modal Information
     const className = struct.classes?.name || "N/A";
     const yearLabel = struct.academic_years?.year_label || "N/A";
     const termName = struct.terms?.name || "N/A";
@@ -626,11 +576,11 @@ async function openViewStructureModal(structureId) {
     document.getElementById("viewClass").textContent = className;
     document.getElementById("viewTotalAmount").textContent =
       `$${Number(struct.total_amount || 0).toFixed(2)}`;
-    // 📍 STATUS CLASS LOGIC HERE 📍
+
     const viewStatusEl = document.getElementById("viewStatus");
     if (viewStatusEl) {
       viewStatusEl.textContent = struct.status || "N/A";
-      viewStatusEl.className = "status"; // base class
+      viewStatusEl.className = "status";
       viewStatusEl.classList.add(
         struct.status?.toLowerCase() === "active"
           ? "structures-status-active"
@@ -638,7 +588,6 @@ async function openViewStructureModal(structureId) {
       );
     }
 
-    // 4. Populate Items Table Body
     itemsBody.innerHTML = "";
     if (!items || items.length === 0) {
       itemsBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888; padding: 12px;">No items found.</td></tr>`;
@@ -662,7 +611,6 @@ async function openViewStructureModal(structureId) {
   }
 }
 
-// Print Handler inside View Modal
 const printViewBtn = document.getElementById("printViewStructureBtn");
 if (printViewBtn) {
   printViewBtn.addEventListener("click", () => {
@@ -670,18 +618,15 @@ if (printViewBtn) {
   });
 }
 
-// Local array holding current edit items state
 let tempEditFeeItems = [];
 
 async function openEditStructureModal(structureId) {
   const modal = document.getElementById("editStructureModal");
   if (!modal) return;
 
-  // Clear previous state before loading new items
   tempEditFeeItems = [];
 
   try {
-    // 1. Load parent fee structure & relation labels from database
     const { data: struct, error: structErr } = await supabaseClient
       .from("fee_structures")
       .select(
@@ -701,14 +646,12 @@ async function openEditStructureModal(structureId) {
 
     if (structErr) throw structErr;
 
-    // Set hidden IDs for submit handler
     document.getElementById("editStructureId").value = struct.id;
     document.getElementById("editAcademicYearSelect").value =
       struct.academic_year_id;
     document.getElementById("editSemesterSelect").value = struct.term_id;
     document.getElementById("editClassSelect").value = struct.class_id;
 
-    // Populate Read-Only Display Inputs & Status
     document.getElementById("editAcademicYearDisplay").value =
       struct.academic_years?.year_label || "N/A";
     document.getElementById("editSemesterDisplay").value =
@@ -717,7 +660,6 @@ async function openEditStructureModal(structureId) {
       struct.classes?.name || "N/A";
     document.getElementById("editStatusSelect").value = struct.status;
 
-    // 2. Load existing fee structure items from database
     const { data: items, error: itemsErr } = await supabaseClient
       .from("fee_structure_items")
       .select("id, fee_name, amount")
@@ -725,18 +667,15 @@ async function openEditStructureModal(structureId) {
 
     if (itemsErr) throw itemsErr;
 
-    // Store fetched database items into local array
     tempEditFeeItems = (items || []).map((i) => ({
       id: i.id,
       name: i.fee_name,
       amount: i.amount,
     }));
 
-    // Save baseline dataset for change detection
     modal.dataset.originalStatus = struct.status;
     modal.dataset.originalItems = normalizeItems(items || []);
 
-    // Render items in modal
     renderEditTempFeeItems();
 
     if (typeof lockBodyScroll === "function") lockBodyScroll();
@@ -748,7 +687,6 @@ async function openEditStructureModal(structureId) {
   }
 }
 
-// Render local fee items inside edit modal
 function renderEditTempFeeItems() {
   const tbody = document.getElementById("editFeeItemsBody");
   const totalEl = document.getElementById("editTotalFeeAmount");
@@ -781,22 +719,20 @@ function renderEditTempFeeItems() {
   if (totalEl) totalEl.textContent = `$${grandTotal.toFixed(2)}`;
 }
 
-// Remove item locally when trash icon is clicked
 const editFeeItemsBody = document.getElementById("editFeeItemsBody");
 if (editFeeItemsBody) {
   editFeeItemsBody.addEventListener("click", (e) => {
     const deleteBtn = e.target.closest(".delete-editItem");
     if (deleteBtn) {
       const index = deleteBtn.getAttribute("data-index");
-      tempEditFeeItems.splice(index, 1); // Removes from memory array
-      renderEditTempFeeItems(); // Re-renders UI table & updates total
+      tempEditFeeItems.splice(index, 1);
+      renderEditTempFeeItems();
     }
   });
 }
 
 let targetStructureId = null;
 
-// Open Archive Modal
 function openArchiveModal(structureId, structureName) {
   targetStructureId = structureId;
 
@@ -814,7 +750,6 @@ function openArchiveModal(structureId, structureName) {
   }
 }
 
-// Close Archive Modal Helper
 function closeArchiveModal() {
   targetStructureId = null;
   const archiveStructureModal = document.getElementById(
@@ -836,13 +771,11 @@ document.addEventListener("click", (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Elements
   const addFeeItemBtn = document.getElementById("addFeeItemBtn");
   const addItemModal = document.getElementById("addItemModal");
   const closeAddItemModal = document.getElementById("closeAddItemModal");
   const cancelAddItemModal = document.getElementById("cancelAddItemModal");
 
-  // 1. Add Item Modal Handlers
   addFeeItemBtn?.addEventListener("click", () => {
     if (addItemModal) addItemModal.style.display = "flex";
   });
@@ -855,7 +788,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (addItemModal) addItemModal.style.display = "none";
   });
 
-  // 2. Edit Item Modal
   const editItemModal = document.getElementById("editItemModal");
   const closeEditItemModal = document.getElementById("closeEditItemModal");
   const cancelEditItemModal = document.getElementById("cancelEditItemModal");
@@ -867,10 +799,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editItemModal) editItemModal.style.display = "none";
   });
 
-  // 3. Delete Item Modal
   const deleteItemModal = document.getElementById("deleteItemModal");
 
-  // 4. Structure Modal (Create)
   const structureModal = document.getElementById("structureModal");
   const openStructureBtn = document.getElementById("addStructure");
   const closeStructureModal = document.getElementById("closeStructureModal");
@@ -891,7 +821,6 @@ document.addEventListener("DOMContentLoaded", () => {
     unLockBodyScroll();
   });
 
-  // 5. View Structure Modal
   const viewStructureModal = document.getElementById("viewStructureModal");
   const closeViewStructureModal = document.getElementById(
     "closeViewStructureModal",
@@ -908,7 +837,6 @@ document.addEventListener("DOMContentLoaded", () => {
     unLockBodyScroll();
   });
 
-  // 6. Archive Structure Modal
   const archiveStructureModal = document.getElementById(
     "archiveStructureModal",
   );
@@ -921,7 +849,6 @@ document.addEventListener("DOMContentLoaded", () => {
     unLockBodyScroll();
   });
 
-  // 7. Edit Structure Modal Controls
   const editStructureModal = document.getElementById("editStructureModal");
   const closeEditStructureModal = document.getElementById(
     "closeEditStructureModal",
@@ -940,7 +867,6 @@ document.addEventListener("DOMContentLoaded", () => {
     unLockBodyScroll();
   });
 
-  // Global Outside Click Handler
   window.addEventListener("click", (e) => {
     if (e.target === addItemModal) addItemModal.style.display = "none";
     if (e.target === editItemModal) editItemModal.style.display = "none";
@@ -967,17 +893,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const academicYearSelect = document.getElementById("academicYearSelect");
 
-  // Trigger semester fetch whenever Academic Year changes
   academicYearSelect?.addEventListener("change", (e) => {
     fetchSemestersForYear(e.target.value);
   });
 
-  // Event delegation for table action buttons (View, Edit, Archive)
   const feeStructuresBody = document.getElementById("feeStructuresBody");
 
   if (feeStructuresBody) {
     feeStructuresBody.addEventListener("click", (e) => {
-      // 1. View Button Handler
       const viewBtn = e.target.closest(".view");
       if (viewBtn) {
         const id = viewBtn.getAttribute("data-id");
@@ -985,7 +908,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 2. Edit Button Handler
       const editBtn = e.target.closest(".edit");
       if (editBtn) {
         const id = editBtn.getAttribute("data-id");
@@ -993,7 +915,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 3. Archive Button Handler (ADD THIS HERE)
       const archiveBtn = e.target.closest(".archive");
       if (archiveBtn) {
         const id = archiveBtn.getAttribute("data-id");
@@ -1016,7 +937,6 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmArchiveStructure.innerHTML = `Archiving...`;
 
     try {
-      // Return only essential columns to keep payload micro-sized
       const { data, error } = await supabaseClient
         .from("fee_structures")
         .update({ is_archived: true, status: "Inactive" })
@@ -1040,7 +960,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       closeArchiveModal();
 
-      // Refresh dropdown options and re-fetch filtered table rows
       if (typeof populateFilterDropdowns === "function") {
         await populateFilterDropdowns();
       }
@@ -1061,7 +980,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ✅ ADD INSIDE DOMCONTENTLOADED
   document
     .getElementById("btnUpdateStructure")
     ?.addEventListener("click", (e) => {
@@ -1080,7 +998,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btnSubmitEditFeeItem = document.getElementById("btnSubmitEditFeeItem");
 
-  // 2. Add sub-modal auto-close in btnSubmitEditFeeItem
   btnSubmitEditFeeItem?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1116,7 +1033,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tempEditFeeItems.push({ name, amount });
     renderEditTempFeeItems();
 
-    // Clear fields and hide sub-modal
     nameInput.value = "";
     amountInput.value = "";
     const editItemModal = document.getElementById("editItemModal");
@@ -1147,15 +1063,10 @@ async function fetchFilteredFeeStructures() {
     terms ( id, name )
   `);
 
-  // Foreign Key Filters
   if (academicYearId) query = query.eq("academic_year_id", academicYearId);
   if (semesterId) query = query.eq("term_id", semesterId);
   if (classId) query = query.eq("class_id", classId);
 
-  // Status Filtering Rules:
-  // 1. "active": shows non-archived rows with status 'Active'
-  // 2. "inactive": shows non-archived rows with status 'Inactive'
-  // 3. "all" (All Status): shows both 'Active' and 'Inactive', but excludes all archived rows (is_archived = false)
   query = query.eq("is_archived", false);
 
   if (statusFilter === "active") {
@@ -1202,7 +1113,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const yearSelect = document.getElementById("filterAcademicYearSelect");
   const statusSelect = document.getElementById("filterStatusSelect");
 
-  // Debounced search bar input
   searchInput?.addEventListener("input", () => {
     clearTimeout(searchDebounceTimeout);
     searchDebounceTimeout = setTimeout(() => {
@@ -1210,18 +1120,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 300);
   });
 
-  // Direct dropdown listeners
   semesterSelect?.addEventListener("change", fetchFilteredFeeStructures);
   classSelect?.addEventListener("change", fetchFilteredFeeStructures);
   yearSelect?.addEventListener("change", fetchFilteredFeeStructures);
   statusSelect?.addEventListener("change", fetchFilteredFeeStructures);
 
-  // Load dropdown choices first, then run initial table fetch
   await populateFilterDropdowns();
   await fetchFilteredFeeStructures();
 });
 async function populateFilterDropdowns() {
-  // Query fee_structures to only extract options that actually exist in this table
   const { data: structures, error } = await supabaseClient
     .from("fee_structures")
     .select(
@@ -1234,7 +1141,7 @@ async function populateFilterDropdowns() {
       terms ( id, name )
     `,
     )
-    .eq("is_archived", false); // Exclude archived rows from filter options if desired
+    .eq("is_archived", false);
 
   if (error) {
     console.error(
@@ -1248,7 +1155,6 @@ async function populateFilterDropdowns() {
   const uniqueClasses = new Map();
   const uniqueTerms = new Map();
 
-  // Filter out duplicates and null relationships
   structures?.forEach((struct) => {
     if (struct.academic_years?.id && struct.academic_years?.year_label) {
       uniqueYears.set(
@@ -1264,7 +1170,6 @@ async function populateFilterDropdowns() {
     }
   });
 
-  // 1. Populate Academic Year Dropdown
   const yearSelect = document.getElementById("filterAcademicYearSelect");
   if (yearSelect) {
     const selectedAcademicYear = yearSelect.value;
@@ -1276,20 +1181,18 @@ async function populateFilterDropdowns() {
     yearSelect.value = selectedAcademicYear;
   }
 
-  // 2. Populate Class Dropdown
   const classSelect = document.getElementById("filterClassSelect");
   if (classSelect) {
-    const selectedClass = classSelect.value; // Store user's current choice
+    const selectedClass = classSelect.value;
 
     classSelect.innerHTML = `<option value="">All Classes</option>`;
     uniqueClasses.forEach((name, id) => {
       classSelect.add(new Option(name, id));
     });
 
-    classSelect.value = selectedClass; // Restore user's choice
+    classSelect.value = selectedClass;
   }
 
-  // 3. Populate Term/Semester Dropdown
   const semesterSelect = document.getElementById("filterSemesterSelect");
   if (semesterSelect) {
     const selectedsemester = semesterSelect.value;
@@ -1301,3 +1204,4 @@ async function populateFilterDropdowns() {
     semesterSelect.value = selectedsemester;
   }
 }
+

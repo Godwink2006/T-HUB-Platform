@@ -1,4 +1,3 @@
-// Helper function to format ISO timestamps
 const formatDate = (dateString) => {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -10,12 +9,10 @@ const formatDate = (dateString) => {
   });
 };
 
-// Call loadAssignmentsTable on DOMContentLoaded and after creating a new record
 document.addEventListener("DOMContentLoaded", () => {
   loadAssignmentsTable();
 });
 
-// Modal Display Helpers
 function openModal(modal) {
   if (!modal) return;
   modal.style.display = "flex";
@@ -28,7 +25,6 @@ function closeModal(modal) {
   document.body.style.overflow = "";
 }
 
-// Helper: Populate Dropdown Elements
 function populateSelect(
   selectId,
   items,
@@ -46,7 +42,6 @@ function populateSelect(
       const option = document.createElement("option");
       option.value = item[valueKey];
 
-      // If a second key is provided (e.g., teacher_id/code), append it to the label
       if (secondTextKey && item[secondTextKey]) {
         option.textContent = `${item[textKey]} (${item[secondTextKey]})`;
       } else {
@@ -58,10 +53,8 @@ function populateSelect(
   }
 }
 
-// Load Active Dropdown Options from Supabase
 async function loadFormDropdowns() {
   try {
-    // 1. Fetch teachers data
     const [teachersRes, subjectsRes, classesRes, yearsRes] = await Promise.all([
       window.supabaseClient
         .from("teachers")
@@ -76,21 +69,18 @@ async function loadFormDropdowns() {
         .eq("profiles.status", "active")
         .eq("profiles.is_archived", false),
 
-      // Fetch active subjects
       window.supabaseClient
         .from("subjects")
         .select("id, name")
         .eq("status", "Active")
         .eq("is_archived", false),
 
-      // Fetch active classes
       window.supabaseClient
         .from("classes")
         .select("id, name")
         .eq("status", "active")
         .eq("is_archived", false),
 
-      // Fetch active academic years
       window.supabaseClient
         .from("academic_years")
         .select("id, year_label")
@@ -98,14 +88,12 @@ async function loadFormDropdowns() {
         .eq("is_archived", false),
     ]);
 
-    // 2. Flatten the teacher array so full_name and profile_id exist at the root level
     const formattedTeachers = (teachersRes.data || []).map((t) => ({
-      id: t.profiles?.id || t.id, // Use profile ID if foreign key references profiles table
+      id: t.profiles?.id || t.id,
       full_name: t.profiles?.full_name || "Unknown",
       staff_id: t.staff_id,
     }));
 
-    // 3. Pass formatted teachers array to populateSelect
     populateSelect(
       "assignTeacherId",
       formattedTeachers,
@@ -146,7 +134,6 @@ async function handleCreateAssignment(e) {
   const form = e.target;
   const saveBtn = form.querySelector("button[type='submit']");
 
-  // 1. Fetch current logged-in user from Supabase session
   const {
     data: { user },
     error: authError,
@@ -157,7 +144,6 @@ async function handleCreateAssignment(e) {
     return;
   }
 
-  // 2. Query the user's profile to get their school_id
   const { data: profile, error: profileError } = await window.supabaseClient
     .from("profiles")
     .select("school_id")
@@ -171,7 +157,6 @@ async function handleCreateAssignment(e) {
 
   const schoolId = profile.school_id;
 
-  // Read Values
   const teacherId = document.getElementById("assignTeacherId").value;
   const subjectId = document.getElementById("assignSubjectId").value;
   const classId = document.getElementById("assignClassId").value;
@@ -198,7 +183,6 @@ async function handleCreateAssignment(e) {
   };
 
   try {
-    // Run validation BEFORE attempting insertion
     const isValid = await validateTeacherAssignment(payload);
     if (!isValid) return;
 
@@ -207,7 +191,6 @@ async function handleCreateAssignment(e) {
       saveBtn.textContent = "Saving...";
     }
 
-    // Insert record
     const { error } = await window.supabaseClient
       .from("teacher_assignments")
       .insert([payload]);
@@ -259,12 +242,12 @@ async function validateTeacherAssignment({
     .eq("class_id", class_id)
     .eq("academic_year_id", academic_year_id)
     .eq("subject_id", subject_id)
-    .eq("status", "active") // Matched lowercase status
+    .eq("status", "active")
     .neq("id", currentAssignmentId);
 
   if (error) {
     console.error("Validation error:", error);
-    return true; // Pass through to allow DB constraint catch if RPC/RLS issue occurs
+    return true;
   }
 
   if (existing && existing.length > 0) {
@@ -274,44 +257,37 @@ async function validateTeacherAssignment({
       `${assignedTeacher} is already assigned to teach this subject for the selected class and academic year.`,
       "error",
     );
-    return false; // Conflict found
+    return false;
   }
 
-  return true; // Valid to proceed
+  return true;
 }
 
 let originalEditData = null;
 
-// Helper: Close Modal & Reset Form State
 function closeModal(modal) {
   if (!modal) return;
 
-  // 1. Hide modal container and restore scroll
   modal.style.display = "none";
   document.body.style.overflow = "";
 
-  // 2. Clear any form inside this modal
   const form = modal.querySelector("form");
   if (form) {
     form.reset();
   }
 
-  // 3. Clear stored hidden assignment ID
   const hiddenIdInput = modal.querySelector("#editAssignmentId");
   if (hiddenIdInput) {
     hiddenIdInput.value = "";
   }
 
-  // 4. Reset cached state variable
   originalEditData = null;
 }
 
-// 1. Fetch Assignment Details & Open Modal
 async function openEditModal(assignmentId) {
   const editModal = document.getElementById("editAssignModal");
   if (!editModal) return;
 
-  // Display modal
   editModal.style.display = "flex";
   document.body.style.overflow = "hidden";
 
@@ -324,17 +300,14 @@ async function openEditModal(assignmentId) {
 
     if (error) throw error;
 
-    // Cache original state for dirty checking
     originalEditData = {
       is_class_teacher: assign.is_class_teacher,
       status: assign.status,
       description: assign.description || "",
     };
 
-    // Populate modal fields
     const idInput = document.getElementById("editAssignmentId");
     if (!idInput) {
-      // Dynamically add hidden input if missing in HTML form
       const hiddenInput = document.createElement("input");
       hiddenInput.type = "hidden";
       hiddenInput.id = "editAssignmentId";
@@ -344,7 +317,6 @@ async function openEditModal(assignmentId) {
       idInput.value = assign.id;
     }
 
-    // Set form control values
     const classTeacherSelect =
       document.querySelector(
         "#editAssignModal select[name='is_class_teacher']",
@@ -367,7 +339,6 @@ async function openEditModal(assignmentId) {
   }
 }
 
-// 2. Submit Update with Change Detection & Constraint Error Handling
 async function handleUpdateAssignment(e) {
   e.preventDefault();
 
@@ -393,7 +364,6 @@ async function handleUpdateAssignment(e) {
     ? descriptionTextarea.value.trim()
     : "";
 
-  // Change detection
   const hasChanges =
     currentIsClassTeacher !== originalEditData.is_class_teacher ||
     currentStatus !== originalEditData.status ||
@@ -422,7 +392,6 @@ async function handleUpdateAssignment(e) {
       .update(payload)
       .eq("id", assignmentId);
     if (error) {
-      // Row Level Security (RLS) permission failure
       if (
         error.code === "42501" ||
         error.message?.toLowerCase().includes("row-level security")
@@ -430,7 +399,6 @@ async function handleUpdateAssignment(e) {
         throw new Error("Permission denied.");
       }
 
-      // Unique class teacher constraint failure
       if (error.code === "23505") {
         throw new Error(
           "This class already has an assigned Class Teacher for this academic year.",
@@ -457,9 +425,7 @@ async function handleUpdateAssignment(e) {
   }
 }
 
-// 3. Event Listeners & Event Delegation
 document.addEventListener("DOMContentLoaded", () => {
-  // Delegate edit button click on the table container
   const tableBody = document.getElementById("assignmentsTableBody");
   if (tableBody) {
     tableBody.addEventListener("click", (e) => {
@@ -471,13 +437,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Edit form submit event listener
   const editForm = document.querySelector("#editAssignModal form");
   if (editForm) {
     editForm.addEventListener("submit", handleUpdateAssignment);
   }
 
-  // Modal controls
   const closeEditBtn = document.getElementById("closeEditAssignModal");
   const cancelEditBtn = document.getElementById("cancelEditAssignModal");
   const editModal = document.getElementById("editAssignModal");
@@ -491,9 +455,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === editModal) hideModal();
   });
 });
-// Bind Event Listeners
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Load select options on page start
   loadFormDropdowns();
 
   const assignModal = document.getElementById("assignModal");
@@ -527,19 +490,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let currentArchiveAssignmentId = null;
 
-// 1. OPEN ARCHIVE MODAL & POPULATE DETAILS BY ID
 async function openArchiveModal(assignmentId) {
   const archiveModal = document.getElementById("archiveAssignModal");
   const modalText = document.getElementById("archiveTeacherNameClass");
   if (!archiveModal || !modalText) return;
-  // Show modal
+
   archiveModal.style.display = "flex";
   document.body.style.overflow = "hidden";
 
   try {
     currentArchiveAssignmentId = assignmentId;
 
-    // Fetch assignment details along with Teacher and Class names
     const { data: assign, error } = await window.supabaseClient
       .from("teacher_assignments")
       .select(
@@ -557,7 +518,6 @@ async function openArchiveModal(assignmentId) {
     const teacherName = assign.profiles?.full_name || "this teacher";
     const className = assign.classes?.name || "this class";
 
-    // Inject Teacher Name and Class with green spans into the paragraph ID
     modalText.innerHTML = `Are you sure you want to archive <span style="color: green; font-weight: 600;">${teacherName}</span>'s assignment for <span style="color: green; font-weight: 600;">${className}</span>?`;
   } catch (err) {
     console.error("Error loading archive details:", err.message);
@@ -565,7 +525,6 @@ async function openArchiveModal(assignmentId) {
   }
 }
 
-// 2. CONFIRM ARCHIVE ACTION BY ID
 async function handleConfirmArchive() {
   if (!currentArchiveAssignmentId) return;
 
@@ -578,7 +537,6 @@ async function handleConfirmArchive() {
       confirmBtn.textContent = "Archiving...";
     }
 
-    // Set is_archived = true and status = 'inactive'
     const { error } = await window.supabaseClient
       .from("teacher_assignments")
       .update({
@@ -589,7 +547,6 @@ async function handleConfirmArchive() {
       .eq("id", currentArchiveAssignmentId);
 
     if (error) {
-      // Handle Supabase Row Level Security (RLS) restriction for non-admins
       if (
         error.code === "42501" ||
         error.message.includes("violates row-level security policy")
@@ -601,7 +558,6 @@ async function handleConfirmArchive() {
       throw error;
     }
 
-    // Close Modal, Reset Form/State & Refresh Active Table
     closeModal(archiveModal);
     showToast("Teacher assignment archived successfully!", "success");
 
@@ -620,9 +576,7 @@ async function handleConfirmArchive() {
   }
 }
 
-// 3. EVENT LISTENERS USING EXACT ELEMENT IDS
 document.addEventListener("DOMContentLoaded", () => {
-  // Delegate click from table body to dynamic archive buttons
   const tableBody = document.getElementById("assignmentsTableBody");
   if (tableBody) {
     tableBody.addEventListener("click", (e) => {
@@ -634,7 +588,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Button Listeners targeted by ID
   const confirmBtn = document.getElementById("confirmArchiveModalBtn");
   const cancelBtn = document.getElementById("cancelArchiveModalBtn");
   const archiveModal = document.getElementById("archiveAssignModal");
@@ -656,7 +609,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let globalAssignmentsData = [];
 
-// 1. FETCH ASSIGNMENTS & POPULATE DYNAMIC FILTER DROPDOWNS
 async function loadAssignmentsTable() {
   const tableBody = document.getElementById("assignmentsTableBody");
   if (!tableBody) return;
@@ -693,13 +645,10 @@ async function loadAssignmentsTable() {
 
     if (error) throw error;
 
-    // Cache assigned data globally
     globalAssignmentsData = assignments || [];
 
-    // Populate filter dropdowns using unique assigned values
     populateFilterDropdowns(globalAssignmentsData);
 
-    // Initial render of all records
     renderAssignmentsTable(globalAssignmentsData);
   } catch (err) {
     console.error("Error fetching assignments:", err.message);
@@ -710,13 +659,11 @@ async function loadAssignmentsTable() {
   }
 }
 
-// 2. EXTRACT UNIQUE OPTIONS FOR TEACHER, CLASS, AND ACADEMIC YEAR DROPDOWNS
 function populateFilterDropdowns(assignments) {
   const teacherSelect = document.getElementById("filterTeacher");
   const classSelect = document.getElementById("filterClass");
   const yearSelect = document.getElementById("filterAcademicYear");
 
-  // Collections for unique items
   const teachersMap = new Map();
   const classesMap = new Map();
   const yearsMap = new Map();
@@ -733,7 +680,6 @@ function populateFilterDropdowns(assignments) {
     }
   });
 
-  // Helper to re-populate standard options
   const buildOptions = (selectElem, map, defaultText) => {
     if (!selectElem) return;
     selectElem.innerHTML = `<option value="">${defaultText}</option>`;
@@ -750,7 +696,6 @@ function populateFilterDropdowns(assignments) {
   buildOptions(yearSelect, yearsMap, "All Academic Years");
 }
 
-// 3. RENDER TABLE ROWS FROM FILTERED DATA
 function renderAssignmentsTable(assignments) {
   const tableBody = document.getElementById("assignmentsTableBody");
   if (!tableBody) return;
@@ -808,7 +753,6 @@ function renderAssignmentsTable(assignments) {
   });
 }
 
-// 4. CLIENT-SIDE FILTER CONTROLLER
 function filterAssignments() {
   const searchTerm =
     document.getElementById("assignSearchInput")?.value.toLowerCase().trim() ||
@@ -844,7 +788,6 @@ function filterAssignments() {
   renderAssignmentsTable(filtered);
 }
 
-// 5. ATTACH TOOLBAR LISTENERS ON LOAD
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("assignSearchInput");
   const filterTeacher = document.getElementById("filterTeacher");
@@ -859,3 +802,4 @@ document.addEventListener("DOMContentLoaded", () => {
   if (filterYear) filterYear.addEventListener("change", filterAssignments);
   if (filterStatus) filterStatus.addEventListener("change", filterAssignments);
 });
+

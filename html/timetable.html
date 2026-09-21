@@ -63,7 +63,6 @@
 
           <select id="academicYearFilter">
             <option value="">All Academic Years</option>
-            <!-- Dynamic options populated from lookups or backend -->
           </select>
 
           <select id="statusFilter">
@@ -83,15 +82,13 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <!-- Dynamic table body -->
-            <tbody id="timetablesTableBody">
-              <!-- Loaded dynamically via JavaScript -->
-            </tbody>
+
+            <tbody id="timetablesTableBody"></tbody>
           </table>
         </section>
       </main>
     </div>
-    <!-- Create Timetable Modal -->
+
     <div id="timetableModal" class="modal-timetable">
       <div class="timetable-modal-content">
         <div class="timetable-modal-header">
@@ -178,7 +175,6 @@
       </div>
     </div>
 
-    <!-- Create Lesson Modal -->
     <div id="lessonModal" class="lesson-modal">
       <div class="lesson-modal-content">
         <div class="lesson-modal-header">
@@ -259,7 +255,6 @@
       </div>
     </div>
 
-    <!-- Edit Lesson Modal -->
     <div id="editLessonModal" class="edit-lesson-modal">
       <div class="edit-lesson-modal-content">
         <div class="edit-lesson-modal-header">
@@ -341,7 +336,6 @@
       </div>
     </div>
 
-    <!-- Edit Timetable Modal -->
     <div id="editTimetableModal" class="edit-modal-timetable">
       <div class="edit-timetable-modal-content">
         <div class="edit-timetable-modal-header">
@@ -385,9 +379,7 @@
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody id="editTimetableLessonsTbody">
-                  <!-- Lessons rendered dynamically -->
-                </tbody>
+                <tbody id="editTimetableLessonsTbody"></tbody>
               </table>
             </section>
 
@@ -410,7 +402,6 @@
       </div>
     </div>
 
-    <!---View timetable modal-->
     <div
       id="viewTimetableModal"
       class="view-timetable-modal"
@@ -450,9 +441,7 @@
                 </tr>
               </thead>
 
-              <tbody id="viewTimetableGridBody">
-                <!-- Dynamic periods and lessons rendered via JS -->
-              </tbody>
+              <tbody id="viewTimetableGridBody"></tbody>
             </table>
           </section>
 
@@ -463,7 +452,6 @@
       </div>
     </div>
 
-    <!-- Archive timetable modal -->
     <div id="archiveTimetableModal" class="archive-timetable-modal">
       <div class="confirm-modal">
         <div class="confirm-icon">
@@ -472,7 +460,6 @@
 
         <h2>Archive Timetable</h2>
 
-        <!-- Added span with id editArchiveClassName -->
         <p>
           Are you sure you want to archive the timetable for
           <strong id="editArchiveClassName" style="color: green">...</strong>?
@@ -491,7 +478,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

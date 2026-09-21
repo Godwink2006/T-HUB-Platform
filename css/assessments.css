@@ -17,15 +17,11 @@ body {
   display: flex;
 }
 
-/* Main Content */
-
 .assessment-main-content {
   width: 100%;
   min-height: 100vh;
   padding: 10px;
 }
-
-/* Topbar */
 
 .topbar {
   display: flex;
@@ -610,7 +606,7 @@ body {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 390px; /* Fixed height requirement */
+    height: 390px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
@@ -665,7 +661,6 @@ body {
     font-size: 13px;
   }
 
-  /* Back and Add Assessment Buttons on the Same Line */
   .top-right {
     display: flex !important;
     flex-direction: row !important;
@@ -710,7 +705,6 @@ body {
     border-radius: 10px;
   }
 
-  /* Toolbar Inputs in a Single Horizontal Row */
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -783,7 +777,7 @@ body {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 590px; /* Fixed height requirement */
+    height: 590px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
@@ -862,7 +856,6 @@ body {
     flex: 1;
   }
 
-  /* Horizontal Modal Action Buttons with Space Between */
   .edit-assessment-modal-footer {
     display: flex;
     flex-direction: row;

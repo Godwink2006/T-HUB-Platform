@@ -2,7 +2,6 @@ const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 let cachedDepartments = [];
 
-// 1. Filter function handling Search, Department, and Status
 function filterTeachersTable() {
   const searchQuery =
     document.getElementById("teacherSearchInput")?.value.trim().toLowerCase() ||
@@ -18,19 +17,15 @@ function filterTeachersTable() {
   const filteredTeachers = currentTeachersList.filter((teacher) => {
     const profile = teacher.profiles || {};
 
-    // Get Department ID and Name directly from teacher object
     let deptId = teacher.department_id || teacher.departments?.id;
     if (Array.isArray(teacher.departments)) deptId = teacher.departments[0]?.id;
 
-    // Department Filter Match
     const matchesDept =
       !selectedDepartment || String(deptId) === String(selectedDepartment);
 
-    // Status Filter Match
     const teacherStatus = (profile.status || "active").toLowerCase();
     const matchesStatus = !selectedStatus || teacherStatus === selectedStatus;
 
-    // Search Input Match (Staff ID, Full Name, Email)
     const staffId = (teacher.staff_id || "").toLowerCase();
     const name = (profile.full_name || "").toLowerCase();
     const email = (profile.email || "").toLowerCase();
@@ -84,13 +79,11 @@ function filterTeachersTable() {
     .join("");
 }
 
-// 2. Setup function populating departments directly from teacher data
 function setupTeacherToolbarFilters() {
   const searchInput = document.getElementById("teacherSearchInput");
   const departmentSelect = document.getElementById("teacherDepartmentFilter");
   const statusSelect = document.getElementById("teacherStatusFilter");
 
-  // Populate Status Options
   if (statusSelect) {
     statusSelect.innerHTML = `
       <option value="">All Status</option>
@@ -99,7 +92,6 @@ function setupTeacherToolbarFilters() {
     `;
   }
 
-  // Populate Department Options from currentTeachersList
   if (departmentSelect) {
     const uniqueDepartments = new Map();
 
@@ -125,7 +117,6 @@ function setupTeacherToolbarFilters() {
     departmentSelect.innerHTML = optionsHtml;
   }
 
-  // Attach Event Listeners
   if (searchInput) searchInput.addEventListener("input", filterTeachersTable);
   if (departmentSelect)
     departmentSelect.addEventListener("change", filterTeachersTable);
@@ -148,7 +139,7 @@ async function loadDepartmentDropdown(
     const { data: departments, error } = await supabaseClient
       .from("departments")
       .select("id, name")
-      .eq("is_archived", false) // Fixed column to match schema
+      .eq("is_archived", false)
       .order("name", { ascending: true });
 
     if (error) {
@@ -168,7 +159,6 @@ async function loadDepartmentDropdown(
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // DOM Elements
   const addTeacherBtn = document.getElementById("addTeacher");
   const teacherModal = document.getElementById("teacherModal");
   const closeTeacherModal = document.getElementById("closeTeacherModal");
@@ -185,14 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const sidebarOverlay = document.getElementById("sidebarOverlay");
   const sidebar = document.querySelector(".sidebar");
 
-  // ------------------------------------------------------------------
-  // 1. Navigation & Modal Controls
-  // ------------------------------------------------------------------
-
-  // Open Add Teacher Modal
   if (addTeacherBtn) {
     addTeacherBtn.addEventListener("click", () => {
-      // 1. Populate active departments into <select>
       loadDepartmentDropdown();
       teacherForm.reset();
       teacherModal.style.display = "flex";
@@ -204,7 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
     teacherModal.style.display = "none";
     unLockBodyScroll();
 
-    // Reset custom image preview elements
     const teacherPhotoPreview = document.getElementById("teacherPhotoPreview");
     const teacherPhotoFileName = document.getElementById(
       "teacherPhotoFileName",
@@ -219,7 +202,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (cancelTeacherModal)
     cancelTeacherModal.addEventListener("click", hideAddModal);
 
-  // Close View Teacher Modal
   const hideViewModal = () => {
     viewTeacherModal.style.display = "none";
     unLockBodyScroll();
@@ -228,16 +210,12 @@ document.addEventListener("DOMContentLoaded", () => {
     closeViewTeacherModal.addEventListener("click", hideViewModal);
   if (closeViewBtn) closeViewBtn.addEventListener("click", hideViewModal);
 
-  // Global helper function for toggling password visibility inline
   window.togglePassword = function (inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input) return;
     const isPassword = input.type === "password";
     input.type = isPassword ? "text" : "password";
   };
-  // ------------------------------------------------------------------
-  // 2. Submit Add Teacher Form (Invoking Edge Function)
-  // ------------------------------------------------------------------
 
   if (teacherForm) {
     teacherForm.addEventListener("submit", async (e) => {
@@ -260,11 +238,9 @@ document.addEventListener("DOMContentLoaded", () => {
         let photoBase64 = null;
 
         if (photoInput && photoInput.files.length > 0) {
-          // Compresses image to max width 800px at 70% JPEG quality
           photoBase64 = await compressToBase64(photoInput.files[0], 800, 0.7);
         }
 
-        // Read values directly using specific IDs
         const firstName = document
           .getElementById("teacherFirstName")
           .value.trim();
@@ -287,14 +263,12 @@ document.addEventListener("DOMContentLoaded", () => {
           password: newPassword,
         };
 
-        // Get Session JWT token for authentication
         const { data: sessionData, error: sessionError } =
           await supabaseClient.auth.getSession();
         if (sessionError || !sessionData.session) {
           throw new Error("User session expired. Please log in again.");
         }
 
-        // Invoke Edge Function
         const { data, error } = await supabaseClient.functions.invoke(
           "create-teacher",
           {
@@ -305,7 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
           },
         );
 
-        // Extract custom error message from Edge Function non-2xx response
         if (error) {
           let serverMessage = null;
           if (error.context) {
@@ -373,7 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Replace the backdrop click section in your second DOMContentLoaded listener with this:
   [
     document.getElementById("teacherModal"),
     document.getElementById("editTeacherModal"),
@@ -388,19 +360,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-  // Initial Data Fetch
+
   loadTeachers();
   loadDepartmentDropdown();
-  setupTeacherToolbarFilters(); // <-- ADD THIS CALL
+  setupTeacherToolbarFilters();
 });
 
-// ------------------------------------------------------------------
-// 4. Action Handlers (View & Archive)
-// ------------------------------------------------------------------
 function openViewModal(teacher) {
   const profile = teacher.profiles || {};
 
-  // Helper function to format ISO timestamps into readable strings
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
@@ -412,7 +380,6 @@ function openViewModal(teacher) {
     });
   };
 
-  // Profile Header Elements
   document.getElementById("viewTeacherName").textContent =
     profile.full_name || "-";
   const photoEl = document.getElementById("viewTeacherPhoto");
@@ -422,13 +389,11 @@ function openViewModal(teacher) {
     this.src = DEFAULT_AVATAR;
   };
 
-  // Status Badge Handling
   const statusElement = document.getElementById("viewTeacherStatus");
   const currentStatus = profile.status || teacher.status || "Active";
   statusElement.textContent = currentStatus;
   statusElement.className = `view-teacher-status ${currentStatus.toLowerCase()}`;
 
-  // Grid Details Elements
   document.getElementById("viewTeacherStaffId").textContent =
     teacher.staff_id || "-";
   document.getElementById("viewTeacherGender").textContent =
@@ -446,7 +411,6 @@ function openViewModal(teacher) {
   document.getElementById("viewTeacherAddress").textContent =
     teacher.address || "-";
 
-  // Created At and Updated At Timestamps
   document.getElementById("viewTeacherCreatedAt").textContent = formatDate(
     teacher.created_at || profile.created_at,
   );
@@ -454,7 +418,6 @@ function openViewModal(teacher) {
     teacher.updated_at || profile.updated_at,
   );
 
-  // Display Modal
   const viewTeacherModal = document.getElementById("viewTeacherModal");
   if (viewTeacherModal) {
     viewTeacherModal.style.display = "flex";
@@ -462,10 +425,8 @@ function openViewModal(teacher) {
   }
 }
 
-// Compress file and return compressed Base64 String
 function compressToBase64(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
-    // Guard against null, undefined, or non-file values
     if (!file || !(file instanceof Blob || file instanceof File)) {
       return resolve(null);
     }
@@ -504,10 +465,8 @@ function compressToBase64(file, maxWidth = 800, quality = 0.7) {
   });
 }
 
-// Updated helper: returns a compressed Blob ready for Supabase Storage
 function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
-    // Guard against null, undefined, or non-file values
     if (!file || !(file instanceof Blob || file instanceof File)) {
       return resolve(null);
     }
@@ -554,7 +513,7 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
     reader.onerror = (err) => reject(err);
   });
 }
-// Close Archive Teacher Modal
+
 const hideArchiveModal = () => {
   const archiveTeacherModal = document.getElementById("archiveTeacherModal");
   if (archiveTeacherModal) {
@@ -595,7 +554,6 @@ if (confirmArchive) {
     confirmArchive.textContent = "Archiving...";
 
     try {
-      // 1. Client-Side Guard: Prevent teachers/non-admins from triggering this action
       const {
         data: { user },
       } = await supabaseClient.auth.getUser();
@@ -611,7 +569,6 @@ if (confirmArchive) {
         );
       }
 
-      // 2. Mark teacher as archived in `teachers` table
       const { error: teacherErr } = await supabaseClient
         .from("teachers")
         .update({
@@ -621,14 +578,12 @@ if (confirmArchive) {
         .eq("id", selectedTeacherId);
 
       if (teacherErr) {
-        // Handle RLS policy violations gracefully
         if (teacherErr.code === "42501") {
           throw new Error("Permission denied by database security policy.");
         }
         throw teacherErr;
       }
 
-      // 3. Mark profile as archived and set status to inactive
       const { error: profileErr } = await supabaseClient
         .from("profiles")
         .update({
@@ -658,14 +613,12 @@ if (confirmArchive) {
   });
 }
 
-// Helper function to reset form & image preview when modal closes
 function resetTeacherForm() {
   if (teacherForm) teacherForm.reset();
   const previewImg = document.getElementById("teacherPhotoPreview");
   if (previewImg) previewImg.src = DEFAULT_AVATAR;
 }
 
-// File Upload Preview Listener
 const editPhotoInput = document.getElementById("editTeacherPhoto");
 if (editPhotoInput) {
   editPhotoInput.addEventListener("change", (e) => {
@@ -683,7 +636,6 @@ if (editPhotoInput) {
   });
 }
 
-// Close Edit Teacher Modal
 const hideEditModal = () => {
   editTeacherModal.style.display = "none";
   unLockBodyScroll();
@@ -711,7 +663,6 @@ async function openEditModal(teacher) {
   const firstName = fullNameParts[0] || "";
   const lastName = fullNameParts.slice(1).join(" ") || "";
 
-  // Safe setter helper
   const setInputValue = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.value = val || "";
@@ -775,7 +726,7 @@ async function openEditModal(teacher) {
     lockBodyScroll();
   }
 }
-// Edit Form Submit Listener
+
 const editTeacherForm = document.getElementById("editTeacherForm");
 if (editTeacherForm) {
   editTeacherForm.addEventListener("submit", async (e) => {
@@ -803,7 +754,6 @@ if (editTeacherForm) {
           ? photoInput.files[0]
           : null;
 
-      // Collect current form input state
       const currentValues = {
         firstName,
         lastName,
@@ -816,7 +766,7 @@ if (editTeacherForm) {
         status: document.getElementById("editTeacherStatus").value,
         address: document.getElementById("editTeacherAddress").value.trim(),
       };
-      // Detect changes with normalized string fallbacks
+
       const hasDataChanged =
         originalTeacherData &&
         Object.keys(currentValues).some(
@@ -835,7 +785,6 @@ if (editTeacherForm) {
 
       let photoUrl = originalTeacherData?.photo_url || null;
 
-      // Only execute compression and upload if a NEW file was explicitly selected
       if (avatarFile) {
         submitBtn.textContent = "Compressing photo...";
         const compressedBlob = await compressImageToBlob(avatarFile, 800, 0.7);
@@ -863,7 +812,6 @@ if (editTeacherForm) {
 
       submitBtn.textContent = "Saving changes...";
 
-      // Construct Payload
       const payload = {
         teacher_id: teacherId,
         full_name: `${firstName} ${lastName}`.trim(),
@@ -874,10 +822,9 @@ if (editTeacherForm) {
         phone_number: currentValues.phone_number,
         status: currentValues.status,
         address: currentValues.address,
-        photoUrl: photoUrl, // Pass direct storage URL
+        photoUrl: photoUrl,
       };
 
-      // Retrieve Session Token
       const { data: sessionData, error: sessionError } =
         await supabaseClient.auth.getSession();
 
@@ -885,7 +832,6 @@ if (editTeacherForm) {
         throw new Error("Session expired. Please log in again.");
       }
 
-      // Invoke Edge Function
       const { data, error } = await supabaseClient.functions.invoke(
         "update-teacher",
         {
@@ -929,9 +875,6 @@ if (editTeacherForm) {
     }
   });
 }
-// ------------------------------------------------------------------
-// 3. Data Fetching & Dynamic Table Rendering
-// ------------------------------------------------------------------
 
 let currentTeachersList = [];
 
@@ -939,7 +882,6 @@ async function loadTeachers() {
   const tbody = document.querySelector(".teachers-table-card tbody");
   if (!tbody) return;
 
-  // Render spinner instantly
   renderTeachersTableLoading();
 
   try {
@@ -958,14 +900,13 @@ async function loadTeachers() {
 
     currentTeachersList = teachers || [];
 
-    setupTeacherToolbarFilters(); // Populates department options & enables search listeners
+    setupTeacherToolbarFilters();
 
     if (currentTeachersList.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No teachers found.</td></tr>`;
       return;
     }
 
-    // Yield execution so spinner renders smoothly before heavy table insertion
     setTimeout(() => {
       const rowsHtml = currentTeachersList
         .map((teacher) => {
@@ -1009,7 +950,6 @@ async function loadTeachers() {
   }
 }
 
-// Single Event Delegation Listener for Table Actions
 document
   .querySelector(".teachers-table-card tbody")
   ?.addEventListener("click", (e) => {
@@ -1030,7 +970,6 @@ document
     }
   });
 
-// Helper function to render loading state in the teachers table
 function renderTeachersTableLoading() {
   const tbody = document.querySelector(".teachers-table-card tbody");
   if (!tbody) return;
@@ -1044,3 +983,4 @@ function renderTeachersTableLoading() {
     </tr>
   `;
 }
+

@@ -7,111 +7,109 @@ const closeDateModal = document.getElementById("closeDateModal");
 const cancelDateModal = document.getElementById("cancelDateModal");
 
 filterBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    if (filterMenu.style.display === "block") {
-
-        filterMenu.style.display = "none";
-    } else {
-       filterMenu.style.display = "block";
-
-    }
+  e.stopPropagation();
+  if (filterMenu.style.display === "block") {
+    filterMenu.style.display = "none";
+  } else {
+    filterMenu.style.display = "block";
+  }
 });
 
 customDate.addEventListener("click", function (e) {
-    e.preventDefault();
+  e.preventDefault();
 
-        filterMenu.style.display = "none";
-     
-       dateRangeModal.style.display = "flex";
+  filterMenu.style.display = "none";
 
-       lockBodyScroll();
+  dateRangeModal.style.display = "flex";
+
+  lockBodyScroll();
 });
 
 closeDateModal.addEventListener("click", function () {
-     
-       dateRangeModal.style.display = "none";
+  dateRangeModal.style.display = "none";
 
-       unLockBodyScroll();
+  unLockBodyScroll();
 });
 
 cancelDateModal.addEventListener("click", function () {
-     
-       dateRangeModal.style.display = "none";
+  dateRangeModal.style.display = "none";
 
-       unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-window.addEventListener("click",(e)=> {
-if(!filterBtn.contains(e.target) && 
-   !filterMenu.contains(e.target)){
+window.addEventListener("click", (e) => {
+  if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
+    filterMenu.style.display = "none";
+  }
 
-filterMenu.style.display="none";
+  if (e.target === dateRangeModal) {
+    dateRangeModal.style.display = "none";
 
-}
-
-if(e.target===dateRangeModal){
-dateRangeModal.style.display="none";
-
-unLockBodyScroll();
-}
+    unLockBodyScroll();
+  }
 });
 
 const announcementModal = document.getElementById("announcementModal");
 
-const cancelAnnouncementModal = document.getElementById("cancelAnnouncementModal");
+const cancelAnnouncementModal = document.getElementById(
+  "cancelAnnouncementModal",
+);
 
 const openAnnouncementModal = document.getElementById("openAnnouncementModal");
 
-const closeAnnouncementModal = document.getElementById("closeAnnouncementModal");
+const closeAnnouncementModal = document.getElementById(
+  "closeAnnouncementModal",
+);
 
-openAnnouncementModal.addEventListener("click", ()=> {
-announcementModal.style.display="flex";
+openAnnouncementModal.addEventListener("click", () => {
+  announcementModal.style.display = "flex";
 
-lockBodyScroll();
+  lockBodyScroll();
 });
 
-closeAnnouncementModal.addEventListener("click", ()=> {
-announcementModal.style.display="none";
+closeAnnouncementModal.addEventListener("click", () => {
+  announcementModal.style.display = "none";
 
-unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-cancelAnnouncementModal.addEventListener("click", ()=> {
-announcementModal.style.display="none";
+cancelAnnouncementModal.addEventListener("click", () => {
+  announcementModal.style.display = "none";
 
-unLockBodyScroll();
+  unLockBodyScroll();
 });
 
-window.addEventListener("click",(e)=> {
-if(e.target===announcementModal){
-announcementModal.style.display="none";
+window.addEventListener("click", (e) => {
+  if (e.target === announcementModal) {
+    announcementModal.style.display = "none";
 
-unLockBodyScroll();
-}
+    unLockBodyScroll();
+  }
 });
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const avatarImg = document.getElementById('profileAvatar');
+document.addEventListener("DOMContentLoaded", async () => {
+  const avatarImg = document.getElementById("profileAvatar");
   if (!avatarImg) return;
 
-  // 1. Get current logged-in user
-  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabaseClient.auth.getUser();
   if (authError || !user) return;
 
-  // 2. Fetch avatar URL directly from profiles table
   const { data: profile, error } = await supabaseClient
-    .from('profiles')
-    .select('photo_url')
-    .eq('id', user.id)
+    .from("profiles")
+    .select("photo_url")
+    .eq("id", user.id)
     .single();
 
   if (error) {
-    console.error('Error fetching dashboard avatar:', error);
+    console.error("Error fetching dashboard avatar:", error);
     return;
   }
 
-  // 3. Set photo if available
   if (profile && profile.photo_url) {
     avatarImg.src = profile.photo_url;
   }
 });
+

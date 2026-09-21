@@ -51,14 +51,12 @@
         </header>
 
         <section class="toolbar">
-          <!-- Search Input -->
           <input
             type="text"
             id="searchSubjectInput"
             placeholder="Search subjects..."
           />
 
-          <!-- Department Filter -->
           <select id="filterDepartmentSelect">
             <option value="">All Departments</option>
           </select>
@@ -153,7 +151,6 @@
       </div>
     </div>
 
-    <!---Edit student modal-->
     <div id="editSubjectModal" class="edit-modal-subject">
       <div class="edit-subject-modal-content">
         <div class="edit-subject-modal-header">
@@ -163,7 +160,6 @@
 
         <div class="edit-subject-modal-body">
           <form id="editSubjectForm">
-            <!-- Hidden input to store subject ID being edited -->
             <input type="hidden" id="editSubjectId" />
 
             <div class="form-grid">
@@ -238,7 +234,6 @@
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

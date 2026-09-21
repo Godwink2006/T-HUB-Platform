@@ -13,8 +13,6 @@ body {
   display: flex;
 }
 
-/* Sidebar */
-
 .sidebar {
   width: 260px;
   height: 100vh;
@@ -82,16 +80,12 @@ body {
   text-align: center;
 }
 
-/* Main Content */
-
 .students-main-content {
   margin-left: 260px;
   width: calc(100% - 260px);
   min-height: 100vh;
   padding: 10px;
 }
-
-/* Topbar */
 
 .topbar {
   display: flex;
@@ -242,8 +236,6 @@ tr {
   background: #fee2e2;
   color: #dc2626;
 }
-
-/* Student modal */
 
 .modal-student {
   position: fixed;
@@ -594,7 +586,6 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
-  /* Responsive Topbar */
   .topbar {
     display: grid !important;
     grid-template-columns: 1fr auto !important;
@@ -644,7 +635,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Toolbar */
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -664,7 +654,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* Responsive Table */
   .students-table-card {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -819,8 +808,6 @@ tr {
   }
 }
 
-/* Password Visibility Toggler */
-
 .password-field {
   position: relative;
 }
@@ -845,8 +832,6 @@ tr {
 .toggle-password:hover {
   color: #333;
 }
-
-/* Avatar Upload Components */
 
 .avatar-upload-group {
   display: flex;

@@ -169,7 +169,6 @@ body {
   border-radius: 10px;
 }
 
-/* Hide form initially to avoid UI flashes */
 #schoolProfileForm,
 form {
   visibility: hidden;
@@ -177,14 +176,12 @@ form {
   transition: opacity 0.2s ease-in-out;
 }
 
-/* Make form visible once check passes */
 #schoolProfileForm.auth-ready,
 form.auth-ready {
   visibility: visible;
   opacity: 1;
 }
 
-/* Container positioning for loader */
 .form-loader {
   display: flex;
   flex-direction: column;
@@ -199,12 +196,11 @@ form.auth-ready {
   color: #64748b;
 }
 
-/* Spinner Animation */
 .spinner {
   width: 36px;
   height: 36px;
   border: 3px solid #e2e8f0;
-  border-top-color: #16a34a; /* Matches green theme */
+  border-top-color: #16a34a;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -215,20 +211,17 @@ form.auth-ready {
   }
 }
 
-/* Initial hidden state for form */
 #schoolProfileForm {
   display: none;
   opacity: 0;
   transition: opacity 0.25s ease-in-out;
 }
 
-/* Revealed state when auth completes */
 #schoolProfileForm.auth-ready {
   display: block;
   opacity: 1;
 }
 
-/* Styling disabled inputs for clean read-only viewing */
 input:disabled,
 select:disabled,
 textarea:disabled {
@@ -237,12 +230,11 @@ textarea:disabled {
   outline: none !important;
   box-shadow: none !important;
   opacity: 1 !important;
-  padding-left: 20px !important; /* Aligns text cleanly with labels */
-  font-weight: 500; /* Makes text slightly bolder for better legibility */
+  padding-left: 20px !important;
+  font-weight: 500;
   cursor: default;
 }
 
-/* Optional: Hides dropdown arrows for select elements when disabled */
 select:disabled {
   appearance: none;
   -webkit-appearance: none;
@@ -251,17 +243,15 @@ select:disabled {
 
 .my-profile-upload {
   display: flex;
-  flex-direction: row; /* Arranges the preview image and actions side-by-side */
-  align-items: center; /* Centers the button vertically alongside the image */
-  gap: 1.5rem; /* Adds spacing between the image and the button */
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-/* Optional: If you want the button on the left and image on the right */
 .avatar-upload-actions {
-  order: 1; /* Moves the upload button box to the left side of the image */
+  order: 1;
 }
 
-/* Column for Upload Button + File Name */
 .avatar-upload-actions {
   display: flex;
   flex-direction: column;
@@ -269,7 +259,6 @@ select:disabled {
   gap: 0.4rem;
 }
 
-/* Custom Upload Button Styling */
 .upload-btn {
   display: inline-flex;
   align-items: center;
@@ -294,14 +283,12 @@ select:disabled {
   font-size: 1.1rem;
 }
 
-/* Selected File Name Text */
 .file-name-text {
   font-size: 0.75rem;
   color: #64748b;
   word-break: break-all;
 }
 
-/* Avatar Section Wrapper */
 .avatar-upload-group {
   display: flex;
   flex-direction: column;
@@ -314,7 +301,6 @@ select:disabled {
   color: #334155;
 }
 
-/* Flex Row for Preview + Actions */
 .avatar-edit-container {
   display: flex;
   align-items: center;
@@ -325,7 +311,6 @@ select:disabled {
   border-radius: 10px;
 }
 
-/* Circular Avatar Frame */
 .avatar-preview-wrapper {
   width: 70px;
   height: 70px;

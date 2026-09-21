@@ -87,14 +87,11 @@ function escapeAttribute(str) {
     .replace(/>/g, "&gt;");
 }
 
-// 1. Fetch Departments from Supabase
 async function loadDepartments() {
   const tbody = document.getElementById("departmentsTableBody");
 
-  // Guard clause: stop execution ONLY if the element is missing
   if (!tbody) return;
 
-  // Loading indicator
   tbody.innerHTML = `
     <tr>
       <td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">
@@ -121,7 +118,6 @@ async function loadDepartments() {
   }
 }
 
-// 2. Render Rows to Table
 function renderDepartmentsTable(departments) {
   const tbody = document.getElementById("departmentsTableBody");
   tbody.innerHTML = "";
@@ -163,7 +159,6 @@ function renderDepartmentsTable(departments) {
   });
 }
 
-// 2. For ISO timestamps (created_at, updated_at)
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -185,7 +180,6 @@ async function handleAddClass(event) {
     .value.trim();
   const status = document.getElementById("departmentStatus").value;
 
-  // 1. Client-side Validation
   if (!name || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
@@ -200,7 +194,6 @@ async function handleAddClass(event) {
       saveBtn.textContent = "Saving...";
     }
 
-    // 2. Insert into Supabase
     const { data, error } = await supabaseClient
       .from("departments")
       .insert([
@@ -213,7 +206,6 @@ async function handleAddClass(event) {
       ])
       .select();
 
-    // 1. Check for database errors first
     if (error) {
       if (error.code === "23505") {
         showToast("This department name already exists.", "error");
@@ -227,7 +219,6 @@ async function handleAddClass(event) {
       return;
     }
 
-    // 2. Check for RLS silent block (no error thrown, but 0 rows inserted)
     if (!data || data.length === 0) {
       showToast("You do not have permission to add a department.", "error");
       return;
@@ -239,7 +230,7 @@ async function handleAddClass(event) {
       departmentModal.style.display = "none";
       unLockBodyScroll();
     }
-    await loadDepartments(); // Function to reload your table data
+    await loadDepartments();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -255,7 +246,6 @@ if (departmentForm) {
   departmentForm.addEventListener("submit", handleAddClass);
 }
 
-// Rename this function to avoid overwriting async function openEditModal
 function showModalById(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
@@ -266,7 +256,6 @@ function showModalById(modalId) {
 
 let originalDepartmentData = null;
 
-// 1. Open Edit Modal & Populate Form Data
 async function openEditModal(departmentId) {
   if (!window.supabaseClient) {
     console.error("Supabase client is not initialized.");
@@ -287,10 +276,8 @@ async function openEditModal(departmentId) {
       return;
     }
 
-    // Cache original values to detect changes later
     originalDepartmentData = { ...data };
 
-    // Fill form fields safely
     const idInput = document.getElementById("editDepartmentId");
     const nameInput = document.getElementById("editDepartmentName");
     const statusInput = document.getElementById("editStatus");
@@ -309,7 +296,6 @@ async function openEditModal(departmentId) {
   }
 }
 
-// 2. Form Submit Handler for Updating
 async function handleEditDepartment(event) {
   event.preventDefault();
 
@@ -318,13 +304,11 @@ async function handleEditDepartment(event) {
   const status = document.getElementById("editStatus").value;
   const description = document.getElementById("editDescription").value.trim();
 
-  // Basic validation
   if (!name || !status) {
     showToast("Please fill in all required fields.", "error");
     return;
   }
 
-  // Check if any value changed
   const isUnchanged =
     originalDepartmentData &&
     originalDepartmentData.name === name &&
@@ -354,9 +338,8 @@ async function handleEditDepartment(event) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", departmentId)
-      .select(); // <--- ADD .select() to return the updated row
+      .select();
 
-    // 1. Check for database errors first
     if (error) {
       if (error.code === "23505") {
         showToast("This department name already exists.", "error");
@@ -373,7 +356,6 @@ async function handleEditDepartment(event) {
       return;
     }
 
-    // 2. Check for RLS silent block (no error thrown, but 0 rows updated)
     if (!data || data.length === 0) {
       showToast("You do not have permission to update a department.", "error");
       return;
@@ -401,7 +383,6 @@ if (editDepartmentForm) {
 }
 let departmentToArchiveId = null;
 
-// 1. Open Archive Confirmation Modal
 function openArchiveModal(departmentId, departmentName) {
   departmentToArchiveId = departmentId;
 
@@ -429,7 +410,6 @@ async function handleConfirmArchive() {
       confirmBtn.textContent = "Archiving...";
     }
 
-    // Archiving is an UPDATE operation in Supabase
     const { data, error } = await supabaseClient
       .from("departments")
       .update({
@@ -438,9 +418,8 @@ async function handleConfirmArchive() {
         updated_at: new Date().toISOString(),
       })
       .eq("id", departmentToArchiveId)
-      .select(); // <--- ADD .select() to return the updated row
+      .select();
 
-    // 1. Handle hard database errors
     if (error) {
       showToast(
         "Permission denied: Only active admins can archive departments.",
@@ -449,7 +428,6 @@ async function handleConfirmArchive() {
       return;
     }
 
-    // 2. Handle RLS silent block (0 rows modified)
     if (!data || data.length === 0) {
       showToast(
         "Permission denied: Only active admins can archive departments.",
@@ -458,17 +436,15 @@ async function handleConfirmArchive() {
       return;
     }
 
-    // 3. True success
     showToast("Department archived successfully!", "success");
 
-    // Close modal using direct DOM manipulation
     if (archiveModal) {
       archiveModal.style.display = "none";
       if (typeof unLockBodyScroll === "function") unLockBodyScroll();
     }
 
     departmentToArchiveId = null;
-    await loadDepartments(); // Reload active departments table
+    await loadDepartments();
   } catch (err) {
     showToast(err.message, "error");
   } finally {
@@ -479,13 +455,11 @@ async function handleConfirmArchive() {
   }
 }
 
-// Attach Confirm Event Listener
 const confirmArchiveBtn = document.getElementById("confirmArchive");
 if (confirmArchiveBtn) {
   confirmArchiveBtn.addEventListener("click", handleConfirmArchive);
 }
 
-// Add this at the bottom of your file
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     if (typeof loadDepartments === "function") loadDepartments();
@@ -493,3 +467,4 @@ if (document.readyState === "loading") {
 } else {
   if (typeof loadDepartments === "function") loadDepartments();
 }
+

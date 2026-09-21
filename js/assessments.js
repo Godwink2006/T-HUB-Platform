@@ -1,6 +1,4 @@
-/* =======================================================
-   ASSESSMENTS MODULE (LOAD, RENDER & EVENT DELEGATION)
-   ======================================================= */
+
 
 function escapeHTML(str) {
   if (str === null || str === undefined) return "";
@@ -10,7 +8,6 @@ function escapeHTML(str) {
     .replace(/>/g, "&gt;");
 }
 
-// ADDED: Prevents quote break-outs inside data-* attributes
 function escapeAttribute(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -20,7 +17,6 @@ function escapeAttribute(str) {
     .replace(/>/g, "&gt;");
 }
 
-// Utility to format timestamps nicely
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -30,12 +26,10 @@ function formatDateTime(isoString) {
     day: "numeric",
   });
 }
-// Global state cache for in-memory operations
+
 let currentAssessments = [];
 
-/**
- * Fetch assessments from Supabase and update local state
- */
+
 async function loadAssessments() {
   const tableBody = document.getElementById("assessmentsTableBody");
   if (!tableBody) return;
@@ -46,7 +40,6 @@ async function loadAssessments() {
       return;
     }
 
-    // Optional loading indicator state
     tableBody.innerHTML = `
       <tr>
          <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
@@ -63,7 +56,6 @@ async function loadAssessments() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      // AFTER: Type check to avoid runtime failure
       if (typeof showToast === "function") {
         showToast("Failed to load assessments.", "error");
       }
@@ -77,7 +69,6 @@ async function loadAssessments() {
       return;
     }
 
-    // Cache the data globally
     currentAssessments = data || [];
     renderAssessmentTable(currentAssessments);
   } catch (err) {
@@ -95,10 +86,7 @@ async function loadAssessments() {
   }
 }
 
-/**
- * Render assessment records into the table DOM
- * @param {Array} assessments
- */
+
 function renderAssessmentTable(assessments) {
   const tableBody = document.getElementById("assessmentsTableBody");
   if (!tableBody) return;
@@ -114,7 +102,6 @@ function renderAssessmentTable(assessments) {
     return;
   }
 
-  // Generate HTML rows matching your markup standard
   tableBody.innerHTML = assessments
     .map((item) => {
       const isInactive = item.status?.toLowerCase() === "inactive";
@@ -123,7 +110,6 @@ function renderAssessmentTable(assessments) {
         : "assessment-status-active";
       const statusLabel = isInactive ? "Inactive" : "Active";
 
-      // Add this line right above your return statement in map():
       const rawName = item.name || "";
 
       return `
@@ -166,10 +152,6 @@ data-name="${escapeAttribute(rawName)}"
     .join("");
 }
 
-/* =========================================================
-OPEN ADD ASSESSMENT MODAL
-========================================================= */
-
 function openAssessmentModal() {
   const modal = document.getElementById("assessmentModal");
 
@@ -178,10 +160,6 @@ function openAssessmentModal() {
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 }
-
-/* =========================================================
-CLOSE ADD ASSESSMENT MODAL
-========================================================= */
 
 function closeAssessmentModal() {
   const modal = document.getElementById("assessmentModal");
@@ -201,13 +179,11 @@ function openEditAssessmentModal(id) {
 
   if (!modal || !form || !id) return;
 
-  // Find record in cached state (handles number/string ID mismatches)
   const assessment = currentAssessments.find(
     (item) => String(item.id) === String(id),
   );
   if (!assessment) return;
 
-  // Populate form fields matching your HTML IDs
   document.getElementById("editAssessmentId").value = assessment.id;
   document.getElementById("editAssessmentNameInput").value =
     assessment.name || "";
@@ -218,7 +194,6 @@ function openEditAssessmentModal(id) {
   document.getElementById("editAssessmentStatusInput").value =
     assessment.status;
 
-  // Save baseline state on form dataset for change detection
   const rawStatus = assessment.status || "";
   const normalizedStatus = rawStatus
     ? rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase()
@@ -228,15 +203,10 @@ function openEditAssessmentModal(id) {
   form.dataset.origMarks = assessment.maximum_marks;
   form.dataset.origStatus = normalizedStatus;
 
-  // Display modal
   modal.dataset.id = id;
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 }
-
-/* =========================================================
-CLOSE EDIT ASSESSMENT MODAL
-========================================================= */
 
 function closeEditAssessmentModal() {
   const modal = document.getElementById("editAssessmentModal");
@@ -255,10 +225,6 @@ function closeEditAssessmentModal() {
   document.body.style.overflow = "";
 }
 
-/* =========================================================
-   OPEN ARCHIVE ASSESSMENT MODAL
-   ========================================================= */
-
 function openArchiveAssessmentModal(id, name) {
   const modal = document.getElementById("archiveAssessmentModal");
   if (!modal || !id) return;
@@ -268,16 +234,11 @@ function openArchiveAssessmentModal(id, name) {
     nameElement.textContent = name || "this assessment";
   }
 
-  // Store target assessment ID on modal dataset
   modal.dataset.id = id;
 
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 }
-
-/* =========================================================
-CLOSE ARCHIVE ASSESSMENT MODAL
-========================================================= */
 
 function closeArchiveAssessmentModal() {
   const modal = document.getElementById("archiveAssessmentModal");
@@ -288,12 +249,7 @@ function closeArchiveAssessmentModal() {
   document.body.style.overflow = "";
 }
 
-/* =========================================================
-   DOM READY
-   ========================================================= */
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Reusable notification helper
   const notifyUser = (message, type = "error", targetInput = null) => {
     if (typeof showToast === "function") {
       showToast(message, type);
@@ -303,14 +259,10 @@ document.addEventListener("DOMContentLoaded", () => {
     targetInput?.focus();
   };
 
-  /* =========================================================
-     ARCHIVE ASSESSMENT CONFIRMATION LISTENER
-     ========================================================= */
   const confirmBtn = document.getElementById("confirmArchiveAssessment");
   const cancelBtn = document.getElementById("cancelArchiveAssessment");
   const archiveModal = document.getElementById("archiveAssessmentModal");
 
-  // Wire Cancel Button
   if (cancelBtn && !cancelBtn.dataset.hasListener) {
     cancelBtn.dataset.hasListener = "true";
     cancelBtn.addEventListener("click", () => {
@@ -319,7 +271,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Wire Confirm Archive Button
   if (confirmBtn && !confirmBtn.dataset.hasListener) {
     confirmBtn.dataset.hasListener = "true";
 
@@ -340,7 +291,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("id", id)
           .select();
 
-        // Fix 1: Handle RLS silent policy rejection (0 rows updated)
         if (!error && (!data || data.length === 0)) {
           notifyUser(
             "You do not have permission to archive assessments.",
@@ -349,7 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Fix 2: Broaden permission error code checks (42501, 403, PGRST301)
         if (error) {
           console.error("Supabase archive error:", error);
 
@@ -399,9 +348,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* =======================================================
-     MODAL CONTROLS (ADD & EDIT)
-     ======================================================= */
   document
     .getElementById("addAssessment")
     ?.addEventListener("click", openAssessmentModal);
@@ -422,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("cancelEditAssessmentModal")
     ?.addEventListener("click", closeEditAssessmentModal);
 
-  // 1. Initial Data Load
   loadAssessments();
 
   const tableBody = document.getElementById("assessmentsTableBody");
@@ -431,7 +376,6 @@ document.addEventListener("DOMContentLoaded", () => {
   tableBody.dataset.listenerAttached = "true";
 
   tableBody.addEventListener("click", (e) => {
-    // Handle Edit Click
     const editBtn = event.target.closest(".edit-assessment");
     if (editBtn) {
       const id = editBtn.dataset.id;
@@ -445,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (archiveBtn) {
       const id = archiveBtn.dataset.id;
       const rawName = archiveBtn.dataset.name || "";
-      // Decode escaped HTML entities stored in dataset back into readable text
+
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = rawName;
       const name = tempDiv.textContent || tempDiv.innerText || "";
@@ -453,9 +397,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* =======================================================
-     ADD ASSESSMENT FORM SUBMISSION
-     ======================================================= */
   const assessmentForm = document.getElementById("assessmentForm");
 
   if (assessmentForm && !assessmentForm.dataset.hasListener) {
@@ -575,9 +516,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* =======================================================
-     EDIT ASSESSMENT FORM SUBMISSION
-     ======================================================= */
   const editAssessmentForm = document.getElementById("editAssessmentForm");
 
   if (editAssessmentForm && !editAssessmentForm.dataset.hasListener) {
@@ -636,7 +574,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const normalizedStatus =
         status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
-      // 1. Prepare inputs & baseline comparisons
       const description = descriptionInput?.value.trim() || null;
       const originalDescription =
         editAssessmentForm.dataset.origDescription || null;
@@ -673,7 +610,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("id", assessmentId)
           .select();
 
-        // 1. Check if RLS blocked the update silently (0 rows updated)
         if (!error && (!data || data.length === 0)) {
           notifyUser(
             "You do not have permission to edit this assessment.",
@@ -682,7 +618,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // 2. Check for explicit permission errors from Supabase
         if (error) {
           console.error("Supabase update error:", error);
 
@@ -748,23 +683,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* =======================================================
-     NAVIGATION
-     ======================================================= */
   document
     .getElementById("backAcademicSettingsBtn")
     ?.addEventListener("click", () => {
       window.location.href = "settings.html";
     });
 
-  /* =======================================================
-     CATEGORY INITIALIZATION & EVENT LISTENERS
-     ======================================================= */
-
-  // 1. Load categories on boot
   loadCategories();
 
-  // 2. Open / Close Category Modal Controls
   document
     .getElementById("addCategoryBtn")
     ?.addEventListener("click", openCategoryModal);
@@ -777,7 +703,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("cancelCategoryModal")
     ?.addEventListener("click", closeCategoryModal);
 
-  // 3. Add Category Form Submission Listener
   const categoryForm = document.getElementById("categoryForm");
 
   if (categoryForm && !categoryForm.dataset.hasListener) {
@@ -802,7 +727,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const status = statusSelect?.value.trim();
       const description = descriptionInput?.value.trim() || null;
 
-      // --- Client-Side Validations ---
       if (!name) {
         return notifyUser("Category name is required.", "error", nameInput);
       }
@@ -840,7 +764,6 @@ document.addEventListener("DOMContentLoaded", () => {
           saveButton.textContent = "Saving...";
         }
 
-        // --- Supabase Insert Call ---
         const { error } = await supabaseClient
           .from("assessment_categories")
           .insert([
@@ -858,7 +781,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (error) {
           console.error("Supabase category insert error:", error);
 
-          // Unique Constraint Check (PG code 23505)
           if (error.code === "23505") {
             notifyUser(
               "A category with this name already exists.",
@@ -868,7 +790,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // Permission / RLS Checks
           if (
             error.code === "42501" ||
             error.message?.toLowerCase().includes("permission")
@@ -903,7 +824,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 4. Update Modal Backdrop & ESC Listeners to include categoryModal
   const allModalIds = [
     "assessmentModal",
     "editAssessmentModal",
@@ -925,9 +845,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  /* =======================================================
-     CATEGORIES TABLE DELEGATION (EDIT & ARCHIVE CLICK)
-     ======================================================= */
   const categoriesTableBody = document.getElementById("categoriesTableBody");
   if (categoriesTableBody && !categoriesTableBody.dataset.hasListener) {
     categoriesTableBody.dataset.hasListener = "true";
@@ -949,9 +866,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* =======================================================
-     EDIT CATEGORY FORM SUBMISSION (CHANGE DETECTION)
-     ======================================================= */
   const editCategoryForm = document.getElementById("editCategoryForm");
   if (editCategoryForm && !editCategoryForm.dataset.hasListener) {
     editCategoryForm.dataset.hasListener = "true";
@@ -995,7 +909,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const normalizedStatus =
         status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
-      // Change Detection against original baseline values
       const origMarks = Number(editCategoryForm.dataset.origMarks);
       const origStatus = editCategoryForm.dataset.origStatus;
       const origDescription = editCategoryForm.dataset.origDescription || null;
@@ -1016,7 +929,6 @@ document.addEventListener("DOMContentLoaded", () => {
           saveButton.textContent = "Updating...";
         }
 
-        // Update database without touching the category name
         const { data, error } = await supabaseClient
           .from("assessment_categories")
           .update({
@@ -1069,9 +981,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* =======================================================
-     ARCHIVE CATEGORY CONFIRMATION LISTENER
-     ======================================================= */
   const confirmArchiveBtn = document.getElementById("confirmArchiveCategory");
   const cancelArchiveBtn = document.getElementById("cancelArchiveCategory");
   const archiveCategoryModal = document.getElementById("archiveCategoryModal");
@@ -1095,7 +1004,6 @@ document.addEventListener("DOMContentLoaded", () => {
         confirmArchiveBtn.disabled = true;
         confirmArchiveBtn.textContent = "Archiving...";
 
-        // Set category to archived and change status to Inactive
         const { data, error } = await supabaseClient
           .from("assessment_categories")
           .update({
@@ -1136,16 +1044,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-/* =======================================================
-   CATEGORIES MODULE (STATE, LOAD, RENDER & CREATE)
-   ======================================================= */
 
-// Global state cache for categories
 let currentCategories = [];
 
-/**
- * Fetch non-archived categories from Supabase
- */
 async function loadCategories() {
   const tableBody = document.getElementById("categoriesTableBody");
   if (!tableBody) return;
@@ -1190,10 +1091,7 @@ async function loadCategories() {
   }
 }
 
-/**
- * Render category records into the HTML table
- * @param {Array} categories
- */
+
 function renderCategoryTable(categories) {
   const tableBody = document.getElementById("categoriesTableBody");
   if (!tableBody) return;
@@ -1258,9 +1156,6 @@ function renderCategoryTable(categories) {
     .join("");
 }
 
-/* =========================================================
-   CATEGORY MODAL CONTROLS
-   ========================================================= */
 
 function openCategoryModal() {
   const modal = document.getElementById("categoryModal");
@@ -1281,9 +1176,6 @@ function closeCategoryModal() {
   document.body.style.overflow = "";
 }
 
-/* =========================================================
-   OPEN / CLOSE EDIT CATEGORY MODAL
-   ========================================================= */
 
 function openEditCategoryModal(id) {
   const modal = document.getElementById("editCategoryModal");
@@ -1296,12 +1188,10 @@ function openEditCategoryModal(id) {
   );
   if (!category) return;
 
-  // Populate form fields
   const nameSelect = document.getElementById("editCategoryNameInput");
   if (nameSelect) {
     nameSelect.value = category.name || "";
-    // Enforce read-only state so category name cannot be edited
-    // Better alternative to disabling
+
     nameSelect.style.pointerEvents = "none";
     nameSelect.tabIndex = -1;
   }
@@ -1312,7 +1202,6 @@ function openEditCategoryModal(id) {
   document.getElementById("editCategoryDescriptionInput").value =
     category.description || "";
 
-  // Store original baseline state for change detection
   const rawStatus = category.status || "";
   const normalizedStatus = rawStatus
     ? rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1).toLowerCase()
@@ -1338,10 +1227,6 @@ function closeEditCategoryModal() {
   document.body.style.overflow = "";
 }
 
-/* =========================================================
-   OPEN / CLOSE ARCHIVE CATEGORY MODAL
-   ========================================================= */
-
 function openArchiveCategoryModal(id, name) {
   const modal = document.getElementById("archiveCategoryModal");
   if (!modal || !id) return;
@@ -1363,3 +1248,4 @@ function closeArchiveCategoryModal() {
   modal.classList.remove("active");
   document.body.style.overflow = "";
 }
+

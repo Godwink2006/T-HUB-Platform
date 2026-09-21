@@ -1,4 +1,3 @@
-// Update your openAddPeriodModal function to call it:
 async function openAddPeriodModal() {
   const modal = document.getElementById("periodModal");
   const form = document.getElementById("periodForm");
@@ -9,7 +8,6 @@ async function openAddPeriodModal() {
   if (editIdInput) editIdInput.value = "";
   if (title) title.textContent = "Add Period";
 
-  // Load active classes into dropdown
   await loadClassesIntoSchoolLevelDropdown();
 
   if (modal) {
@@ -18,7 +16,6 @@ async function openAddPeriodModal() {
 
   if (typeof lockBodyScroll === "function") lockBodyScroll();
 }
-//Also, in your openEditPeriodModal(id) function, add await loadClassesIntoSchoolLevelDropdown(); right at the start before setting document.getElementById("schoolLevelSelect").value = period.school_level;.
 
 function closePeriodModal() {
   const modal = document.getElementById("periodModal");
@@ -28,10 +25,6 @@ function closePeriodModal() {
   if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 }
 
-//  Change this:
-// const fetchFilteredPeriods = async () => { ... }
-
-//  To this:
 async function fetchFilteredPeriods() {
   const searchQuery =
     document.getElementById("searchPeriodInput")?.value.trim() || "";
@@ -74,7 +67,6 @@ async function fetchFilteredPeriods() {
   renderPeriodsTable(periods || []);
 }
 
-// Utility to format timestamps nicely
 function formatDateTime(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -88,7 +80,6 @@ function formatDateTime(isoString) {
 function convert12to24(timeStr) {
   if (!timeStr) return "";
 
-  // If already in 24-hour format (e.g., "12:00" or "12:00:00")
   if (
     !timeStr.toLowerCase().includes("am") &&
     !timeStr.toLowerCase().includes("pm")
@@ -131,7 +122,6 @@ async function handleSavePeriod(event) {
     return;
   }
 
-  // Convert "12:00 PM" -> "12:00:00" and "12:45 PM" -> "12:45:00"
   const startTime = convert12to24(rawStartTime);
   const endTime = convert12to24(rawEndTime);
 
@@ -334,7 +324,6 @@ function closeArchivePeriodModal() {
   }
 }
 
-// Renders periods array into the DOM table element
 function renderPeriodsTable(periods = [], isLoading = false) {
   const tbody = document.getElementById("periodsTableBody");
   if (!tbody) return;
@@ -356,7 +345,6 @@ function renderPeriodsTable(periods = [], isLoading = false) {
 
   tbody.innerHTML = periods
     .map((period) => {
-      // 1. Determine status status class & formatting
       const isInactive = String(period.status).toLowerCase() === "inactive";
       const statusText = isInactive ? "Inactive" : "Active";
       const statusClass = isInactive
@@ -382,7 +370,6 @@ function renderPeriodsTable(periods = [], isLoading = false) {
     .join("");
 }
 
-// Populates filter dropdown options dynamically from Supabase
 async function populatePeriodFilterDropdowns() {
   const levelSelect = document.getElementById("filterLevelSelect");
   if (!levelSelect) return;
@@ -396,7 +383,6 @@ async function populatePeriodFilterDropdowns() {
 
   const uniqueLevels = [...new Set(data.map((item) => item.school_level))];
 
-  // Preserve selected option if any
   const currentVal = levelSelect.value;
   levelSelect.innerHTML =
     `<option value="">All Levels</option>` +
@@ -406,11 +392,9 @@ async function populatePeriodFilterDropdowns() {
   levelSelect.value = currentVal;
 }
 
-// 1. Initialize Event Listeners on Page Load
 document.addEventListener("DOMContentLoaded", () => {
   const periodForm = document.getElementById("periodForm");
 
-  // FIX: Match the HTML ID 'addPeriod'
   const openModalBtn = document.getElementById("addPeriod");
 
   const closeModalBtn = document.getElementById("closePeriodModal");
@@ -419,30 +403,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const levelSelect = document.getElementById("filterLevelSelect");
   const statusSelect = document.getElementById("filterStatusSelect");
 
-  // Form Submit Handler
   if (periodForm) {
     periodForm.addEventListener("submit", handleSavePeriod);
   }
 
-  // Modal Open/Close Controls
   if (openModalBtn) openModalBtn.addEventListener("click", openAddPeriodModal);
   if (closeModalBtn) closeModalBtn.addEventListener("click", closePeriodModal);
   if (cancelModalBtn)
     cancelModalBtn.addEventListener("click", closePeriodModal);
 
-  // Live Filtering Event Listeners
   if (searchInput) searchInput.addEventListener("input", fetchFilteredPeriods);
   if (levelSelect) levelSelect.addEventListener("change", fetchFilteredPeriods);
   if (statusSelect)
     statusSelect.addEventListener("change", fetchFilteredPeriods);
 
-  // Table Action Event Delegation (Edit & Archive)
   const tbody = document.getElementById("periodsTableBody");
   if (tbody) {
     tbody.addEventListener("click", handleTableActions);
   }
 
-  // Initial Data Load
   fetchFilteredPeriods();
   populatePeriodFilterDropdowns();
 
@@ -496,7 +475,6 @@ async function handleUpdatePeriod(event) {
     return;
   }
 
-  // Check whether anything actually changed
   const noChanges =
     originalPeriodData &&
     name === originalPeriodData.name &&
@@ -645,7 +623,6 @@ async function loadClassesIntoSchoolLevelDropdown() {
 
   const currentVal = select.value;
 
-  // Helper map to convert database keys to user-friendly titles
   const levelLabels = {
     nursery: "Nursery",
     junior_primary: "Junior Primary",
@@ -654,7 +631,6 @@ async function loadClassesIntoSchoolLevelDropdown() {
     senior_secondary: "Senior Secondary",
   };
 
-  // 1. Fetch active classes AND their corresponding school_level
   const { data: classes, error } = await supabaseClient
     .from("classes")
     .select("name, school_level")
@@ -668,12 +644,10 @@ async function loadClassesIntoSchoolLevelDropdown() {
 
   const activeClasses = classes || [];
 
-  // 2. Extract unique school_level keys present in active classes
   const uniqueLevels = [
     ...new Set(activeClasses.map((c) => c.school_level).filter(Boolean)),
   ];
 
-  // 3. Render HTML dynamically
   select.innerHTML = `
     <option value="">Select Level or Class</option>
 
@@ -704,7 +678,6 @@ async function loadClassesIntoSchoolLevelDropdown() {
     </optgroup>
   `;
 
-  // 4. Restore previous selection if valid
   if (
     currentVal &&
     [...select.options].some((option) => option.value === currentVal)
@@ -712,3 +685,4 @@ async function loadClassesIntoSchoolLevelDropdown() {
     select.value = currentVal;
   }
 }
+

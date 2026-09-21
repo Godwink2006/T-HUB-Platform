@@ -57,3 +57,4 @@ viewPaymentModal.style.display="none";
 unLockBodyScroll();
 }
 });
+

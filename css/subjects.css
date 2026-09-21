@@ -13,15 +13,11 @@ body {
   display: flex;
 }
 
-/* Main Content */
-
 .subjects-main-content {
   width: 100%;
   min-height: 100vh;
   padding: 10px;
 }
-
-/* Topbar */
 
 .topbar {
   display: flex;
@@ -159,8 +155,6 @@ tr {
   background: #fee2e2;
   color: #dc2626;
 }
-
-/* Subject modal */
 
 .modal-subject {
   position: fixed;
@@ -452,7 +446,7 @@ tr {
     display: flex;
     flex-direction: column;
     max-width: 350px;
-    height: 390px; /* Fixed height requirement */
+    height: 390px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
@@ -518,7 +512,6 @@ tr {
     font-size: 13px;
   }
 
-  /* Back and Add User Buttons on the Same Line */
   .top-right {
     display: flex !important;
     flex-direction: row !important;
@@ -563,8 +556,6 @@ tr {
     border-radius: 10px;
   }
 
-  /* --- Toolbar Inputs in a Single Horizontal Row --- */
-
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -582,7 +573,7 @@ tr {
     background: #ffffff;
     font-size: 12px;
     flex: 1;
-    min-width: 0; /* Prevents overflow inside flex containers */
+    min-width: 0;
     border-radius: 10px;
   }
 
@@ -596,7 +587,7 @@ tr {
   table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 500px; /* Ensures table doesn't shrink too much on small screens */
+    min-width: 500px;
   }
 
   thead {
@@ -637,12 +628,12 @@ tr {
     flex-direction: column;
     width: 100%;
     max-width: 350px;
-    height: 590px; /* Fixed height requirement */
+    height: 590px;
     max-height: 85vh;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
-    overflow: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow: auto;
   }
 
   @keyframes modalShow {
@@ -682,7 +673,7 @@ tr {
 
   .subject-modal-body {
     padding: 20px;
-    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow-y: auto;
     flex: 1;
   }
 
@@ -712,11 +703,10 @@ tr {
 
   .edit-subject-modal-body {
     padding: 20px;
-    overflow-y: auto; /* Internal scroll for content if form exceeds fixed modal height */
+    overflow-y: auto;
     flex: 1;
   }
 
-  /* Horizontal Modal Action Buttons with Space Between */
   .edit-subject-modal-footer {
     display: flex;
     flex-direction: row;
@@ -727,7 +717,6 @@ tr {
     border-top: 1.5px solid rgb(219, 215, 215);
   }
 
-  /* Horizontal Modal Action Buttons with Space Between */
   .subject-modal-footer {
     display: flex;
     flex-direction: row;

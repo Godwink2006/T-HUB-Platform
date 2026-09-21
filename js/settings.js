@@ -1,10 +1,8 @@
-// Single initialization function to handle fetching, rendering, and visibility swap
 async function initSettingsPage() {
   const skeletonEl = document.getElementById("settingsSkeleton");
   const containerEl = document.getElementById("settingsContainer");
 
   try {
-    // 1. Fetch user authentication
     const {
       data: { user },
       error: userError,
@@ -15,7 +13,6 @@ async function initSettingsPage() {
       return;
     }
 
-    // 2. Fetch user profile and role BEFORE altering the UI
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("role")
@@ -29,10 +26,7 @@ async function initSettingsPage() {
     const userRole = profile?.role;
     const isAdmin = userRole === "admin";
 
-    // 3. Build HTML conditionally (or use renderNavigation if cards exist in HTML)
-    // If containerEl exists, inject or filter cards
     if (containerEl) {
-      // Option A: If cards are rendered dynamically via JS string
       const allCardsHTML = `
         ${
           isAdmin
@@ -150,7 +144,6 @@ async function initSettingsPage() {
 
       containerEl.innerHTML = allCardsHTML;
 
-      // Apply any additional element visibility checks from your utils
       if (typeof renderNavigation === "function") {
         renderNavigation(userRole);
       }
@@ -158,11 +151,10 @@ async function initSettingsPage() {
   } catch (err) {
     console.error("Initialization error:", err);
   } finally {
-    // 4. Reveal final content only after processing finishes
     if (skeletonEl) skeletonEl.style.display = "none";
     if (containerEl) containerEl.style.display = "grid";
   }
 }
 
-// Single listener call
 document.addEventListener("DOMContentLoaded", initSettingsPage);
+

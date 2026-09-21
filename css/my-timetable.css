@@ -38,7 +38,6 @@
   padding: 10px;
 }
 
-/* Page Header */
 .timetable-header {
   display: flex;
   justify-content: space-between;
@@ -58,7 +57,6 @@
   margin-top: 4px;
 }
 
-/* Student Info Banner */
 .meta-banner {
   display: flex;
   gap: 32px;
@@ -98,7 +96,6 @@
   color: #0f172a;
 }
 
-/* Weekly Schedule Grid Cards */
 .timetable-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -113,7 +110,6 @@
   overflow: hidden;
 }
 
-/* Card Header */
 .day-card-header {
   padding: 14px 18px;
   font-weight: 600;
@@ -131,7 +127,6 @@
   font-weight: 500;
 }
 
-/* Card Period Items */
 .day-card-body {
   padding: 12px;
   display: flex;
@@ -172,7 +167,6 @@
   gap: 6px;
 }
 
-/* Loading & Empty States */
 .loading-state,
 .empty-state {
   grid-column: 1 / -1;
@@ -226,7 +220,6 @@
   margin-bottom: 0;
 }
 
-/* Align filters neatly on the right */
 .topbar-filters {
   display: flex;
   align-items: center;

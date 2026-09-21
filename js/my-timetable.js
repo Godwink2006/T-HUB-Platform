@@ -1,11 +1,8 @@
-/* ==========================================================================
-   MY TIMETABLE - CARD BASED LAYOUT (my-timetable.js)
-   ========================================================================== */
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   await initMyTimetable();
 
-  // Print schedule handler
   document
     .getElementById("printTimetableBtn")
     ?.addEventListener("click", () => {
@@ -14,7 +11,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 async function initMyTimetable() {
   try {
-    // 1. Get authenticated user
     const {
       data: { user },
       error: authError,
@@ -25,7 +21,6 @@ async function initMyTimetable() {
       return;
     }
 
-    // 2. Fetch user profile role and school_id
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("role, school_id")
@@ -42,7 +37,6 @@ async function initMyTimetable() {
     const schoolId = profile.school_id;
 
     if (role === "student") {
-      // Query students table directly for the logged in user
       const { data: studentData, error: studentErr } = await supabaseClient
         .from("students")
         .select("class_id, school_id")
@@ -55,16 +49,13 @@ async function initMyTimetable() {
         return;
       }
 
-      // Pass class_id and school_id
       await loadStudentClassSchedule(
         studentData.class_id,
         studentData.school_id || schoolId,
       );
 
-      // Initialize dropdown filters with valid schoolId
       await setupTimetableFilters(studentData.school_id || schoolId);
     } else if (role === "teacher") {
-      // Fetch teacher record linked to user
       const { data: teacherData } = await supabaseClient
         .from("teachers")
         .select("id")
@@ -74,7 +65,6 @@ async function initMyTimetable() {
       const teacherId = teacherData?.id || user.id;
       await loadTeacherPersonalSchedule(teacherId);
 
-      // Initialize dropdown filters for teacher
       await setupTimetableFilters(schoolId);
     } else {
       renderEmptyState("Timetable access is not available for your role.");
@@ -84,16 +74,13 @@ async function initMyTimetable() {
     renderEmptyState("Failed to load timetable schedule.");
   }
 }
-/**
- * Load Class Schedule for Students
- */
+
 async function loadStudentClassSchedule(classId, schoolId) {
   if (!classId) {
     renderEmptyState("You are not assigned to any class yet.");
     return;
   }
 
-  // 1. Fetch Class Name scoped to school_id
   let classQuery = supabaseClient
     .from("classes")
     .select("name")
@@ -110,7 +97,6 @@ async function loadStudentClassSchedule(classId, schoolId) {
     if (classNameEl) classNameEl.textContent = classData.name;
   }
 
-  // Fetch class teacher for THIS EXACT class_id
   const { data: assignment } = await supabaseClient
     .from("teacher_assignments")
     .select("teacher_id")
@@ -140,7 +126,6 @@ async function loadStudentClassSchedule(classId, schoolId) {
 
   document.getElementById("classMetaBanner")?.classList.remove("hidden");
 
-  // 3. Fetch Active Timetable record scoped by class_id and school_id
   let ttQuery = supabaseClient
     .from("timetables")
     .select("id, status, academic_year_id")
@@ -170,7 +155,6 @@ async function loadStudentClassSchedule(classId, schoolId) {
     return;
   }
 
-  // 4. Fetch raw lessons
   const { data: rawLessons, error: lessonsErr } = await supabaseClient
     .from("timetable_lessons")
     .select("id, day_of_week, is_break, subject_id, teacher_id, period_id")
@@ -182,7 +166,6 @@ async function loadStudentClassSchedule(classId, schoolId) {
     return;
   }
 
-  // 5. Fetch lookups
   const [subjectsRes, profilesRes, periodsRes] = await Promise.all([
     supabaseClient.from("subjects").select("id, name"),
     supabaseClient.from("profiles").select("id, full_name"),
@@ -193,19 +176,17 @@ async function loadStudentClassSchedule(classId, schoolId) {
   const profilesMap = new Map((profilesRes.data || []).map((p) => [p.id, p]));
   const periodsMap = new Map((periodsRes.data || []).map((p) => [p.id, p]));
 
-  // Step 6: Format lessons for rendering
   const formattedLessons = rawLessons.map((lesson) => {
     const subjectObj = subjectsMap.get(lesson.subject_id);
     const periodObj = periodsMap.get(lesson.period_id);
     const profileObj = profilesMap.get(lesson.teacher_id);
 
-    // Strictly evaluate if this period is a break
     const isBreak = Boolean(
       lesson.is_break === true ||
       lesson.is_break === "true" ||
       (!lesson.subject_id && !subjectObj),
     );
-    // Fallback to period name or generic "BREAK" if subjectName is absent
+
     const breakDisplayName = periodObj?.name || "BREAK";
 
     return {
@@ -223,16 +204,12 @@ async function loadStudentClassSchedule(classId, schoolId) {
 
   renderScheduleCards(formattedLessons, "student");
 }
-/**
- * Load Personal Schedule for Teachers
- */
+
 async function loadTeacherPersonalSchedule(teacherId) {
-  // Hide Class Teacher Metadata Banner
   document.getElementById("classMetaBanner")?.classList.add("hidden");
   document.getElementById("timetableSubtitle").textContent =
     "Your personal weekly teaching schedule";
 
-  // Fetch only lessons where teacher is assigned
   const { data: lessons, error } = await supabaseClient
     .from("timetable_lessons")
     .select(
@@ -252,7 +229,6 @@ async function loadTeacherPersonalSchedule(teacherId) {
     return;
   }
 
-  // 1. Format raw lessons for teachers
   const formattedLessons = lessons.map((lesson) => {
     const isBreak = Boolean(
       lesson.is_break || (!lesson.subject && !lesson.subject?.name),
@@ -269,16 +245,12 @@ async function loadTeacherPersonalSchedule(teacherId) {
     };
   });
 
-  // 2. Save to global store for dropdown filtering
   allCurrentLessons = formattedLessons;
 
-  // 3. Render once with teacher role context
   renderScheduleCards(formattedLessons, "teacher");
 }
 
-/**
- * Render Day Cards (Filters out hidden day cards when a day is selected)
- */
+
 function renderScheduleCards(lessons, roleContext) {
   const container = document.getElementById("timetableCardsGrid");
   if (!container) return;
@@ -286,20 +258,17 @@ function renderScheduleCards(lessons, roleContext) {
   const selectedDay = document.getElementById("filterTimetableDays")?.value;
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
-  // Filter the list of days to display based on dropdown selection
   const activeDays = selectedDay
     ? daysOfWeek.filter(
         (day) => day.toLowerCase() === selectedDay.toLowerCase(),
       )
     : daysOfWeek;
 
-  // Group lessons by active days
   const groupedLessons = activeDays.reduce((acc, day) => {
     acc[day] = lessons.filter(
       (l) => l.day_of_week === day || l.day_of_week === "All",
     );
 
-    // Sort chronologically by period start time
     acc[day].sort((a, b) => {
       const timeA = a.period?.start_time || "00:00";
       const timeB = b.period?.start_time || "00:00";
@@ -309,7 +278,6 @@ function renderScheduleCards(lessons, roleContext) {
     return acc;
   }, {});
 
-  // Build HTML Cards for active days only
   container.innerHTML = activeDays
     .map((day) => {
       const dayLessons = groupedLessons[day] || [];
@@ -335,9 +303,7 @@ function renderScheduleCards(lessons, roleContext) {
     .join("");
 }
 
-/**
- * Render individual period box inside a Day Card
- */
+
 function renderLessonCardItem(item, roleContext) {
   const timeStr =
     item.period?.start_time && item.period?.end_time
@@ -347,12 +313,10 @@ function renderLessonCardItem(item, roleContext) {
   const subjectName = item.subject?.name || "";
   const teacherName = item.teacher?.full_name || "";
 
-  // Evaluation to check if this slot is a break
   const isBreakCard = Boolean(
     item.is_break || (!item.subject_id && !item.subject?.name),
   );
 
-  // Render Break Card (No Teacher, No Subject fields)
   if (isBreakCard) {
     const breakName = item.period?.name || "Break / Interval";
     return `
@@ -367,7 +331,6 @@ function renderLessonCardItem(item, roleContext) {
     `;
   }
 
-  // Render Regular Class Card
   let secondaryLabel = "";
   if (roleContext === "student") {
     secondaryLabel = `<div class="lesson-teacher"><i class="fa-solid fa-user-tie"></i> ${escapeHTML(teacherName)}</div>`;
@@ -384,9 +347,7 @@ function renderLessonCardItem(item, roleContext) {
     </div>
   `;
 }
-/**
- * Render Empty State Placeholder
- */
+
 function renderEmptyState(message) {
   const container = document.getElementById("timetableCardsGrid");
   if (!container) return;
@@ -399,14 +360,12 @@ function renderEmptyState(message) {
   `;
 }
 
-// Global store to keep loaded lessons in memory for instant client-side filtering
 let allCurrentLessons = [];
 
 async function setupTimetableFilters(schoolId) {
   const yearSelect = document.getElementById("filterTimetableAcademicYear");
   const daySelect = document.getElementById("filterTimetableDays");
 
-  // 1. Populate Days Dropdown
   if (daySelect && daySelect.options.length <= 1) {
     daySelect.innerHTML = '<option value="">All Days</option>';
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -418,7 +377,6 @@ async function setupTimetableFilters(schoolId) {
     });
   }
 
-  // 2. Fetch Academic Years from Supabase
   if (yearSelect && schoolId) {
     const { data: years, error } = await supabaseClient
       .from("academic_years")
@@ -446,7 +404,6 @@ async function setupTimetableFilters(schoolId) {
     }
   }
 
-  // 3. Attach Filter Listeners
   if (yearSelect) {
     yearSelect.removeEventListener("change", applyTimetableFilters);
     yearSelect.addEventListener("change", applyTimetableFilters);
@@ -457,9 +414,7 @@ async function setupTimetableFilters(schoolId) {
   }
 }
 
-/**
- * Filter Loaded Lessons & Trigger Re-render
- */
+
 function applyTimetableFilters() {
   const selectedYearId = document.getElementById(
     "filterTimetableAcademicYear",
@@ -468,17 +423,14 @@ function applyTimetableFilters() {
 
   let filtered = [...allCurrentLessons];
 
-  // Filter by Academic Year
   if (selectedYearId) {
     filtered = filtered.filter((lesson) => {
-      // Check direct property, nested timetable object, or activeTimetable fallback
       const lessonYearId =
         lesson.academic_year_id || lesson.timetable?.academic_year_id;
       return !lessonYearId || lessonYearId === selectedYearId;
     });
   }
 
-  // Filter by Day of Week
   if (selectedDay) {
     filtered = filtered.filter(
       (lesson) =>
@@ -486,6 +438,6 @@ function applyTimetableFilters() {
     );
   }
 
-  // Re-render schedule cards
   renderScheduleCards(filtered, currentUserRole);
 }
+

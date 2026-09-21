@@ -77,16 +77,12 @@
   text-align: center;
 }
 
-/* Main Content */
-
 .settings-main-content {
   margin-left: 260px;
   width: calc(100% - 260px);
   min-height: 100vh;
   padding: 30px;
 }
-
-/* Topbar */
 
 .topbar {
   display: flex;
@@ -134,7 +130,7 @@
   background-color: #ffffff;
   padding: 24px;
   display: flex;
-  flex-direction: column; /* Stacks title, description, and button vertically */
+  flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
   min-height: 160px;
@@ -156,7 +152,7 @@
 }
 
 .setting-card .manage-btn {
-  width: 100%; /* Spans full card width nicely at the bottom */
+  width: 100%;
   padding: 10px 16px;
   background-color: #2563eb;
   color: #ffffff;
@@ -173,19 +169,16 @@
    ========================================== */
 
 @media screen and (max-width: 768px) {
-  /* 1. Reset Main Layout */
   .settings-container {
     flex-direction: column;
   }
 
-  /* 3. Expand Main Content Area */
   .settings-main-content {
     margin-left: 0;
     width: 100%;
     padding: 15px;
   }
 
-  /* 4. Fix Topbar & Prevents Heading/Button Overflow */
   .topbar {
     display: flex;
     flex-direction: column;
@@ -208,20 +201,17 @@
     border-radius: 10px;
   }
 
-  /* 5. Convert 3-Column Grid to Single Column */
   .setting-cards {
     grid-template-columns: 1fr;
     gap: 15px;
     border-radius: 10px;
   }
 
-  /* 6. Stack Card Buttons on Small Screens */
   .button-group {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  /* 7. Prevent Mobile Safari Zoom Janks */
   input,
   select,
   textarea,
@@ -238,7 +228,6 @@
   }
 }
 
-/* Skeleton Card Styling */
 .setting-card.skeleton {
   pointer-events: none;
   user-select: none;
