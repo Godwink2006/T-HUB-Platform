@@ -258,9 +258,17 @@ async function handleSaveBook() {
     .getElementById("bookShelfLocation")
     .value.trim();
   const description = document.getElementById("bookDescription").value.trim();
+  const status = document.getElementById("bookStatus").value.trim();
 
   // Basic validation
-  if (!book_code || !title || !author || !department_id || !copies_total) {
+  if (
+    !book_code ||
+    !title ||
+    !author ||
+    !department_id ||
+    !copies_total ||
+    !status
+  ) {
     showToast("Please fill in all required fields marked with *", "error");
     return;
   }
@@ -302,6 +310,7 @@ async function handleSaveBook() {
         shelf_location: shelf_location || null,
         description: description || null,
         cover_image_url: coverBase64, // Ensure your column exists or map it accordingly
+        status: status,
       },
     ]);
 
