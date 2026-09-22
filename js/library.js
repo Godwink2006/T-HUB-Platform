@@ -258,7 +258,10 @@ async function handleSaveBook() {
     .getElementById("bookShelfLocation")
     .value.trim();
   const description = document.getElementById("bookDescription").value.trim();
-  const status = document.getElementById("bookStatus").value.trim();
+  const statusInput = document.getElementById("bookStatus");
+  const status = statusInput
+    ? statusInput.value.trim().toLowerCase()
+    : "active";
 
   // Basic validation
   if (
@@ -275,6 +278,16 @@ async function handleSaveBook() {
 
   if (department_id === "Select Category" || !department_id) {
     showToast("Please select a valid department category.", "error");
+    return;
+  }
+
+  if (
+    !status ||
+    status === "select status" ||
+    status === "select" ||
+    (status !== "active" && status !== "inactive")
+  ) {
+    showToast("Please select a valid status (Active or Inactive).", "error");
     return;
   }
 
