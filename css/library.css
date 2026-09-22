@@ -63,7 +63,6 @@ body {
   text-decoration: none;
 
   padding: 14px 16px;
-  border-radius: 12px;
   transition: 0.3s;
 }
 
@@ -85,7 +84,7 @@ body {
   margin-left: 260px;
   width: calc(100% - 260px);
   min-height: 100vh;
-  padding: 30px;
+  padding: 10px;
 }
 
 .topbar {
@@ -134,7 +133,9 @@ body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
+  background: #15803d;
+  color: #ffffff;
+  border: 2px solid #14532d;
 }
 
 .toolbar {
@@ -147,7 +148,6 @@ body {
 .toolbar select {
   height: 48px;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -192,7 +192,6 @@ tr {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -227,7 +226,6 @@ tr {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -246,9 +244,9 @@ tr {
 
 .book-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -283,7 +281,6 @@ tr {
   width: 100%;
   padding: 12px 15px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   outline: none;
   font-size: 15px;
 }
@@ -306,15 +303,15 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
-  background: #e5e7eb;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   cursor: pointer;
 }
 
 .save-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -323,7 +320,6 @@ tr {
 .view-book-modal-content {
   width: 850px;
   background: #ffff;
-  border-radius: 18px;
   overflow: auto;
   height: 500px;
   animation: modalShow 0.25s ease;
@@ -387,9 +383,9 @@ tr {
 
 #closeViewBookModal {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -416,7 +412,6 @@ tr {
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -435,9 +430,9 @@ tr {
 
 .edit-book-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -458,7 +453,6 @@ tr {
 .edit-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -484,7 +478,6 @@ tr {
   width: 700px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 470px;
 }
@@ -514,9 +507,9 @@ tr {
 
 .addBook-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -543,7 +536,6 @@ tr {
   width: 700px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 470px;
 }
@@ -573,9 +565,9 @@ tr {
 
 .editBook-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -606,74 +598,6 @@ tr {
   object-fit: cover;
 }
 
-.archive {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.confirm-modal {
-  width: 430px;
-  background: #ffff;
-  border-radius: 18px;
-  padding: 35px;
-  text-align: center;
-  animation: modalShow 0.25s ease;
-}
-
-.confirm-icon {
-  width: 70px;
-  height: 70px;
-  background: #fee2e2;
-  color: #dc2626;
-  border-radius: 50%;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  margin-bottom: 20px;
-}
-
-.confirm-modal h2 {
-  margin-bottom: 15px;
-}
-
-.confirm-modal p {
-  line-height: 1.6;
-  color: #6b7280;
-}
-
-.archive-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 10px;
-  background: #dc2626;
-  color: #ffff;
-  cursor: pointer;
-}
-
-.archive-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.archive-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
 .avatar-upload-group {
   display: flex;
   flex-direction: column;
@@ -692,7 +616,7 @@ tr {
   gap: 1.25rem;
   padding: 0.75rem;
   background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
 }
 
 .avatar-preview-wrapper {
@@ -727,7 +651,7 @@ tr {
   font-weight: 500;
   background: #15803d;
   color: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 2px solid #cbd5e1;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -745,4 +669,21 @@ tr {
   font-size: 0.75rem;
   color: #64748b;
   word-break: break-all;
+}
+
+.books-status-inactive,
+.books-status-active {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.books-status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.books-status-inactive {
+  background: #fcdcdc;
+  color: #651616;
 }

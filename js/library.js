@@ -349,8 +349,7 @@ async function handleSaveBook() {
       bookModal.style.display = "none";
     }
 
-    // Refresh your book grid/table view here if you have one
-    // await loadBooksTable();
+    await loadBooksTable();
   } catch (err) {
     console.error("Error saving book:", err);
     showToast(err.message || "Failed to save book.", "error");
@@ -404,3 +403,144 @@ async function loadDepartmentDropdown() {
     showToast("Failed to load departments.", "error");
   }
 }
+
+function renderTableLoading() {
+  const tableBody = document.querySelector("#booksTableBody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = `
+    <tr>
+      <td colspan="9" style="text-align: center; padding: 2rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+        Loading books...
+      </td>
+    </tr>
+  `;
+}
+
+async function loadBooksTable() {
+  renderTableLoading();
+  const tableBody = document.getElementById("booksTableBody");
+  if (!tableBody) return;
+
+  try {
+    const { data: books, error } = await window.supabaseClient
+      .from("books")
+      .select(
+        `
+        *,
+        departments (
+          name
+        )
+      `,
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    tableBody.innerHTML = "";
+
+    if (!books || books.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 20px; color: #666;">
+            No books found in the library inventory.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    books.forEach((book) => {
+      const tr = document.createElement("tr");
+
+      // Use uploaded cover image if available, otherwise default book icon
+      const coverSrc =
+        book.cover_image_url ||
+        "https://cdn-icons-png.flaticon.com/512/29/29302.png";
+      const departmentName = book.departments ? book.departments.name : "-";
+
+      tr.innerHTML = `
+        <td>
+          <img
+            src="${coverSrc}"
+            alt="Book Cover"
+            onerror="
+              this.onerror = null;
+              this.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            "
+            class="book-photo"
+          />
+        </td>
+        <td>${escapeHtml(book.book_code)}</td>
+        <td>${escapeHtml(book.title)}</td>
+        <td>${escapeHtml(book.author)}</td>
+        <td>${escapeHtml(departmentName)}</td>
+        <td>${book.total_copies}</td>
+        <td>${book.available_copies}</td>
+        <td><span class="books-status-${(book.status || "inactive").toLowerCase()}">
+          ${book.status || "Inactive"}
+        </span></td>
+        <td>
+          <button class="books-actions-btn view" data-id="${book.id}">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+          <button class="books-actions-btn edit" data-id="${book.id}">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+        </td>
+      `;
+
+      tableBody.appendChild(tr);
+    });
+
+    // Re-bind your view and edit button event listeners for the newly generated rows
+    attachBookActionListeners();
+  } catch (err) {
+    console.error("Error loading books table:", err);
+    showToast("Failed to load library inventory.", "error");
+  }
+}
+
+// Helper to prevent XSS injection in dynamic text
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Re-attach listeners for dynamically created action buttons
+function attachBookActionListeners() {
+  const viewButtons = document.querySelectorAll("#booksTableBody .view");
+  const editButtons = document.querySelectorAll("#booksTableBody .edit");
+
+  viewButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const bookId = button.getAttribute("data-id");
+      // TODO: Load specific book details into viewModal using bookId if needed
+      const viewBookModal = document.getElementById("viewBookModal");
+      if (viewBookModal) {
+        viewBookModal.style.display = "flex";
+        lockBodyScroll();
+      }
+    });
+  });
+
+  editButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const bookId = button.getAttribute("data-id");
+      // TODO: Populate edit modal inputs with this bookId's data
+      const editBookModal = document.getElementById("editBookModal");
+      if (editBookModal) {
+        editBookModal.style.display = "flex";
+        lockBodyScroll();
+      }
+    });
+  });
+}
+
+loadBooksTable();
