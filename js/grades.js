@@ -25,31 +25,42 @@ function closeModal(modalEl) {
   if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 }
 
+let isGradeModalListenersInitialized = false;
+
 function initGradeModalEventListeners() {
+  // Prevent duplicate event listener registration on re-init
+  if (isGradeModalListenersInitialized) return;
+  isGradeModalListenersInitialized = true;
+
   const gradeModal = document.getElementById("gradeModal");
   const enterGradeModal = document.getElementById("enterGradeModal");
   const viewGradeModal = document.getElementById("viewGradeModal");
   const editGradeModal = document.getElementById("editGradeModal");
 
+  // 1. Open Setup Modal ("Add Grade" / "Enter Grades")
   document.getElementById("addGrade")?.addEventListener("click", async () => {
     resetGradeModal();
-    openModal(gradeModal);
-    // Populate options on open without overriding active selection
+    if (typeof openModal === "function") openModal(gradeModal);
+
+    // Fetch dropdown data on open
     await populateClassOptions();
     await loadAssessmentCategories();
   });
 
+  // 2. Setup Modal Close Actions
   document
     .getElementById("closeGradeModal")
-    ?.addEventListener("click", () => closeModal(gradeModal));
+    .addEventListener("click", () => closeModal(gradeModal));
   document
     .getElementById("cancelGradeModal")
-    ?.addEventListener("click", () => closeModal(gradeModal));
+    .addEventListener("click", () => closeModal(gradeModal));
 
+  // 3. Load Students Action (Proceed from Setup Modal to Enter Grade Modal)
   document
     .getElementById("loadEnterGrade")
     ?.addEventListener("click", handleLoadStudents);
 
+  // 4. Enter Grade Modal Close Actions
   document
     .getElementById("closeEnterGradeModal")
     ?.addEventListener("click", () => closeModal(enterGradeModal));
@@ -57,6 +68,7 @@ function initGradeModalEventListeners() {
     .getElementById("cancelEnterGradeModal")
     ?.addEventListener("click", () => closeModal(enterGradeModal));
 
+  // 5. View Grade Modal Close Actions
   document
     .getElementById("closeViewGradeModal")
     ?.addEventListener("click", () => closeModal(viewGradeModal));
@@ -64,6 +76,7 @@ function initGradeModalEventListeners() {
     .getElementById("closeViewBtn")
     ?.addEventListener("click", () => closeModal(viewGradeModal));
 
+  // 6. Edit Grade Modal Close Actions
   document
     .getElementById("closeEditGradeModal")
     ?.addEventListener("click", () => closeModal(editGradeModal));
@@ -71,32 +84,37 @@ function initGradeModalEventListeners() {
     .getElementById("cancelEditGradeModal")
     ?.addEventListener("click", () => closeModal(editGradeModal));
 
+  // 7. Table Row Actions (View & Edit Delegation)
   document.addEventListener("click", (e) => {
     const viewBtn = e.target.closest(".view");
     const editBtn = e.target.closest(".edit");
 
     if (viewBtn) {
-      // Read data-grade-id attribute instead of data-id
       const gradeId =
         viewBtn.dataset.gradeId || viewBtn.closest("tr")?.dataset.gradeId;
 
-      if (typeof handleViewGrades === "function") {
-        handleViewGrades(gradeId);
+      if (gradeId) {
+        if (typeof handleViewGrades === "function") {
+          handleViewGrades(gradeId);
+        }
+        if (typeof openModal === "function") openModal(viewGradeModal);
       }
-      openModal(viewGradeModal);
     }
 
     if (editBtn) {
-      // Read data-grade-id attribute instead of data-id
       const gradeId =
         editBtn.dataset.gradeId || editBtn.closest("tr")?.dataset.gradeId;
 
-      if (typeof handleEditGrades === "function") {
-        handleEditGrades(gradeId);
+      if (gradeId) {
+        if (typeof handleEditGrades === "function") {
+          handleEditGrades(gradeId);
+        }
+        if (typeof openModal === "function") openModal(editGradeModal);
       }
-      openModal(editGradeModal);
     }
   });
+
+  // 8. Outside Backdrop Click to Close Modals safely
   window.addEventListener("click", (e) => {
     if (e.target === gradeModal) closeModal(gradeModal);
     if (e.target === enterGradeModal) closeModal(enterGradeModal);
@@ -106,26 +124,47 @@ function initGradeModalEventListeners() {
 }
 
 function resetGradeModal() {
+  // 1. Reset Form Inputs
   const form =
     document.getElementById("gradeForm") ||
     document.getElementById("gradeSetupForm");
   if (form) form.reset();
 
+  // 2. Reset Class Dropdown (Checking both single and plural ID variants)
+  const classSelect =
+    document.getElementById("gradesClassSelect") ||
+    document.getElementById("gradeClassSelect");
+  if (classSelect) {
+    classSelect.value = "";
+  }
+
+  // 3. Reset & Disable Subject Dropdown
   const subjectSelect = document.getElementById("gradeSubjectSelect");
   if (subjectSelect) {
     subjectSelect.innerHTML = `<option value="">Select Subject</option>`;
     subjectSelect.disabled = true;
   }
+
+  // 4. Reset Category Dropdown if populated dynamically
+  const categorySelect = document.getElementById(
+    "gradeAssessmentCategorySelect",
+  );
+  if (categorySelect) {
+    categorySelect.value = "";
+  }
 }
 
-let classListenerAttached = false;
 function initGradeFormListeners() {
-  const classSelect = document.getElementById("gradesClassSelect");
-  if (classSelect && !classListenerAttached) {
+  const classSelect =
+    document.getElementById("gradesClassSelect") ||
+    document.getElementById("gradeClassSelect");
+
+  // Use dataset flag attached to element to prevent duplicate handlers safely
+  if (classSelect && !classSelect.dataset.listenerBound) {
     classSelect.addEventListener("change", (e) => {
       handleClassSelectChange(e.target.value);
     });
-    classListenerAttached = true;
+    classSelect.dataset.listenerBound = "true";
   }
 }
 
@@ -157,7 +196,7 @@ async function populateClassOptions() {
       const { data: allClasses, error } = await client
         .from("classes")
         .select("id, name")
-        .order("name");
+        .order("name", { ascending: true });
       if (error) throw error;
       classesList = allClasses || [];
     } else {
@@ -168,6 +207,7 @@ async function populateClassOptions() {
 
       if (error) throw error;
 
+      // Extract unique classes
       classesList = [
         ...new Map(
           (assignments || [])
@@ -175,6 +215,9 @@ async function populateClassOptions() {
             .map((a) => [a.classes.id, a.classes]),
         ).values(),
       ];
+
+      // Sort teacher classes alphabetically A-Z
+      classesList.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     classSelect.innerHTML = `<option value="">Select Class</option>`;
@@ -186,14 +229,22 @@ async function populateClassOptions() {
       classSelect.appendChild(opt);
     });
 
-    // Re-apply selected value if it still exists in the options
+    // Re-apply selected value if it still exists in options
     if (selectedValue) {
       classSelect.value = selectedValue;
     }
 
-    initGradeFormListeners();
+    // Safely attach listeners only if flag isn't set, or call once during page init
+    if (
+      !classSelect.dataset.listenersBound &&
+      typeof initGradeFormListeners === "function"
+    ) {
+      initGradeFormListeners();
+      classSelect.dataset.listenersBound = "true";
+    }
   } catch (err) {
     console.error("Error populating class options:", err);
+    classSelect.innerHTML = `<option value="">Error loading classes</option>`;
   }
 }
 
@@ -222,45 +273,60 @@ async function handleClassSelectChange(classId) {
       .maybeSingle();
 
     const role = profile?.role;
-    let assignments = [];
+    const subjectMap = new Map();
 
     if (role === "admin") {
-      const { data, error } = await client
+      // 1. Fetch class-assigned subjects first
+      const { data: assignedData, error: assignedErr } = await client
         .from("teacher_assignments")
         .select("subject_id, subjects(id, name)")
         .eq("class_id", classId);
 
-      if (error) console.error("Admin subject query error:", error);
-      assignments = data || [];
+      if (assignedErr) console.error("Admin subject query error:", assignedErr);
+
+      (assignedData || []).forEach((item) => {
+        if (item.subjects?.id) {
+          subjectMap.set(item.subjects.id, item.subjects.name);
+        }
+      });
+
+      // Fallback for Admins: If no assignments exist for this class, fetch all subjects
+      if (subjectMap.size === 0) {
+        const { data: allSubjects } = await client
+          .from("subjects")
+          .select("id, name")
+          .order("name", { ascending: true });
+
+        (allSubjects || []).forEach((s) => subjectMap.set(s.id, s.name));
+      }
     } else {
-      const { data, error } = await client
+      // 2. Fetch teacher-specific assignments for this class
+      const { data: teacherData, error: teacherErr } = await client
         .from("teacher_assignments")
         .select("subject_id, subjects(id, name)")
         .eq("class_id", classId)
         .eq("teacher_id", user.id);
 
-      if (error) console.error("Teacher subject query error:", error);
-      assignments = data || [];
+      if (teacherErr) console.error("Teacher subject query error:", teacherErr);
+
+      (teacherData || []).forEach((item) => {
+        if (item.subjects?.id) {
+          subjectMap.set(item.subjects.id, item.subjects.name);
+        }
+      });
     }
 
-    if (!assignments || assignments.length === 0) {
+    if (subjectMap.size === 0) {
       subjectSelect.innerHTML = `<option value="">No subjects assigned</option>`;
       return;
     }
 
-    const subjectMap = new Map();
-    assignments.forEach((item) => {
-      if (item.subjects?.id) {
-        subjectMap.set(item.subjects.id, item.subjects.name);
-      }
-    });
+    // Sort subjects alphabetically before appending
+    const sortedSubjects = Array.from(subjectMap.entries()).sort((a, b) =>
+      a[1].localeCompare(b[1]),
+    );
 
-    if (subjectMap.size === 0) {
-      subjectSelect.innerHTML = `<option value="">No subjects found</option>`;
-      return;
-    }
-
-    subjectMap.forEach((subjectName, subjectId) => {
+    sortedSubjects.forEach(([subjectId, subjectName]) => {
       const opt = document.createElement("option");
       opt.value = subjectId;
       opt.textContent = subjectName;
@@ -270,6 +336,7 @@ async function handleClassSelectChange(classId) {
     subjectSelect.disabled = false;
   } catch (err) {
     console.error("Error in handleClassSelectChange:", err);
+    subjectSelect.innerHTML = `<option value="">Error loading subjects</option>`;
   }
 }
 
@@ -281,7 +348,7 @@ async function loadAssessmentCategories() {
   );
   if (!assessmentSelect) return;
 
-  assessmentSelect.innerHTML = `<option value="">Select Assessment</option>`;
+  assessmentSelect.innerHTML = `<option value="">Select Category</option>`;
 
   try {
     const client = window.supabaseClient || supabaseClient;
@@ -302,15 +369,23 @@ async function loadAssessmentCategories() {
       return;
     }
 
+    // 1. Sync global state arrays
     activeAssessmentCategories = categories;
     window.activeAssessmentCategories = categories;
+    window.activeCategories = categories; // Ensures fallback compatibility in handleLoadStudents
 
-    // Populate options
-    assessmentSelect.innerHTML = `<option value="">Select Assessment</option>`;
+    // 2. Clear and populate options
+    assessmentSelect.innerHTML = `<option value="">Select Category</option>`;
+
     categories.forEach((cat) => {
       const opt = document.createElement("option");
       opt.value = cat.id;
-      // Show total marks if available (e.g., Cat 1 (20 Marks))
+
+      // Store marks on dataset for instant client-side lookup
+      if (cat.marks != null) {
+        opt.dataset.marks = cat.marks;
+      }
+
       const marksLabel = cat.marks ? ` (${cat.marks} Marks)` : "";
       opt.textContent = `${cat.name}${marksLabel}`;
       assessmentSelect.appendChild(opt);
@@ -325,10 +400,17 @@ function populateAssessmentDropdown(assessments) {
   const select = document.getElementById("enterGradeModalCategoryPeriod");
   if (!select) return;
 
+  if (!Array.isArray(assessments)) return;
+
   assessments.forEach((item) => {
     const opt = document.createElement("option");
     opt.value = item.id;
-    opt.textContent = `${item.name} (${item.maximum_marks} marks)`;
+    opt.textContent = `${item.name} (${item.maximum_marks ?? 0} marks)`;
+
+    if (item.maximum_marks != null) {
+      opt.dataset.marks = item.maximum_marks;
+    }
+
     select.appendChild(opt);
   });
 }
@@ -352,7 +434,7 @@ async function loadAcademicContext() {
         .ilike("status", "Active")
         .maybeSingle(),
 
-      // 3. Fetch Assessment Categories
+      // 3. Fetch Assessment Categories / Periods
       client
         .from("assessments")
         .select("id, name, maximum_marks")
@@ -362,34 +444,25 @@ async function loadAcademicContext() {
 
     // Handle Active Year
     if (yearRes.data) {
-      activeAcademicYearId = yearRes.data.id;
       window.activeAcademicYearId = yearRes.data.id;
-      window.activeAcademicYearLabel = yearRes.data.year_label; // Attached for UI display
+      window.activeAcademicYearLabel = yearRes.data.year_label;
     }
 
     // Handle Active Term
     if (termRes.data) {
-      activeTermId = termRes.data.id;
       window.activeTermId = termRes.data.id;
-      window.activeTermLabel = termRes.data.name; // Attached for UI display
+      window.activeTermLabel = termRes.data.name;
     }
 
-    // Handle Assessment Categories
+    // Handle Active Assessment Periods
     if (assessmentRes.data) {
-      activeAssessment = assessmentRes.data;
       window.activeAssessment = assessmentRes.data;
-      populateAssessmentDropdown(assessmentRes.data);
     }
-
-    console.log("Loaded Grades Academic Context:", {
-      academicYearId: activeAcademicYearId,
-      academicYearLabel: window.activeAcademicYearLabel,
-      termId: activeTermId,
-      termLabel: window.activeTermLabel,
-      assessment: activeAssessment,
-    });
   } catch (err) {
     console.error("Error loading academic context for grades:", err);
+    if (typeof showToast === "function") {
+      showToast("Failed to load active academic context.", "error");
+    }
   }
 }
 
@@ -495,12 +568,23 @@ async function handleLoadStudents(e) {
   const elClass = document.getElementById("enterGradeModalClass");
   const elSubject = document.getElementById("enterGradeModalSubject");
   const elCategory = document.getElementById("enterGradeModalCategory");
+  const elPeriod = document.getElementById("enterGradeModalAssessmentPeriod");
   const elDate = document.getElementById("enterGradeModalDate");
 
   if (elClass) elClass.textContent = className;
   if (elSubject) elSubject.textContent = subjectName;
   if (elCategory) {
-    elCategory.textContent = `${categoryName} (Max Allowed: ${finalMaxMarks ?? "N/A"} marks)`;
+    elCategory.textContent = `${categoryName} (Max Allowed: ${finalMaxMarks ?? "-"} marks)`;
+  }
+
+  if (elPeriod) {
+    const periodMarks =
+      selectedAssessment?.maximum_marks != null
+        ? ` (${selectedAssessment.maximum_marks} marks)`
+        : "";
+    elPeriod.textContent = assessmentName
+      ? `${assessmentName}${periodMarks}`
+      : "-";
   }
   if (elDate) {
     elDate.textContent = new Date().toLocaleDateString("en-GB", {
@@ -521,7 +605,7 @@ async function handleLoadStudents(e) {
   if (setupModal) closeModal(setupModal);
   if (enterGradeModal) openModal(enterGradeModal);
 
-  await loadStudentRosterForGrades(classId);
+  await loadStudentRosterForGrades(classId, finalMaxMarks);
 }
 
 async function handleSaveGrades(e) {
@@ -537,7 +621,6 @@ async function handleSaveGrades(e) {
     return;
   }
 
-  // Inside handleSaveGrades(e):
   if (!currentGradeSession.assessmentId) {
     showToast(
       "Active assessment period not found. Please refresh and try again.",
@@ -552,7 +635,7 @@ async function handleSaveGrades(e) {
     document.getElementById("enterGradeModalStatus");
   const selectedStatus = statusSelect
     ? statusSelect.value.toLowerCase()
-    : "published";
+    : "drafted";
 
   // 2. Gather scores from input fields in the table
   const scoreInputs = document.querySelectorAll(".student-score-input");
@@ -608,6 +691,7 @@ async function handleSaveGrades(e) {
 
     const targetAssessmentId = currentGradeSession.assessmentId || null;
 
+    // 3. RPC Call with p_is_edit flag
     const { data: gradeId, error } = await client.rpc("save_grade_session", {
       p_class_id: currentGradeSession.classId,
       p_subject_id: currentGradeSession.subjectId,
@@ -617,6 +701,7 @@ async function handleSaveGrades(e) {
       p_term_id: currentGradeSession.termId || null,
       p_status: selectedStatus,
       p_records: recordsPayload,
+      p_is_edit: false, // Flag as new creation session
     });
 
     if (error) throw error;
@@ -635,7 +720,16 @@ async function handleSaveGrades(e) {
     }
   } catch (err) {
     console.error("Error saving grade session:", err);
-    showToast(`Failed to save grades: ${err.message}`, "error");
+
+    // Friendly message for duplicate entries
+    if (err.code === "23505" || err.message?.includes("already exists")) {
+      showToast(
+        "A grade session for this Subject, Category, and Period already exists!",
+        "error",
+      );
+    } else {
+      showToast(`Failed to save grades: ${err.message}`, "error");
+    }
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -652,7 +746,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-async function loadStudentRosterForGrades(classId) {
+async function loadStudentRosterForGrades(classId, maxMarks = null) {
   const tbody = document.getElementById("gradeRosterTableBody");
   if (!tbody) return;
 
@@ -663,10 +757,10 @@ async function loadStudentRosterForGrades(classId) {
     const client = window.supabaseClient || supabaseClient;
     const cleanClassId = classId ? classId.trim() : "";
 
-    // Fetch students in class (including student_id column)
+    // 1. Single Query: Fetch students AND their profile names
     const { data: students, error: studentErr } = await client
       .from("students")
-      .select("id, student_id, class_id")
+      .select("id, student_id, class_id, profiles(full_name)")
       .eq("class_id", cleanClassId);
 
     if (studentErr) {
@@ -680,24 +774,21 @@ async function loadStudentRosterForGrades(classId) {
       return;
     }
 
-    // Fetch student profile full names using primary key id
-    const studentIds = students.map((s) => s.id);
-    let profileMap = new Map();
+    const numericMax =
+      maxMarks !== null && maxMarks !== undefined && !isNaN(maxMarks)
+        ? Number(maxMarks)
+        : null;
 
-    const { data: profiles, error: profileErr } = await client
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", studentIds);
+    // Use numericMax consistently
+    const maxAttr = numericMax !== null ? `max="${numericMax}"` : "";
+    const placeholderText =
+      numericMax !== null ? `0 - ${numericMax}` : "Enter grade";
 
-    if (!profileErr && profiles) {
-      profileMap = new Map(profiles.map((p) => [p.id, p.full_name]));
-    }
-
-    // Populate rows
+    // 3. Populate rows
     tbody.innerHTML = "";
     students.forEach((student) => {
       const studentCode = student.student_id || "N/A";
-      const displayName = profileMap.get(student.id) || "Unknown Student";
+      const displayName = student.profiles?.full_name || "Unknown Student";
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -708,9 +799,10 @@ async function loadStudentRosterForGrades(classId) {
             type="number" 
             class="student-score-input" 
             data-student-id="${student.id}" 
-            placeholder="Enter grade" 
+            placeholder="${placeholderText}" 
             min="0" 
-            step="0.5"
+            ${maxAttr}
+            step="0.01"
             style="width: 100%;"
           />
         </td>
@@ -727,23 +819,52 @@ async function loadGradesList() {
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
 
+  const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")
+    .toLowerCase()
+    .trim();
+  const selectedClass = document.getElementById(
+    "gradeToolbarClassSelect",
+  )?.value;
+  const selectedSubject = document.getElementById(
+    "gradeToolbarSubjectSelect",
+  )?.value;
+  const selectedCategory = document.getElementById(
+    "gradeToolbarCategorySelect",
+  )?.value;
+
   try {
     const client = window.supabaseClient || supabaseClient;
 
-    // 1. Fetch grades table with foreign relations
-    const { data: grades, error } = await client
+    // 1. Fetch grades table with foreign relations using correct column name (category_id)
+    let query = client
       .from("grades")
       .select(
         `
         id,
         status,
         created_at,
+        class_id,
+        subject_id,
+        category_id,
         assessment_categories ( name ),
         classes ( name ),
         subjects ( name )
       `,
       )
       .order("created_at", { ascending: false });
+
+    // Apply active toolbar dropdown filters
+    if (selectedClass) {
+      query = query.eq("class_id", selectedClass);
+    }
+    if (selectedSubject) {
+      query = query.eq("subject_id", selectedSubject);
+    }
+    if (selectedCategory) {
+      query = query.eq("category_id", selectedCategory);
+    }
+
+    const { data: grades, error } = await query;
 
     if (error) throw error;
 
@@ -757,10 +878,38 @@ async function loadGradesList() {
       return;
     }
 
-    // 2. Build row elements
-    tbody.innerHTML = grades
+    // Filter by text search query across Category, Class, Subject, and Status
+    const filteredGrades = grades.filter((item) => {
+      if (!searchQuery) return true;
+
+      const categoryName = (
+        item.assessment_categories?.name || ""
+      ).toLowerCase();
+      const className = (item.classes?.name || "").toLowerCase();
+      const subjectName = (item.subjects?.name || "").toLowerCase();
+      const statusText = (item.status || "").toLowerCase();
+
+      return (
+        categoryName.includes(searchQuery) ||
+        className.includes(searchQuery) ||
+        subjectName.includes(searchQuery) ||
+        statusText.includes(searchQuery)
+      );
+    });
+
+    if (filteredGrades.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+            No grade records found matching filters.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    // 2. Build row elements (UNCHANGED HTML OUTPUT)
+    tbody.innerHTML = filteredGrades
       .map((item) => {
-        // Fallback check to ensure gradeId exists
         const gradeId = item.id || item.grade_id;
 
         if (!gradeId) {
@@ -782,7 +931,6 @@ async function loadGradesList() {
         const subjectName = item.subjects?.name || "N/A";
         const displayStatus = isDraft ? "Drafted" : "Submitted";
 
-        // Generate action button with exact gradeId
         const actionButtonHTML = isDraft
           ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${gradeId}">
                <i class="fa-solid fa-pen"></i>
@@ -821,6 +969,16 @@ async function handleViewGrades(gradeId) {
     return;
   }
 
+  const skeletonText = `<span class="skeleton-text">Loading...</span>`;
+
+  document.getElementById("viewModalClass").innerHTML = skeletonText;
+  document.getElementById("viewModalSubject").innerHTML = skeletonText;
+  document.getElementById("viewModalAssessment").innerHTML = skeletonText;
+  document.getElementById("viewModalAssessmentPeriod").innerHTML = skeletonText;
+  document.getElementById("viewModalAcademicYear").innerHTML = skeletonText;
+  document.getElementById("viewModalSemester").innerHTML = skeletonText;
+  document.getElementById("viewModalDate").innerHTML = skeletonText;
+
   const modal = document.getElementById("viewGradeModal");
   if (!modal) return;
 
@@ -835,14 +993,17 @@ async function handleViewGrades(gradeId) {
         status,
         created_at,
         assessment_categories ( name ),
+        assessments ( name ),
+        academic_years ( year_label ),
+        terms ( name ),
         classes ( name ),
-        subjects ( name ),
+        subjects ( name ),     
         grade_records (
           id,
           student_id,
           score,
           students (
-            id,
+            id, student_id,
             profiles ( full_name )
           )
         )
@@ -853,37 +1014,57 @@ async function handleViewGrades(gradeId) {
 
     if (error) throw error;
 
+    // Helper for safe text escaping
+    const escapeHtml = (str) =>
+      String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
     // Populate header details
     document.getElementById("viewModalClass").textContent =
-      grade.classes?.name || "N/A";
+      grade.classes?.name || "-";
     document.getElementById("viewModalSubject").textContent =
-      grade.subjects?.name || "N/A";
+      grade.subjects?.name || "-";
     document.getElementById("viewModalAssessment").textContent =
-      grade.assessment_categories?.name || "N/A";
-    document.getElementById("viewModalDate").textContent = new Date(
-      grade.created_at,
-    ).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+      grade.assessment_categories?.name || "-";
+    document.getElementById("viewModalAssessmentPeriod").textContent =
+      grade.assessments?.name || "-";
+    document.getElementById("viewModalAcademicYear").textContent =
+      grade.academic_years?.year_label || "-";
+    document.getElementById("viewModalSemester").textContent =
+      grade.terms?.name || "-";
+
+    document.getElementById("viewModalDate").textContent = grade.created_at
+      ? new Date(grade.created_at).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "-";
 
     // Populate student table rows
     const tbody = document.getElementById("viewGradeTableBody");
     const records = grade.grade_records || [];
 
     if (records.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student marks recorded.</td></tr>`;
+      // Fixed: colspan changed to 3 to match the table columns
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888;">No student marks recorded.</td></tr>`;
     } else {
+      // Fixed: HTML-escaped output to prevent XSS attacks
       tbody.innerHTML = records
         .map((rec) => {
-          // Check nested profile full_name, fallback if null
-          const studentName =
-            rec.students?.profiles?.full_name || "Unknown Student";
-          const scoreDisplay = rec.score ?? "-";
+          const idDisplay = escapeHtml(rec.students?.student_id ?? "-");
+          const studentName = escapeHtml(
+            rec.students?.profiles?.full_name || "-",
+          );
+          const scoreDisplay = escapeHtml(rec.score ?? "-");
 
           return `
             <tr>
+              <td>${idDisplay}</td>
               <td>${studentName}</td>
               <td><p>${scoreDisplay}</p></td>
             </tr>`;
@@ -891,7 +1072,6 @@ async function handleViewGrades(gradeId) {
         .join("");
     }
 
-    // Replace modal.style.display = "block"; with:
     openModal(modal);
   } catch (err) {
     console.error("Error opening view modal:", err);
@@ -899,7 +1079,6 @@ async function handleViewGrades(gradeId) {
       showToast("Failed to view grade details", "error");
   }
 }
-
 /**
  * Open and Populate Edit Grade Modal (Editable)
  */
@@ -915,6 +1094,33 @@ async function handleEditGrades(gradeId) {
 
   currentEditGradeId = gradeId;
 
+  // 1. Safe HTML escape helper
+  const escapeHtml = (str) =>
+    String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  // 2. Set skeleton placeholders
+  const skeletonText = `<span class="skeleton-text">Loading...</span>`;
+  document.getElementById("editModalClass").innerHTML = skeletonText;
+  document.getElementById("editModalSubject").innerHTML = skeletonText;
+  document.getElementById("editModalAssessment").innerHTML = skeletonText;
+  document.getElementById("editModalAssessmentPeriod").innerHTML = skeletonText;
+  document.getElementById("editModalAcademicYear").innerHTML = skeletonText;
+  document.getElementById("editModalSemester").innerHTML = skeletonText;
+  document.getElementById("editModalDate").innerHTML = skeletonText;
+
+  const elMaxMarks = document.getElementById("editModalMaxMarks");
+  if (elMaxMarks) elMaxMarks.innerHTML = skeletonText;
+
+  const tbody = document.getElementById("editGradeTableBody");
+  tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888;">Loading records...</td></tr>`;
+
+  openModal(modal);
+
   try {
     const client = window.supabaseClient || supabaseClient;
 
@@ -925,15 +1131,18 @@ async function handleEditGrades(gradeId) {
         id,
         status,
         created_at,
-        assessment_categories ( name ),
+        assessment_categories ( name, marks ),
+        assessments ( name, maximum_marks ),
+        academic_years ( year_label ),
+        terms ( name ),
         classes ( name ),
-        subjects ( name ),
+        subjects ( name ),     
         grade_records (
           id,
           student_id,
           score,
           students (
-            id,
+            id, student_id,
             profiles ( full_name )
           )
         )
@@ -944,64 +1153,124 @@ async function handleEditGrades(gradeId) {
 
     if (error) throw error;
 
+    // 1. Extract raw marks from foreign tables
+    const categoryMax =
+      grade.assessment_categories?.marks != null
+        ? Number(grade.assessment_categories.marks)
+        : null;
+
+    const periodMax =
+      grade.assessments?.maximum_marks != null
+        ? Number(grade.assessments.maximum_marks)
+        : null;
+
+    // 2. Compute effective dynamic cap
+    const effectiveMax = Math.min(
+      categoryMax ?? Infinity,
+      periodMax ?? Infinity,
+    );
+    const finalMaxMarks = isFinite(effectiveMax) ? effectiveMax : null;
+
+    // 3. Render raw individual limits
+    const elCatMax = document.getElementById("editModalCategoryMax");
+    if (elCatMax) {
+      elCatMax.textContent =
+        categoryMax !== null ? `(Category Max: ${categoryMax})` : "";
+    }
+
+    const elPerMax = document.getElementById("editModalPeriodMax");
+    if (elPerMax) {
+      elPerMax.textContent =
+        periodMax !== null ? `(Period Max: ${periodMax})` : "";
+    }
+
+    // 4. Render effective combined cap
+    const elMaxMarks = document.getElementById("editModalMaxMarks");
+    if (elMaxMarks) {
+      elMaxMarks.textContent =
+        finalMaxMarks !== null ? `${finalMaxMarks} Marks` : "No Limit";
+    }
+
+    // 4. Populate metadata
     document.getElementById("editModalClass").textContent =
-      grade.classes?.name || "N/A";
+      grade.classes?.name || "-";
     document.getElementById("editModalSubject").textContent =
-      grade.subjects?.name || "N/A";
+      grade.subjects?.name || "-";
     document.getElementById("editModalAssessment").textContent =
-      grade.assessment_categories?.name || "N/A";
-    document.getElementById("editModalDate").textContent = new Date(
-      grade.created_at,
-    ).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+      grade.assessment_categories?.name || "-";
+    document.getElementById("editModalAssessmentPeriod").textContent =
+      grade.assessments?.name || "-";
+    document.getElementById("editModalAcademicYear").textContent =
+      grade.academic_years?.year_label || "-";
+    document.getElementById("editModalSemester").textContent =
+      grade.terms?.name || "-";
+    document.getElementById("editModalDate").textContent = grade.created_at
+      ? new Date(grade.created_at).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "-";
+
+    if (elMaxMarks) {
+      elMaxMarks.textContent =
+        finalMaxMarks !== null ? `${finalMaxMarks} Marks` : "No Limit";
+    }
 
     const statusSelect = document.getElementById("editModalStatusSelect");
     if (statusSelect) {
-      statusSelect.value = (grade.status || "draft")
+      const initialStatus = (grade.status || "drafted")
         .toLowerCase()
-        .includes("draft")
-        ? "draft"
+        .includes("drafted")
+        ? "drafted"
         : "submitted";
+
+      statusSelect.value = initialStatus;
+      statusSelect.dataset.initialValue = initialStatus;
     }
 
     const tbody = document.getElementById("editGradeTableBody");
     const records = grade.grade_records || [];
 
     if (records.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student records found.</td></tr>`;
+      // Fixed: colspan="3"
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888;">No student records found.</td></tr>`;
     } else {
+      // Fixed: escapeHtml wrapping
       tbody.innerHTML = records
         .map((rec) => {
-          const studentName =
-            rec.students?.profiles?.full_name || "Unknown Student";
+          const studentName = escapeHtml(
+            rec.students?.profiles?.full_name || "-",
+          );
+          const studentId = escapeHtml(rec.students?.student_id || "-");
+          const scoreVal = rec.score ?? "";
+
           return `
-            <tr data-record-id="${rec.id}">
-              <td>${studentName}</td>
-              <td class="form-group">
-                <input 
-                  type="number" 
-                  class="edit-score-input" 
-                  data-record-id="${rec.id}"
-                  value="${rec.score ?? ""}" 
-                  placeholder="Enter grade" 
-                  step="0.01"
-                  min="0"
-                />
-              </td>
-            </tr>`;
+         <tr data-record-id="${rec.id}">
+          <td>${studentId}</td>
+          <td>${studentName}</td>
+          <td class="form-group">
+            <input 
+              type="number" 
+              class="edit-score-input" 
+              data-record-id="${rec.id}"
+              data-initial-value="${scoreVal}"
+              value="${scoreVal}" 
+             placeholder="0 - ${finalMaxMarks ?? "Max"}" 
+               step="0.01"
+               min="0"
+               ${finalMaxMarks !== null ? `max="${finalMaxMarks}"` : ""}
+            />
+          </td>
+        </tr>`;
         })
         .join("");
     }
-
-    // Replace modal.style.display = "block"; with:
-    openModal(modal);
   } catch (err) {
     console.error("Error opening edit modal:", err);
     if (typeof showToast === "function")
       showToast("Failed to load grade for editing", "error");
+    closeModal(modal);
   }
 }
 
@@ -1011,7 +1280,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   tbody.addEventListener("click", async (e) => {
     const btn = e.target.closest(".grades-actions-btn");
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
 
     const action = btn.getAttribute("data-action");
 
@@ -1025,80 +1294,224 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (action === "view") {
-      await handleViewGrades(gradeId);
-    } else if (action === "edit") {
-      await handleEditGrades(gradeId);
+    try {
+      // Prevent rapid double-clicks while async handler runs
+      btn.disabled = true;
+
+      if (action === "view") {
+        await handleViewGrades(gradeId);
+      } else if (action === "edit") {
+        await handleEditGrades(gradeId);
+      }
+    } catch (err) {
+      console.error(`Error processing ${action} action:`, err);
+    } finally {
+      btn.disabled = false;
     }
   });
 
   loadGradesList();
 });
-/**
- * Handle Save / Update Form Submission
- */
+
+document.addEventListener("DOMContentLoaded", async () => {
+  if (typeof initGradeModalEventListeners === "function") {
+    initGradeModalEventListeners();
+  }
+  if (typeof initGradeFormListeners === "function") {
+    initGradeFormListeners();
+  }
+
+  // Initialize Toolbar
+  initToolbarListeners();
+  await populateToolbarDropdowns();
+
+  // Load Context & Initial Setup Options
+  await loadAcademicContext();
+  await populateClassOptions();
+});
+
 document
   .getElementById("editGradeForm")
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentEditGradeId) return;
 
+    // 1. Detect if anything actually changed
+    const statusSelect = document.getElementById("editModalStatusSelect");
+    const currentStatus = statusSelect
+      ? statusSelect.value.toLowerCase()
+      : "drafted";
+    const initialStatus = statusSelect?.dataset.initialValue || "";
+
+    let hasStatusChanged = currentStatus !== initialStatus;
+    let hasScoresChanged = false;
+
+    const inputs = document.querySelectorAll(".edit-score-input");
+    inputs.forEach((input) => {
+      const initialScore = input.dataset.initialValue ?? "";
+      const currentScore = input.value.trim();
+
+      if (initialScore !== currentScore) {
+        hasScoresChanged = true;
+      }
+    });
+
+    // 🛑 STOP: If no changes were made, notify user and cancel API request
+    if (!hasStatusChanged && !hasScoresChanged) {
+      if (typeof showToast === "function") {
+        showToast("No changes detected.", "info"); // or "warning"
+      }
+      return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.textContent : "Save";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Updating...";
+    }
+
     try {
       const client = window.supabaseClient || supabaseClient;
-      const newStatus = document.getElementById("editModalStatusSelect").value;
 
-      // 1. Update grade session status
-      const { error: gradeErr } = await client
-        .from("grades")
-        .update({ status: newStatus })
-        .eq("id", currentEditGradeId);
+      if (hasStatusChanged) {
+        const { error: gradeErr } = await client
+          .from("grades")
+          .update({ status: currentStatus })
+          .eq("id", currentEditGradeId);
 
-      if (gradeErr) throw gradeErr;
+        if (gradeErr) throw gradeErr;
+      }
 
-      // 2. Collect updated marks from table inputs
-      const inputs = document.querySelectorAll(".edit-score-input");
       const updatePromises = Array.from(inputs).map((input) => {
         const recordId = input.dataset.recordId;
-        const score = input.value === "" ? null : parseFloat(input.value);
+        const rawVal = input.value.trim();
+
+        let score = null;
+        if (rawVal !== "") {
+          const parsed = parseFloat(rawVal);
+          if (isNaN(parsed))
+            throw new Error(`Invalid score number for student record.`);
+          score = parsed;
+        }
 
         return client
           .from("grade_records")
           .update({ score: score })
-          .eq("id", recordId);
+          .eq("id", recordId)
+          .throwOnError();
       });
 
       await Promise.all(updatePromises);
 
-      if (typeof showToast === "function")
+      if (typeof showToast === "function") {
         showToast("Grades updated successfully!", "success");
+      }
 
-      // Close modal and refresh list
-      closeModal("editGradeModal");
-      loadGradesList();
+      closeModal(document.getElementById("editGradeModal"));
+      if (typeof loadGradesList === "function") loadGradesList();
     } catch (err) {
       console.error("Error saving updated grades:", err);
-      if (typeof showToast === "function")
+      if (typeof showToast === "function") {
         showToast(`Update failed: ${err.message}`, "error");
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
     }
   });
 
-/**
- * Modal Close Utility Listeners
- */
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) modal.style.display = "none";
+// 1. Populate Filter Dropdowns on Initial Load
+async function populateToolbarDropdowns() {
+  const classFilter = document.getElementById("gradeToolbarClassSelect");
+  const subjectFilter = document.getElementById("gradeToolbarSubjectSelect");
+  const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
+
+  const client = window.supabaseClient || supabaseClient;
+
+  try {
+    const [classRes, subjectRes, categoryRes] = await Promise.all([
+      client.from("classes").select("id, name").order("name"),
+      client.from("subjects").select("id, name").order("name"),
+      client.from("assessment_categories").select("id, name").order("name"),
+    ]);
+
+    // Populate Class Filter
+    if (classFilter && classRes.data) {
+      classFilter.innerHTML = `<option value="">All Classes</option>`;
+      classRes.data.forEach((c) => {
+        classFilter.appendChild(new Option(c.name, c.id));
+      });
+    }
+
+    // Populate Subject Filter
+    if (subjectFilter && subjectRes.data) {
+      subjectFilter.innerHTML = `<option value="">All Subjects</option>`;
+      subjectRes.data.forEach((s) => {
+        subjectFilter.appendChild(new Option(s.name, s.id));
+      });
+    }
+
+    // Populate Category Filter
+    if (categoryFilter && categoryRes.data) {
+      categoryFilter.innerHTML = `<option value="">All Assessment Categories</option>`;
+      categoryRes.data.forEach((cat) => {
+        categoryFilter.appendChild(new Option(cat.name, cat.id));
+      });
+    }
+  } catch (err) {
+    console.error("Error populating toolbar filters:", err);
+  }
 }
 
-document
-  .getElementById("closeViewGradeModal")
-  ?.addEventListener("click", () => closeModal("viewGradeModal"));
-document
-  .getElementById("closeViewBtn")
-  ?.addEventListener("click", () => closeModal("viewGradeModal"));
-document
-  .getElementById("closeEditGradeModal")
-  ?.addEventListener("click", () => closeModal("editGradeModal"));
-document
-  .getElementById("cancelEditGradeModal")
-  ?.addEventListener("click", () => closeModal("editGradeModal"));
+// 2. Client-Side Table Filter Handler
+function handleToolbarFilter() {
+  const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")
+    .toLowerCase()
+    .trim();
+  const selectedClass = document.getElementById(
+    "gradeToolbarClassSelect",
+  )?.value;
+  const selectedSubject = document.getElementById(
+    "gradeToolbarSubjectSelect",
+  )?.value;
+  const selectedCategory = document.getElementById(
+    "gradeToolbarCategorySelect",
+  )?.value;
+
+  const rows = document.querySelectorAll("#gradesTableBody tr");
+
+  rows.forEach((row) => {
+    // Extract row attributes or cell text
+    const textContent = row.textContent.toLowerCase();
+    const rowClassId = row.dataset.classId;
+    const rowSubjectId = row.dataset.subjectId;
+    const rowCategoryId = row.dataset.categoryId;
+
+    const matchesSearch = !searchQuery || textContent.includes(searchQuery);
+    const matchesClass = !selectedClass || rowClassId === selectedClass;
+    const matchesSubject = !selectedSubject || rowSubjectId === selectedSubject;
+    const matchesCategory =
+      !selectedCategory || rowCategoryId === selectedCategory;
+
+    if (matchesSearch && matchesClass && matchesSubject && matchesCategory) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
+
+function initToolbarListeners() {
+  const searchInput = document.getElementById("gradeSearchInput");
+  const classFilter = document.getElementById("gradeToolbarClassSelect");
+  const subjectFilter = document.getElementById("gradeToolbarSubjectSelect");
+  const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
+
+  if (searchInput) searchInput.addEventListener("input", loadGradesList);
+  if (classFilter) classFilter.addEventListener("change", loadGradesList);
+  if (subjectFilter) subjectFilter.addEventListener("change", loadGradesList);
+  if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
+}

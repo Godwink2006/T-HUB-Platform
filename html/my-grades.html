@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/my-grades.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header class="page-header">
+        <h1>My Grades</h1>
+        <p>View your academic performance and breakdown.</p>
+      </header>
+
+      <!-- Student Toolbar Filters -->
+      <section class="toolbar">
+        <select id="studentAcademicYearSelect">
+          <option value="">Select Academic Year</option>
+        </select>
+
+        <select id="studentTermSelect">
+          <option value="">Select Term / Semester</option>
+        </select>
+      </section>
+
+      <!-- Student Grades Summary Table / Report View -->
+      <div class="grades-container">
+        <div id="studentGradesReport">
+          <p style="text-align: center; color: #888; padding: 20px">
+            Select a term to view your grades.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/my-grades.js"></script>
+  </body>
+</html>

@@ -51,26 +51,22 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search grades..." />
+          <input
+            type="text"
+            id="gradeSearchInput"
+            placeholder="Search grades..."
+          />
 
-          <select>
-            <option>Class</option>
+          <select id="gradeToolbarClassSelect">
+            <option value="">All Classes</option>
           </select>
 
-          <select>
-            <option>Academic Year</option>
+          <select id="gradeToolbarSubjectSelect">
+            <option value="">All Subjects</option>
           </select>
 
-          <select>
-            <option>Subject</option>
-          </select>
-
-          <select>
-            <option>Assessment</option>
-          </select>
-
-          <select>
-            <option>Term</option>
+          <select id="gradeToolbarCategorySelect">
+            <option value="">All Assessment Categories</option>
           </select>
         </section>
 
@@ -78,7 +74,7 @@
           <table class="grades-table">
             <thead>
               <tr>
-                <th>Assessment</th>
+                <th>Assessment Category</th>
                 <th>Class</th>
                 <th>Subject</th>
                 <th>Date</th>
@@ -87,44 +83,7 @@
               </tr>
             </thead>
 
-            <tbody id="gradesTableBody">
-              <!-- Static Example Structure for Reference -->
-              <tr data-grade-id="example-uuid-1">
-                <td>Cat 1</td>
-                <td>Grade 8A</td>
-                <td>Mathematics</td>
-                <td>12 Aug</td>
-                <td><span class="badge badge-submitted">Submitted</span></td>
-                <td>
-                  <button
-                    class="grades-actions-btn view"
-                    title="View Grades"
-                    data-action="view"
-                    data-grade-id="example-uuid-1"
-                  >
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
-                </td>
-              </tr>
-
-              <tr data-grade-id="example-uuid-2">
-                <td>Cat 2</td>
-                <td>Grade 8A</td>
-                <td>Mathematics</td>
-                <td>12 Sept</td>
-                <td><span class="badge badge-drafted">Drafted</span></td>
-                <td>
-                  <button
-                    class="grades-actions-btn edit"
-                    title="Edit Grades"
-                    data-action="edit"
-                    data-grade-id="example-uuid-2"
-                  >
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="gradesTableBody"></tbody>
           </table>
         </section>
       </main>
@@ -176,7 +135,7 @@
       </div>
     </div>
     <!-- VIEW GRADE MODAL -->
-    <div id="viewGradeModal" class="view-grade-modal" style="display: none">
+    <div id="viewGradeModal" class="view-grade-modal">
       <div class="view-grade-modal-content">
         <div class="view-grade-modal-header">
           <h2>View Grades</h2>
@@ -187,19 +146,35 @@
           <div class="details-grid">
             <div class="details-item">
               <label>Class</label>
-              <p id="viewModalClass">--</p>
+              <p id="viewModalClass"></p>
             </div>
             <div class="details-item">
               <label>Subject</label>
-              <p id="viewModalSubject">--</p>
+              <p id="viewModalSubject"></p>
             </div>
             <div class="details-item">
-              <label>Assessment</label>
-              <p id="viewModalAssessment">--</p>
+              <label>Assessment Category</label>
+              <p id="viewModalAssessment"></p>
             </div>
+
+            <div class="details-item">
+              <label>Assessment Period</label>
+              <p id="viewModalAssessmentPeriod"></p>
+            </div>
+
+            <div class="details-item">
+              <label>Academic Year</label>
+              <p id="viewModalAcademicYear"></p>
+            </div>
+
+            <div class="details-item">
+              <label>Semester</label>
+              <p id="viewModalSemester"></p>
+            </div>
+
             <div class="details-item">
               <label>Date</label>
-              <p id="viewModalDate">--</p>
+              <p id="viewModalDate"></p>
             </div>
           </div>
 
@@ -207,6 +182,7 @@
             <table>
               <thead>
                 <tr>
+                  <th>Student ID</th>
                   <th>Student</th>
                   <th>Score</th>
                 </tr>
@@ -238,19 +214,51 @@
           <div class="details-grid">
             <div class="details-item">
               <label>Class</label>
-              <p id="editModalClass">--</p>
+              <p id="editModalClass"></p>
             </div>
             <div class="details-item">
               <label>Subject</label>
-              <p id="editModalSubject">--</p>
+              <p id="editModalSubject"></p>
             </div>
             <div class="details-item">
-              <label>Assessment</label>
-              <p id="editModalAssessment">--</p>
+              <label>Assessment Category</label>
+              <p id="editModalAssessment"></p>
+              <small
+                id="editModalCategoryMax"
+                style="color: #666; display: block"
+              ></small>
             </div>
+
+            <div class="details-item">
+              <label>Assessment Period</label>
+              <p id="editModalAssessmentPeriod"></p>
+              <small
+                id="editModalPeriodMax"
+                style="color: #666; display: block"
+              ></small>
+            </div>
+
+            <div class="details-item">
+              <label>Effective Max Limit</label>
+              <p
+                id="editModalMaxMarks"
+                style="font-weight: bold; color: #dc2626"
+              ></p>
+            </div>
+
+            <div class="details-item">
+              <label>Academic Year</label>
+              <p id="editModalAcademicYear"></p>
+            </div>
+
+            <div class="details-item">
+              <label>Semester</label>
+              <p id="editModalSemester"></p>
+            </div>
+
             <div class="details-item">
               <label>Date</label>
-              <p id="editModalDate">--</p>
+              <p id="editModalDate"></p>
             </div>
           </div>
 
@@ -259,7 +267,7 @@
               <div class="form-group" style="margin-bottom: 5px">
                 <label>Status *</label>
                 <select id="editModalStatusSelect">
-                  <option value="draft">Drafted</option>
+                  <option value="drafted">Drafted</option>
                   <option value="submitted">Submitted</option>
                 </select>
               </div>
@@ -269,6 +277,7 @@
               <table>
                 <thead>
                   <tr>
+                    <th>Student ID</th>
                     <th>Student</th>
                     <th>Score</th>
                   </tr>
@@ -331,7 +340,7 @@
 
             <div class="details-item">
               <label>Assessment Period</label>
-              <p id="enterGradeModalCategoryPeriod"></p>
+              <p id="enterGradeModalAssessmentPeriod"></p>
             </div>
 
             <div class="details-item">

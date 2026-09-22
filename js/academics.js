@@ -79,6 +79,14 @@ async function initAcademicsPage() {
         Manage attendance <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
+
+     <div id="nav-grades" class="academic-card">
+      <h4>My Grades</h4>
+      <p>View and manage your grades.</p>
+      <button onclick="window.location.href = 'my-grades.html'" class="manage-btn">
+        Manage grades <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
     `
         : ""
     }
