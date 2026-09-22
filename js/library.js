@@ -383,7 +383,7 @@ async function loadDepartmentDropdown() {
     if (error) throw error;
 
     // Reset the dropdown with a clean default option
-    departmentSelect.innerHTML = '<option value="">Select Category</option>';
+    departmentSelect.innerHTML = '<option value="">Select Department</option>';
 
     if (departments && departments.length > 0) {
       departments.forEach((dept) => {
