@@ -1,20 +1,18 @@
-/* ==========================================================================
-   Student Portal Grades View (`student-grades.css`)
-   ========================================================================== */
-
-/* Page Container & Layout */
 .container {
-  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-    Cantarell, sans-serif;
+  padding: 10px;
   color: #111827;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .page-header h1 {
@@ -36,30 +34,34 @@
   gap: 12px;
   background-color: #ffffff;
   padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 2px solid rgb(219, 215, 215);
   margin-bottom: 24px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .toolbar select {
   padding: 10px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border: 2px solid rgb(219, 215, 215);
   font-size: 0.875rem;
   color: #374151;
   background-color: #ffffff;
   outline: none;
-  transition:
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
   cursor: pointer;
   min-width: 220px;
 }
 
-.toolbar select:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+.back-grades-btn {
+  width: auto;
+  height: 30px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 5px;
+  width: auto;
+  justify-content: space-between;
+  color: #ffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
 }
 
 /* Grades Container & Subject Cards */
@@ -71,13 +73,8 @@
 
 .card {
   background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border: 2px solid rgb(219, 215, 215);
   padding: 20px 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
 }
 
 .card h3 {
@@ -86,7 +83,7 @@
   color: #111827;
   margin: 0 0 16px 0;
   padding-bottom: 8px;
-  border-bottom: 2px solid #f3f4f6;
+  border-bottom: 2px solid rgb(219, 215, 215);
 }
 
 /* Subject Grade Tables */
@@ -102,12 +99,12 @@
   color: #4b5563;
   font-weight: 600;
   padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .table td {
   padding: 12px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 2px solid rgb(219, 215, 215);
   color: #1f2937;
 }
 
@@ -142,5 +139,12 @@
 
   .card {
     padding: 16px;
+  }
+
+  .back-grades-btn,
+  .toolbar select,
+  .card,
+  .toolbar {
+    border-radius: 10px;
   }
 }

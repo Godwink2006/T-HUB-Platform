@@ -23,7 +23,7 @@ async function initStudentContext() {
   async function loadTermsForYear(selectedYearId, preselectTermId = null) {
     if (!termSelect) return;
 
-    termSelect.innerHTML = `<option value="">Select Term / Semester</option>`;
+    termSelect.innerHTML = `<option value="">Select Semester</option>`;
     if (!selectedYearId) return;
 
     const { data: terms, error } = await client
@@ -42,7 +42,7 @@ async function initStudentContext() {
         const opt = document.createElement("option");
         opt.value = t.id;
         opt.textContent = t.name;
-        
+
         // Preselect matching term if provided, otherwise select the first one
         if (preselectTermId ? t.id === preselectTermId : t === terms[0]) {
           opt.selected = true;
@@ -79,7 +79,7 @@ async function initStudentContext() {
       const opt = document.createElement("option");
       opt.value = y.id;
       opt.textContent = y.year_label;
-      
+
       // Select the year that actually has grades for this student (or fallback to first)
       if (targetYearId ? y.id === targetYearId : y === years[0]) {
         opt.selected = true;
@@ -117,8 +117,8 @@ async function loadStudentGrades(authUserId) {
 
   if (!termId) {
     reportContainer.innerHTML = `
-      <p style="text-align: center; color: #888; padding: 20px;">
-        Please select a term/semester to display grades.
+      <p>
+        Please select a semester to display grades.
       </p>`;
     return;
   }
@@ -150,7 +150,8 @@ async function loadStudentGrades(authUserId) {
         )
       `,
       )
-      .eq("student_id", authUserId);
+      .eq("student_id", authUserId)
+      .eq("grades.status", "submitted");
 
     // Apply term and academic year filters using Supabase dot-notation
     if (termId) query = query.eq("grades.term_id", termId);
@@ -165,7 +166,7 @@ async function loadStudentGrades(authUserId) {
 
     if (!records || records.length === 0) {
       reportContainer.innerHTML = `
-        <p style="text-align: center; color: #888; padding: 20px;">
+        <p>
           No published grades available for this period.
         </p>`;
       return;
@@ -193,24 +194,24 @@ async function loadStudentGrades(authUserId) {
     let html = "";
     grouped.forEach((items, subName) => {
       html += `
-        <div class="card" style="margin-bottom: 20px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
-          <h3 style="margin-bottom: 12px; color: #111827; font-size: 1.1rem; font-weight: 600;">${subName}</h3>
+        <div class="card" style="margin-bottom: 20px; background: #fff; border: 1px solid #e5e7eb; padding: 16px;">
+          <h3>${subName}</h3>
           <table class="table" style="width: 100%; border-collapse: collapse;">
             <thead>
-              <tr style="border-bottom: 2px solid #e5e7eb; text-align: left; background-color: #f9fafb;">
-                <th style="padding: 10px; font-weight: 600; color: #374151;">Category</th>
-                <th style="padding: 10px; font-weight: 600; color: #374151;">Score</th>
-                <th style="padding: 10px; font-weight: 600; color: #374151;">Max Marks</th>
+              <tr>
+                <th>Category</th>
+                <th>Score</th>
+                <th>Max Marks</th>
               </tr>
             </thead>
             <tbody>
               ${items
                 .map(
                   (i) => `
-                <tr style="border-bottom: 1.1px solid #f3f4f6;">
-                  <td style="padding: 10px; color: #1f2937;">${i.catName}</td>
-                  <td style="padding: 10px;"><strong>${i.score ?? "N/A"}</strong></td>
-                  <td style="padding: 10px; color: #6b7280;">${i.weight}</td>
+                <tr>
+                  <td>${i.catName}</td>
+                  <td><strong>${i.score ?? "N/A"}</strong></td>
+                  <td>${i.weight}</td>
                 </tr>`,
                 )
                 .join("")}

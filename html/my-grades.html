@@ -32,6 +32,14 @@
       <header class="page-header">
         <h1>My Grades</h1>
         <p>View your academic performance and breakdown.</p>
+
+        <button
+          onclick="window.location.href = 'academics.html'"
+          class="back-grades-btn"
+        >
+          <i class="fa-solid fa-chevron-left"></i>
+          Back
+        </button>
       </header>
 
       <!-- Student Toolbar Filters -->
@@ -41,7 +49,7 @@
         </select>
 
         <select id="studentTermSelect">
-          <option value="">Select Term / Semester</option>
+          <option value="">Select Semester</option>
         </select>
       </section>
 
@@ -49,7 +57,7 @@
       <div class="grades-container">
         <div id="studentGradesReport">
           <p style="text-align: center; color: #888; padding: 20px">
-            Select a term to view your grades.
+            Select a semester to view your grades.
           </p>
         </div>
       </div>
