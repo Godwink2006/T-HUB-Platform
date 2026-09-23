@@ -103,7 +103,6 @@ if (newAnnouncementTrigger) {
 function closeAnnounceModal() {
   announcementModal.style.display = "none";
   unLockBodyScroll();
-  // Optional: clear form inputs here
 }
 
 if (closeAnnouncementBtn)
@@ -179,6 +178,8 @@ if (saveAnnouncementBtn) {
       }
 
       closeAnnounceModal();
+
+      unLockBodyScroll();
 
       if (typeof loadDashboardAnnouncements === "function") {
         loadDashboardAnnouncements();
