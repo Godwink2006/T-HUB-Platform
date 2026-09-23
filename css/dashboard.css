@@ -130,12 +130,6 @@ body {
   cursor: pointer;
 }
 
-.dashboard-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
 .dashboard-card {
   background: #ffff;
   padding: 20px;
@@ -177,6 +171,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-y: auto;
+  height: 300px;
 }
 
 .announcement-item {
@@ -243,12 +239,6 @@ body {
   height: 490px;
 }
 
-.form-row {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(2, 1fr);
-}
-
 .announcement-modal-header {
   display: flex;
   justify-content: space-between;
@@ -288,9 +278,10 @@ body {
   font-size: 14px;
 }
 
-.dashboard-grid {
+.dashboard-grid,
+.dashboard-cards {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
   margin-top: 30px;
 }
@@ -517,5 +508,14 @@ body {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .announcement-cards,
+  .cancel-btn,
+  .save-btn,
+  .form-group input {
+    border-radius: 10px;
   }
 }

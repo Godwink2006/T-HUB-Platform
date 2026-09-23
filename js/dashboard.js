@@ -275,9 +275,9 @@ async function loadDashboardAnnouncements() {
     // 4. Render into preview container
     if (filteredAnnouncements.length === 0) {
       previewContainer.innerHTML = `
-        <div class="announcement-item" style="padding: 20px; text-align: center; color: #64748b;">
-          <h4 style="margin: 0 0 4px 0; color: #334155;">No announcements yet</h4>
-          <p style="margin: 0; font-size: 0.9rem;">Published announcements will appear here.</p>
+        <div class="announcement-item" style="padding: 20px; text-align: center; height: 250px; color: #64748b;">
+          <h4 style="margin: 0 0 4px 0; color: #334155; font-size: 25px;">No announcements yet</h4>
+          <p style="margin: 0; font-size: 0.9rem; font-size: 20px;">Published announcements will appear here.</p>
         </div>
       `;
       return;
