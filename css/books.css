@@ -57,6 +57,7 @@
   background: #f1f5f9;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .book-card-img-wrapper img {
@@ -90,7 +91,6 @@
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
 }
 
 .book-card-category {
@@ -308,7 +308,6 @@ body {
   color: #d97706;
   background: #fef3c7;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
   font-weight: 600;
   font-size: 0.85rem;
 }
@@ -317,7 +316,26 @@ body {
   color: #16a34a;
   background: #dcfce7;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
   font-weight: 600;
   font-size: 0.85rem;
+}
+
+@media screen and (max-width: 768px) {
+  .status-returned,
+  .status-borrowed,
+  .student-modal-close-btn,
+  .student-modal-card,
+  .book-view-details-btn,
+  .catalog-search-box input,
+  .book-card,
+  .book-card-badge,
+  .small-card {
+    border-radius: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .menu-toggle {
+    z-index: 100;
+  }
 }
