@@ -1,122 +1,77 @@
 const addBorrow = document.getElementById("addBorrow");
 const addBorrowModal = document.getElementById("addBorrowModal");
 const closeAddBorrowModal = document.getElementById("closeAddBorrowModal");
-
 const cancelAddBorrowModal = document.getElementById("cancelAddBorrowModal");
 
-addBorrow.addEventListener("click", async () => {
-  addBorrowModal.style.display = "flex";
-  await loadDepartmentDropdown();
+cancelAddBorrowModal?.addEventListener("click", () => {
+  if (addBorrowModal) addBorrowModal.style.display = "none";
 });
 
-cancelAddBorrowModal.addEventListener("click", () => {
-  addBorrowModal.style.display = "none";
-});
-
-closeAddBorrowModal.addEventListener("click", () => {
-  addBorrowModal.style.display = "none";
+closeAddBorrowModal?.addEventListener("click", () => {
+  if (addBorrowModal) addBorrowModal.style.display = "none";
 });
 
 window.addEventListener("click", (e) => {
-  if (e.target === addBorrowModal) {
+  if (addBorrowModal && e.target === addBorrowModal) {
     addBorrowModal.style.display = "none";
   }
 });
 
-const addReturnBorrow = document.getElementById("addReturnBorrow");
 const returnBorrowModal = document.getElementById("returnBorrowModal");
-const closeReturnBorrowModal = document.getElementById(
-  "closeReturnBorrowModal",
-);
-
-const cancelReturnBorrowModal = document.getElementById(
-  "cancelReturnBorrowModal",
-);
-
-addReturnBorrow.addEventListener("click", () => {
-  returnBorrowModal.style.display = "flex";
-});
-
-cancelReturnBorrowModal.addEventListener("click", () => {
-  returnBorrowModal.style.display = "none";
-});
-
-closeReturnBorrowModal.addEventListener("click", () => {
-  returnBorrowModal.style.display = "none";
-});
 
 window.addEventListener("click", (e) => {
-  if (e.target === returnBorrowModal) {
+  if (returnBorrowModal && e.target === returnBorrowModal) {
     returnBorrowModal.style.display = "none";
   }
 });
 
 const bookModal = document.getElementById("bookModal");
-
 const cancelBookModal = document.getElementById("cancelBookModal");
-
 const openBookModal = document.getElementById("addBook");
-
 const closeBookModal = document.getElementById("closeBookModal");
 
-openBookModal.addEventListener("click", async () => {
-  bookModal.style.display = "flex";
-
-  lockBodyScroll();
-  await loadDepartmentDropdown();
+openBookModal?.addEventListener("click", async () => {
+  if (bookModal) bookModal.style.display = "flex";
+  if (typeof lockBodyScroll === "function") lockBodyScroll();
+  if (typeof loadDepartmentDropdown === "function")
+    await loadDepartmentDropdown();
 });
 
-closeBookModal.addEventListener("click", () => {
-  bookModal.style.display = "none";
-
-  unLockBodyScroll();
+closeBookModal?.addEventListener("click", () => {
+  if (bookModal) bookModal.style.display = "none";
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 });
 
-cancelBookModal.addEventListener("click", () => {
-  bookModal.style.display = "none";
-
-  unLockBodyScroll();
+cancelBookModal?.addEventListener("click", () => {
+  if (bookModal) bookModal.style.display = "none";
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 });
 
 window.addEventListener("click", (e) => {
-  if (e.target === bookModal) {
+  if (bookModal && e.target === bookModal) {
     bookModal.style.display = "none";
-
-    unLockBodyScroll();
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   }
 });
 
 const viewBookModal = document.getElementById("viewBookModal");
-const viewButtons = document.querySelectorAll(".view");
 const closeViewBookModal = document.getElementById("closeViewBookModal");
-
 const closeViewBtn = document.getElementById("closeViewBtn");
 
-viewButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    viewBookModal.style.display = "flex";
-
-    lockBodyScroll();
-  });
+closeViewBookModal?.addEventListener("click", () => {
+  if (viewBookModal) viewBookModal.style.display = "none";
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 });
 
-closeViewBookModal.addEventListener("click", () => {
-  viewBookModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-closeViewBtn.addEventListener("click", () => {
-  viewBookModal.style.display = "none";
-
-  unLockBodyScroll();
+closeViewBtn?.addEventListener("click", () => {
+  if (viewBookModal) viewBookModal.style.display = "none";
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 });
 
 window.addEventListener("click", (e) => {
-  if (e.target === viewBookModal) {
+  if (viewBookModal && e.target === viewBookModal) {
     viewBookModal.style.display = "none";
-
-    unLockBodyScroll();
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   }
 });
 
@@ -127,29 +82,25 @@ const editButtons = document.querySelectorAll(".edit");
 
 editButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    editBookModal.style.display = "flex";
-
-    lockBodyScroll();
+    if (editBookModal) editBookModal.style.display = "flex";
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
   });
 });
 
-closeEditBookModal.addEventListener("click", () => {
-  editBookModal.style.display = "none";
-
-  unLockBodyScroll();
+closeEditBookModal?.addEventListener("click", () => {
+  if (editBookModal) editBookModal.style.display = "none";
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 });
 
-cancelEditBookModal.addEventListener("click", () => {
-  editBookModal.style.display = "none";
-
-  unLockBodyScroll();
+cancelEditBookModal?.addEventListener("click", () => {
+  if (editBookModal) editBookModal.style.display = "none";
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
 });
 
 window.addEventListener("click", (e) => {
-  if (e.target === editBookModal) {
+  if (editBookModal && e.target === editBookModal) {
     editBookModal.style.display = "none";
-
-    unLockBodyScroll();
+    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   }
 });
 
@@ -235,7 +186,6 @@ if (bookForm) {
   });
 }
 
-// Also hook up the explicit save button if it's outside the submit flow or acts as the trigger
 if (saveBookBtn) {
   saveBookBtn.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -298,7 +248,6 @@ async function handleSaveBook() {
     const photoInput = document.getElementById("addAvatarInput");
     let coverBase64 = null;
 
-    // Compress image if uploaded, matching your system utility pattern
     if (photoInput && photoInput.files[0]) {
       saveButton.textContent = "Compressing cover...";
       const compressedBlob = await compressImageToBlob(
@@ -311,7 +260,6 @@ async function handleSaveBook() {
 
     saveButton.textContent = "Inserting into database...";
 
-    // Direct insertion into the books table (school_id is auto-injected by your trigger!)
     const { data, error } = await window.supabaseClient.from("books").insert([
       {
         book_code: book_code,
@@ -319,10 +267,10 @@ async function handleSaveBook() {
         author: author,
         department_id: department_id,
         total_copies: parseInt(copies_total, 10),
-        available_copies: parseInt(copies_total, 10), // Initially, available equals total
+        available_copies: parseInt(copies_total, 10),
         shelf_location: shelf_location || null,
         description: description || null,
-        cover_image_url: coverBase64, // Ensure your column exists or map it accordingly
+        cover_image_url: coverBase64,
         status: status,
       },
     ]);
@@ -331,7 +279,6 @@ async function handleSaveBook() {
 
     showToast("Book added successfully!", "success");
 
-    // Reset form and UI states
     bookForm.reset();
 
     const avatarPreview = document.getElementById("addAvatarPreview");
@@ -367,7 +314,6 @@ async function loadDepartmentDropdown() {
   if (!departmentSelect) return;
 
   try {
-    // Fetch departments from Supabase (tenant filtering happens automatically via RLS / triggers if configured)
     const { data: departments, error } = await supabaseClient
       .from("departments")
       .select("id, name")
@@ -376,7 +322,6 @@ async function loadDepartmentDropdown() {
 
     if (error) throw error;
 
-    // Reset the dropdown with a clean default option
     departmentSelect.innerHTML = '<option value="">Select Department</option>';
 
     if (departments && departments.length > 0) {
@@ -448,7 +393,6 @@ async function loadBooksTable() {
     books.forEach((book) => {
       const tr = document.createElement("tr");
 
-      // Use uploaded cover image if available, otherwise default book icon
       const coverSrc =
         book.cover_image_url ||
         "https://cdn-icons-png.flaticon.com/512/29/29302.png";
@@ -489,7 +433,6 @@ async function loadBooksTable() {
       tableBody.appendChild(tr);
     });
 
-    // Re-bind your view and edit button event listeners for the newly generated rows
     attachBookActionListeners();
   } catch (err) {
     console.error("Error loading books table:", err);
@@ -497,7 +440,6 @@ async function loadBooksTable() {
   }
 }
 
-// Helper to prevent XSS injection in dynamic text
 function escapeHtml(str) {
   if (!str) return "";
   return String(str)
@@ -508,7 +450,6 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Re-attach listeners for dynamically created action buttons
 function attachBookActionListeners() {
   const viewButtons = document.querySelectorAll("#booksTableBody .view");
   const editButtons = document.querySelectorAll("#booksTableBody .edit");
@@ -551,19 +492,18 @@ if (editFileInput) {
   });
 }
 
+let currentOriginalBookData = null;
+
 async function openEditBookModal(bookId) {
   const editBookModal = document.getElementById("editBookModal");
   if (!editBookModal) return;
 
-  // Open modal and lock scroll
   editBookModal.style.display = "flex";
   lockBodyScroll();
 
   try {
-    // 1. Ensure departments dropdown in edit modal is dynamically loaded
     await loadEditDepartmentDropdown();
 
-    // 2. Fetch specific book record from Supabase
     const { data: book, error } = await window.supabaseClient
       .from("books")
       .select("*")
@@ -573,7 +513,8 @@ async function openEditBookModal(bookId) {
     if (error) throw error;
     if (!book) throw new Error("Book not found.");
 
-    // 3. Populate form controls
+    currentOriginalBookData = book;
+
     document.getElementById("editBookId").value = book.id;
     document.getElementById("editBookCode").textContent = book.book_code || "-";
     document.getElementById("editBookTitle").value = book.title || "";
@@ -588,7 +529,6 @@ async function openEditBookModal(bookId) {
       book.description || "";
     document.getElementById("editBookStatus").value = book.status || "active";
 
-    // Set cover preview image
     const previewImg = document.getElementById("editAvatarPreview");
     if (previewImg) {
       previewImg.src =
@@ -596,7 +536,6 @@ async function openEditBookModal(bookId) {
         "https://cdn-icons-png.flaticon.com/512/29/29302.png";
     }
 
-    // Reset file input text indicator
     if (editFileNameText) {
       editFileNameText.textContent = "No new file chosen";
     }
@@ -606,7 +545,6 @@ async function openEditBookModal(bookId) {
   }
 }
 
-// Populate the edit modal's department dropdown
 async function loadEditDepartmentDropdown() {
   const deptSelect = document.getElementById("editBookDepartment");
   if (!deptSelect) return;
@@ -636,14 +574,6 @@ async function loadEditDepartmentDropdown() {
 }
 
 const updateBookBtn = document.getElementById("editBook");
-const editBookForm = document.getElementById("EditBookForm");
-
-if (editBookForm) {
-  editBookForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await handleUpdateBook();
-  });
-}
 
 if (updateBookBtn) {
   updateBookBtn.addEventListener("click", async (e) => {
@@ -661,7 +591,6 @@ async function handleUpdateBook() {
     return;
   }
 
-  // Extract form values
   const title = document.getElementById("editBookTitle").value.trim();
   const author = document.getElementById("editBookAuthor").value.trim();
   const department_id = document.getElementById("editBookDepartment").value;
@@ -676,7 +605,6 @@ async function handleUpdateBook() {
     .value.trim();
   const status = document.getElementById("editBookStatus").value.toLowerCase();
 
-  // Basic Validation
   if (!title || !author || !department_id || !copies_total) {
     showToast("Please fill in all required fields marked with *", "error");
     return;
@@ -694,6 +622,27 @@ async function handleUpdateBook() {
   ) {
     showToast("Please select a valid status (Active or Inactive).", "error");
     return;
+  }
+
+  const photoInput = document.getElementById("editAvatarInput");
+  const hasNewImage = photoInput && photoInput.files[0];
+
+  if (currentOriginalBookData) {
+    const isUnchanged =
+      title === (currentOriginalBookData.title || "") &&
+      author === (currentOriginalBookData.author || "") &&
+      department_id === (currentOriginalBookData.department_id || "") &&
+      parseInt(copies_total, 10) ===
+        (currentOriginalBookData.total_copies || 0) &&
+      shelf_location === (currentOriginalBookData.shelf_location || "") &&
+      description === (currentOriginalBookData.description || "") &&
+      status === (currentOriginalBookData.status || "active").toLowerCase() &&
+      !hasNewImage;
+
+    if (isUnchanged) {
+      showToast("No changes detected.", "info");
+      return; 
+    }
   }
 
   saveBtn.disabled = true;
@@ -714,7 +663,6 @@ async function handleUpdateBook() {
       coverBase64 = await blobToBase64(compressedBlob);
     }
 
-    // Build update object
     const updateData = {
       title: title,
       author: author,
@@ -725,14 +673,12 @@ async function handleUpdateBook() {
       status: status,
     };
 
-    // Only update cover image if a new file was actually picked
     if (coverBase64) {
       updateData.cover_image_url = coverBase64;
     }
 
     saveBtn.textContent = "Saving to database...";
 
-    // Direct update query
     const { error } = await window.supabaseClient
       .from("books")
       .update(updateData)
@@ -742,14 +688,12 @@ async function handleUpdateBook() {
 
     showToast("Book updated successfully!", "success");
 
-    // Close Modal
     const editBookModal = document.getElementById("editBookModal");
     if (editBookModal) {
       editBookModal.style.display = "none";
       unLockBodyScroll();
     }
 
-    // Refresh table inventory
     if (typeof loadBooksTable === "function") {
       await loadBooksTable();
     }
@@ -762,16 +706,17 @@ async function handleUpdateBook() {
   }
 }
 
+let currentViewBookId = null;
+
 async function openViewBookModal(bookId) {
+  currentViewBookId = bookId;
   const modal = document.getElementById("viewBookModal");
   if (!modal) return;
 
-  // Show modal and lock scroll
   modal.style.display = "flex";
   if (typeof lockBodyScroll === "function") lockBodyScroll();
 
   try {
-    // 1. Fetch Book Details + Department Name
     const { data: book, error: bookError } = await window.supabaseClient
       .from("books")
       .select(
@@ -785,7 +730,6 @@ async function openViewBookModal(bookId) {
 
     if (bookError) throw bookError;
 
-    // 1. Populate book cover image (falls back to placeholder if empty)
     const coverImgElement = document.getElementById("viewBookCover");
     if (coverImgElement) {
       coverImgElement.src =
@@ -793,28 +737,25 @@ async function openViewBookModal(bookId) {
         "https://cdn-icons-png.flaticon.com/512/29/29302.png";
     }
 
-    // 2. Populate and style the status badge
     const statusBadge = document.getElementById("viewBookStatus");
     if (statusBadge) {
       const bookStatus = (book.status || "active").toLowerCase();
       statusBadge.textContent =
         bookStatus.charAt(0).toUpperCase() + bookStatus.slice(1);
 
-      // Update class name so your CSS handles active vs inactive coloring correctly
-      statusBadge.className = `view-book-status ${bookStatus}`; // results in 'view-book-status active' or 'view-book-status inactive'
+      statusBadge.className = `view-book-status books-status-${bookStatus}`;
     }
     document.getElementById("viewBookCode").textContent = book.book_code || "-";
     document.getElementById("viewBookTitle").textContent = book.title || "-";
     document.getElementById("viewBookAuthor").textContent = book.author || "-";
     document.getElementById("viewBookCategory").textContent = book.departments
       ? book.departments.name
-      : "N/A";
+      : "-";
     document.getElementById("viewBookShelf").textContent =
-      book.shelf_location || "N/A";
+      book.shelf_location || "-";
     document.getElementById("viewBookDescription").textContent =
-      book.description || "No description provided.";
+      book.description || "-";
 
-    // Populate inventory counts
     const total = book.total_copies || 0;
     const available = book.available_copies || 0;
     const currentlyBorrowed = total - available;
@@ -824,7 +765,6 @@ async function openViewBookModal(bookId) {
     document.getElementById("viewBorrowedCopies").textContent =
       currentlyBorrowed;
 
-    // 2. Fetch Borrow History for this book
     const { data: borrowings, error: borrowError } = await window.supabaseClient
       .from("book_borrowings")
       .select(
@@ -852,7 +792,6 @@ async function openViewBookModal(bookId) {
       return;
     }
 
-    // Populate history rows dynamically
     borrowings.forEach((record) => {
       const tr = document.createElement("tr");
 
@@ -861,7 +800,6 @@ async function openViewBookModal(bookId) {
         : "Unknown User";
       const returnDateText = record.return_date ? record.return_date : "-";
 
-      // Capitalize status badge format
       const statusClass =
         record.status === "borrowed" ? "status-borrowed" : "status-returned";
 
@@ -882,4 +820,389 @@ async function openViewBookModal(bookId) {
   }
 }
 
-loadBooksTable();
+document
+  .getElementById("borrowFromViewBtn")
+  .addEventListener("click", async () => {
+    if (!currentViewBookId) return;
+
+    document.getElementById("viewBookModal").style.display = "none";
+
+    const borrowModal = document.getElementById("addBorrowModal");
+    if (borrowModal) borrowModal.style.display = "flex";
+
+    const hiddenBookIdInput = document.getElementById("borrowBookId");
+    if (hiddenBookIdInput) {
+      hiddenBookIdInput.value = currentViewBookId;
+    }
+
+    await loadStudentsDropdown();
+  });
+
+async function loadStudentsDropdown(searchTerm = "") {
+  const select = document.getElementById("borrowStudentSelect");
+  if (!select) return;
+
+  try {
+    let query = window.supabaseClient
+      .from("students")
+      .select(
+        `
+        id, 
+        student_id, 
+        profiles ( id, full_name )
+      `,
+      )
+      .order("student_id", { ascending: true });
+
+    const { data: students, error } = await query;
+
+    select.innerHTML = '<option value="">Select Student</option>';
+
+    if (!students || students.length === 0) {
+      showToast("No Users found", "error");
+      return;
+    }
+
+    students.forEach((student) => {
+      const profileData = Array.isArray(student.profiles)
+        ? student.profiles[0]
+        : student.profiles;
+
+      const studentName = profileData ? profileData.full_name : "-";
+      const studentCode = student.student_id || "-";
+      const userId = student.id;
+
+      if (searchTerm) {
+        const matchName = studentName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        const matchCode = studentCode
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        if (!matchName && !matchCode) return;
+      }
+
+      const opt = document.createElement("option");
+      opt.value = userId;
+      opt.textContent = `${studentName} (${studentCode})`;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    console.error("Error loading students list:", err);
+  }
+}
+
+document
+  .getElementById("studentSearchInput")
+  ?.addEventListener("input", (e) => {
+    loadStudentsDropdown(e.target.value.trim());
+  });
+
+const borrowForm = document.getElementById("borrowForm");
+const saveBorrowBtn = document.getElementById("saveBorrowBtn");
+if (borrowForm) {
+  borrowForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await handleSaveBorrow();
+  });
+}
+
+async function handleSaveBorrow() {
+  const saveBtn = document.getElementById("saveBorrowBtn");
+  const bookId = document.getElementById("borrowBookId").value;
+  const borrowerId = document.getElementById("borrowStudentSelect").value;
+  const dueDate = document.getElementById("borrowDueDate").value;
+
+  if (!bookId || !borrowerId || !dueDate) {
+    if (typeof showToast === "function") {
+      showToast("Please fill in all required fields.", "error");
+    }
+    return;
+  }
+
+  const today = new Date().toLocaleDateString("en-CA");
+  if (dueDate < today) {
+    if (typeof showToast === "function") {
+      showToast("Due date cannot be in the past.", "error");
+    }
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    const { data: authData, error: authError } =
+      await window.supabaseClient.auth.getUser();
+    if (authError || !authData.user) throw new Error("User not authenticated.");
+
+    const currentAuthId = authData.user.id;
+
+    const { data: userProfile, error: profileError } =
+      await window.supabaseClient
+        .from("profiles")
+        .select("school_id")
+        .eq("id", currentAuthId)
+        .single();
+
+    if (profileError) throw profileError;
+
+    const insertPayload = {
+      book_id: bookId,
+      borrower_id: borrowerId,
+      due_date: dueDate,
+      status: "borrowed",
+    };
+
+    if (userProfile && userProfile.school_id) {
+      insertPayload.school_id = userProfile.school_id;
+    }
+
+    const { error: insertError } = await window.supabaseClient
+      .from("book_borrowings")
+      .insert(insertPayload);
+
+    if (insertError) throw insertError;
+
+    if (typeof showToast === "function") {
+      showToast("Book successfully checked out!", "success");
+    }
+
+    const modal = document.getElementById("addBorrowModal");
+    if (modal) modal.style.display = "none";
+
+    if (typeof loadBooksTable === "function") {
+      loadBooksTable();
+    }
+  } catch (err) {
+    console.error("Error saving borrow record:", err);
+    if (typeof showToast === "function") {
+      showToast(err.message || "Failed to borrow book.", "error");
+    }
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save";
+  }
+}
+
+let currentActiveBorrowings = [];
+
+async function openReturnModal(bookId) {
+  const modal = document.getElementById("returnBorrowModal");
+  if (!modal) return;
+
+  modal.style.display = "flex";
+
+  const searchInput = document.getElementById("returnStudentSearchInput");
+  if (searchInput) searchInput.value = "";
+
+  const select = document.getElementById("returnBorrowStudentSelect");
+  const borrowDateDisplay = document.getElementById("displayBorrowDate");
+  const returnDateDisplay = document.getElementById("displayReturnDate");
+  const recordIdInput = document.getElementById("activeBorrowRecordId");
+
+  const todayStr = new Date().toLocaleDateString("en-CA");
+  if (returnDateDisplay) returnDateDisplay.textContent = todayStr;
+  if (borrowDateDisplay) borrowDateDisplay.textContent = "-";
+  if (recordIdInput) recordIdInput.value = "";
+
+  try {
+    const { data: activeBorrowings, error } = await window.supabaseClient
+      .from("book_borrowings")
+      .select(
+        `
+        id,
+        borrow_date,
+        due_date,
+        borrower_id,
+        profiles ( 
+          id, 
+          full_name,
+          students ( student_id )
+        )
+      `,
+      )
+      .eq("book_id", bookId)
+      .eq("status", "borrowed");
+
+    if (error) throw error;
+
+    currentActiveBorrowings = activeBorrowings || [];
+
+    if (currentActiveBorrowings.length === 0) {
+      if (typeof showToast === "function") {
+        showToast("No active borrowings found for this book.", "error");
+      }
+      modal.style.display = "none";
+      return;
+    }
+
+    renderStudentDropdown(currentActiveBorrowings);
+  } catch (err) {
+    console.error("Error opening return modal:", err);
+    if (typeof showToast === "function") {
+      showToast("Failed to load return details.", "error");
+    }
+  }
+}
+
+function renderStudentDropdown(borrowings) {
+  const select = document.getElementById("returnBorrowStudentSelect");
+  const borrowDateDisplay = document.getElementById("displayBorrowDate");
+  const recordIdInput = document.getElementById("activeBorrowRecordId");
+
+  if (!select) return;
+
+  select.innerHTML = '<option value="">Select student</option>';
+
+  borrowings.forEach((record) => {
+    const studentProfile = record.profiles || {};
+
+    const studentName = studentProfile.full_name || "-";
+    const studentIdNum =
+      record.profiles?.students?.student_id || record.profiles?.id || "-";
+
+    const opt = document.createElement("option");
+    opt.value = record.id;
+    opt.textContent = `${studentName} (${studentIdNum})`;
+    select.appendChild(opt);
+  });
+
+  select.onchange = (e) => {
+    const selectedRecordId = e.target.value;
+    if (recordIdInput) recordIdInput.value = selectedRecordId;
+
+    const found = borrowings.find((r) => r.id === selectedRecordId);
+    if (found && borrowDateDisplay) {
+      borrowDateDisplay.textContent = found.borrow_date || "-";
+    } else if (borrowDateDisplay) {
+      borrowDateDisplay.textContent = "-";
+    }
+  };
+
+  if (borrowings.length === 1) {
+    select.value = borrowings[0].id;
+    if (recordIdInput) recordIdInput.value = borrowings[0].id;
+    if (borrowDateDisplay) {
+      borrowDateDisplay.textContent = borrowings[0].borrow_date || "-";
+    }
+  }
+}
+
+const studentSearchInput = document.getElementById("returnStudentSearchInput");
+if (studentSearchInput) {
+  studentSearchInput.addEventListener("input", (e) => {
+    const query = e.target.value.toLowerCase().trim();
+
+    const filtered = currentActiveBorrowings.filter((record) => {
+      const studentProfile = record.profiles || {};
+
+      const studentRecord = studentProfile.students || {};
+
+      const name = (studentProfile.full_name || "").toLowerCase();
+      const studentId = (
+        studentRecord.student_id ||
+        studentRecord.id ||
+        ""
+      ).toLowerCase();
+
+      return name.includes(query) || studentId.includes(query);
+    });
+
+    renderStudentDropdown(filtered);
+  });
+}
+
+const returnForm = document.getElementById("returnBorrowForm");
+if (returnForm) {
+  returnForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const confirmBtn = document.getElementById("confirmReturnBtn");
+    const recordId = document.getElementById("activeBorrowRecordId").value;
+
+    if (!recordId) {
+      if (typeof showToast === "function")
+        showToast("No active record selected.", "error");
+      return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Processing...";
+
+    try {
+      const todayStr = new Date().toLocaleDateString("en-CA");
+
+      const { error: updateError } = await window.supabaseClient
+        .from("book_borrowings")
+        .update({
+          status: "returned",
+          return_date: todayStr,
+        })
+        .eq("id", recordId);
+
+      if (updateError) throw updateError;
+
+      if (typeof showToast === "function") {
+        showToast("Book successfully returned!", "success");
+      }
+
+      document.getElementById("returnBorrowModal").style.display = "none";
+      if (typeof loadBooksTable === "function") loadBooksTable();
+    } catch (err) {
+      console.error("Error processing return:", err);
+      if (typeof showToast === "function") {
+        showToast(err.message || "Failed to return book.", "error");
+      }
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Confirm Return";
+    }
+  });
+}
+
+// Close button listeners
+document
+  .getElementById("closeReturnBorrowModal")
+  ?.addEventListener("click", () => {
+    document.getElementById("returnBorrowModal").style.display = "none";
+  });
+document
+  .getElementById("cancelReturnBorrowModal")
+  ?.addEventListener("click", () => {
+    document.getElementById("returnBorrowModal").style.display = "none";
+  });
+
+document
+  .getElementById("returnBookFromViewBtn")
+  ?.addEventListener("click", () => {
+    if (!currentViewBookId) return;
+
+    document.getElementById("viewBookModal").style.display = "none";
+
+    // Open return modal
+    openReturnModal(currentViewBookId);
+  });
+
+if (studentSearchInput) {
+  studentSearchInput.addEventListener("input", (e) => {
+    const query = e.target.value.toLowerCase().trim();
+
+    const filtered = currentActiveBorrowings.filter((record) => {
+      const studentProfile = record.profiles || {};
+      const studentIdNum =
+        studentProfile.students?.student_id ||
+        studentProfile.students?.id ||
+        "";
+      const name = (studentProfile.full_name || "").toLowerCase();
+      const studentId = String(studentIdNum).toLowerCase();
+
+      return name.includes(query) || studentId.includes(query);
+    });
+
+    renderStudentDropdown(filtered);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadBooksTable();
+});

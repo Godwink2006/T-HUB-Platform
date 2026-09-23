@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initGradeModalEventListeners();
   initGradeFormListeners();
 
-  // Load Context & Initial Dropdowns
+
   await loadAcademicContext();
   await populateClassOptions();
 });
@@ -28,7 +28,6 @@ function closeModal(modalEl) {
 let isGradeModalListenersInitialized = false;
 
 function initGradeModalEventListeners() {
-  // Prevent duplicate event listener registration on re-init
   if (isGradeModalListenersInitialized) return;
   isGradeModalListenersInitialized = true;
 
@@ -37,17 +36,14 @@ function initGradeModalEventListeners() {
   const viewGradeModal = document.getElementById("viewGradeModal");
   const editGradeModal = document.getElementById("editGradeModal");
 
-  // 1. Open Setup Modal ("Add Grade" / "Enter Grades")
   document.getElementById("addGrade")?.addEventListener("click", async () => {
     resetGradeModal();
     if (typeof openModal === "function") openModal(gradeModal);
 
-    // Fetch dropdown data on open
     await populateClassOptions();
     await loadAssessmentCategories();
   });
 
-  // 2. Setup Modal Close Actions
   document
     .getElementById("closeGradeModal")
     .addEventListener("click", () => closeModal(gradeModal));

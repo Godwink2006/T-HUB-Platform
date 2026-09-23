@@ -441,7 +441,7 @@
 
         <div class="view-book-body">
           <div class="profile-section">
-            <img id="viewBookCover" class="view-student-photo" />
+            <img id="viewBookCover" class="view-book-cover" />
             <span id="viewBookStatus">Active</span>
           </div>
 
@@ -477,7 +477,6 @@
             </div>
           </div>
 
-          <!-- Inventory Numbers Table -->
           <section class="book-table-card">
             <table>
               <thead>
@@ -497,7 +496,6 @@
             </table>
           </section>
 
-          <!-- Borrow History Table -->
           <section class="book-table-card">
             <h4>Borrow History</h4>
             <table>
@@ -521,11 +519,11 @@
           </section>
 
           <div class="view-modal-footer">
-            <button type="button" id="addBorrow" class="edit-btn">
+            <button type="button" id="borrowFromViewBtn" class="edit-btn">
               Borrow Book
             </button>
 
-            <button type="button" id="addReturnBorrow" class="edit-btn">
+            <button type="button" id="returnBookFromViewBtn" class="edit-btn">
               Return Book
             </button>
 
@@ -535,40 +533,39 @@
       </div>
     </div>
 
-    <div id="addBorrowModal" class="addBook-modal">
+    <div id="addBorrowModal" class="addBook-modal" style="display: none">
       <div class="addBook-modal-content">
         <div class="addBook-modal-header">
           <h2>Borrow Book</h2>
-
           <button id="cancelAddBorrowModal">&times;</button>
         </div>
 
         <div class="addBook-modal-body">
+          <input type="hidden" id="borrowBookId" />
+
           <form id="borrowForm">
             <div class="form-grid">
               <div class="form-group">
                 <label>Search student</label>
                 <input
                   type="text"
+                  id="studentSearchInput"
                   placeholder="search students by name or ID"
                 />
                 <label>Students *</label>
-
-                <select>
-                  <option>John Doe</option>
+                <select id="borrowStudentSelect">
+                  <option value="">Select Student</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Borrow Date</label>
-
-                <p>Today</p>
+                <p id="borrowDateDisplay">Today</p>
               </div>
 
               <div class="form-group">
                 <label>Due Date *</label>
-
-                <input type="date" />
+                <input type="date" id="borrowDueDate" />
               </div>
             </div>
 
@@ -576,48 +573,52 @@
               <button type="button" class="cancel-btn" id="closeAddBorrowModal">
                 Cancel
               </button>
-
-              <button type="button" class="save-btn">Save</button>
+              <button type="submit" class="save-btn" id="saveBorrowBtn">
+                Save
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <div id="returnBorrowModal" class="editBook-modal">
+    <div id="returnBorrowModal" class="editBook-modal" style="display: none">
       <div class="editBook-modal-content">
         <div class="editBook-modal-header">
           <h2>Return Book</h2>
-
-          <button id="cancelReturnBorrowModal">&times;</button>
+          <button type="button" id="cancelReturnBorrowModal">&times;</button>
         </div>
 
         <div class="editBook-modal-body">
           <form id="returnBorrowForm">
+            <input type="hidden" id="activeBorrowRecordId" />
+
             <div class="form-grid">
               <div class="form-group">
                 <label>Search student</label>
                 <input
                   type="text"
+                  id="returnStudentSearchInput"
                   placeholder="search students by name or ID"
                 />
-                <label>Currently borrow by: *</label>
-
-                <select>
-                  <option>John Doe</option>
+                <label>Currently borrowed by: *</label>
+                <select
+                  id="returnBorrowStudentSelect"
+                  required
+                  class="form-control"
+                >
+                  <option value="">Select student</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Borrow Date</label>
-
-                <p>Aug 12 2026</p>
+                <p id="displayBorrowDate">-</p>
               </div>
 
               <div class="form-group">
                 <label>Return Date</label>
-
-                <p>Today</p>
+                <p id="displayReturnDate">Today</p>
               </div>
             </div>
 
@@ -630,7 +631,9 @@
                 Cancel
               </button>
 
-              <button type="button" class="save-btn">Confirm Return</button>
+              <button type="submit" class="save-btn" id="confirmReturnBtn">
+                Confirm Return
+              </button>
             </div>
           </form>
         </div>

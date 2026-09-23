@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>High School Management System</title>
+    <link rel="stylesheet" href="/css/books.css" />
+    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="students-container">
+      <button
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Toggle Navigation"
+      >
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <aside class="sidebar">
+        <div class="logo">
+          <img
+            id="appHeaderLogo"
+            src="https://api.dicebear.com/7.x/initials/svg?seed=School"
+            alt="School Logo"
+          />
+          <h2>HSMS</h2>
+        </div>
+
+        <ul class="menu">
+          <li>
+            <a href="dashboard.html">
+              <i class="fa-solid fa-house"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+
+          <li class="admin-only">
+            <a href="students.html">
+              <i class="fa-solid fa-user-graduate"></i>
+              <span>Students</span>
+            </a>
+          </li>
+
+          <li class="active">
+            <a href="#">
+              <i class="fa-solid fa-user-graduate"></i>
+              <span>Books</span>
+            </a>
+          </li>
+
+          <li class="admin-only">
+            <a href="teachers.html">
+              <i class="fa-solid fa-chalkboard-user"></i>
+              <span>Teachers</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="academics.html">
+              <i class="fa-solid fa-book"></i>
+              <span>Academics</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="finance.html">
+              <i class="fa-solid fa-money-bill-wave"></i>
+              <span>Finance</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="library.html">
+              <i class="fa-solid fa-book-open"></i>
+              <span>Library</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="reports.html">
+              <i class="fa-solid fa-chart-line"></i>
+              <span>Reports</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="settings.html">
+              <i class="fa-solid fa-gear"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <main class="students-main-content">
+        <div class="catalog-container">
+          <!-- Search & Filter Header -->
+          <div class="catalog-header">
+            <h2>Library Catalog</h2>
+            <div class="catalog-search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input
+                type="text"
+                id="catalogSearchInput"
+                placeholder="Search by title, author, or category..."
+              />
+            </div>
+          </div>
+
+          <!-- Dynamic Card Grid Container -->
+          <div id="bookCardGrid" class="book-card-grid">
+            <!-- Cards will be injected here dynamically -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Student Personal History Modal -->
+    <div
+      id="studentHistoryModal"
+      class="student-modal-overlay"
+      style="display: none"
+    >
+      <div class="student-modal-card">
+        <div class="student-modal-header">
+          <h3>My Borrowing History</h3>
+          <button
+            class="student-modal-close-btn"
+            onclick="closeStudentHistoryModal()"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div id="studentHistoryContent" class="student-modal-body">
+          <!-- Dynamic history records will load here -->
+        </div>
+      </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/books.js"></script>
+  </body>
+</html>
