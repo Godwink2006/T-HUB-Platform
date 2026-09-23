@@ -441,114 +441,80 @@
 
         <div class="view-book-body">
           <div class="profile-section">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path
-                d="M6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22V4.5A2.5 2.5 0 0 1 6.5 2z"
-              />
-              <line x1="8" y1="7" x2="16" y2="7" />
-              <line x1="8" y1="11" x2="16" y2="11" />
-            </svg>
+            <img id="viewBookCover" class="view-student-photo" />
+            <span id="viewBookStatus">Active</span>
           </div>
 
           <div class="details-grid">
             <div class="details-item">
               <label>Book Code</label>
-              <p>BK001</p>
+              <p id="viewBookCode">-</p>
             </div>
 
             <div class="details-item">
               <label>Title</label>
-              <p>John is going to school</p>
+              <p id="viewBookTitle">-</p>
             </div>
 
             <div class="details-item">
               <label>Author</label>
-              <p>Barte moore</p>
+              <p id="viewBookAuthor">-</p>
             </div>
 
             <div class="details-item">
               <label>Category</label>
-              <p>Reading Book</p>
+              <p id="viewBookCategory">-</p>
             </div>
 
             <div class="details-item">
               <label>Shelf Location</label>
-              <p>Shelf 2</p>
+              <p id="viewBookShelf">-</p>
             </div>
 
             <div class="details-item">
               <label>Description</label>
-              <p>Not for borrowing</p>
+              <p id="viewBookDescription">-</p>
             </div>
           </div>
 
+          <!-- Inventory Numbers Table -->
           <section class="book-table-card">
             <table>
               <thead>
                 <tr>
                   <th>Total Copies</th>
                   <th>Available</th>
-                  <th>Brrowed</th>
+                  <th>Borrowed</th>
                 </tr>
               </thead>
-
               <tbody>
                 <tr>
-                  <td>20</td>
-
-                  <td>18</td>
-
-                  <td>2</td>
+                  <td id="viewTotalCopies">0</td>
+                  <td id="viewAvailableCopies">0</td>
+                  <td id="viewBorrowedCopies">0</td>
                 </tr>
               </tbody>
             </table>
           </section>
 
+          <!-- Borrow History Table -->
           <section class="book-table-card">
             <h4>Borrow History</h4>
             <table>
               <thead>
                 <tr>
-                  <th>Student</th>
+                  <th>Borrower</th>
                   <th>Borrow Date</th>
                   <th>Due Date</th>
                   <th>Return Date</th>
                   <th>Status</th>
                 </tr>
               </thead>
-
-              <tbody>
+              <tbody id="viewBorrowHistoryBody">
                 <tr>
-                  <td>John Doe</td>
-                  <td>Aug 12 2026</td>
-
-                  <td>Aug 20 2026</td>
-
-                  <td>Aug 15 2026</td>
-
-                  <td>Borrowed</td>
-                </tr>
-
-                <tr>
-                  <td>Sarah Doe</td>
-                  <td>Aug 13 2026</td>
-
-                  <td>Aug 17 2026</td>
-
-                  <td>Aug 15 2026</td>
-
-                  <td>Available</td>
+                  <td colspan="5" style="text-align: center; color: #666">
+                    Loading history...
+                  </td>
                 </tr>
               </tbody>
             </table>

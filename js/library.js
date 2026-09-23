@@ -525,11 +525,8 @@ function attachBookActionListeners() {
   viewButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const bookId = button.getAttribute("data-id");
-      // TODO: Load specific book details into viewModal using bookId if needed
-      const viewBookModal = document.getElementById("viewBookModal");
-      if (viewBookModal) {
-        viewBookModal.style.display = "flex";
-        lockBodyScroll();
+      if (bookId) {
+        openViewBookModal(bookId);
       }
     });
   });
@@ -762,6 +759,126 @@ async function handleUpdateBook() {
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Update Book";
+  }
+}
+
+async function openViewBookModal(bookId) {
+  const modal = document.getElementById("viewBookModal");
+  if (!modal) return;
+
+  // Show modal and lock scroll
+  modal.style.display = "flex";
+  if (typeof lockBodyScroll === "function") lockBodyScroll();
+
+  try {
+    // 1. Fetch Book Details + Department Name
+    const { data: book, error: bookError } = await window.supabaseClient
+      .from("books")
+      .select(
+        `
+        *,
+        departments ( name )
+      `,
+      )
+      .eq("id", bookId)
+      .single();
+
+    if (bookError) throw bookError;
+
+    // 1. Populate book cover image (falls back to placeholder if empty)
+    const coverImgElement = document.getElementById("viewBookCover");
+    if (coverImgElement) {
+      coverImgElement.src =
+        book.cover_image_url ||
+        "https://cdn-icons-png.flaticon.com/512/29/29302.png";
+    }
+
+    // 2. Populate and style the status badge
+    const statusBadge = document.getElementById("viewBookStatus");
+    if (statusBadge) {
+      const bookStatus = (book.status || "active").toLowerCase();
+      statusBadge.textContent =
+        bookStatus.charAt(0).toUpperCase() + bookStatus.slice(1);
+
+      // Update class name so your CSS handles active vs inactive coloring correctly
+      statusBadge.className = `view-book-status ${bookStatus}`; // results in 'view-book-status active' or 'view-book-status inactive'
+    }
+    document.getElementById("viewBookCode").textContent = book.book_code || "-";
+    document.getElementById("viewBookTitle").textContent = book.title || "-";
+    document.getElementById("viewBookAuthor").textContent = book.author || "-";
+    document.getElementById("viewBookCategory").textContent = book.departments
+      ? book.departments.name
+      : "N/A";
+    document.getElementById("viewBookShelf").textContent =
+      book.shelf_location || "N/A";
+    document.getElementById("viewBookDescription").textContent =
+      book.description || "No description provided.";
+
+    // Populate inventory counts
+    const total = book.total_copies || 0;
+    const available = book.available_copies || 0;
+    const currentlyBorrowed = total - available;
+
+    document.getElementById("viewTotalCopies").textContent = total;
+    document.getElementById("viewAvailableCopies").textContent = available;
+    document.getElementById("viewBorrowedCopies").textContent =
+      currentlyBorrowed;
+
+    // 2. Fetch Borrow History for this book
+    const { data: borrowings, error: borrowError } = await window.supabaseClient
+      .from("book_borrowings")
+      .select(
+        `
+        *,
+        profiles ( full_name )
+      `,
+      )
+      .eq("book_id", bookId)
+      .order("created_at", { ascending: false });
+
+    if (borrowError) throw borrowError;
+
+    const historyBody = document.getElementById("viewBorrowHistoryBody");
+    historyBody.innerHTML = "";
+
+    if (!borrowings || borrowings.length === 0) {
+      historyBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 15px; color: #666;">
+            No borrowing history found for this book.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    // Populate history rows dynamically
+    borrowings.forEach((record) => {
+      const tr = document.createElement("tr");
+
+      const borrowerName = record.profiles
+        ? record.profiles.full_name
+        : "Unknown User";
+      const returnDateText = record.return_date ? record.return_date : "-";
+
+      // Capitalize status badge format
+      const statusClass =
+        record.status === "borrowed" ? "status-borrowed" : "status-returned";
+
+      tr.innerHTML = `
+        <td>${escapeHtml(borrowerName)}</td>
+        <td>${record.borrow_date}</td>
+        <td>${record.due_date}</td>
+        <td>${returnDateText}</td>
+        <td><span class="${statusClass}">${escapeHtml(record.status)}</span></td>
+      `;
+      historyBody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Error loading view modal data:", err);
+    if (typeof showToast === "function") {
+      showToast("Failed to load full book details.", "error");
+    }
   }
 }
 

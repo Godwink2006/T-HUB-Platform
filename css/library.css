@@ -125,6 +125,20 @@ body {
   cursor: pointer;
 }
 
+.profile-section {
+  text-align: center;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.view-student-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
 .add-books-btn {
   width: auto;
   height: 48px;
