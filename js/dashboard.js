@@ -355,43 +355,73 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadDashboardStats(schoolId) {
   try {
-    // 1. Fetch Total Students Count
-    const { count: studentCount, error: studentError } =
+    // 1. Fetch Total & Active Students
+    const { data: studentsData, error: studentError } =
       await window.supabaseClient
-        .from("students")
-        .select("*", { count: "exact", head: true })
-        .eq("school_id", schoolId);
+        .from("profiles")
+        .select("status")
+        .eq("school_id", schoolId)
+        .eq("role", "student");
 
-    if (!studentError) {
-      document.getElementById("totalStudentsCount").textContent =
-        studentCount || 0;
+    if (!studentError && studentsData) {
+      const totalStudents = studentsData.length;
+      const activeStudents = studentsData.filter(
+        (s) => (s.status || "").toLowerCase() === "active",
+      ).length;
+
+      document.getElementById("totalStudentsCount").textContent = totalStudents;
+      document.getElementById("studentSubtext").textContent =
+        `${activeStudents} Active / ${totalStudents} Total`;
+    } else {
+      document.getElementById("totalStudentsCount").textContent = "0";
+      document.getElementById("studentSubtext").textContent =
+        "0 Active / 0 Total";
     }
 
-    // 2. Fetch Total Teachers Count
-    const { count: teacherCount, error: teacherError } =
+    // 2. Fetch Total & Active Teachers
+    const { data: teachersData, error: teacherError } =
       await window.supabaseClient
-        .from("teachers")
-        .select("*", { count: "exact", head: true })
-        .eq("school_id", schoolId);
+        .from("profiles")
+        .select("status")
+        .eq("school_id", schoolId)
+        .eq("role", "teacher");
 
-    if (!teacherError) {
-      document.getElementById("totalTeachersCount").textContent =
-        teacherCount || 0;
+    if (!teacherError && teachersData) {
+      const totalTeachers = teachersData.length;
+      const activeTeachers = teachersData.filter(
+        (t) => (t.status || "").toLowerCase() === "active",
+      ).length;
+
+      document.getElementById("totalTeachersCount").textContent = totalTeachers;
+      document.getElementById("teacherSubtext").textContent =
+        `${activeTeachers} Active / ${totalTeachers} Total`;
+    } else {
+      document.getElementById("totalTeachersCount").textContent = "0";
+      document.getElementById("teacherSubtext").textContent =
+        "0 Active / 0 Total";
     }
 
-    // 3. Fetch Classes Count
-    const { count: classCount, error: classError } = await window.supabaseClient
+    const { data: classesData, error: classError } = await window.supabaseClient
       .from("classes")
-      .select("*", { count: "exact", head: true })
+      .select("status")
       .eq("school_id", schoolId);
 
-    if (!classError) {
-      document.getElementById("totalClassesCount").textContent =
-        classCount || 0;
+    if (!classError && classesData) {
+      const totalClasses = classesData.length;
+      const activeClasses = classesData.filter(
+        (c) => (c.status || "").toLowerCase() === "active",
+      ).length;
+
+      document.getElementById("totalClassesCount").textContent = totalClasses;
+      document.getElementById("classSubtext").textContent =
+        `${activeClasses} Active / ${totalClasses} Total`;
+    } else {
+      document.getElementById("totalClassesCount").textContent = "0";
+      document.getElementById("classSubtext").textContent =
+        "0 Active / 0 Total";
     }
 
-    // 4. Calculate Attendance Today from attendance_records
-    const today = new Date().toISOString().split("T")[0]; // "2026-09-23"
+    const today = new Date().toISOString().split("T")[0]; // e.g., "2026-09-24"
 
     const { data: attendanceData, error: attError } =
       await window.supabaseClient
@@ -410,8 +440,36 @@ async function loadDashboardStats(schoolId) {
         (presentCount / attendanceData.length) * 100,
       );
       document.getElementById("attendanceCount").textContent = `${percentage}%`;
+
+      // Determine dynamic status subtext
+      let statusLabel = "Normal";
+      let statusColor = "#475569";
+
+      if (percentage >= 90) {
+        statusLabel = "Excellent";
+        statusColor = "#16a34a"; // Green
+      } else if (percentage >= 75) {
+        statusLabel = "Normal";
+        statusColor = "#2563eb"; // Blue
+      } else if (percentage >= 50) {
+        statusLabel = "Needs Attention";
+        statusColor = "#d97706"; // Amber/Orange
+      } else {
+        statusLabel = "Bad";
+        statusColor = "#dc2626"; // Red
+      }
+
+      const subtextEl = document.getElementById("attendanceSubtext");
+      subtextEl.textContent = statusLabel;
+      subtextEl.style.color = statusColor;
+      subtextEl.style.fontWeight = "600";
     } else {
+      // This triggers automatically when a new day starts and no records exist yet!
       document.getElementById("attendanceCount").textContent = "0%";
+      const subtextEl = document.getElementById("attendanceSubtext");
+      subtextEl.textContent = "No records today";
+      subtextEl.style.color = "#64748b";
+      subtextEl.style.fontWeight = "normal";
     }
   } catch (err) {
     console.error("Error loading dashboard stats:", err);
