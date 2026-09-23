@@ -237,6 +237,8 @@ async function loadDashboardAnnouncements() {
     if (profileError || !profile)
       throw new Error("Could not fetch user profile.");
 
+    loadDashboardStats(profile.school_id);
+
     if (welcomeText) {
       welcomeText.textContent = `Welcome back, ${profile.full_name || "User"}`;
     }
@@ -301,10 +303,10 @@ async function loadDashboardAnnouncements() {
         }
 
         return `
-        <div style=" padding: 16px; margin-bottom: 12px; background: #fff;  border: 2px solid rgb(219, 215, 215);">
+        <div class="small-border-announcement" style=" padding: 16px; margin-bottom: 12px; background: #fff;  border: 2px solid rgb(219, 215, 215);">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
             <h4 style="margin: 0; font-size: 1.05rem; color: #0f172a; font-weight: 600;">${escapeHtml(ann.title)}</h4>
-            <span style="font-size: 0.75rem; padding: 3px 10px; background: ${statusBg}; color: ${statusColor}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;">${escapeHtml(ann.status)}</span>
+            <span class="announcement-status" style="font-size: 0.75rem; padding: 3px 10px; background: ${statusBg}; color: ${statusColor}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;">${escapeHtml(ann.status)}</span>
           </div>
           <p style="margin: 0 0 12px 0; font-size: 0.95rem; color: #334155; line-height: 1.5;">${escapeHtml(ann.message)}</p>
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #64748b;  border-top: 2px solid rgb(219, 215, 215);">
@@ -350,3 +352,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     avatarImg.src = profile.photo_url;
   }
 });
+
+async function loadDashboardStats(schoolId) {
+  try {
+    // 1. Fetch Total Students Count
+    const { count: studentCount, error: studentError } =
+      await window.supabaseClient
+        .from("students")
+        .select("*", { count: "exact", head: true })
+        .eq("school_id", schoolId);
+
+    if (!studentError) {
+      document.getElementById("totalStudentsCount").textContent =
+        studentCount || 0;
+    }
+
+    // 2. Fetch Total Teachers Count
+    const { count: teacherCount, error: teacherError } =
+      await window.supabaseClient
+        .from("teachers")
+        .select("*", { count: "exact", head: true })
+        .eq("school_id", schoolId);
+
+    if (!teacherError) {
+      document.getElementById("totalTeachersCount").textContent =
+        teacherCount || 0;
+    }
+
+    // 3. Fetch Classes Count
+    const { count: classCount, error: classError } = await window.supabaseClient
+      .from("classes")
+      .select("*", { count: "exact", head: true })
+      .eq("school_id", schoolId);
+
+    if (!classError) {
+      document.getElementById("totalClassesCount").textContent =
+        classCount || 0;
+    }
+  } catch (err) {
+    console.error("Error loading dashboard stats:", err);
+  }
+}

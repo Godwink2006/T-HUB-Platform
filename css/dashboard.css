@@ -133,6 +133,7 @@ body {
 .dashboard-card {
   background: #ffff;
   padding: 20px;
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .dashboard-card h4 {
@@ -253,8 +254,9 @@ body {
 
 .announcement-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+  border: 2px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -291,6 +293,7 @@ body {
   background: #ffff;
   border: 18px;
   padding: 25px;
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .dashboard-card-header {
@@ -445,8 +448,9 @@ body {
 
 .date-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
+  border: 2px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -495,7 +499,9 @@ body {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  background: #e5e7eb;
+  border: 2px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   cursor: pointer;
 }
 
@@ -515,7 +521,21 @@ body {
   .announcement-cards,
   .cancel-btn,
   .save-btn,
-  .form-group input {
+  .form-group input,
+  select,
+  textarea,
+  .date-modal-content,
+  .filter-btn,
+  .dashboard-chart-card,
+  .dashboard-activity-card,
+  .announcement-preview,
+  .dashboard-card,
+  .small-border-announcement,
+  .announcement-status,
+  .checkbox-group,
+  .announcement-modal-content,
+  .announcement-modal-header button,
+  .filter-menu {
     border-radius: 10px;
   }
 }

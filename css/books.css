@@ -229,7 +229,6 @@ body {
   margin-left: 260px;
   width: calc(100% - 260px);
   min-height: 100vh;
-  padding: 10px;
 }
 
 /* Modal Overlay Background */
