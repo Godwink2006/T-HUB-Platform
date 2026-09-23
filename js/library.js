@@ -363,6 +363,7 @@ async function loadBooksTable() {
   if (!tableBody) return;
 
   try {
+    // 1. Fetch books and departments
     const { data: books, error } = await window.supabaseClient
       .from("books")
       .select(
@@ -376,6 +377,15 @@ async function loadBooksTable() {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
+
+    // 2. Fetch all active borrowings to calculate availability dynamically
+    const { data: allBorrowings, error: borrowError } =
+      await window.supabaseClient
+        .from("book_borrowings")
+        .select("book_id, status")
+        .eq("status", "borrowed");
+
+    if (borrowError) throw borrowError;
 
     tableBody.innerHTML = "";
 
@@ -398,6 +408,15 @@ async function loadBooksTable() {
         "https://cdn-icons-png.flaticon.com/512/29/29302.png";
       const departmentName = book.departments ? book.departments.name : "-";
 
+      // 3. Calculate how many copies are currently borrowed for this specific book
+      const activeBorrowedCount = allBorrowings
+        ? allBorrowings.filter((b) => b.book_id === book.id).length
+        : 0;
+
+      const totalCopies = book.total_copies || 0;
+      // 4. Compute true available copies
+      const availableCopies = Math.max(0, totalCopies - activeBorrowedCount);
+
       tr.innerHTML = `
         <td>
           <img
@@ -414,8 +433,8 @@ async function loadBooksTable() {
         <td>${escapeHtml(book.title)}</td>
         <td>${escapeHtml(book.author)}</td>
         <td>${escapeHtml(departmentName)}</td>
-        <td>${book.total_copies}</td>
-        <td>${book.available_copies}</td>
+        <td>${totalCopies}</td>
+        <td>${availableCopies}</td>
         <td><span class="books-status-${(book.status || "inactive").toLowerCase()}">
           ${book.status || "Inactive"}
         </span></td>
@@ -641,7 +660,7 @@ async function handleUpdateBook() {
 
     if (isUnchanged) {
       showToast("No changes detected.", "info");
-      return; 
+      return;
     }
   }
 
@@ -663,11 +682,23 @@ async function handleUpdateBook() {
       coverBase64 = await blobToBase64(compressedBlob);
     }
 
+    // If your modal already displays the borrowed count or you have it in an object, grab it here:
+    const currentBorrowed =
+      currentOriginalBookData && currentOriginalBookData.active_borrowed_count
+        ? currentOriginalBookData.active_borrowed_count
+        : 0;
+
+    const newTotal = parseInt(copies_total, 10);
+
+    // Calculate available copies dynamically
+    const newAvailable = Math.max(0, newTotal - currentBorrowed);
+
     const updateData = {
       title: title,
       author: author,
       department_id: department_id,
       total_copies: parseInt(copies_total, 10),
+      available_copies: newAvailable,
       shelf_location: shelf_location || null,
       description: description || null,
       status: status,
@@ -756,27 +787,28 @@ async function openViewBookModal(bookId) {
     document.getElementById("viewBookDescription").textContent =
       book.description || "-";
 
+    // 1. Fetch borrowings first (move this block up before calculating copies)
+    const { data: borrowings, error: borrowError } = await window.supabaseClient
+      .from("book_borrowings")
+      .select(`*, profiles ( full_name )`)
+      .eq("book_id", bookId)
+      .order("created_at", { ascending: false });
+
+    if (borrowError) throw borrowError;
+
+    // 2. Count active borrowings dynamically from the fetched records
+    const currentlyBorrowed = borrowings
+      ? borrowings.filter((r) => r.status === "borrowed").length
+      : 0;
+
     const total = book.total_copies || 0;
-    const available = book.available_copies || 0;
-    const currentlyBorrowed = total - available;
+    // 3. Calculate available copies dynamically so it is always accurate
+    const available = Math.max(0, total - currentlyBorrowed);
 
     document.getElementById("viewTotalCopies").textContent = total;
     document.getElementById("viewAvailableCopies").textContent = available;
     document.getElementById("viewBorrowedCopies").textContent =
       currentlyBorrowed;
-
-    const { data: borrowings, error: borrowError } = await window.supabaseClient
-      .from("book_borrowings")
-      .select(
-        `
-        *,
-        profiles ( full_name )
-      `,
-      )
-      .eq("book_id", bookId)
-      .order("created_at", { ascending: false });
-
-    if (borrowError) throw borrowError;
 
     const historyBody = document.getElementById("viewBorrowHistoryBody");
     historyBody.innerHTML = "";
