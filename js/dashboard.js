@@ -102,6 +102,7 @@ if (newAnnouncementTrigger) {
 
 function closeAnnounceModal() {
   announcementModal.style.display = "none";
+  unLockBodyScroll(); hbh
   // Optional: clear form inputs here
 }
 
@@ -307,7 +308,7 @@ async function loadDashboardAnnouncements() {
           <p style="margin: 0 0 12px 0; font-size: 0.95rem; color: #334155; line-height: 1.5;">${escapeHtml(ann.message)}</p>
           <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #64748b;  border-top: 2px solid rgb(219, 215, 215);">
             <span><i class="fa-solid fa-users" style="margin-right: 4px;"></i> Target: ${escapeHtml(ann.target_audience)}</span>
-            <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> ${new Date(ann.created_at).toLocaleDateString()}</span>
+            <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> ${ann.expiry_date || "No expiry date"}</span>
           </div>
         </div>
       `;
