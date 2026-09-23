@@ -303,58 +303,117 @@
         </div>
 
         <div class="edit-book-modal-body">
-          <form id="BookForm">
+          <form id="EditBookForm">
+            <input type="hidden" id="editBookId" />
             <div class="form-grid">
               <div class="form-group">
                 <label>Book Code *</label>
 
-                <input type="text" placeholder="Enter book code" />
+                <p id="editBookCode">-</p>
               </div>
 
               <div class="form-group">
                 <label>Book Title *</label>
 
-                <input type="text" placeholder="Enter title" />
+                <input
+                  type="text"
+                  id="editBookTitle"
+                  placeholder="Enter title"
+                />
               </div>
 
               <div class="form-group">
                 <label>Author *</label>
 
-                <input type="text" placeholder="Enter author of the book" />
+                <input
+                  type="text"
+                  id="editBookAuthor"
+                  placeholder="Enter author of the book"
+                />
               </div>
 
               <div class="form-group">
-                <label>Category *</label>
+                <label>Department *</label>
 
-                <select>
-                  <option>Select Category</option>
-                  <option>Mathematics</option>
-                  <option>English</option>
+                <select id="editBookDepartment">
+                  <option>Select Department</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label>Number of Copies *</label>
 
-                <input type="text" placeholder="Enter the number of copies" />
+                <input
+                  type="text"
+                  id="editBookNumberOfCopies"
+                  placeholder="Enter the number of copies"
+                />
               </div>
 
               <div class="form-group">
                 <label>Shelf Location (Optional)</label>
 
-                <input type="text" placeholder="Enter shelf location" />
+                <input
+                  type="text"
+                  id="editBookShelfLocation"
+                  placeholder="Enter shelf location"
+                />
               </div>
 
               <div class="form-group">
                 <label>Description (Optional)</label>
 
-                <input type="text" placeholder="Write description" />
+                <input
+                  type="text"
+                  id="editBookDescription"
+                  placeholder="Write description"
+                />
+              </div>
+
+              <div class="avatar-upload-group">
+                <label class="form-label">Book Cover or Image (Optional)</label>
+                <div class="avatar-edit-container">
+                  <div class="avatar-preview-wrapper">
+                    <img
+                      id="editAvatarPreview"
+                      src="https://cdn-icons-png.flaticon.com/512/29/29302.png"
+                      alt="Book Icon"
+                      onerror="
+                        this.onerror = null;
+                        this.src =
+                          'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                      "
+                    />
+                  </div>
+
+                  <div class="avatar-upload-actions">
+                    <label
+                      for="editAvatarInput"
+                      class="btn-secondary upload-btn"
+                    >
+                      <i class="bx bx-upload"></i> Change Photo
+                    </label>
+                    <input
+                      type="file"
+                      id="editAvatarInput"
+                      accept="image/*"
+                      hidden
+                    />
+                    <span id="fileNameDisplay" class="file-name-text"
+                      >No new file chosen</span
+                    >
+                  </div>
+                </div>
               </div>
 
               <div class="form-group">
-                <label>Book Cover/Image (Optional)</label>
+                <label>Status *</label>
 
-                <input type="file" />
+                <select id="editBookStatus">
+                  <option>Select Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
             </div>
 
@@ -363,7 +422,9 @@
                 Cancel
               </button>
 
-              <button type="submit" class="edit-btn">Update Book</button>
+              <button type="button" class="edit-btn" id="editBook">
+                Update Book
+              </button>
             </div>
           </form>
         </div>

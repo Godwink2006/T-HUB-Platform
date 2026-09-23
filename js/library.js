@@ -343,12 +343,6 @@ async function handleSaveBook() {
       fileNameText.textContent = "No new file chosen";
     }
 
-    // Close modal if you have a close handler function, e.g., closeBookModalFunc();
-    const bookModal = document.getElementById("bookModal");
-    if (bookModal) {
-      bookModal.style.display = "none";
-    }
-
     await loadBooksTable();
   } catch (err) {
     console.error("Error saving book:", err);
@@ -482,11 +476,12 @@ async function loadBooksTable() {
           ${book.status || "Inactive"}
         </span></td>
         <td>
+         <button class="books-actions-btn edit" data-id="${book.id}">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+
           <button class="books-actions-btn view" data-id="${book.id}">
             <i class="fa-solid fa-eye"></i>
-          </button>
-          <button class="books-actions-btn edit" data-id="${book.id}">
-            <i class="fa-solid fa-pen"></i>
           </button>
         </td>
       `;
@@ -518,6 +513,15 @@ function attachBookActionListeners() {
   const viewButtons = document.querySelectorAll("#booksTableBody .view");
   const editButtons = document.querySelectorAll("#booksTableBody .edit");
 
+  editButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const bookId = button.getAttribute("data-id");
+      if (bookId) {
+        openEditBookModal(bookId);
+      }
+    });
+  });
+
   viewButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const bookId = button.getAttribute("data-id");
@@ -529,18 +533,236 @@ function attachBookActionListeners() {
       }
     });
   });
+}
 
-  editButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const bookId = button.getAttribute("data-id");
-      // TODO: Populate edit modal inputs with this bookId's data
-      const editBookModal = document.getElementById("editBookModal");
-      if (editBookModal) {
-        editBookModal.style.display = "flex";
-        lockBodyScroll();
-      }
-    });
+const editFileInput = document.getElementById("editAvatarInput");
+const editFileNameText = document.getElementById("fileNameDisplay");
+const editPreviewImg = document.getElementById("editAvatarPreview");
+
+if (editFileInput) {
+  editFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (editFileNameText) editFileNameText.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (editPreviewImg) editPreviewImg.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   });
+}
+
+async function openEditBookModal(bookId) {
+  const editBookModal = document.getElementById("editBookModal");
+  if (!editBookModal) return;
+
+  // Open modal and lock scroll
+  editBookModal.style.display = "flex";
+  lockBodyScroll();
+
+  try {
+    // 1. Ensure departments dropdown in edit modal is dynamically loaded
+    await loadEditDepartmentDropdown();
+
+    // 2. Fetch specific book record from Supabase
+    const { data: book, error } = await window.supabaseClient
+      .from("books")
+      .select("*")
+      .eq("id", bookId)
+      .single();
+
+    if (error) throw error;
+    if (!book) throw new Error("Book not found.");
+
+    // 3. Populate form controls
+    document.getElementById("editBookId").value = book.id;
+    document.getElementById("editBookCode").textContent = book.book_code || "-";
+    document.getElementById("editBookTitle").value = book.title || "";
+    document.getElementById("editBookAuthor").value = book.author || "";
+    document.getElementById("editBookDepartment").value =
+      book.department_id || "";
+    document.getElementById("editBookNumberOfCopies").value =
+      book.total_copies || 0;
+    document.getElementById("editBookShelfLocation").value =
+      book.shelf_location || "";
+    document.getElementById("editBookDescription").value =
+      book.description || "";
+    document.getElementById("editBookStatus").value = book.status || "active";
+
+    // Set cover preview image
+    const previewImg = document.getElementById("editAvatarPreview");
+    if (previewImg) {
+      previewImg.src =
+        book.cover_image_url ||
+        "https://cdn-icons-png.flaticon.com/512/29/29302.png";
+    }
+
+    // Reset file input text indicator
+    if (editFileNameText) {
+      editFileNameText.textContent = "No new file chosen";
+    }
+  } catch (err) {
+    console.error("Error loading book for editing:", err);
+    showToast(err.message || "Failed to load book data.", "error");
+  }
+}
+
+// Populate the edit modal's department dropdown
+async function loadEditDepartmentDropdown() {
+  const deptSelect = document.getElementById("editBookDepartment");
+  if (!deptSelect) return;
+
+  try {
+    const { data: departments, error } = await window.supabaseClient
+      .from("departments")
+      .select("id, name")
+      .order("name", { ascending: true })
+      .eq("status", "active");
+
+    if (error) throw error;
+
+    deptSelect.innerHTML = '<option value="">Select Department</option>';
+
+    if (departments && departments.length > 0) {
+      departments.forEach((dept) => {
+        const option = document.createElement("option");
+        option.value = dept.id;
+        option.textContent = dept.name;
+        deptSelect.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.error("Error fetching departments for edit:", err);
+  }
+}
+
+const updateBookBtn = document.getElementById("editBook");
+const editBookForm = document.getElementById("EditBookForm");
+
+if (editBookForm) {
+  editBookForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await handleUpdateBook();
+  });
+}
+
+if (updateBookBtn) {
+  updateBookBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    await handleUpdateBook();
+  });
+}
+
+async function handleUpdateBook() {
+  const saveBtn = document.getElementById("editBook");
+  const bookId = document.getElementById("editBookId").value;
+
+  if (!bookId) {
+    showToast("Invalid book ID.", "error");
+    return;
+  }
+
+  // Extract form values
+  const title = document.getElementById("editBookTitle").value.trim();
+  const author = document.getElementById("editBookAuthor").value.trim();
+  const department_id = document.getElementById("editBookDepartment").value;
+  const copies_total = document
+    .getElementById("editBookNumberOfCopies")
+    .value.trim();
+  const shelf_location = document
+    .getElementById("editBookShelfLocation")
+    .value.trim();
+  const description = document
+    .getElementById("editBookDescription")
+    .value.trim();
+  const status = document.getElementById("editBookStatus").value.toLowerCase();
+
+  // Basic Validation
+  if (!title || !author || !department_id || !copies_total) {
+    showToast("Please fill in all required fields marked with *", "error");
+    return;
+  }
+
+  if (department_id === "Select Department" || !department_id) {
+    showToast("Please select a valid department.", "error");
+    return;
+  }
+
+  if (
+    !status ||
+    status === "select status" ||
+    (status !== "active" && status !== "inactive")
+  ) {
+    showToast("Please select a valid status (Active or Inactive).", "error");
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Updating...";
+
+  try {
+    const photoInput = document.getElementById("editAvatarInput");
+    let coverBase64 = null;
+
+    // Compress new cover if user uploaded one
+    if (photoInput && photoInput.files[0]) {
+      saveBtn.textContent = "Compressing cover...";
+      const compressedBlob = await compressImageToBlob(
+        photoInput.files[0],
+        800,
+        0.7,
+      );
+      coverBase64 = await blobToBase64(compressedBlob);
+    }
+
+    // Build update object
+    const updateData = {
+      title: title,
+      author: author,
+      department_id: department_id,
+      total_copies: parseInt(copies_total, 10),
+      shelf_location: shelf_location || null,
+      description: description || null,
+      status: status,
+    };
+
+    // Only update cover image if a new file was actually picked
+    if (coverBase64) {
+      updateData.cover_image_url = coverBase64;
+    }
+
+    saveBtn.textContent = "Saving to database...";
+
+    // Direct update query
+    const { error } = await window.supabaseClient
+      .from("books")
+      .update(updateData)
+      .eq("id", bookId);
+
+    if (error) throw error;
+
+    showToast("Book updated successfully!", "success");
+
+    // Close Modal
+    const editBookModal = document.getElementById("editBookModal");
+    if (editBookModal) {
+      editBookModal.style.display = "none";
+      unLockBodyScroll();
+    }
+
+    // Refresh table inventory
+    if (typeof loadBooksTable === "function") {
+      await loadBooksTable();
+    }
+  } catch (err) {
+    console.error("Error updating book:", err);
+    showToast(err.message || "Failed to update book.", "error");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Update Book";
+  }
 }
 
 loadBooksTable();
