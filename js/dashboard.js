@@ -102,7 +102,7 @@ if (newAnnouncementTrigger) {
 
 function closeAnnounceModal() {
   announcementModal.style.display = "none";
-  unLockBodyScroll(); hbh
+  unLockBodyScroll();
   // Optional: clear form inputs here
 }
 
