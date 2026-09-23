@@ -119,7 +119,7 @@
         <header class="topbar">
           <div>
             <h1>Dashboard</h1>
-            <p>Welcome back, Administrator</p>
+            <p id="welcomeUserText">Welcome back...</p>
           </div>
 
           <div class="top-right">
@@ -153,7 +153,7 @@
             </button>
           </div>
 
-          <div class="announcement-preview">
+          <div class="announcement-preview" id="announcementPreviewContainer">
             <div class="announcement-item">
               <h4>No announcements yet</h4>
               <p>Published announcements will appear here.</p>
@@ -276,11 +276,14 @@
       </div>
     </div>
 
-    <div id="announcementModal" class="announcement-modal">
+    <div
+      id="announcementModal"
+      class="announcement-modal"
+      style="display: none"
+    >
       <div class="announcement-modal-content">
         <div class="announcement-modal-header">
           <h2>Create Announcement</h2>
-
           <button id="closeAnnouncementModal">&times;</button>
         </div>
 
@@ -290,42 +293,146 @@
               <label>Title *</label>
               <input
                 type="text"
+                id="announcementTitle"
                 placeholder="Enter announcement title"
                 required
               />
             </div>
 
             <div class="form-group">
-              <label>Audience *</label>
-
-              <select>
-                <option>All Staff</option>
-                <option>Teachers</option>
-                <option>Receptionists</option>
-                <option>Accountants</option>
-                <option>Librarians</option>
-              </select>
+              <label>Audience * (Select all that apply)</label>
+              <div
+                class="checkbox-group"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                  margin-top: 6px;
+                  background: #f8fafc;
+                  padding: 10px;
+                  border-radius: 6px;
+                  border: 1px solid #e2e8f0;
+                "
+              >
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    name="announcementAudience"
+                    value="All"
+                    checked
+                  />
+                  All (Everyone)
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    name="announcementAudience"
+                    value="Teachers"
+                  />
+                  Teachers
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    name="announcementAudience"
+                    value="Receptionists"
+                  />
+                  Receptionists
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    name="announcementAudience"
+                    value="Accountants"
+                  />
+                  Accountants
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    name="announcementAudience"
+                    value="Librarians"
+                  />
+                  Librarians
+                </label>
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: normal;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    name="announcementAudience"
+                    value="Students"
+                  />
+                  Students
+                </label>
+              </div>
             </div>
 
             <div class="form-group">
-              <label>Priority *</label>
-
-              <select>
-                <option>Normal</option>
-                <option>Important</option>
-                <option>Urgent</option>
+              <label>Status *</label>
+              <select id="announcementStatus">
+                <option value="Normal">Normal</option>
+                <option value="Important">Important</option>
+                <option value="Urgent">Urgent</option>
               </select>
             </div>
 
             <div class="form-group">
               <label>Expiry Date (Optional)</label>
-              <input type="date" />
+              <input type="date" id="announcementExpiry" />
             </div>
           </div>
 
           <div class="form-group">
             <label>Message *</label>
             <textarea
+              id="announcementMessage"
               rows="6"
               placeholder="Write your announcement........"
             ></textarea>
@@ -335,8 +442,9 @@
             <button id="cancelAnnouncementModal" class="cancel-btn">
               Cancel
             </button>
-
-            <button class="save-btn">Publish Announcements</button>
+            <button id="saveAnnouncementBtn" class="save-btn">
+              Publish Announcements
+            </button>
           </div>
         </div>
       </div>
