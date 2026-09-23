@@ -389,6 +389,30 @@ async function loadDashboardStats(schoolId) {
       document.getElementById("totalClassesCount").textContent =
         classCount || 0;
     }
+
+    // 4. Calculate Attendance Today from attendance_records
+    const today = new Date().toISOString().split("T")[0]; // "2026-09-23"
+
+    const { data: attendanceData, error: attError } =
+      await window.supabaseClient
+        .from("attendance_records")
+        .select("status")
+        .eq("school_id", schoolId)
+        .gte("created_at", `${today}T00:00:00`)
+        .lte("created_at", `${today}T23:59:59`);
+
+    if (!attError && attendanceData && attendanceData.length > 0) {
+      const presentCount = attendanceData.filter(
+        (row) => (row.status || "").toLowerCase() === "present",
+      ).length;
+
+      const percentage = Math.round(
+        (presentCount / attendanceData.length) * 100,
+      );
+      document.getElementById("attendanceCount").textContent = `${percentage}%`;
+    } else {
+      document.getElementById("attendanceCount").textContent = "0%";
+    }
   } catch (err) {
     console.error("Error loading dashboard stats:", err);
   }
