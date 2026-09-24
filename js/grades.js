@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   initGradeModalEventListeners();
   initGradeFormListeners();
 
-
   await loadAcademicContext();
   await populateClassOptions();
 });
@@ -714,6 +713,24 @@ async function handleSaveGrades(e) {
     if (typeof loadGradesList === "function") {
       loadGradesList();
     }
+
+    if (
+      selectedStatus === "submitted" &&
+      typeof window.sendNotification === "function" &&
+      schoolId
+    ) {
+      await Promise.all(
+        recordsPayload.map(async (record) => {
+          return window.sendNotification(
+            schoolId,
+            record.student_id,
+            "New Grade Posted",
+            `Your grade has been updated (Score: ${record.score}/${currentGradeSession.maxMarks || "N/A"}).`,
+            "academic",
+          );
+        }),
+      );
+    }
   } catch (err) {
     console.error("Error saving grade session:", err);
 
@@ -1242,7 +1259,7 @@ async function handleEditGrades(gradeId) {
           const scoreVal = rec.score ?? "";
 
           return `
-         <tr data-record-id="${rec.id}">
+ <tr data-record-id="${rec.id}">
           <td>${studentId}</td>
           <td>${studentName}</td>
           <td class="form-group">
@@ -1250,15 +1267,16 @@ async function handleEditGrades(gradeId) {
               type="number" 
               class="edit-score-input" 
               data-record-id="${rec.id}"
+              data-student-id="${rec.student_id}"
               data-initial-value="${scoreVal}"
               value="${scoreVal}" 
-             placeholder="0 - ${finalMaxMarks ?? "Max"}" 
-               step="0.01"
-               min="0"
-               ${finalMaxMarks !== null ? `max="${finalMaxMarks}"` : ""}
+              placeholder="0 - ${finalMaxMarks ?? "Max"}" 
+              step="0.01"
+              min="0"
+              ${finalMaxMarks !== null ? `max="${finalMaxMarks}"` : ""}
             />
           </td>
-        </tr>`;
+         </tr>`;
         })
         .join("");
     }
@@ -1379,8 +1397,33 @@ document
         if (gradeErr) throw gradeErr;
       }
 
+      const { data: gradeDetails, error: detailsErr } = await client
+        .from("grades")
+        .select(
+          `
+          subjects ( name ),
+          assessment_categories ( name )
+        `,
+        )
+        .eq("id", currentEditGradeId)
+        .single();
+
+      if (detailsErr) {
+        console.warn(
+          "Could not fetch grade details for notification text:",
+          detailsErr,
+        );
+      }
+
+      const subjectName = gradeDetails?.subjects?.name || "Subject";
+      const categoryName =
+        gradeDetails?.assessment_categories?.name || "Assessment";
+
+      const updatedRecordsInfo = [];
+
       const updatePromises = Array.from(inputs).map((input) => {
         const recordId = input.dataset.recordId;
+        const studentId = input.dataset.studentId; // Ensure your edit input has data-student-id
         const rawVal = input.value.trim();
 
         let score = null;
@@ -1390,6 +1433,8 @@ document
             throw new Error(`Invalid score number for student record.`);
           score = parsed;
         }
+
+        updatedRecordsInfo.push({ student_id: studentId, score: score });
 
         return client
           .from("grade_records")
@@ -1406,6 +1451,28 @@ document
 
       closeModal(document.getElementById("editGradeModal"));
       if (typeof loadGradesList === "function") loadGradesList();
+
+      const isSubmittedState = currentStatus === "submitted";
+
+      if (isSubmittedState && typeof window.sendNotification === "function") {
+        await Promise.all(
+          updatedRecordsInfo.map(async (record) => {
+            if (!record.student_id) {
+              return;
+            }
+            const scoreText = record.score !== null ? record.score : "N/A";
+            const message = `Your grade for ${subjectName} (${categoryName}) has been updated. New Score: ${scoreText}.`;
+
+            return window.sendNotification(
+              null, 
+              record.student_id,
+              "Grade Updated",
+              message,
+              "academic",
+            );
+          }),
+        );
+      }
     } catch (err) {
       console.error("Error saving updated grades:", err);
       if (typeof showToast === "function") {

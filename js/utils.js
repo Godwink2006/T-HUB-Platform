@@ -642,3 +642,36 @@ function prependActivityToUI(activity) {
     listContainer.removeChild(items[items.length - 1]);
   }
 }
+
+window.sendNotification = async function (
+  schoolId,
+  userId,
+  title,
+  message,
+  type = "general",
+) {
+  try {
+    const payload = {
+      user_id: userId,
+      title: title,
+      message: message,
+      type: type,
+      is_read: false,
+    };
+
+    // Only add school_id if it's provided, otherwise let the DB trigger handle it
+    if (schoolId) {
+      payload.school_id = schoolId;
+    }
+
+    const { data, error } = await window.supabaseClient
+      .from("notifications")
+      .insert([payload]);
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error("Failed to send notification:", err);
+    return { success: false, error: err };
+  }
+};
