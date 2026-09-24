@@ -526,31 +526,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// --- GLOBAL RECENT ACTIVITIES UTILITIES ---
+async function logActivity(
+  schoolId,
+  description,
+  color,
+  targetAudience = "Everyone",
+) {
+  const { error } = await window.supabaseClient
+    .from("recent_activities")
+    .insert([
+      {
+        school_id: schoolId,
+        message: description,
+        dot_color: color,
+        target_audience: targetAudience,
+      },
+    ]);
 
-async function logActivity(schoolId, message, color = "green") {
-  if (!schoolId || !message) {
-    console.warn("Missing schoolId or message for logging activity.");
-    return;
-  }
-
-  try {
-    const { error } = await window.supabaseClient
-      .from("recent_activities")
-      .insert([
-        {
-          school_id: schoolId,
-          message: message,
-          dot_color: color,
-        },
-      ]);
-
-    if (error) {
-      console.error("Error logging activity:", error.message);
-    }
-  } catch (err) {
-    console.error("Unexpected error in logActivity:", err);
-  }
+  if (error) console.error("Error logging activity:", error);
 }
 
 async function loadRecentActivities(schoolId) {
@@ -589,7 +582,15 @@ async function loadRecentActivities(schoolId) {
   }
 }
 
-function subscribeToRecentActivities(schoolId) {
+async function subscribeToRecentActivities(schoolId, userRole) {
+  const existingChannel = window.supabaseClient
+    .getChannels()
+    .find((c) => c.topic === "realtime:public:recent_activities");
+
+  if (existingChannel) {
+    await window.supabaseClient.removeChannel(existingChannel);
+  }
+
   window.supabaseClient
     .channel("public:recent_activities")
     .on(
@@ -601,8 +602,20 @@ function subscribeToRecentActivities(schoolId) {
         filter: `school_id=eq.${schoolId}`,
       },
       (payload) => {
-        const newActivity = payload.new;
-        prependActivityToUI(newActivity);
+        const activity = payload.new;
+        const targetAudience = activity.target_audience || "Everyone";
+
+        // Split comma-separated audiences (e.g., "Teachers, Students")
+        const allowedAudiences = targetAudience.split(",").map((a) => a.trim());
+
+        // Only display if it matches the user's role or is for everyone/all
+        if (
+          allowedAudiences.includes("Everyone") ||
+          allowedAudiences.includes("All") ||
+          allowedAudiences.includes(userRole)
+        ) {
+          prependActivityToUI(activity);
+        }
       },
     )
     .subscribe();

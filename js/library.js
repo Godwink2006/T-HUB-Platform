@@ -299,7 +299,6 @@ async function handleSaveBook() {
 
     showToast("Book added successfully!", "success");
 
-    await loadRecentActivities(schoolId);
     subscribeToRecentActivities(schoolId);
 
     bookForm.reset();
@@ -1026,6 +1025,8 @@ async function handleSaveBorrow() {
     const modal = document.getElementById("addBorrowModal");
     if (modal) modal.style.display = "none";
 
+    unLockBodyScroll();
+
     if (typeof loadBooksTable === "function") {
       loadBooksTable();
     }
@@ -1202,6 +1203,7 @@ if (returnForm) {
       }
 
       document.getElementById("returnBorrowModal").style.display = "none";
+      unLockBodyScroll();
       if (typeof loadBooksTable === "function") loadBooksTable();
     } catch (err) {
       console.error("Error processing return:", err);

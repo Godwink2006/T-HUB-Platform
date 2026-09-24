@@ -120,7 +120,6 @@ function disableFormInputs(form) {
   }
 }
 
-
 async function initFormProtection() {
   const form =
     document.getElementById("schoolProfileForm") ||
@@ -223,16 +222,17 @@ async function handleFormSubmit() {
   const logoFile = logoInput?.files[0];
 
   let hasChanges = Boolean(logoFile);
+  const changedFields = []; // Track exact fields that changed
+  if (logoFile) changedFields.push("School Logo");
 
-  if (!hasChanges) {
-    for (const key in formData) {
-      const currentValue = formData[key] ?? "";
-      const originalValue = originalSchoolData[key] ?? "";
+  for (const key in formData) {
+    const currentValue = formData[key] ?? "";
+    const originalValue = originalSchoolData[key] ?? "";
 
-      if (currentValue.toString().trim() !== originalValue.toString().trim()) {
-        hasChanges = true;
-        break;
-      }
+    if (currentValue.toString().trim() !== originalValue.toString().trim()) {
+      hasChanges = true;
+      // Convert snake_case to a clean readable format (e.g., "principal_name" -> "principal name")
+      changedFields.push(key.replace(/_/g, " "));
     }
   }
 
@@ -343,6 +343,7 @@ async function handleFormSubmit() {
 
     let savedRecord;
     let error;
+    const isNewRecord = !existingRecordId;
 
     if (existingRecordId) {
       const { data, error: updateErr } = await supabaseClient
@@ -378,6 +379,28 @@ async function handleFormSubmit() {
     }
 
     showToast("School information saved successfully!", "success");
+
+    if (typeof logActivity === "function" && savedRecord) {
+      const schoolId = savedRecord.id;
+      let activityMessage = "School information updated";
+
+      if (isNewRecord) {
+        activityMessage = `School profile initialized: ${savedRecord.school_name || "New School"}`;
+      } else if (changedFields.length > 0) {
+        // Capitalize fields for a clean look
+        const formattedFields = changedFields
+          .map((f) => f.charAt(0).toUpperCase() + f.slice(1))
+          .join(", ");
+        activityMessage = `School details updated: ${formattedFields}`;
+      }
+
+      await logActivity(
+        schoolId,
+        activityMessage,
+        "purple", // Distinct color for system/school updates
+        "Everyone", // Broadcast to all roles in the school
+      );
+    }
   } catch (err) {
     console.error("Error saving profile:", err.message);
     showToast("Failed to save settings: " + err.message, "error");
@@ -400,7 +423,6 @@ function setValue(id, val) {
     el.value = val;
   }
 }
-
 
 function resetToOriginalData() {
   if (!originalSchoolData || Object.keys(originalSchoolData).length === 0) {
@@ -482,4 +504,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 });
-

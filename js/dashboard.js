@@ -175,7 +175,12 @@ if (saveAnnouncementBtn) {
 
       if (insertError) throw insertError;
 
-      await logActivity(schoolId, `New Announcement: ${title}`, "blue");
+      await logActivity(
+        schoolId,
+        `New Announcement: ${title}`,
+        "blue",
+        target_audience,
+      );
 
       if (typeof showToast === "function") {
         showToast("Announcement published successfully!", "success");
@@ -216,6 +221,9 @@ function escapeHtml(str) {
 async function loadDashboardAnnouncements() {
   const previewContainer = document.querySelector(".announcement-preview");
   const openAnnouncementBtn = document.getElementById("openAnnouncementModal");
+  const openClassBtn = document.getElementById("class-dashboard-card");
+  const openStudentBtn = document.getElementById("student-dashboard-card");
+  const openTeacherBtn = document.getElementById("teacher-dashboard-card");
   const welcomeText = document.getElementById("welcomeUserText");
   if (!previewContainer) return;
 
@@ -250,9 +258,17 @@ async function loadDashboardAnnouncements() {
       welcomeText.textContent = `Welcome back, ${profile.full_name || "User"}`;
     }
     // Show "New Announcement" button only if the user is an admin
-    if (openAnnouncementBtn) {
+    if (
+      openAnnouncementBtn ||
+      openClassBtn ||
+      openStudentBtn ||
+      openTeacherBtn
+    ) {
       if (profile.role === "admin") {
-        openAnnouncementBtn.style.display = "flex"; // Replaces the CSS default only for admins
+        openAnnouncementBtn.style.display = "flex";
+        openClassBtn.style.display = "block";
+        openStudentBtn.style.display = "block";
+        openTeacherBtn.style.display = "block"; // Replaces the CSS default only for admins
       }
     }
 
@@ -513,7 +529,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     subscribeToRecentActivities(schoolId);
 
     loadDashboardStats(schoolId);
-    loadDashboardAnnouncements(schoolId);
   } catch (err) {
     console.error("Error loading dashboard data:", err);
   }

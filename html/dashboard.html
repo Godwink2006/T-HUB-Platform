@@ -161,7 +161,7 @@
         </section>
 
         <section class="dashboard-cards">
-          <div class="dashboard-card">
+          <div id="student-dashboard-card" class="dashboard-card">
             <h4>Total Students</h4>
             <h2 id="totalStudentsCount">...</h2>
             <p
@@ -172,7 +172,7 @@
             </p>
           </div>
 
-          <div class="dashboard-card">
+          <div id="teacher-dashboard-card" class="dashboard-card">
             <h4>Total Teachers</h4>
             <h2 id="totalTeachersCount">...</h2>
             <p
@@ -183,7 +183,7 @@
             </p>
           </div>
 
-          <div class="dashboard-card">
+          <div id="class-dashboard-card" class="dashboard-card">
             <h4>Classes</h4>
             <h2 id="totalClassesCount">...</h2>
             <p
@@ -207,6 +207,20 @@
         </section>
 
         <section class="dashboard-grid">
+          <div class="dashboard-activity-card">
+            <div class="dashboard-card-header">
+              <h3>Recent Activities</h3>
+            </div>
+
+            <!-- Added id here -->
+            <ul id="recentActivitiesList" class="dashboard-activity-list">
+              <li>
+                <span class="dashboard-dot green"></span>
+                Loading recent activities...
+              </li>
+            </ul>
+          </div>
+
           <div class="dashboard-chart-card">
             <div class="dashboard-card-header">
               <h3>Student Enrollment</h3>
@@ -229,20 +243,6 @@
             </div>
 
             <div class="dashboard-chart-placeholder">Chart Area</div>
-          </div>
-
-          <div class="dashboard-activity-card">
-            <div class="dashboard-card-header">
-              <h3>Recent Activities</h3>
-            </div>
-
-            <!-- Added id here -->
-            <ul id="recentActivitiesList" class="dashboard-activity-list">
-              <li>
-                <span class="dashboard-dot green"></span>
-                Loading recent activities...
-              </li>
-            </ul>
           </div>
         </section>
       </main>
