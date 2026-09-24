@@ -260,8 +260,11 @@ async function handleSaveBook() {
 
     saveButton.textContent = "Inserting into database...";
 
+    const schoolId = profile.school_id;
+
     const { data, error } = await window.supabaseClient.from("books").insert([
       {
+        school_id: schoolId,
         book_code: book_code,
         title: title,
         author: author,
@@ -277,7 +280,12 @@ async function handleSaveBook() {
 
     if (error) throw error;
 
+    await logActivity(schoolId, `New Book Added: ${title}`, "green");
+
     showToast("Book added successfully!", "success");
+
+    await loadRecentActivities(schoolId);
+    subscribeToRecentActivities(schoolId);
 
     bookForm.reset();
 

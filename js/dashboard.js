@@ -482,3 +482,39 @@ async function loadDashboardStats(schoolId) {
     console.error("Error loading dashboard stats:", err);
   }
 }
+
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    // 1. Get the current logged-in user from Supabase Auth
+    const {
+      data: { user },
+      error: authError,
+    } = await window.supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.warn("No active user session found.");
+      return;
+    }
+
+    // 2. Fetch the user's profile to get their school_id
+    const { data: profile, error: profileError } = await window.supabaseClient
+      .from("profiles")
+      .select("school_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile || !profile.school_id) {
+      console.error("Could not determine user school ID.");
+      return;
+    }
+
+    const schoolId = profile.school_id;
+
+    await loadRecentActivities(schoolId);
+    subscribeToRecentActivities(schoolId);
+
+    loadDashboardStats(schoolId);
+    loadDashboardAnnouncements(schoolId);
+  } catch (err) {
+    console.error("Error loading dashboard data:", err);
+  }
+});
