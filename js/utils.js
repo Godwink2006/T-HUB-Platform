@@ -556,7 +556,7 @@ async function loadRecentActivities(schoolId) {
       .select("message, dot_color, created_at")
       .eq("school_id", schoolId)
       .order("created_at", { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (!error && activities && activities.length > 0) {
       listContainer.innerHTML = activities

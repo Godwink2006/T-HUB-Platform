@@ -296,6 +296,8 @@ body {
   border: 18px;
   padding: 25px;
   border: 2px solid rgb(219, 215, 215);
+  overflow-y: auto;
+  height: 470px;
 }
 
 .dashboard-card-header {
