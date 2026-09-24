@@ -260,6 +260,21 @@ async function handleSaveBook() {
 
     saveButton.textContent = "Inserting into database...";
 
+    const {
+      data: { user },
+      error: authError,
+    } = await window.supabaseClient.auth.getUser();
+    if (authError) throw authError;
+
+    const { data: profile, error: profileError } = await window.supabaseClient
+      .from("profiles")
+      .select("school_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile)
+      throw new Error("Could not determine user school.");
+
     const schoolId = profile.school_id;
 
     const { data, error } = await window.supabaseClient.from("books").insert([
