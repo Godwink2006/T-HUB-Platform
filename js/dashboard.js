@@ -463,6 +463,7 @@ async function loadDashboardStats(schoolId) {
         .from("attendance_records")
         .select("status")
         .eq("school_id", schoolId)
+        .eq("status", "active")
         .gte("created_at", `${today}T00:00:00`)
         .lte("created_at", `${today}T23:59:59`);
 
