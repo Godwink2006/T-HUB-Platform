@@ -46,7 +46,7 @@ function renderBookCards(booksToRender) {
     gridContainer.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #64748b;">
         <i class="fa-solid fa-book-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-        No books available matching your search.
+        No books available.
       </div>
     `;
     return;

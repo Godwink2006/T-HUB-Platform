@@ -224,6 +224,12 @@ async function loadDashboardAnnouncements() {
   const openClassBtn = document.getElementById("class-dashboard-card");
   const openStudentBtn = document.getElementById("student-dashboard-card");
   const openTeacherBtn = document.getElementById("teacher-dashboard-card");
+  const openAttendanceBtn = document.getElementById(
+    "attendance-dashboard-card",
+  );
+  const openEnrollmentBtn = document.getElementById(
+    "enrollment-dashboard-card",
+  );
   const welcomeText = document.getElementById("welcomeUserText");
   if (!previewContainer) return;
 
@@ -257,19 +263,25 @@ async function loadDashboardAnnouncements() {
     if (welcomeText) {
       welcomeText.textContent = `Welcome back, ${profile.full_name || "User"}`;
     }
-    // Show "New Announcement" button only if the user is an admin
-    if (
-      openAnnouncementBtn ||
-      openClassBtn ||
-      openStudentBtn ||
-      openTeacherBtn
-    ) {
-      if (profile.role === "admin") {
-        openAnnouncementBtn.style.display = "flex";
-        openClassBtn.style.display = "block";
-        openStudentBtn.style.display = "block";
-        openTeacherBtn.style.display = "block"; // Replaces the CSS default only for admins
-      }
+    // 1. Admin-only buttons check
+    if (profile.role === "admin") {
+      if (openAnnouncementBtn) openAnnouncementBtn.style.display = "flex";
+      if (openClassBtn) openClassBtn.style.display = "block";
+      if (openStudentBtn) openStudentBtn.style.display = "block";
+      if (openTeacherBtn) openTeacherBtn.style.display = "block";
+    }
+
+    // 2. Staff roles check for enrollment button (using .includes() instead of commas)
+    const allowedStaffRoles = ["admin", "teacher", "accountant", "librarian"];
+
+    if (allowedStaffRoles.includes(profile.role)) {
+      if (openEnrollmentBtn) openEnrollmentBtn.style.display = "block";
+    }
+
+    const allowedAttendanceRoles = ["admin", "teacher", "student"];
+
+    if (allowedAttendanceRoles.includes(profile.role)) {
+      if (openAttendanceBtn) openAttendanceBtn.style.display = "block";
     }
 
     const today = new Date().toISOString().split("T")[0];
@@ -524,12 +536,151 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const schoolId = profile.school_id;
+    window.currentSchoolId = schoolId;
 
     await loadRecentActivities(schoolId);
     subscribeToRecentActivities(schoolId);
 
     loadDashboardStats(schoolId);
+    loadEnrollmentStats(schoolId);
+    loadEnrollmentStats("year");
   } catch (err) {
     console.error("Error loading dashboard data:", err);
   }
+});
+
+async function loadEnrollmentStats(
+  filterType = "year",
+  customStart = null,
+  customEnd = null,
+) {
+  try {
+    const activeSchoolId = window.currentSchoolId;
+
+    if (!activeSchoolId) {
+      console.warn("Active school ID not found yet.");
+      return;
+    }
+
+    let query = window.supabaseClient
+      .from("profiles")
+      .select("id, status, created_at, students(gender)")
+      .eq("school_id", activeSchoolId)
+      .eq("role", "student");
+
+    const now = new Date();
+
+    if (filterType === "today") {
+      const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+      query = query.gte("created_at", startOfDay);
+    } else if (filterType === "week") {
+      const startOfWeek = new Date(
+        now.setDate(now.getDate() - 7),
+      ).toISOString();
+      query = query.gte("created_at", startOfWeek);
+    } else if (filterType === "month") {
+      const startOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1,
+      ).toISOString();
+      query = query.gte("created_at", startOfMonth);
+    } else if (filterType === "year") {
+      const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
+      query = query.gte("created_at", startOfYear);
+    } else if (filterType === "custom" && customStart && customEnd) {
+      query = query
+        .gte("created_at", `${customStart}T00:00:00`)
+        .lte("created_at", `${customEnd}T23:59:59`);
+    }
+
+    const { data: profiles, error } = await query;
+    if (error) throw error;
+
+    const total = profiles.length;
+    const active = profiles.filter(
+      (p) => (p.status || "").toLowerCase() === "active",
+    ).length;
+
+    let boys = 0;
+    let girls = 0;
+
+    profiles.forEach((p) => {
+      const studentData = Array.isArray(p.students)
+        ? p.students[0]
+        : p.students;
+      if (studentData && studentData.gender) {
+        const g = studentData.gender.toLowerCase();
+        if (g === "male") boys++;
+        if (g === "female") girls++;
+      }
+    });
+
+    document.getElementById("totalEnrollmentCount").textContent =
+      total.toLocaleString();
+    document.getElementById("activeEnrollmentCount").textContent =
+      active.toLocaleString();
+    document.getElementById("genderBreakdownCount").textContent =
+      `${boys} / ${girls}`;
+  } catch (err) {
+    console.error("Error loading enrollment stats:", err);
+  }
+}
+
+const dateModal = document.getElementById("dateRangeModal");
+const closeDateModalBtn = document.getElementById("closeDateModal");
+const cancelDateModalBtn = document.getElementById("cancelDateModal");
+const applyDateBtn = document.getElementById("applyDateBtn");
+
+// 1. Open modal when "Custom Date Range" is clicked in the dropdown
+document
+  .querySelector(".filter-menu a.custom-date")
+  .addEventListener("click", (e) => {
+    e.preventDefault();
+    dateModal.style.display = "flex"; // Or whatever class/display style your app uses for modals
+  });
+
+closeDateModalBtn.addEventListener("click", closeDateModal);
+cancelDateModalBtn.addEventListener("click", closeDateModal);
+
+// 3. Apply custom date filter
+applyDateBtn.addEventListener("click", async () => {
+  const startDate = document.getElementById("startDateInput").value;
+  const endDate = document.getElementById("endDateInput").value;
+
+  if (!startDate || !endDate) {
+    showToast("Please select both start and end dates.", "error");
+    return;
+  }
+
+  if (startDate > endDate) {
+    showToast("Start date cannot be after end date.", "error");
+    return;
+  }
+
+  // Update the dropdown button text to show the active custom range
+  const btnSpan = document.querySelector(".filter-dropdown .selected-filter");
+  if (btnSpan) btnSpan.textContent = `${startDate} to ${endDate}`;
+
+  dateModal.style.display = "flex";
+
+  // Call your stats function with custom date parameters
+  await loadEnrollmentStats("custom", startDate, endDate);
+});
+// Handle dropdown filter menu clicks
+document.querySelectorAll(".filter-menu a").forEach((link) => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const filterText = e.target.textContent;
+    const filterType = e.target.getAttribute("data-filter");
+
+    // Update button text
+    const btnSpan = e.target
+      .closest(".filter-dropdown")
+      .querySelector(".selected-filter");
+    if (btnSpan) btnSpan.textContent = filterText;
+
+    // Reload stats with the selected range
+    loadEnrollmentStats(filterType);
+  });
 });

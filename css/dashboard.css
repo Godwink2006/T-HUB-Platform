@@ -16,7 +16,9 @@ body {
 #openAnnouncementModal,
 #class-dashboard-card,
 #student-dashboard-card,
-#teacher-dashboard-card {
+#teacher-dashboard-card,
+#enrollment-dashboard-card,
+#attendance-dashboard-card {
   display: none;
 }
 
@@ -324,16 +326,6 @@ body {
   font-size: 14px;
 }
 
-.dashboard-chart-placeholder {
-  height: 320px;
-  border: 5px dashed rgb(219, 215, 215);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #9ca3af;
-  font-size: 18px;
-}
-
 .dashboard-activity-list {
   list-style: none;
 }
@@ -546,7 +538,78 @@ body {
   .checkbox-group,
   .announcement-modal-content,
   .announcement-modal-header button,
-  .filter-menu {
+  .filter-menu,
+  .enrollment-stats-body,
+  .sub-stat-item {
     border-radius: 10px;
   }
+}
+
+.enrollment-stats-body {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 5px dashed rgb(219, 215, 215);
+}
+
+.main-stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.main-stat-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sub-stats-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border-top: 2px solid rgb(219, 215, 215);
+  padding-top: 15px;
+}
+
+.sub-stat-item {
+  background: #edf3f8;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sub-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-bottom: 2px;
+}
+
+.green-dot {
+  background: #22c55e;
+}
+.blue-dot {
+  background: #2563eb;
+}
+
+.sub-label {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.sub-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #334155;
 }

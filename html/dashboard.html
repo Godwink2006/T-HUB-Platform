@@ -194,7 +194,7 @@
             </p>
           </div>
 
-          <div class="dashboard-card">
+          <div id="attendance-dashboard-card" class="dashboard-card">
             <h4>Attendance Today</h4>
             <h2 id="attendanceCount">...</h2>
             <p
@@ -221,28 +221,49 @@
             </ul>
           </div>
 
-          <div class="dashboard-chart-card">
+          <div id="enrollment-dashboard-card" class="dashboard-chart-card">
             <div class="dashboard-card-header">
               <h3>Student Enrollment</h3>
 
               <div class="filter-dropdown">
                 <button class="filter-btn">
-                  This Year
+                  <span class="selected-filter">This Year</span>
                   <i class="fa-solid fa-chevron-down"></i>
                 </button>
 
                 <div class="filter-menu">
-                  <a href="#">Today</a>
-                  <a href="#">This Week</a>
-                  <a href="#">This Month</a>
-                  <a href="#">This Term</a>
-                  <a href="#">This Year</a>
-                  <a href="#" class="custom-date">Custom Date Range</a>
+                  <a href="#" data-filter="today">Today</a>
+                  <a href="#" data-filter="week">This Week</a>
+                  <a href="#" data-filter="month">This Month</a>
+                  <a href="#" data-filter="term">This Term</a>
+                  <a href="#" data-filter="year">This Year</a>
+                  <a href="#" class="custom-date" data-filter="custom"
+                    >Custom Date Range</a
+                  >
                 </div>
               </div>
             </div>
 
-            <div class="dashboard-chart-placeholder">Chart Area</div>
+            <!-- 👉 NEW STABLE METRICS CONTENT -->
+            <div class="enrollment-stats-body">
+              <div class="main-stat-number" id="totalEnrollmentCount">--</div>
+              <div class="main-stat-label">Total Enrolled Students</div>
+
+              <div class="sub-stats-grid">
+                <div class="sub-stat-item">
+                  <span class="sub-dot green-dot"></span>
+                  <span class="sub-label">Active</span>
+                  <span class="sub-value" id="activeEnrollmentCount">--</span>
+                </div>
+                <div class="sub-stat-item">
+                  <span class="sub-dot blue-dot"></span>
+                  <span class="sub-label">Boys / Girls</span>
+                  <span class="sub-value" id="genderBreakdownCount"
+                    >-- / --</span
+                  >
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -252,30 +273,30 @@
       <div class="date-modal-content">
         <div class="date-modal-header">
           <h2>Custom Date Range</h2>
-
           <button id="closeDateModal">&times;</button>
         </div>
 
         <div class="date-modal-body">
           <div class="form-group">
             <label>From</label>
-            <input type="date" />
+            <input type="date" id="startDateInput" />
+            <!-- Added ID -->
           </div>
 
           <div class="form-group">
             <label>To</label>
-            <input type="date" />
+            <input type="date" id="endDateInput" />
+            <!-- Added ID -->
           </div>
 
           <div class="date-modal-footer">
             <button id="cancelDateModal" class="cancel-btn">Cancel</button>
-
-            <button class="save-btn">Apply Filter</button>
+            <button id="applyDateBtn" class="save-btn">Apply Filter</button>
+            <!-- Added ID -->
           </div>
         </div>
       </div>
     </div>
-
     <div
       id="announcementModal"
       class="announcement-modal"
