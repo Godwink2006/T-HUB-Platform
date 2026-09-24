@@ -525,3 +525,75 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+async function logActivity(schoolId, message, color = "green") {
+  if (!schoolId || !message) {
+    console.warn("Missing schoolId or message for logging activity.");
+    return;
+  }
+
+  try {
+    const { error } = await window.supabaseClient
+      .from("recent_activities")
+      .insert([
+        {
+          school_id: schoolId,
+          message: message,
+          dot_color: color,
+        },
+      ]);
+
+    if (error) {
+      console.error("Error logging activity:", error.message);
+    }
+  } catch (err) {
+    console.error("Unexpected error in logActivity:", err);
+  }
+}
+
+// Function to listen for live updates
+function subscribeToRecentActivities(schoolId) {
+  window.supabaseClient
+    .channel("public:recent_activities")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "recent_activities",
+        filter: `school_id=eq.${schoolId}`,
+      },
+      (payload) => {
+        const newActivity = payload.new;
+        prependActivityToUI(newActivity);
+      },
+    )
+    .subscribe();
+}
+
+// Helper to prepend the new item and keep only the top 5 visible
+function prependActivityToUI(activity) {
+  const listContainer = document.getElementById("recentActivitiesList");
+  if (!listContainer) return;
+
+  // Remove the "No activities" placeholder if it's there
+  if (listContainer.innerHTML.includes("No recent activities")) {
+    listContainer.innerHTML = "";
+  }
+
+  // Create the new list item element
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <span class="dashboard-dot ${activity.dot_color || "green"}"></span>
+    ${activity.message}
+  `;
+
+  // Insert at the very top of the list
+  listContainer.prepend(li);
+
+  // Keep the list trimmed to a maximum of 5 items
+  const items = listContainer.getElementsByTagName("li");
+  if (items.length > 5) {
+    listContainer.removeChild(items[items.length - 1]);
+  }
+}

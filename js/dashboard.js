@@ -157,11 +157,13 @@ if (saveAnnouncementBtn) {
       if (profileError || !profile)
         throw new Error("Could not determine user school.");
 
+      const schoolId = profile.school_id;
+
       const { error: insertError } = await window.supabaseClient
         .from("announcements")
         .insert([
           {
-            school_id: profile.school_id,
+            school_id: schoolId,
             title: title,
             message: message,
             status: status,
@@ -173,9 +175,14 @@ if (saveAnnouncementBtn) {
 
       if (insertError) throw insertError;
 
+      await logActivity(schoolId, `New Announcement: ${title}`, "blue");
+
       if (typeof showToast === "function") {
         showToast("Announcement published successfully!", "success");
       }
+
+      await loadRecentActivities(schoolId);
+      subscribeToRecentActivities(schoolId);
 
       closeAnnounceModal();
 
