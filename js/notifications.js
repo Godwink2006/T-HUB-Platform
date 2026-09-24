@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         (item) => `
             <div data-id="${item.id}" class="notif-item" style="padding: 16px 20px; border-bottom: 1px solid #f3f4f6; background: ${item.is_read ? "white" : "#f8fafc"}; display: flex; justify-content: space-between; align-items: flex-start; transition: background 0.2s; cursor: pointer;">
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
-                    <div style="margin-top: 4px; width: 8px; height: 8px; border-radius: 50%; background: ${item.is_read ? "transparent" : "#2563eb"};"></div>
+                    <div style="margin-top: 4px; flex-shrink: 0; width: 12px; height: 12px; border-radius: 50%; background: ${item.is_read ? "transparent" : "#2563eb"};"></div>
                     <div>
                         <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: ${item.is_read ? "500" : "600"}; color: #111827;">${item.title}</h4>
                         <p style="margin: 0 0 6px 0; font-size: 13px; color: #4b5563; line-height: 1.4;">${item.message}</p>

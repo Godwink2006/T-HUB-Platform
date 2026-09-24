@@ -1,0 +1,85 @@
+/* Page Layout */
+.notifications-page {
+  padding: 10px;
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+.notifications-header .page-title {
+  margin: 0;
+  font-size: 24px;
+  color: #111827;
+}
+
+.notifications-header .page-subtitle {
+  margin: 4px 0 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Action Button */
+.btn-primary-action {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-primary-action:hover {
+  background: #1d4ed8;
+}
+
+/* Filter Tabs Container */
+.notif-tabs-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgb(219, 215, 215);
+  padding-bottom: 12px;
+}
+
+/* Base Filter Tab Style */
+.notif-tab {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Active Filter Tab Modifier */
+.notif-tab.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* Notifications List Container */
+.notifications-card-list {
+  background: white;
+  border: 2px solid rgb(219, 215, 215);
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.notifications-loading-state {
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+}

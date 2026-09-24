@@ -13,7 +13,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>High School Management System</title>
-    <link rel="stylesheet" href="/css/my-grades.css" />
+    <link rel="stylesheet" href="/css/notifications.css" />
     <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,109 +31,27 @@
     <div class="app-container">
       <!-- Sidebar (Keep your standard sidebar here) -->
 
-      <main class="main-content" style="padding: 30px">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-          "
-        >
+      <main class="main-content notifications-page">
+        <div class="notifications-header">
           <div>
-            <h1 style="margin: 0; font-size: 24px; color: #111827">
-              Notifications
-            </h1>
-            <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 14px">
-              Manage your school alerts and updates
-            </p>
+            <h1 class="page-title">Notifications</h1>
+            <p class="page-subtitle">Manage your school alerts and updates</p>
           </div>
-          <button
-            id="markAllReadBtn"
-            style="
-              background: #2563eb;
-              color: white;
-              border: none;
-              padding: 10px 16px;
-              border-radius: 6px;
-              cursor: pointer;
-              font-size: 13px;
-              font-weight: 500;
-            "
-          >
+          <button id="markAllReadBtn" class="btn-primary-action">
             Mark all as read
           </button>
         </div>
 
         <!-- Filter Tabs -->
-        <div
-          style="
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 12px;
-          "
-        >
-          <button
-            class="notif-tab active"
-            data-filter="all"
-            style="
-              background: #eff6ff;
-              color: #2563eb;
-              border: none;
-              padding: 8px 16px;
-              border-radius: 20px;
-              font-weight: 600;
-              cursor: pointer;
-            "
-          >
-            All
-          </button>
-          <button
-            class="notif-tab"
-            data-filter="unread"
-            style="
-              background: #f3f4f6;
-              color: #4b5563;
-              border: none;
-              padding: 8px 16px;
-              border-radius: 20px;
-              font-weight: 500;
-              cursor: pointer;
-            "
-          >
-            Unread
-          </button>
-          <button
-            class="notif-tab"
-            data-filter="read"
-            style="
-              background: #f3f4f6;
-              color: #4b5563;
-              border: none;
-              padding: 8px 16px;
-              border-radius: 20px;
-              font-weight: 500;
-              cursor: pointer;
-            "
-          >
-            Read
-          </button>
+        <div class="notif-tabs-container">
+          <button class="notif-tab active" data-filter="all">All</button>
+          <button class="notif-tab" data-filter="unread">Unread</button>
+          <button class="notif-tab" data-filter="read">Read</button>
         </div>
 
         <!-- Notifications Container List -->
-        <div
-          id="fullNotificationList"
-          style="
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-          "
-        >
-          <div style="padding: 24px; text-align: center; color: #6b7280">
+        <div id="fullNotificationList" class="notifications-card-list">
+          <div class="notifications-loading-state">
             Loading notifications...
           </div>
         </div>
