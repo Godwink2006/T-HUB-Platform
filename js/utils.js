@@ -526,6 +526,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// --- GLOBAL RECENT ACTIVITIES UTILITIES ---
+
 async function logActivity(schoolId, message, color = "green") {
   if (!schoolId || !message) {
     console.warn("Missing schoolId or message for logging activity.");
@@ -551,7 +553,42 @@ async function logActivity(schoolId, message, color = "green") {
   }
 }
 
-// Function to listen for live updates
+async function loadRecentActivities(schoolId) {
+  const listContainer = document.getElementById("recentActivitiesList");
+  if (!listContainer) return;
+
+  try {
+    const { data: activities, error } = await window.supabaseClient
+      .from("recent_activities")
+      .select("message, dot_color, created_at")
+      .eq("school_id", schoolId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (!error && activities && activities.length > 0) {
+      listContainer.innerHTML = activities
+        .map(
+          (act) => `
+        <li>
+          <span class="dashboard-dot ${act.dot_color || "green"}"></span>
+          ${act.message}
+        </li>
+      `,
+        )
+        .join("");
+    } else {
+      listContainer.innerHTML = `
+        <li>
+          <span class="dashboard-dot green"></span>
+          No recent activities recorded yet
+        </li>
+      `;
+    }
+  } catch (err) {
+    console.error("Error loading recent activities:", err);
+  }
+}
+
 function subscribeToRecentActivities(schoolId) {
   window.supabaseClient
     .channel("public:recent_activities")
@@ -571,27 +608,22 @@ function subscribeToRecentActivities(schoolId) {
     .subscribe();
 }
 
-// Helper to prepend the new item and keep only the top 5 visible
 function prependActivityToUI(activity) {
   const listContainer = document.getElementById("recentActivitiesList");
   if (!listContainer) return;
 
-  // Remove the "No activities" placeholder if it's there
   if (listContainer.innerHTML.includes("No recent activities")) {
     listContainer.innerHTML = "";
   }
 
-  // Create the new list item element
   const li = document.createElement("li");
   li.innerHTML = `
     <span class="dashboard-dot ${activity.dot_color || "green"}"></span>
     ${activity.message}
   `;
 
-  // Insert at the very top of the list
   listContainer.prepend(li);
 
-  // Keep the list trimmed to a maximum of 5 items
   const items = listContainer.getElementsByTagName("li");
   if (items.length > 5) {
     listContainer.removeChild(items[items.length - 1]);
