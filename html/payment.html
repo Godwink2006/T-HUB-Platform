@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/css/payment.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
@@ -48,20 +49,16 @@
           <input type="text" placeholder="Search students..." />
 
           <select>
-            <option>Term</option>
-            <option>Term 1</option>
+            <option>Semester</option>
+            <option></option>
           </select>
 
           <select>
             <option>Class</option>
-            <option>Grade 7B</option>
           </select>
 
           <select>
             <option>Academic Year</option>
-            <option>2026-2027</option>
-            <option>2025-2026</option>
-            <option>2024-2025</option>
           </select>
 
           <select>
@@ -86,7 +83,7 @@
               </tr>
             </thead>
 
-            <tbody>
+            <tbody id="student-fees-tbody">
               <tr>
                 <td>John Doe</td>
                 <td>Grade 8A</td>
@@ -126,11 +123,14 @@
       </main>
     </div>
 
-    <div id="addRecordPaymentModal" class="recordPayment-modal">
+    <div
+      id="addRecordPaymentModal"
+      class="recordPayment-modal"
+      style="display: none"
+    >
       <div class="recordPayment-modal-content">
         <div class="recordPayment-modal-header">
-          <h2>Record Payment</h2>
-
+          <h2>Record Itemized Payment</h2>
           <button id="cancelAddRecordPaymentModal">&times;</button>
         </div>
 
@@ -138,30 +138,32 @@
           <form id="recordPaymentForm">
             <div class="form-grid">
               <div class="form-group">
-                <label>Amount Paid *</label>
-
-                <input type="text" placeholder="Enter amount in numbers" />
-              </div>
-
-              <div class="form-group">
                 <label>Payment Method *</label>
-
-                <select>
-                  <option>Cash</option>
-                  <option>Mobile Money</option>
+                <select id="payment-method-select">
+                  <option value="Cash">Cash</option>
+                  <option value="Mobile Money">Mobile Money</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Reference Number (Optional for cash only)</label>
-
-                <input type="text" placeholder="Enter reference number" />
+                <label>Reference Number (Optional)</label>
+                <input
+                  type="text"
+                  id="payment-reference-input"
+                  placeholder="Enter reference number"
+                />
               </div>
+            </div>
 
-              <div class="form-group">
-                <label>Notes (Optional)</label>
-
-                <input type="text" placeholder="Write notes" />
+            <!-- 💡 Dynamic Itemized Allocation Container -->
+            <div class="fee-allocation-section">
+              <h4>Allocate Payment to Fee Items</h4>
+              <div id="item-allocations-container">
+                <!-- JavaScript will inject fee items and remaining balances here dynamically -->
+              </div>
+              <div class="allocation-total-display">
+                <strong>Total Payment: </strong
+                ><span id="calculated-total-payment">0.00</span>
               </div>
             </div>
 
@@ -173,19 +175,19 @@
               >
                 Cancel
               </button>
-
-              <button type="button" class="save-btn">Save Payment</button>
+              <button type="button" id="savePaymentBtn" class="save-btn">
+                Save Payment
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <div id="viewPaymentModal" class="view-payment-modal">
+    <div id="viewPaymentModal" class="view-payment-modal" style="display: none">
       <div class="view-payment-modal-content">
         <div class="view-payment-modal-header">
           <h2>Payment Details</h2>
-
           <button id="closeViewPaymentModal">&times;</button>
         </div>
 
@@ -193,22 +195,22 @@
           <div class="details-grid">
             <div class="details-item">
               <label>Student</label>
-              <p>John Doe</p>
+              <p id="modal-student-name">Loading...</p>
             </div>
 
             <div class="details-item">
               <label>Academic Year</label>
-              <p>2026-2027</p>
+              <p id="modal-academic-year">Loading...</p>
             </div>
 
             <div class="details-item">
               <label>Term</label>
-              <p>Term 1</p>
+              <p id="modal-term">Loading...</p>
             </div>
 
             <div class="details-item">
               <label>Class</label>
-              <p>Grade 8A</p>
+              <p id="modal-class">Loading...</p>
             </div>
           </div>
 
@@ -221,27 +223,8 @@
                   <th>Amount</th>
                 </tr>
               </thead>
-
-              <tbody>
-                <tr>
-                  <td>Total Fees</td>
-                  <td>RWF 500,000</td>
-                </tr>
-
-                <tr>
-                  <td>Total Paid</td>
-                  <td>RWF 200,000</td>
-                </tr>
-
-                <tr>
-                  <td>Outstanding Balance</td>
-                  <td>RWF 300,000</td>
-                </tr>
-
-                <tr>
-                  <td>Status</td>
-                  <td>Partial</td>
-                </tr>
+              <tbody id="modal-fee-summary-tbody">
+                <!-- Populated dynamically -->
               </tbody>
             </table>
           </section>
@@ -256,28 +239,15 @@
                   <th>Payment Method</th>
                 </tr>
               </thead>
-
-              <tbody>
-                <tr>
-                  <td>20 Aug 2026</td>
-                  <td>RWF 100,000</td>
-                  <td>Cash</td>
-                </tr>
-
-                <tr>
-                  <td>25 Aug 2026</td>
-                  <td>RWF 100,000</td>
-                  <td>Mobile Money</td>
-                </tr>
+              <tbody id="modal-payment-history-tbody">
+                <!-- Populated dynamically -->
               </tbody>
             </table>
           </section>
 
           <div class="view-payment-modal-footer">
             <button id="closeViewBtn" class="cancel-btn">Close</button>
-
             <button type="button" class="save-btn">Print Receipt</button>
-
             <button type="button" id="addRecordPayment" class="save-btn">
               Record Payment
             </button>
@@ -285,7 +255,10 @@
         </div>
       </div>
     </div>
+    <div id="toastContainer" class="toast-container"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/payment.js"></script>
   </body>

@@ -461,46 +461,65 @@ async function loadDashboardStats(schoolId) {
     const { data: attendanceData, error: attError } =
       await window.supabaseClient
         .from("attendance_records")
-        .select("status")
+        .select(
+          `
+          status,
+          attendance:attendance_id ( status )
+        `,
+        )
         .eq("school_id", schoolId)
-        .eq("status", "active")
         .gte("created_at", `${today}T00:00:00`)
         .lte("created_at", `${today}T23:59:59`);
 
     if (!attError && attendanceData && attendanceData.length > 0) {
-      const presentCount = attendanceData.filter(
-        (row) => (row.status || "").toLowerCase() === "present",
-      ).length;
-
-      const percentage = Math.round(
-        (presentCount / attendanceData.length) * 100,
+      // Filter only student records belonging to an attendance session whose status is "submitted"
+      const submittedRecords = attendanceData.filter(
+        (row) => (row.attendance?.status || "").toLowerCase() === "submitted",
       );
-      document.getElementById("attendanceCount").textContent = `${percentage}%`;
 
-      // Determine dynamic status subtext
-      let statusLabel = "Normal";
-      let statusColor = "#475569";
+      if (submittedRecords.length > 0) {
+        const presentCount = submittedRecords.filter(
+          (row) => (row.status || "").toLowerCase() === "present",
+        ).length;
 
-      if (percentage >= 90) {
-        statusLabel = "Excellent";
-        statusColor = "#16a34a"; // Green
-      } else if (percentage >= 75) {
-        statusLabel = "Normal";
-        statusColor = "#2563eb"; // Blue
-      } else if (percentage >= 50) {
-        statusLabel = "Needs Attention";
-        statusColor = "#d97706"; // Amber/Orange
+        const percentage = Math.round(
+          (presentCount / submittedRecords.length) * 100,
+        );
+        document.getElementById("attendanceCount").textContent =
+          `${percentage}%`;
+
+        // Determine dynamic status subtext
+        let statusLabel = "Normal";
+        let statusColor = "#475569";
+
+        if (percentage >= 90) {
+          statusLabel = "Excellent";
+          statusColor = "#16a34a"; // Green
+        } else if (percentage >= 75) {
+          statusLabel = "Normal";
+          statusColor = "#2563eb"; // Blue
+        } else if (percentage >= 50) {
+          statusLabel = "Needs Attention";
+          statusColor = "#d97706"; // Amber/Orange
+        } else {
+          statusLabel = "Bad";
+          statusColor = "#dc2626"; // Red
+        }
+
+        const subtextEl = document.getElementById("attendanceSubtext");
+        subtextEl.textContent = statusLabel;
+        subtextEl.style.color = statusColor;
+        subtextEl.style.fontWeight = "600";
       } else {
-        statusLabel = "Bad";
-        statusColor = "#dc2626"; // Red
+        // Triggered if there are records today, but none of them are officially submitted yet
+        document.getElementById("attendanceCount").textContent = "0%";
+        const subtextEl = document.getElementById("attendanceSubtext");
+        subtextEl.textContent = "No submitted records";
+        subtextEl.style.color = "#64748b";
+        subtextEl.style.fontWeight = "normal";
       }
-
-      const subtextEl = document.getElementById("attendanceSubtext");
-      subtextEl.textContent = statusLabel;
-      subtextEl.style.color = statusColor;
-      subtextEl.style.fontWeight = "600";
     } else {
-      // This triggers automatically when a new day starts and no records exist yet!
+      // Triggered automatically when a new day starts and no records exist yet
       document.getElementById("attendanceCount").textContent = "0%";
       const subtextEl = document.getElementById("attendanceSubtext");
       subtextEl.textContent = "No records today";
@@ -545,10 +564,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadDashboardStats(schoolId);
     loadEnrollmentStats(schoolId);
     loadEnrollmentStats("year");
+    updateNotificationBadge(user.id);
   } catch (err) {
     console.error("Error loading dashboard data:", err);
   }
 });
+
+async function updateNotificationBadge(userId) {
+  try {
+    // Query unread notifications for the user
+    const { error, count } = await window.supabaseClient
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("is_read", false); // Adjust to .eq("status", "unread") if your DB uses a text column instead of boolean
+
+    const badge = document.getElementById("sidebarNotificationBadge");
+    if (!badge) return;
+
+    // Use nullish coalescing to ensure count defaults to 0 safely
+    const unreadCount = count ?? 0;
+
+    if (!error && unreadCount > 0) {
+      badge.textContent = unreadCount;
+      badge.style.display = "inline-block"; // Makes it visible!
+    } else {
+      badge.style.display = "none"; // Hide if zero or error occurs
+    }
+  } catch (err) {
+    console.error("Error fetching notifications:", err);
+  }
+}
 
 async function loadEnrollmentStats(
   filterType = "year",

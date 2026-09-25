@@ -16,7 +16,7 @@ body {
 .payments-main-content {
   width: 100%;
   min-height: 100vh;
-  padding: 20px;
+  padding: 10px;
 }
 
 .topbar {
@@ -121,6 +121,11 @@ tr {
 .payments-status-inactive {
   background: #fcdcdc;
   color: #651616;
+}
+
+.payments-status-partial {
+  background: rgb(255, 255, 219);
+  color: yellow;
 }
 
 .payments-actions-btn {

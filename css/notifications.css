@@ -83,3 +83,16 @@
   text-align: center;
   color: #6b7280;
 }
+
+@media screen and (max-width: 768px) {
+  .notifications-card-list,
+  .notif-tab.active,
+  .notif-tab,
+  .btn-primary-action {
+    border-radius: 10px;
+  }
+
+  .btn-primary-action {
+    font-size: 8px;
+  }
+}
