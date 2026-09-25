@@ -207,12 +207,21 @@ async function viewFeeDetails(feeId) {
       if (profile) studentName = profile.full_name;
     }
 
-    // 2. Fetch individual payment transactions for this fee record
     const { data: transactions, error: txError } = await supabaseClient
       .from("payment_transactions")
-      .select("created_at, amount, payment_method")
-      .eq("student_fee_id", feeId)
-      .order("created_at", { ascending: false });
+      .select(
+        `
+        created_at,
+        amount,
+        payment_method,
+        payment_allocations (
+          amount,
+          item_name
+        )
+      `,
+      )
+      .eq("student_fee_id", feeId) // <--- Fixed: changed activeFeeId to feeId
+      .order("created_at", { descending: true });
 
     if (txError) throw txError;
 
@@ -248,7 +257,7 @@ async function viewFeeDetails(feeId) {
       `;
     }
 
-    // 5. Populate Payment History Table
+    // 5. Populate Payment History Table with Itemized Breakdown
     const historyTbody = document.getElementById("modal-payment-history-tbody");
     if (historyTbody) {
       if (!transactions || transactions.length === 0) {
@@ -265,10 +274,31 @@ async function viewFeeDetails(feeId) {
               year: "numeric",
             },
           );
+
+          // Build itemized breakdown sub-list using snapshot item_name with fallback
+          let allocationsHtml =
+            '<ul style="margin: 4px 0 0 15px; padding: 0; font-size: 0.9em; color: #555;">';
+          if (tx.payment_allocations && tx.payment_allocations.length > 0) {
+            tx.payment_allocations.forEach((alloc) => {
+              // Prioritize the frozen snapshot item_name, fallback to live join or default
+              const itemName =
+                alloc.item_name ||
+                alloc.fee_structure_items?.fee_name ||
+                "General Fee";
+              allocationsHtml += `<li><strong>${itemName}:</strong> RWF ${Number(alloc.amount || 0).toLocaleString()}</li>`;
+            });
+          } else {
+            allocationsHtml += `<li><em>No specific item breakdown</em></li>`;
+          }
+          allocationsHtml += "</ul>";
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${formattedDate}</td>
-            <td>RWF ${Number(tx.amount || 0).toLocaleString()}</td>
+            <td>
+              <div><strong>RWF ${Number(tx.amount || 0).toLocaleString()}</strong></div>
+              ${allocationsHtml}
+            </td>
             <td>${tx.payment_method || "Cash"}</td>
           `;
           historyTbody.appendChild(row);
@@ -277,10 +307,9 @@ async function viewFeeDetails(feeId) {
     }
   } catch (err) {
     console.error("Error loading fee details:", err.message);
-    alert("Could not load payment details.");
+    showToast("Could not load payment details.", "error");
   }
 }
-
 // Close Modal Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("viewPaymentModal");
@@ -378,7 +407,7 @@ if (savePaymentBtn) {
       if (typeof loadStudentFees === "function") loadStudentFees();
     } catch (err) {
       console.error("Error saving itemized payment:", err.message);
-      showToast("Failed to save payment: " + err.message);
+      showToast("Failed to save payment: " + err.message, "error");
     }
   });
 }
@@ -387,36 +416,28 @@ async function loadFeeItemAllocations(feeId) {
   container.innerHTML = "Loading items...";
 
   try {
-    // 1. Get the fee_structure_id from the student_fees record
+    // 1. Get the frozen fee_breakdown snapshot from the student_fees record
     const { data: feeRecord, error: feeErr } = await supabaseClient
       .from("student_fees")
-      .select("fee_structure_id")
+      .select("fee_breakdown")
       .eq("id", feeId)
       .single();
 
     if (feeErr) throw feeErr;
 
-    if (!feeRecord || !feeRecord.fee_structure_id) {
+    if (
+      !feeRecord ||
+      !feeRecord.fee_breakdown ||
+      feeRecord.fee_breakdown.length === 0
+    ) {
       container.innerHTML =
-        '<p style="color: gray;">No fee structure linked to this student fee record.</p>';
+        '<p style="color: gray;">No fee items found for this record.</p>';
       return;
     }
 
-    // 2. Fetch the fee items matching this fee_structure_id
-    const { data: items, error: itemErr } = await supabaseClient
-      .from("fee_structure_items")
-      .select("*")
-      .eq("fee_structure_id", feeRecord.fee_structure_id);
+    const items = feeRecord.fee_breakdown;
 
-    if (itemErr) throw itemErr;
-
-    if (!items || items.length === 0) {
-      container.innerHTML =
-        '<p style="color: gray;">No specific fee items found for this structure.</p>';
-      return;
-    }
-
-    // 3. Render the input rows cleanly
+    // 2. Render the input rows cleanly using the snapshot data
     container.innerHTML = "";
     items.forEach((item) => {
       const itemRow = document.createElement("div");
@@ -424,9 +445,12 @@ async function loadFeeItemAllocations(feeId) {
       itemRow.style.cssText =
         "display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;";
 
+      // Note: Make sure the property matches what you used in jsonb_build_object ('name' vs 'fee_name')
+      const itemName = item.name || item.fee_name || "Fee Item";
+
       itemRow.innerHTML = `
         <div class="item-info">
-          <strong>${item.fee_name}</strong><br>
+          <strong>${itemName}</strong><br>
           <small>Amount: RWF ${Number(item.amount || 0).toLocaleString()}</small>
         </div>
         <input 
