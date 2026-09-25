@@ -1,7 +1,6 @@
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
-
 function renderStudentsTable(studentsToRender) {
   const tableBody = document.getElementById("studentsTableBody");
   if (!tableBody) return;
@@ -93,7 +92,6 @@ function populateClassFilterDropdown() {
     classFilterSelect.value = currentSelection;
   }
 }
-
 
 function filterStudents() {
   const searchVal = (document.getElementById("studentSearchInput")?.value || "")
@@ -647,8 +645,6 @@ document.addEventListener("DOMContentLoaded", () => {
           payload.password = newPassword;
           payload.phone_number = phoneInput;
         }
-
-        console.log("PAYLOAD VERIFICATION:", payload);
 
         const { data: sessionData, error: sessionError } =
           await supabaseClient.auth.getSession();
@@ -1310,4 +1306,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-

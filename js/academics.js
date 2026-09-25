@@ -126,6 +126,14 @@ async function initAcademicsPage() {
     `
         : ""
     }
+
+     <div id="nav-enrollment" class="academic-card">
+      <h4>Enrollment</h4>
+      <p>View and manage your Enrollment.</p>
+      <button onclick="window.location.href = 'enrollment.html'" class="manage-btn">
+        Manage enrollment <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
   `;
 
       containerEl.innerHTML = allCardsHTML;

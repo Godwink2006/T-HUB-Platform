@@ -108,10 +108,45 @@ async function initStudentContext() {
   await loadStudentGrades(user.id);
 }
 
+async function loadStudentStatusForTerm(studentId, academicYearId, termId) {
+  const badge = document.getElementById("studentStatusBadge");
+  if (!badge) {
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("student_enrollments")
+      .select("enrollment_status")
+      .eq("student_id", studentId)
+      .eq("academic_year_id", academicYearId)
+      .eq("term_id", termId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (data && data.enrollment_status) {
+      const status = data.enrollment_status;
+      badge.textContent = status;
+      badge.className = `status-badge ${status.toLowerCase()}`;
+    } else {
+      badge.textContent = "Normal";
+      badge.className = "status-badge normal";
+    }
+  } catch (err) {
+    console.error("Error loading term status:", err.message);
+  }
+}
 async function loadStudentGrades(authUserId) {
   const reportContainer = document.getElementById("studentGradesReport");
   const yearId = document.getElementById("studentAcademicYearSelect")?.value;
   const termId = document.getElementById("studentTermSelect")?.value;
+
+  if (yearId && termId) {
+    await loadStudentStatusForTerm(authUserId, yearId, termId);
+  }
 
   if (!reportContainer) return;
 
