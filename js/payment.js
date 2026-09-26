@@ -161,6 +161,12 @@ async function loadStudentFees() {
 
 // Function to open and load the payment details modal
 async function viewFeeDetails(feeId) {
+  console.log("Opening fee details for fee.id:", feeId); // <-- Check your console for this!
+  if (!feeId || feeId === "undefined") {
+    console.error("Invalid feeId passed to viewFeeDetails!");
+    showToast("Error: Invalid fee record ID.", "error");
+    return;
+  }
   const modal = document.getElementById("viewPaymentModal");
   if (!modal) return;
 
@@ -378,6 +384,15 @@ if (savePaymentBtn) {
       showToast("Please enter an amount for at least one fee item.", "info");
       return;
     }
+    console.log("Found recordPaymentBtn element:", recordPaymentBtn);
+    console.log(
+      "Attribute data-fee-id:",
+      recordPaymentBtn?.getAttribute("data-fee-id"),
+    );
+    console.log(
+      "Attribute data-student-id:",
+      recordPaymentBtn?.getAttribute("data-student-id"),
+    );
 
     try {
       // Call the Supabase RPC function

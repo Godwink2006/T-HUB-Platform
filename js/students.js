@@ -849,7 +849,46 @@ function viewStudent(id) {
   }
 }
 
-function openViewStudentModal(student) {
+async function viewStudent(id) {
+  let student = null;
+
+  // 1. Try to fetch fresh student data from Supabase directly
+  try {
+    const { data, error } = await supabaseClient
+      .from("students")
+      .select(
+        `
+        *,
+        profiles (*),
+        classes:class_id (name),
+        academic_years:academic_year_id (year_label)
+      `,
+      )
+      .eq("id", id)
+      .single();
+
+    if (!error && data) {
+      student = data;
+    }
+  } catch (err) {
+    console.warn(
+      "Could not fetch fresh student from network, checking cache...",
+      err,
+    );
+  }
+
+  // 2. Fallback to cache if network fetch failed
+  if (!student) {
+    student = (window.allStudentsCache || []).find((s) => s.id === id);
+  }
+
+  if (!student) {
+    console.error("Student not found for ID:", id);
+    showToast("Student record not found.", "error");
+    return;
+  }
+
+  // 3. Populate modal fields directly
   const profile = student.profiles || {};
 
   document.getElementById("viewStudentName").textContent =
@@ -866,15 +905,10 @@ function openViewStudentModal(student) {
 
   const statusElement = document.getElementById("viewStudentStatus");
   const rawStatus = (profile.status || "active").toLowerCase();
-
   if (statusElement) {
     statusElement.textContent =
       rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
-
-    const badgeClass =
-      rawStatus === "active" ? "status-active" : "status-inactive";
-
-    statusElement.className = `view-student-status ${badgeClass}`;
+    statusElement.className = `view-student-status ${rawStatus === "active" ? "status-active" : "status-inactive"}`;
   }
 
   document.getElementById("viewStudentCustomId").textContent =
@@ -899,7 +933,6 @@ function openViewStudentModal(student) {
     student.address || "-";
   document.getElementById("viewStudentMedicalNotes").textContent =
     student.medical_notes || "-";
-
   document.getElementById("viewStudentCreatedAt").textContent = formatDate(
     student.created_at || profile.created_at,
   );
@@ -907,6 +940,7 @@ function openViewStudentModal(student) {
     student.updated_at || profile.updated_at,
   );
 
+  // 4. Open the modal
   const viewStudentModal = document.getElementById("viewStudentModal");
   if (viewStudentModal) {
     viewStudentModal.style.display = "flex";

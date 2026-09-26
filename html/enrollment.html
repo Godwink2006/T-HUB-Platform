@@ -48,11 +48,89 @@
 
     <div id="bulkActionBar" class="bulk-action-bar">
       <span id="selectedCount">0 students selected</span>
-      <button id="btnChangeStatus" class="btn-secondary">Change Status</button>
-      <button id="btnSemesterMove" class="btn-primary">
-        Move to 2nd Semester
-      </button>
-      <button id="btnPromote" class="btn-primary">Promote Students</button>
+      <div class="tooltip-container">
+        <button id="btnChangeStatus" class="btn-secondary">
+          Change Status
+        </button>
+        <div class="tooltip-card">
+          <p style="margin: 0 0 5px 0; font-weight: 600; color: #000">
+            📌 Status Guide
+          </p>
+          <p style="margin: 0 0 6px 0">
+            This allows you to update the enrollment status (e.g., Normal,
+            Repeating, Promoted, or Graduated) for the selected student(s).
+          </p>
+          <p
+            style="
+              margin: 0;
+              font-size: 11px;
+              color: grey;
+              border-top: 2px solid rgb(219, 215, 215);
+              padding-top: 4px;
+            "
+          >
+            <em>Note:</em> Select the student row using the checkbox first
+            before clicking this button.
+          </p>
+        </div>
+      </div>
+      <div class="tooltip-container">
+        <button id="btnSemesterMove" class="btn-primary">
+          Move to 2nd Semester
+        </button>
+        <div class="tooltip-card">
+          <p style="margin: 0 0 5px 0; font-weight: 600; color: #000">
+            📌 Semester Move Guide
+          </p>
+          <p style="margin: 0 0 6px 0">
+            This transitions the selected student(s) directly into the 2nd
+            Semester for their current class and academic year, creating their
+            new semester fee structure records.
+          </p>
+          <p
+            style="
+              margin: 0;
+              font-size: 11px;
+              color: grey;
+              border-top: 2px solid rgb(219, 215, 215);
+              padding-top: 4px;
+            "
+          >
+            <em>Note:</em> Use this when students are staying in the same
+            grade/class for the next semester rather than changing grade levels.
+          </p>
+        </div>
+      </div>
+
+      <button id="btnNewYearMove">New Year Movement</button>
+      <div class="tooltip-container">
+        <button id="btnPromoteStudents" class="btn-primary">
+          2nd Semester Promotion
+        </button>
+        <div class="tooltip-card">
+          <p style="margin: 0 0 5px 0; font-weight: 600; color: #000">
+            📌 Promotion Guide
+          </p>
+          <p style="margin: 0 0 6px 0">
+            This will promote this student to the next class and 2nd semester
+            with the fee structure.
+          </p>
+          <p
+            style="
+              margin: 0;
+              font-size: 11px;
+              color: grey;
+              border-top: 2px solid rgb(219, 215, 215);
+              padding-top: 4px;
+            "
+          >
+            <em>Note:</em> Does not apply to students coming from classes below
+            Grade 9 going to Grade 10+. Classes 10 and above require a user
+            account—please use the <b>Promote Student to User</b> button
+            instead.
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Modal for Inputs -->
