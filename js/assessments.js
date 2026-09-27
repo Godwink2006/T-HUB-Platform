@@ -1,5 +1,3 @@
-
-
 function escapeHTML(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -28,7 +26,6 @@ function formatDateTime(isoString) {
 }
 
 let currentAssessments = [];
-
 
 async function loadAssessments() {
   const tableBody = document.getElementById("assessmentsTableBody");
@@ -85,7 +82,6 @@ async function loadAssessments() {
     `;
   }
 }
-
 
 function renderAssessmentTable(assessments) {
   const tableBody = document.getElementById("assessmentsTableBody");
@@ -621,6 +617,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (error) {
           console.error("Supabase update error:", error);
 
+          const isDuplicateErr =
+            error.code === "23505" ||
+            error.message
+              ?.toLowerCase()
+              .includes("unique_active_assessment_per_school");
+
+          if (isDuplicateErr) {
+            notifyUser(
+              "Only one assessment can be active per school. Please deactivate the current active assessment first.",
+              "error",
+            );
+            return;
+          }
+
           const isPermissionErr =
             error.code === "42501" ||
             error.code === "PGRST301" ||
@@ -1044,7 +1054,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-
 let currentCategories = [];
 
 async function loadCategories() {
@@ -1090,7 +1099,6 @@ async function loadCategories() {
     }
   }
 }
-
 
 function renderCategoryTable(categories) {
   const tableBody = document.getElementById("categoriesTableBody");
@@ -1156,7 +1164,6 @@ function renderCategoryTable(categories) {
     .join("");
 }
 
-
 function openCategoryModal() {
   const modal = document.getElementById("categoryModal");
   if (!modal) return;
@@ -1175,7 +1182,6 @@ function closeCategoryModal() {
   modal.classList.remove("active");
   document.body.style.overflow = "";
 }
-
 
 function openEditCategoryModal(id) {
   const modal = document.getElementById("editCategoryModal");
@@ -1248,4 +1254,3 @@ function closeArchiveCategoryModal() {
   modal.classList.remove("active");
   document.body.style.overflow = "";
 }
-
