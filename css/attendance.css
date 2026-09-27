@@ -666,6 +666,14 @@ tr {
     font-size: 24px;
   }
 
+  .attendance-modal-content {
+    height: 350px !important;
+  }
+
+  .studentAttendance-modal-content {
+    height: 450px;
+  }
+
   .topbar p {
     margin-top: 2px;
     font-size: 13px;
@@ -836,6 +844,10 @@ tr {
   #editAttendanceModal .edit-status-dropdown {
     border: 1.5px solid rgb(219, 215, 215);
     font-size: 13px;
+    border-radius: 10px;
+  }
+
+  #clearDateFilterBtn {
     border-radius: 10px;
   }
 
