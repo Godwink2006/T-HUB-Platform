@@ -95,15 +95,31 @@ async function initStudentContext() {
     await loadTermsForYear(activeYearId, targetTermId);
   }
 
-  await loadAssessments(targetAssessmentId);
+  const activeTermId = termSelect?.value;
+  if (activeYearId && activeTermId) {
+    await loadAssessmentsForYearAndTerm(
+      activeYearId,
+      activeTermId,
+      targetAssessmentId,
+    );
+  }
 
   // 5. Event Listeners
   yearSelect?.addEventListener("change", async (e) => {
     await loadTermsForYear(e.target.value);
+
+    const currentYearId = yearSelect.value;
+    const currentTermId = termSelect?.value;
+
+    await loadAssessmentsForYearAndTerm(currentYearId, currentTermId);
     await loadStudentGrades(user.id);
   });
 
-  termSelect?.addEventListener("change", () => {
+  termSelect?.addEventListener("change", async (e) => {
+    const currentYearId = yearSelect?.value;
+    const currentTermId = e.target.value;
+
+    await loadAssessmentsForYearAndTerm(currentYearId, currentTermId);
     loadStudentGrades(user.id);
   });
 
@@ -116,38 +132,50 @@ async function initStudentContext() {
   await loadStudentGrades(user.id);
 }
 
-async function loadAssessments(preselectAssessmentId = null) {
+async function loadAssessmentsForYearAndTerm(
+  academicYearId,
+  termId,
+  preselectAssessmentId = null,
+) {
   const assessmentSelect = document.getElementById("studentAssessmentSelect");
   if (!assessmentSelect) return;
 
   assessmentSelect.innerHTML = `<option value="">Select Assessment / Period</option>`;
+  if (!academicYearId || !termId) return;
 
-  // Fetch assessments from your assessments table
-  const { data: assessments, error } = await client
-    .from("assessments")
-    .select("id, name, status")
-    .eq("status", "Active"); // Optional: only load active assessments
+  // Query the grades table to find assessments tied to this specific year and term
+  const { data: gradeEntries, error } = await supabaseClient
+    .from("grades")
+    .select("assessment_id, assessments ( id, name )")
+    .eq("academic_year_id", academicYearId)
+    .eq("term_id", termId);
 
   if (error) {
-    console.error("Error loading assessments:", error);
+    console.error("Error loading assessments for period:", error);
     return;
   }
 
-  if (assessments && assessments.length > 0) {
-    assessments.forEach((a) => {
-      const opt = document.createElement("option");
-      opt.value = a.id;
-      opt.textContent = a.name;
+  // Use a Map to extract unique assessments (so duplicates don't show up in the dropdown)
+  const uniqueAssessments = new Map();
+  gradeEntries?.forEach((entry) => {
+    if (entry.assessments) {
+      uniqueAssessments.set(entry.assessments.id, entry.assessments.name);
+    }
+  });
 
-      // Auto-select matching assessment if found, otherwise fallback to the first one
-      if (
-        preselectAssessmentId
-          ? a.id === preselectAssessmentId
-          : a === assessments[0]
-      ) {
+  if (uniqueAssessments.size > 0) {
+    let index = 0;
+    uniqueAssessments.forEach((name, id) => {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = name;
+
+      // Auto-select matching assessment or default to the first one
+      if (preselectAssessmentId ? id === preselectAssessmentId : index === 0) {
         opt.selected = true;
       }
       assessmentSelect.appendChild(opt);
+      index++;
     });
   }
 }
