@@ -25,7 +25,6 @@
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -44,9 +43,9 @@
 
 .enterGrade-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -55,6 +54,7 @@
 
 .enterGrade-modal-body {
   padding: 25px;
+  overflow-y: auto;
 }
 
 .modal-editGrade {
@@ -84,7 +84,6 @@
   width: 850px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 500px;
 }
@@ -103,9 +102,9 @@
 
 .editGrade-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -114,6 +113,7 @@
 
 .editGrade-modal-body {
   padding: 25px;
+  overflow-y: auto;
 }
 
 * {
@@ -168,7 +168,9 @@ body {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
+  background: #15803d;
+  color: #ffffff;
+  border: 2px solid #14532d;
 }
 
 .back-grades-btn {
@@ -179,7 +181,9 @@ body {
   align-items: center;
   cursor: pointer;
   margin-top: 5px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   width: 50%;
   justify-content: space-between;
 }
@@ -194,7 +198,6 @@ body {
 .toolbar select {
   height: 48px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -239,7 +242,6 @@ tr {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 10px;
   cursor: pointer;
   margin-right: 6px;
 }
@@ -274,7 +276,6 @@ tr {
   width: 700px;
   max-width: 95%;
   background: #ffff;
-  border-radius: 18px;
   animation: modalShow 0.25s ease;
   height: 390px;
 }
@@ -305,9 +306,9 @@ tr {
 
 .grade-modal-header button {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
@@ -316,6 +317,7 @@ tr {
 
 .grade-modal-body {
   padding: 25px;
+  overflow-y: auto;
 }
 
 .form-grid {
@@ -342,7 +344,6 @@ tr {
   width: 100%;
   padding: 12px 15px;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
   outline: none;
   font-size: 15px;
 }
@@ -365,15 +366,15 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
-  background: #e5e7eb;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   cursor: pointer;
 }
 
 .save-btn {
   padding: 12px 22px;
   border: none;
-  border-radius: 10px;
   background: #2563eb;
   color: #ffff;
   cursor: pointer;
@@ -382,7 +383,6 @@ tr {
 .view-grade-modal-content {
   width: 850px;
   background: #ffff;
-  border-radius: 18px;
   overflow: auto;
   height: 445px;
   animation: modalShow 0.25s ease;
@@ -405,6 +405,7 @@ tr {
 
 .view-grade-body {
   padding: 30px;
+  overflow-y: auto;
 }
 
 .details-grid {
@@ -446,11 +447,265 @@ tr {
 
 #closeViewGradeModal {
   cursor: pointer;
-  color: #374151;
-  background: #f3f4f6;
-  border-radius: 8px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   height: 40px;
   width: 40px;
   font-size: 22px;
+}
+
+/* ==========================================
+   MOBILE RESPONSIVE STYLES (@media max-width: 768px)
+   ========================================== */
+
+@media screen and (max-width: 768px) {
+  /* Layout Adjustments */
+  .grades-container {
+    flex-direction: column;
+  }
+
+  .grades-main-content {
+    padding: 10px;
+  }
+
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px 12px !important;
+    align-items: center !important;
+  }
+
+  .topbar h1,
+  .topbar p {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .topbar h1 {
+    font-size: 24px;
+  }
+
+  .topbar p {
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  .top-right {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .add-grades-btn {
+    grid-column: 2;
+    flex: 1 !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    background: #15803d;
+    color: #ffffff;
+    border: 2px solid #14532d;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  .back-grades-btn {
+    width: auto !important;
+    height: 40px !important;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid rgb(219, 215, 215);
+    background: #1f2937;
+    color: #f9fafb;
+    font-size: 13px;
+    white-space: nowrap;
+    border-radius: 10px;
+    margin-top: 0;
+  }
+
+  /* Toolbar Controls */
+  .toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin: 15px 0;
+    width: 100%;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    height: 40px;
+    border: 2px solid rgb(219, 215, 215);
+    padding: 0 10px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+    border-radius: 10px;
+  }
+
+  .toolbar input {
+    width: auto;
+  }
+
+  /* Table Card & Horizontal Scroll */
+  .grade-table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  th,
+  td {
+    padding: 12px 14px !important;
+    font-size: 13px !important;
+    white-space: nowrap;
+  }
+
+  /* Modals (Enter Grade, Edit Grade, View Grade) */
+  .enterGrade-modal-content,
+  .editGrade-modal-content,
+  .grade-modal-content,
+  .view-grade-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 92% !important;
+    max-width: 380px !important;
+    height: auto !important;
+    max-height: 85vh !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .enterGrade-modal-header,
+  .editGrade-modal-header,
+  .grade-modal-header,
+  .view-grade-modal-header {
+    padding: 14px 18px;
+    border-bottom: 1.5px solid rgb(219, 215, 215);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+  }
+
+  .enterGrade-modal-header h2,
+  .editGrade-modal-header h2,
+  .grade-modal-header h2,
+  .view-grade-modal-header h2 {
+    font-size: 18px;
+  }
+
+  .enterGrade-modal-header button,
+  .editGrade-modal-header button,
+  .grade-modal-header button,
+  #closeViewGradeModal {
+    height: 34px;
+    width: 34px;
+    font-size: 16px;
+    border-radius: 8px !important;
+  }
+
+  .enterGrade-modal-body,
+  .editGrade-modal-body,
+  .grade-modal-body,
+  .view-grade-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .enterGrade-modal-footer,
+  .editGrade-modal-footer,
+  .grade-modal-footer,
+  .view-modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-top: 1.5px solid rgb(219, 215, 215);
+    margin-top: 0;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+
+  /* Form Grids inside Modals */
+  .form-grid,
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-group label,
+  .details-item label {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    border: 1.5px solid rgb(219, 215, 215);
+    font-size: 13px;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  /* Buttons inside Modals */
+  .cancel-btn,
+  .save-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .grades-actions-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  .enterGrade-modal-content,
+  .editGrade-modal-content,
+  .grade-modal-content,
+  .view-grade-modal-content {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .enterGrade-modal-header,
+  .editGrade-modal-header,
+  .grade-modal-header,
+  .view-grade-modal-header {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+
+  .cancel-btn,
+  .save-btn,
+  .add-grades-btn,
+  .back-grades-btn,
+  .toolbar input,
+  .toolbar select,
+  .grades-actions-btn {
+    border-radius: 8px;
+  }
 }
