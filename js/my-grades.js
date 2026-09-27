@@ -55,12 +55,13 @@ async function initStudentContext() {
   // 2. Fetch the student's actual grade records first to find their valid year & term IDs
   const { data: userGrades } = await client
     .from("grade_records")
-    .select("grades!inner(academic_year_id, term_id)")
+    .select("grades!inner(academic_year_id, term_id, assessment_id)")
     .eq("student_id", user.id)
     .limit(1);
 
   const targetYearId = userGrades?.[0]?.grades?.academic_year_id;
   const targetTermId = userGrades?.[0]?.grades?.term_id;
+  const targetAssessmentId = userGrades?.[0]?.grades?.assessment_id;
 
   // 3. Load Academic Years into dropdown
   const { data: years, error: yearsErr } = await client
@@ -94,6 +95,8 @@ async function initStudentContext() {
     await loadTermsForYear(activeYearId, targetTermId);
   }
 
+  await loadAssessments(targetAssessmentId);
+
   // 5. Event Listeners
   yearSelect?.addEventListener("change", async (e) => {
     await loadTermsForYear(e.target.value);
@@ -104,8 +107,49 @@ async function initStudentContext() {
     loadStudentGrades(user.id);
   });
 
+  const assessmentSelect = document.getElementById("studentAssessmentSelect");
+  assessmentSelect?.addEventListener("change", () => {
+    loadStudentGrades(user.id);
+  });
+
   // 6. Initial fetch
   await loadStudentGrades(user.id);
+}
+
+async function loadAssessments(preselectAssessmentId = null) {
+  const assessmentSelect = document.getElementById("studentAssessmentSelect");
+  if (!assessmentSelect) return;
+
+  assessmentSelect.innerHTML = `<option value="">Select Assessment / Period</option>`;
+
+  // Fetch assessments from your assessments table
+  const { data: assessments, error } = await client
+    .from("assessments")
+    .select("id, name, status")
+    .eq("status", "Active"); // Optional: only load active assessments
+
+  if (error) {
+    console.error("Error loading assessments:", error);
+    return;
+  }
+
+  if (assessments && assessments.length > 0) {
+    assessments.forEach((a) => {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = a.name;
+
+      // Auto-select matching assessment if found, otherwise fallback to the first one
+      if (
+        preselectAssessmentId
+          ? a.id === preselectAssessmentId
+          : a === assessments[0]
+      ) {
+        opt.selected = true;
+      }
+      assessmentSelect.appendChild(opt);
+    });
+  }
 }
 
 async function loadStudentStatusForTerm(studentId, academicYearId, termId) {
@@ -143,6 +187,9 @@ async function loadStudentGrades(authUserId) {
   const reportContainer = document.getElementById("studentGradesReport");
   const yearId = document.getElementById("studentAcademicYearSelect")?.value;
   const termId = document.getElementById("studentTermSelect")?.value;
+  const assessmentId = document.getElementById(
+    "studentAssessmentSelect",
+  )?.value;
 
   if (yearId && termId) {
     await loadStudentStatusForTerm(authUserId, yearId, termId);
@@ -150,10 +197,10 @@ async function loadStudentGrades(authUserId) {
 
   if (!reportContainer) return;
 
-  if (!termId) {
+  if (!termId || !assessmentId) {
     reportContainer.innerHTML = `
-      <p>
-        Please select a semester to display grades.
+      <p style="text-align: center; color: #888; padding: 20px;">
+        Please select a semester and assessment period to display grades.
       </p>`;
     return;
   }
@@ -177,6 +224,7 @@ async function loadStudentGrades(authUserId) {
           date_recorded,
           term_id,
           academic_year_id,
+          assessment_id,
           subjects ( id, name ),
           terms ( id, name ),
           academic_years ( id, year_label ),
@@ -191,18 +239,16 @@ async function loadStudentGrades(authUserId) {
     // Apply term and academic year filters using Supabase dot-notation
     if (termId) query = query.eq("grades.term_id", termId);
     if (yearId) query = query.eq("grades.academic_year_id", yearId);
+    if (assessmentId) query = query.eq("grades.assessment_id", assessmentId);
 
     const { data: records, error } = await query;
 
-    if (error) {
-      console.error("Error querying grade records:", error);
-      throw error;
-    }
+    if (error) throw error;
 
     if (!records || records.length === 0) {
       reportContainer.innerHTML = `
-        <p>
-          No published grades available for this period.
+        <p style="text-align: center; color: #888; padding: 20px;">
+          No published grades available for this assessment period.
         </p>`;
       return;
     }
