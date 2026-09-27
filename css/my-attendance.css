@@ -24,7 +24,6 @@
   background: #1f2937;
   color: #f9fafb;
   border: 1px solid #dbd7d7;
-  border-radius: 10px;
   cursor: pointer;
   margin-bottom: 12px;
   font-size: 13px;
@@ -210,10 +209,6 @@ th {
   background: #fee2e2;
   color: #991b1b;
 }
-.status-tag.late {
-  background: #fef3c7;
-  color: #92400e;
-}
 
 @media screen and (max-width: 768px) {
   .topbar h1 {
@@ -242,7 +237,8 @@ th {
     gap: 12px;
   }
 
-  .subject-card {
+  .subject-card,
+  .back-academics-btn {
     border-radius: 10px;
   }
   .toolbar {
@@ -252,12 +248,16 @@ th {
 
   .toolbar input,
   .toolbar select {
-    width: 100%;
     border-radius: 10px;
+    padding: 10px;
   }
 
   /* Horizontal table scroll for mobile */
-  .history-card {
+  .history-card,
+  .progress-bar-fill,
+  .progress-bar-bg,
+  .subject-badge,
+  .status-tag {
     border-radius: 10px;
   }
 
