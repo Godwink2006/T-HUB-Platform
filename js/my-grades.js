@@ -55,13 +55,17 @@ async function initStudentContext() {
   // 2. Fetch the student's actual grade records first to find their valid year & term IDs
   const { data: userGrades } = await client
     .from("grade_records")
-    .select("grades!inner(academic_year_id, term_id, assessment_id)")
+    .select(
+      "grades!inner(academic_year_id, term_id, assessment_id, class_id, subject_id)",
+    )
     .eq("student_id", user.id)
     .limit(1);
 
   const targetYearId = userGrades?.[0]?.grades?.academic_year_id;
   const targetTermId = userGrades?.[0]?.grades?.term_id;
   const targetAssessmentId = userGrades?.[0]?.grades?.assessment_id;
+  const targetClassId = userGrades?.[0]?.grades?.class_id; // <-- Grab class ID
+  const targetSubjectId = userGrades?.[0]?.grades?.subject_id;
 
   // 3. Load Academic Years into dropdown
   const { data: years, error: yearsErr } = await client
@@ -73,6 +77,10 @@ async function initStudentContext() {
     console.error("Error loading academic years:", yearsErr);
     return;
   }
+
+  const classSelect = document.getElementById("studentClassSelect");
+  const subjectSelect = document.getElementById("studentSubjectSelect");
+  const assessmentSelect = document.getElementById("studentAssessmentSelect");
 
   if (yearSelect && years) {
     yearSelect.innerHTML = `<option value="">Select Academic Year</option>`;
@@ -95,6 +103,68 @@ async function initStudentContext() {
     await loadTermsForYear(activeYearId, targetTermId);
   }
 
+  yearSelect?.addEventListener("change", async (e) => {
+    await loadTermsForYear(e.target.value);
+    await loadAssessmentsForYearAndTerm(yearSelect.value, termSelect.value);
+    await loadClassesForSelection(
+      yearSelect.value,
+      termSelect.value,
+      assessmentSelect.value,
+    );
+    await loadSubjectsForSelection(
+      yearSelect.value,
+      termSelect.value,
+      assessmentSelect.value,
+      classSelect.value,
+    );
+    loadStudentGrades(user.id);
+  });
+
+  termSelect?.addEventListener("change", async () => {
+    await loadAssessmentsForYearAndTerm(yearSelect.value, termSelect.value);
+    await loadClassesForSelection(
+      yearSelect.value,
+      termSelect.value,
+      assessmentSelect.value,
+    );
+    await loadSubjectsForSelection(
+      yearSelect.value,
+      termSelect.value,
+      assessmentSelect.value,
+      classSelect.value,
+    );
+    loadStudentGrades(user.id);
+  });
+
+  assessmentSelect?.addEventListener("change", async () => {
+    await loadClassesForSelection(
+      yearSelect.value,
+      termSelect.value,
+      assessmentSelect.value,
+    );
+    await loadSubjectsForSelection(
+      yearSelect.value,
+      termSelect.value,
+      assessmentSelect.value,
+      classSelect.value,
+    );
+    loadStudentGrades(user.id);
+  });
+
+  classSelect?.addEventListener("change", async () => {
+    await loadSubjectsForSelection(
+      yearSelect.value,
+      termSelect.value,
+      assessmentSelect.value,
+      classSelect.value,
+    );
+    loadStudentGrades(user.id);
+  });
+
+  subjectSelect?.addEventListener("change", () => {
+    loadStudentGrades(user.id);
+  });
+
   const activeTermId = termSelect?.value;
   if (activeYearId && activeTermId) {
     await loadAssessmentsForYearAndTerm(
@@ -104,29 +174,26 @@ async function initStudentContext() {
     );
   }
 
-  // 5. Event Listeners
-  yearSelect?.addEventListener("change", async (e) => {
-    await loadTermsForYear(e.target.value);
+  // >>> ADD THESE LINES HERE ON INITIAL LOAD <<<
+  if (activeYearId && activeTermId && assessmentSelect?.value) {
+    await loadClassesForSelection(
+      activeYearId,
+      activeTermId,
+      assessmentSelect.value,
+      targetClassId,
+    );
 
-    const currentYearId = yearSelect.value;
-    const currentTermId = termSelect?.value;
-
-    await loadAssessmentsForYearAndTerm(currentYearId, currentTermId);
-    await loadStudentGrades(user.id);
-  });
-
-  termSelect?.addEventListener("change", async (e) => {
-    const currentYearId = yearSelect?.value;
-    const currentTermId = e.target.value;
-
-    await loadAssessmentsForYearAndTerm(currentYearId, currentTermId);
-    loadStudentGrades(user.id);
-  });
-
-  const assessmentSelect = document.getElementById("studentAssessmentSelect");
-  assessmentSelect?.addEventListener("change", () => {
-    loadStudentGrades(user.id);
-  });
+    const activeClassId = classSelect?.value;
+    if (activeClassId) {
+      await loadSubjectsForSelection(
+        activeYearId,
+        activeTermId,
+        assessmentSelect.value,
+        activeClassId,
+        targetSubjectId,
+      );
+    }
+  }
 
   // 6. Initial fetch
   await loadStudentGrades(user.id);
@@ -218,6 +285,8 @@ async function loadStudentGrades(authUserId) {
   const assessmentId = document.getElementById(
     "studentAssessmentSelect",
   )?.value;
+  const classId = document.getElementById("studentClassSelect")?.value;
+  const subjectId = document.getElementById("studentSubjectSelect")?.value;
 
   if (yearId && termId) {
     await loadStudentStatusForTerm(authUserId, yearId, termId);
@@ -225,14 +294,13 @@ async function loadStudentGrades(authUserId) {
 
   if (!reportContainer) return;
 
-  if (!termId || !assessmentId) {
+  if (!termId || !assessmentId || !classId) {
     reportContainer.innerHTML = `
       <p style="text-align: center; color: #888; padding: 20px;">
-        Please select a semester and assessment period to display grades.
+        Please select a semester, assessment period, and class to view your grades.
       </p>`;
     return;
   }
-
   try {
     const client = window.supabaseClient || supabaseClient;
 
@@ -253,6 +321,8 @@ async function loadStudentGrades(authUserId) {
           term_id,
           academic_year_id,
           assessment_id,
+          class_id,
+          subject_id,
           subjects ( id, name ),
           terms ( id, name ),
           academic_years ( id, year_label ),
@@ -268,6 +338,8 @@ async function loadStudentGrades(authUserId) {
     if (termId) query = query.eq("grades.term_id", termId);
     if (yearId) query = query.eq("grades.academic_year_id", yearId);
     if (assessmentId) query = query.eq("grades.assessment_id", assessmentId);
+    if (classId) query = query.eq("grades.class_id", classId);
+    if (subjectId) query = query.eq("grades.subject_id", subjectId);
 
     const { data: records, error } = await query;
 
@@ -342,4 +414,96 @@ async function loadStudentGrades(authUserId) {
         Failed to load grades: ${err.message}
       </p>`;
   }
+}
+
+// Load classes available for the selected Year, Term, and Assessment
+async function loadClassesForSelection(
+  yearId,
+  termId,
+  assessmentId,
+  preselectClassId = null,
+) {
+  const classSelect = document.getElementById("studentClassSelect");
+  if (!classSelect) return;
+
+  classSelect.innerHTML = `<option value="">Select Class</option>`;
+  if (!yearId || !termId || !assessmentId) return;
+
+  const { data, error } = await supabaseClient
+    .from("grades")
+    .select("class_id, classes ( id, name )")
+    .eq("academic_year_id", yearId)
+    .eq("term_id", termId)
+    .eq("assessment_id", assessmentId);
+
+  if (error) {
+    console.error("Error loading classes:", error);
+    return;
+  }
+
+  const uniqueClasses = new Map();
+  data?.forEach((entry) => {
+    if (entry.classes) {
+      uniqueClasses.set(entry.classes.id, entry.classes.name);
+    }
+  });
+
+  let index = 0;
+  uniqueClasses.forEach((name, id) => {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = name;
+    if (preselectClassId ? id === preselectClassId : index === 0) {
+      opt.selected = true;
+    }
+    classSelect.appendChild(opt);
+    index++;
+  });
+}
+
+// Load subjects available for the selected Class, Year, Term, and Assessment
+async function loadSubjectsForSelection(
+  yearId,
+  termId,
+  assessmentId,
+  classId,
+  preselectSubjectId = null,
+) {
+  const subjectSelect = document.getElementById("studentSubjectSelect");
+  if (!subjectSelect) return;
+
+  subjectSelect.innerHTML = `<option value="">Select Subject</option>`;
+  if (!yearId || !termId || !assessmentId || !classId) return;
+
+  const { data, error } = await supabaseClient
+    .from("grades")
+    .select("subject_id, subjects ( id, name )")
+    .eq("academic_year_id", yearId)
+    .eq("term_id", termId)
+    .eq("assessment_id", assessmentId)
+    .eq("class_id", classId);
+
+  if (error) {
+    console.error("Error loading subjects:", error);
+    return;
+  }
+
+  const uniqueSubjects = new Map();
+  data?.forEach((entry) => {
+    if (entry.subjects) {
+      uniqueSubjects.set(entry.subjects.id, entry.subjects.name);
+    }
+  });
+
+  let index = 0;
+  uniqueSubjects.forEach((name, id) => {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = name;
+    if (preselectSubjectId ? id === preselectSubjectId : index === 0) {
+      opt.selected = true;
+    }
+    subjectSelect.appendChild(opt);
+    index++;
+  });
 }

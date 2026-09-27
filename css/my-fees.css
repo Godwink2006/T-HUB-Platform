@@ -1,0 +1,167 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #1e293b;
+  padding: 10px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.header-section {
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-btn:hover {
+  opacity: 0.9;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+p.subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  margin-bottom: 24px;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+  vertical-align: top;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+tr:last-child td {
+  border-bottom: none;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+.badge {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge.paid {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.badge.unpaid,
+.badge.pending,
+.badge.partial {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.amount-bold {
+  font-weight: 600;
+}
+
+.amount-balance {
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.amount-paid {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.breakdown-list {
+  margin-top: 4px;
+  padding-left: 16px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.breakdown-list li {
+  margin-bottom: 2px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #64748b;
+  padding: 30px 20px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .badge,
+  .back-btn,
+  .card {
+    border-radius: 10px;
+  }
+}

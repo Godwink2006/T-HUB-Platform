@@ -103,6 +103,14 @@ async function initAcademicsPage() {
         Manage grades <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
+
+     <div id="nav-fees" class="academic-card">
+      <h4>My Fees</h4>
+      <p>View and manage your fees.</p>
+      <button onclick="window.location.href = 'my-fees.html'" class="manage-btn">
+        Manage fees <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
     `
         : ""
     }
