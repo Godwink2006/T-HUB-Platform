@@ -240,16 +240,7 @@
 
               <div class="details-item">
                 <label for="attendanceWorkflowStatus">Workflow Status</label>
-                <select
-                  id="attendanceWorkflowStatus"
-                  class="form-control"
-                  style="
-                    padding: 6px 10px;
-                    border-radius: 6px;
-                    border: 1px solid #d1d5db;
-                    width: 100%;
-                  "
-                >
+                <select id="attendanceWorkflowStatus" class="form-control">
                   <option value="drafted">Drafted</option>
                   <option value="submitted" selected>Submitted</option>
                 </select>
@@ -287,7 +278,7 @@
     </div>
 
     <div id="editAttendanceModal" class="modal">
-      <div class="modal-content" style="max-width: 500px">
+      <div class="edit-draft-modal-content">
         <div class="modal-header">
           <h2>Edit Drafted Attendance</h2>
           <button type="button" id="closeEditAttendanceModal" class="close-btn">

@@ -529,10 +529,10 @@ tr {
 
 #editAttendanceModal .studentAttendance-table-card {
   margin-top: 15px;
-  border-radius: 8px;
-  overflow: hidden;
   max-height: 280px;
   overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 #editAttendanceModal table {
@@ -717,7 +717,7 @@ tr {
   .toolbar input,
   .toolbar select {
     height: 40px;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 2px solid rgb(219, 215, 215);
     padding: 0 8px;
     font-size: 12px;
     flex: 1;
@@ -729,7 +729,6 @@ tr {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
-    border-radius: 10px;
   }
 
   table {
@@ -847,7 +846,8 @@ tr {
     border-radius: 10px;
   }
 
-  #clearDateFilterBtn {
+  #clearDateFilterBtn,
+  .attendance-status-dropdown {
     border-radius: 10px;
   }
 
@@ -861,4 +861,46 @@ tr {
     font-size: 13px;
     font-weight: 500;
   }
+}
+
+/* 1. Modal Content */
+.edit-draft-modal-content {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  box-sizing: border-box;
+}
+
+/* 2. Modal Body - Handle vertical scroll only, hide horizontal overflow here */
+.edit-draft-modal-content .modal-body {
+  overflow-y: auto;
+  overflow-x: hidden; /* Crucial: stops the body from messing with horizontal scrolling */
+  flex: 1;
+  min-width: 0;
+}
+
+/* 3. Form inside the body */
+#editAttendanceForm {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* 4. Table Card Container - The actual horizontal scroll zone */
+.studentAttendance-table-card {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+}
+
+/* 5. Table - Forces the horizontal scrollbar to appear */
+.studentAttendance-table-card table {
+  width: 100%;
+  min-width: 650px; /* Wider than the 500px modal to trigger the scrollbar */
+  border-collapse: collapse;
 }

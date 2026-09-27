@@ -485,7 +485,7 @@ async function loadRosterIntoModal(classId) {
       tr.innerHTML = `
         <td style="padding: 10px 12px; font-weight: 500;">${displayName}</td>
         <td style="padding: 10px 12px;">
-          <select class="attendance-status-dropdown" data-student-id="${student.id}" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #d1d5db; width: 100%;">
+          <select class="attendance-status-dropdown" data-student-id="${student.id}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;">
             <option value="present">Present</option>
             <option value="absent">Absent</option>
           </select>
@@ -1105,7 +1105,7 @@ async function openViewAttendanceModal(attendanceId) {
           : "status-drafted";
 
       elWorkflowStatus.innerHTML = `
-        <span class="status-badge ${statusClass}" style="padding: 4px 10px; font-size: 0.85rem; font-weight: 600;">
+        <span class="status-badge ${statusClass}" style="padding: 4px 10px; font-size: 0.85rem; margin-bottom: 5px; font-weight: 600;">
           ${escapeHtml(statusLabel)}
         </span>
       `;
@@ -1294,9 +1294,9 @@ async function openEditAttendanceModal(attendanceId) {
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td style="padding: 10px 12px; font-weight: 500;">${escapeHtml(studentName)}</td>
-          <td style="padding: 10px 12px;">
-            <select class="edit-status-dropdown" data-student-id="${record.student_id}" style="padding: 6px 10px; border: 2px solid #d1d5db; width: 100%;">
+          <td>${escapeHtml(studentName)}</td>
+          <td>
+            <select class="edit-status-dropdown" data-student-id="${record.student_id}">
               <option value="present" ${record.status === "present" ? "selected" : ""}>Present</option>
               <option value="absent" ${record.status === "absent" ? "selected" : ""}>Absent</option>
             </select>
