@@ -144,7 +144,6 @@ h1 {
 .card-btn {
   flex: 1;
   padding: 0.6rem;
-  border: 1px solid #e2e8f0;
   background: #f8fafc;
   color: #334155;
   font-weight: 600;
@@ -163,14 +162,15 @@ h1 {
 }
 
 .card-btn.primary {
-  background: #334155;
-  color: #ffffff;
   border: 2px solid rgb(219, 215, 215);
+  background: #f8fafc;
+  color: #334155;
 }
 
 .card-btn.primary:hover {
-  background: #1e293b;
-  border-color: #1e293b;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .class-badge {
