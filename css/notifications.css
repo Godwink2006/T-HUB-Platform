@@ -64,6 +64,20 @@
   font-size: 13px;
 }
 
+.back-my-profiles-btn {
+  height: 40px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 12px;
+  border: 2px solid rgb(219, 215, 215);
+  width: 70px;
+  justify-content: space-between;
+  background: #1f2937;
+  color: #f9fafb;
+}
+
 /* Active Filter Tab Modifier */
 .notif-tab.active {
   background: #eff6ff;
@@ -89,7 +103,8 @@
   .notifications-card-list,
   .notif-tab.active,
   .notif-tab,
-  .btn-primary-action {
+  .btn-primary-action,
+  .back-my-profiles-btn {
     border-radius: 10px;
   }
 
