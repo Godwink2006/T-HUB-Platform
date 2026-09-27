@@ -27,12 +27,28 @@ async function initAcademicsPage() {
     const isAdmin = userRole === "admin";
     const isTeacher = userRole === "teacher";
     const isStudent = userRole === "student";
+    const isAccountant = userRole === "accountant";
 
     const isAdminOrTeacher = isAdmin || isTeacher;
+    const isAdminOrAccountant = isAdmin || isAccountant;
     const isTeacherOrStudent = isTeacher || isStudent;
 
     if (containerEl) {
       const allCardsHTML = `
+ ${
+   isAdminOrAccountant
+     ? `
+    <div id="nav-enrollment" class="academic-card">
+      <h4>Enrollment</h4>
+      <p>View and manage your Enrollment.</p>
+      <button onclick="window.location.href = 'enrollment.html'" class="manage-btn">
+        Manage enrollment <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+    `
+     : ""
+ }
+
     ${
       isAdmin
         ? `
@@ -126,14 +142,6 @@ async function initAcademicsPage() {
     `
         : ""
     }
-
-     <div id="nav-enrollment" class="academic-card">
-      <h4>Enrollment</h4>
-      <p>View and manage your Enrollment.</p>
-      <button onclick="window.location.href = 'enrollment.html'" class="manage-btn">
-        Manage enrollment <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
   `;
 
       containerEl.innerHTML = allCardsHTML;

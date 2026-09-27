@@ -3,6 +3,13 @@ function renderNavigation(userRole) {
   const isAccountant = userRole === "accountant";
   const isTeacher = userRole === "teacher";
   const isStudent = userRole === "student";
+  const isLibrarian = userRole === "librarian";
+
+  if (isAdmin || isLibrarian) {
+    document.querySelectorAll(".admin-librarian-only").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
 
   if (isAdmin) {
     document.querySelectorAll(".admin-only").forEach((el) => {
@@ -57,7 +64,11 @@ const ADMIN_ONLY_PAGES = [
   "timetable.html",
 ];
 
-const ADMIN_ACCOUNTANT_PAGES = ["students.html", "finance.html"];
+const ADMIN_ACCOUNTANT_PAGES = [
+  "students.html",
+  "finance.html",
+  "enrollment.html",
+];
 
 const ADMIN_TEACHER_PAGES = ["attendance.html", "grades.html"];
 
@@ -66,6 +77,8 @@ const TEACHER_ONLY_PAGES = ["my-assignments.html"];
 const STUDENT_ONLY_PAGES = ["my-attendance.html"];
 
 const TEACHER_STUDENT_ONLY_PAGES = ["my-timetable.html"];
+
+const TEACHER_LIBRARIAN_ONLY_PAGES = ["library.html"];
 
 function isLoginPage() {
   const path = window.location.pathname.toLowerCase();
@@ -138,6 +151,8 @@ async function checkPageAccess() {
   const isStudentOnly = STUDENT_ONLY_PAGES.includes(currentPage);
   const isTeacherOrStudentOnly =
     TEACHER_STUDENT_ONLY_PAGES.includes(currentPage);
+  const isAdminOrLibrarianOnly =
+    TEACHER_LIBRARIAN_ONLY_PAGES.includes(currentPage);
 
   const isProtectedPage =
     isAdminOnly ||
@@ -145,6 +160,7 @@ async function checkPageAccess() {
     isAdminOrTeacherOnly ||
     isTeacherOnly ||
     isStudentOnly ||
+    isAdminOrLibrarianOnly ||
     isTeacherOrStudentOnly;
 
   if (!isProtectedPage) {
@@ -182,6 +198,11 @@ async function checkPageAccess() {
   }
 
   if (isAdminOrAccountantOnly && role !== "admin" && role !== "accountant") {
+    await window.forceLogout();
+    return;
+  }
+
+  if (isAdminOrLibrarianOnly && role !== "admin" && role !== "librarian") {
     await window.forceLogout();
     return;
   }
