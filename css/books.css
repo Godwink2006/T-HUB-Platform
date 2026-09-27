@@ -331,6 +331,17 @@ body {
   .small-card {
     border-radius: 10px;
   }
+
+  .student-modal-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 550px;
+    height: 450px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalFadeIn 0.2s ease-out;
+  }
 }
 
 @media screen and (max-width: 768px) {
