@@ -37,43 +37,53 @@
           <h1>My Attendance</h1>
           <p>Track your class attendance and attendance rates for this year.</p>
         </div>
-      </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-label">Overall Rate</span>
-          <div class="stat-value text-green" id="overallRate">0%</div>
-          <span class="stat-sub">Total</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Present</span>
-          <div class="stat-value text-green" id="totalPresent">0</div>
-          <span class="stat-sub">Total Classes</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Absent</span>
-          <div class="stat-value text-red" id="totalAbsent">0</div>
-          <span class="stat-sub">Total Classes</span>
-        </div>
-      </div>
+        <div class="toolbar">
+          <div class="filters-container">
+            <select id="academicYearFilter">
+              <option value="all">All Academic Years</option>
+            </select>
 
-      <h2 class="section-title">Subject Summary</h2>
-      <div class="subject-cards-grid" id="subjectCardsContainer"></div>
+            <select id="termFilter">
+              <option value="all">All Semesters</option>
+            </select>
 
-      <div class="toolbar">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search by subject or teacher..."
-        />
-        <select id="subjectFilter">
-          <option value="all">All Subjects</option>
-        </select>
-        <select id="statusFilter">
-          <option value="all">All Statuses</option>
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-        </select>
+            <select id="classFilter">
+              <option value="all">All Classes</option>
+            </select>
+
+            <select id="subjectFilter">
+              <option value="all">All Subjects</option>
+            </select>
+
+            <select id="statusFilter">
+              <option value="all">All Status</option>
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Overall Rate</span>
+            <div class="stat-value text-green" id="overallRate">0%</div>
+            <span class="stat-sub">Total</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Present</span>
+            <div class="stat-value text-green" id="totalPresent">0</div>
+            <span class="stat-sub">Total Classes</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Absent</span>
+            <div class="stat-value text-red" id="totalAbsent">0</div>
+            <span class="stat-sub">Total Classes</span>
+          </div>
+        </div>
+
+        <h2 class="section-title">Subject Summary</h2>
+        <div class="subject-cards-grid" id="subjectCardsContainer"></div>
       </div>
 
       <div class="history-card">

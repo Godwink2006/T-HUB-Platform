@@ -13,7 +13,6 @@ async function getCurrentStudentId() {
 
   if (authError || !user) {
     console.error("User not authenticated:", authError);
-
     window.location.href = "/login.html";
     return null;
   }
@@ -32,10 +31,18 @@ async function getCurrentStudentId() {
   return student.id;
 }
 
+let allAttendanceRecords = []; // Stores raw fetched data
+
 function setupFilterEventListeners() {
   document
-    .getElementById("searchInput")
-    .addEventListener("input", applyFiltersAndRender);
+    .getElementById("academicYearFilter")
+    .addEventListener("change", applyFiltersAndRender);
+  document
+    .getElementById("termFilter")
+    .addEventListener("change", applyFiltersAndRender);
+  document
+    .getElementById("classFilter")
+    .addEventListener("change", applyFiltersAndRender);
   document
     .getElementById("subjectFilter")
     .addEventListener("change", applyFiltersAndRender);
@@ -44,48 +51,14 @@ function setupFilterEventListeners() {
     .addEventListener("change", applyFiltersAndRender);
 }
 
-function applyFiltersAndRender() {
-  const searchTerm = document
-    .getElementById("searchInput")
-    .value.trim()
-    .toLowerCase();
-  const selectedSubject = document.getElementById("subjectFilter").value;
-  const selectedStatus = document.getElementById("statusFilter").value;
-
-  const filteredRecords = allAttendanceRecords.filter((r) => {
-    const subjectName = (r.attendance?.subjects?.name || "").toLowerCase();
-    const teacherName = (r.attendance?.profiles?.full_name || "").toLowerCase();
-    const status = (r.status || "").toLowerCase();
-
-    // 1. Text Search (Matches Subject OR Teacher)
-    const matchesSearch =
-      searchTerm === "" ||
-      subjectName.includes(searchTerm) ||
-      teacherName.includes(searchTerm);
-
-    // 2. Subject Filter
-    const matchesSubject =
-      selectedSubject === "all" ||
-      r.attendance?.subjects?.name === selectedSubject;
-
-    // 3. Status Filter
-    const matchesStatus =
-      selectedStatus === "all" || status === selectedStatus.toLowerCase();
-
-    return matchesSearch && matchesSubject && matchesStatus;
-  });
-
-  renderAttendanceHistory(filteredRecords);
-}
-
 function calculateOverviewStats(records) {
   const total = records.length;
   let present = 0,
     absent = 0;
 
   records.forEach((r) => {
-    if (r.status === "present") present++;
-    else if (r.status === "absent") absent++;
+    if (r.status.toLowerCase() === "present") present++;
+    else if (r.status.toLowerCase() === "absent") absent++;
   });
 
   const rate = total > 0 ? Math.round((present / total) * 100) : 0;
@@ -107,12 +80,19 @@ function renderSubjectCards(records) {
       subjectsMap[subjectName] = { total: 0, present: 0 };
     }
     subjectsMap[subjectName].total++;
-    if (r.status === "present") subjectsMap[subjectName].present++;
+    if (r.status.toLowerCase() === "present")
+      subjectsMap[subjectName].present++;
   });
+
+  if (Object.keys(subjectsMap).length === 0) {
+    container.innerHTML = `<p style="color: #888; grid-column: 1 / -1; text-align: center;">No subject data for this filter selection.</p>`;
+    return;
+  }
 
   Object.keys(subjectsMap).forEach((subjectName) => {
     const stat = subjectsMap[subjectName];
-    const percentage = Math.round((stat.present / stat.total) * 100);
+    const percentage =
+      stat.total > 0 ? Math.round((stat.present / stat.total) * 100) : 0;
 
     const card = document.createElement("div");
     card.className = "subject-card";
@@ -141,7 +121,7 @@ function renderAttendanceHistory(records) {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align: center; color: #888; padding: 20px;">
-          No matching attendance records found.
+          No matching attendance records found for these filters.
         </td>
       </tr>`;
     return;
@@ -168,8 +148,6 @@ function renderAttendanceHistory(records) {
   });
 }
 
-let allAttendanceRecords = []; // Global variable to store fetched data
-
 async function loadStudentAttendanceData(studentId) {
   const { data: records, error } = await supabaseClient
     .from("attendance_records")
@@ -181,6 +159,9 @@ async function loadStudentAttendanceData(studentId) {
         id,
         date,
         status,
+        academic_years ( id, year_label ),
+        terms ( id, name ),
+        classes ( id, name ),
         subjects ( id, name ),
         profiles:teacher_id ( full_name ),
         periods ( name )
@@ -197,33 +178,93 @@ async function loadStudentAttendanceData(studentId) {
 
   allAttendanceRecords = records || [];
 
-  calculateOverviewStats(allAttendanceRecords);
-  renderSubjectCards(allAttendanceRecords);
+  // Populate all dropdown filter options dynamically with names
+  populateDropdownFilters(allAttendanceRecords);
 
-  // Populate the subject filter dropdown dynamically
-  populateSubjectFilter(allAttendanceRecords);
-
-  // Apply filtering and render history table
+  // Apply filters and render stats, cards, and table initially
   applyFiltersAndRender();
 
-  // Attach event listeners to search input and filter dropdowns
+  // Attach event listeners to all dropdown filters
   setupFilterEventListeners();
 }
 
-function populateSubjectFilter(records) {
-  const subjectFilter = document.getElementById("subjectFilter");
-  subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
+function applyFiltersAndRender() {
+  const selectedYear = document.getElementById("academicYearFilter").value;
+  const selectedTerm = document.getElementById("termFilter").value;
+  const selectedClass = document.getElementById("classFilter").value;
+  const selectedSubject = document.getElementById("subjectFilter").value;
+  const selectedStatus = document.getElementById("statusFilter").value;
 
-  const uniqueSubjects = new Set();
-  records.forEach((r) => {
-    const name = r.attendance?.subjects?.name;
-    if (name) uniqueSubjects.add(name);
+  const filteredRecords = allAttendanceRecords.filter((r) => {
+    // Match against the names or IDs depending on what the dropdown value holds
+    const yearName = r.attendance?.academic_years?.year_label || "";
+    const termName = r.attendance?.terms?.name || "";
+    const className = r.attendance?.classes?.name || "";
+    const subjectName = r.attendance?.subjects?.name || "";
+    const status = (r.status || "").toLowerCase();
+
+    const matchesYear = selectedYear === "all" || yearName === selectedYear;
+    const matchesTerm = selectedTerm === "all" || termName === selectedTerm;
+    const matchesClass = selectedClass === "all" || className === selectedClass;
+    const matchesSubject =
+      selectedSubject === "all" || subjectName === selectedSubject;
+    const matchesStatus =
+      selectedStatus === "all" || status === selectedStatus.toLowerCase();
+
+    return (
+      matchesYear &&
+      matchesTerm &&
+      matchesClass &&
+      matchesSubject &&
+      matchesStatus
+    );
   });
 
-  uniqueSubjects.forEach((subject) => {
-    const option = document.createElement("option");
-    option.value = subject;
-    option.textContent = subject;
-    subjectFilter.appendChild(option);
+  calculateOverviewStats(filteredRecords);
+  renderSubjectCards(filteredRecords);
+  renderAttendanceHistory(filteredRecords);
+}
+
+function populateDropdownFilters(records) {
+  const subjectFilter = document.getElementById("subjectFilter");
+  const yearFilter = document.getElementById("academicYearFilter");
+  const termFilter = document.getElementById("termFilter");
+  const classFilter = document.getElementById("classFilter");
+
+  // Reset dropdowns
+  subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
+  yearFilter.innerHTML = '<option value="all">All Academic Years</option>';
+  termFilter.innerHTML = '<option value="all">All Terms</option>';
+  classFilter.innerHTML = '<option value="all">All Classes</option>';
+
+  const uniqueSubjects = new Set();
+  const uniqueYears = new Set();
+  const uniqueTerms = new Set();
+  const uniqueClasses = new Set();
+
+  records.forEach((r) => {
+    if (r.attendance?.subjects?.name)
+      uniqueSubjects.add(r.attendance.subjects.name);
+    if (r.attendance?.academic_years?.year_label)
+      uniqueYears.add(r.attendance.academic_years.year_label);
+    if (r.attendance?.terms?.name) uniqueTerms.add(r.attendance.terms.name);
+    if (r.attendance?.classes?.name)
+      uniqueClasses.add(r.attendance.classes.name);
+  });
+
+  uniqueSubjects.forEach((sub) => {
+    subjectFilter.innerHTML += `<option value="${sub}">${sub}</option>`;
+  });
+
+  uniqueYears.forEach((yearName) => {
+    yearFilter.innerHTML += `<option value="${yearName}">${yearName}</option>`;
+  });
+
+  uniqueTerms.forEach((termName) => {
+    termFilter.innerHTML += `<option value="${termName}">${termName}</option>`;
+  });
+
+  uniqueClasses.forEach((className) => {
+    classFilter.innerHTML += `<option value="${className}">${className}</option>`;
   });
 }
