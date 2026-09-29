@@ -247,6 +247,9 @@ tr {
   height: 445px;
   animation: modalShow 0.25s ease;
 }
+.menu-toggle {
+  z-index: 99999;
+}
 
 .view-payment-modal {
   position: fixed;
