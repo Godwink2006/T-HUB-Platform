@@ -144,6 +144,29 @@ window.forceLogout = async function () {
 async function checkPageAccess() {
   const currentPage = window.location.pathname.split("/").pop();
 
+  if (currentPage === "academics.html") {
+    // <-- Put your exact academic page filename here
+    document.documentElement.style.visibility = "hidden";
+    if (window.supabaseClient) {
+      const {
+        data: { user },
+      } = await window.supabaseClient.auth.getUser();
+      if (user) {
+        const { data: profile } = await window.supabaseClient
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.role === "librarian") {
+          await window.forceLogout();
+          return;
+        }
+      }
+    }
+    document.documentElement.style.visibility = "";
+  }
+
   const isAdminOnly = ADMIN_ONLY_PAGES.includes(currentPage);
   const isAdminOrAccountantOnly = ADMIN_ACCOUNTANT_PAGES.includes(currentPage);
   const isAdminOrTeacherOnly = ADMIN_TEACHER_PAGES.includes(currentPage);
