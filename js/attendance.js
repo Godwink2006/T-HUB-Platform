@@ -441,42 +441,32 @@ async function loadRosterIntoModal(classId) {
 
   try {
     const cleanClassId = classId ? classId.trim() : "";
-    console.log("Querying students for class_id:", cleanClassId);
+    console.log("Querying active students via RPC for class_id:", cleanClassId);
 
-    const { data: students, error: studentErr } = await supabaseClient
-      .from("students")
-      .select("id, student_id, class_id")
-      .eq("class_id", cleanClassId);
+    // Call the secure database function that filters out graduated/transferred students server-side
+    const { data: activeStudents, error: studentErr } =
+      await supabaseClient.rpc("get_active_class_students", {
+        p_class_id: cleanClassId,
+      });
 
     if (studentErr) {
-      console.error("Error fetching students:", studentErr);
+      console.error("Error fetching active students:", studentErr);
       tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Error loading students: ${studentErr.message}</td></tr>`;
       return;
     }
 
-    console.log("Found raw students in database:", students);
+    console.log("Filtered active students from database:", activeStudents);
 
-    if (!students || students.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">No students found for this class in database.</td></tr>`;
+    if (!activeStudents || activeStudents.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">No active students found for this class.</td></tr>`;
       return;
     }
 
-    const studentIds = students.map((s) => s.id);
-    let profileMap = new Map();
-
-    const { data: profiles, error: profileErr } = await supabaseClient
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", studentIds);
-
-    if (!profileErr && profiles) {
-      profileMap = new Map(profiles.map((p) => [p.id, p.full_name]));
-    }
-
+    // Render rows directly
     tbody.innerHTML = "";
-    students.forEach((student) => {
+    activeStudents.forEach((student) => {
       const displayName =
-        profileMap.get(student.id) ||
+        student.full_name ||
         (student.student_id
           ? `Student (${student.student_id})`
           : `Student (${student.id.slice(0, 8)})`);

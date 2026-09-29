@@ -847,7 +847,8 @@ tr {
   }
 
   #clearDateFilterBtn,
-  .attendance-status-dropdown {
+  .attendance-status-dropdown,
+  .edit-draft-modal-content {
     border-radius: 10px;
   }
 

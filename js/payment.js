@@ -83,7 +83,7 @@ async function loadStudentFees() {
     '<tr><td colspan="7" style="text-align: center; color: grey;"><i class="fas fa-spinner fa-spin" style="color: grey"></i>  Loading fees...</td></tr>';
 
   try {
-    // 1. Fetch student fees and join classes (which works cleanly)
+    // 1. Fetch student fees and join classes
     const { data: fees, error: feeError } = await supabaseClient
       .from("student_fees")
       .select(
@@ -107,14 +107,13 @@ async function loadStudentFees() {
       return;
     }
 
-    // 2. Fetch all profiles so we can match them by student_id / id
+    // 2. Fetch all profiles for student names
     const { data: profiles, error: profileError } = await supabaseClient
       .from("profiles")
       .select("id, full_name");
 
     if (profileError) throw profileError;
 
-    // Create a quick lookup map for profiles
     const profileMap = {};
     if (profiles) {
       profiles.forEach((p) => {
@@ -122,11 +121,45 @@ async function loadStudentFees() {
       });
     }
 
-    // 3. Clear and populate table rows
+    // 3. Fetch student enrollment statuses so we can filter out inactive students
+    const { data: enrollments, error: enrollmentError } = await supabaseClient
+      .from("student_enrollments")
+      .select("student_id, enrollment_status");
+
+    if (enrollmentError) throw enrollmentError;
+
+    // Create a lookup map for the student's latest enrollment status
+    const enrollmentStatusMap = {};
+    if (enrollments) {
+      enrollments.forEach((e) => {
+        enrollmentStatusMap[e.student_id] = e.enrollment_status;
+      });
+    }
+
+    // 4. FILTER: Exclude students whose status is Graduated or Transferred
+    const activeFees = fees.filter((fee) => {
+      const status = enrollmentStatusMap[fee.student_id] || "";
+      const lowerStatus = status.toLowerCase();
+
+      if (
+        lowerStatus.includes("graduated") ||
+        lowerStatus.includes("transferred")
+      ) {
+        return false; // Skip this student
+      }
+      return true;
+    });
+
+    if (activeFees.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="7" style="text-align: center;">No active student fee records found.</td></tr>';
+      return;
+    }
+
+    // 5. Clear and populate table rows with active fees only
     tbody.innerHTML = "";
 
-    fees.forEach((fee) => {
-      // Look up student name using the student_id reference
+    activeFees.forEach((fee) => {
       const studentName = profileMap[fee.student_id] || "Unknown Student";
       const className = fee.classes?.name || "Unassigned";
 

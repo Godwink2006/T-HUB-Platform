@@ -770,20 +770,21 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
     const client = window.supabaseClient || supabaseClient;
     const cleanClassId = classId ? classId.trim() : "";
 
-    // 1. Single Query: Fetch students AND their profile names
-    const { data: students, error: studentErr } = await client
-      .from("students")
-      .select("id, student_id, class_id, profiles(full_name)")
-      .eq("class_id", cleanClassId);
+    // 1. Fetch ONLY active students using our secure database RPC function
+    // (This automatically filters out graduated and transferred students, bypassing RLS)
+    const { data: activeStudents, error: studentErr } = await client.rpc(
+      "get_active_class_students",
+      { p_class_id: cleanClassId },
+    );
 
     if (studentErr) {
-      console.error("Error fetching students:", studentErr);
+      console.error("Error fetching active students:", studentErr);
       tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">Error loading students: ${studentErr.message}</td></tr>`;
       return;
     }
 
-    if (!students || students.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">No students found for this class in database.</td></tr>`;
+    if (!activeStudents || activeStudents.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">No active students found for this class in database.</td></tr>`;
       return;
     }
 
@@ -792,16 +793,15 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
         ? Number(maxMarks)
         : null;
 
-    // Use numericMax consistently
     const maxAttr = numericMax !== null ? `max="${numericMax}"` : "";
     const placeholderText =
       numericMax !== null ? `0 - ${numericMax}` : "Enter grade";
 
-    // 3. Populate rows
+    // 2. Populate rows with active students only
     tbody.innerHTML = "";
-    students.forEach((student) => {
+    activeStudents.forEach((student) => {
       const studentCode = student.student_id || "N/A";
-      const displayName = student.profiles?.full_name || "Unknown Student";
+      const displayName = student.full_name || "Unknown Student";
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -1464,7 +1464,7 @@ document
             const message = `Your grade for ${subjectName} (${categoryName}) has been updated. New Score: ${scoreText}.`;
 
             return window.sendNotification(
-              null, 
+              null,
               record.student_id,
               "Grade Updated",
               message,
