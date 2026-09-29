@@ -242,6 +242,21 @@ tr {
   transform: translateX(-50%) translateY(-2px);
 }
 
+.back-academics-btn {
+  width: auto;
+  height: 30px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 5px;
+  color: #ffffff;
+  background: #1f2937;
+  border: 1px solid rgb(219, 215, 215);
+  width: 50%;
+  justify-content: space-between;
+}
+
 @media (max-width: 768px) {
   .bulk-action-bar {
     flex-direction: column;
@@ -272,9 +287,29 @@ tr {
   .form-control,
   .btn-primary,
   .btn-secondary,
-  .status-badge {
+  .status-badge,
+  .back-academics-btn {
     border-radius: 10px;
   }
+}
+
+/* Page Header */
+.topbar {
+  margin-bottom: 14px;
+  padding: 10px;
+}
+
+.topbar h1 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.topbar p {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 480px) {
@@ -295,7 +330,11 @@ tr {
   .btn-primary,
   .btn-secondary,
   .status-badge,
-  #selectAll {
+  .back-academics-btn {
     border-radius: 10px;
+  }
+
+  .back-academics-btn {
+    width: 70px;
   }
 }
