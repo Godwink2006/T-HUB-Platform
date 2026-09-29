@@ -9,39 +9,6 @@ body {
   background: rgb(231, 226, 226);
 }
 
-.payments-container {
-  display: flex;
-}
-
-.payments-main-content {
-  width: 100%;
-  min-height: 100vh;
-  padding: 10px;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.topbar h1 {
-  font-size: 32px;
-  color: #1f2937;
-}
-
-.topbar p {
-  color: #6b7280;
-  margin-top: 5px;
-}
-
-.top-right {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-}
-
 .back-payments-btn {
   width: auto;
   height: 30px;
@@ -337,4 +304,209 @@ tr {
   height: 40px;
   width: 40px;
   font-size: 22px;
+}
+
+@media screen and (max-width: 768px) {
+  .topbar {
+    margin-top: 50px;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    align-items: center !important;
+  }
+
+  .topbar h1 {
+    font-size: 24px;
+  }
+
+  .topbar p {
+    margin-top: 2px;
+    font-size: 13px;
+  }
+
+  .toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    height: 40px;
+    border: 1.5px solid rgb(219, 215, 215);
+    padding: 0 8px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+    border-radius: 10px;
+  }
+
+  .payments-table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  table {
+    min-width: 500px;
+  }
+
+  thead {
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  th,
+  td {
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    border: 1.5px solid rgb(219, 215, 215);
+    white-space: nowrap;
+  }
+
+  tr {
+    border: 1.5px solid rgb(219, 215, 215);
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-group label {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px;
+    border: 1.5px solid rgb(219, 215, 215);
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .sidebar {
+    /* If you want it completely hidden on mobile: */
+    transform: translateX(-100%);
+    /* OR if you want it to collapse into a drawer/overlay instead, remove translateX and use display: none; */
+  }
+
+  .payments-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 10px;
+  }
+
+  .back-payments-btn {
+    width: 70px;
+    border-radius: 10px;
+  }
+}
+
+.payments-container {
+  display: flex;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: rgb(231, 226, 226);
+}
+
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  overflow: auto;
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  background: #1d4ed8;
+  color: #fff;
+  padding: 25px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  margin-bottom: 40px;
+}
+
+.logo img {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.logo h2 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.menu {
+  list-style: none;
+}
+
+.menu li {
+  margin-bottom: 10px;
+}
+
+.menu li a {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  color: #fff;
+  text-decoration: none;
+
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+.menu li a:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.menu li.active a {
+  background: #fff;
+  color: #1d4ed8;
+}
+
+.menu li a i {
+  width: 20px;
+  text-align: center;
+}
+
+.payments-main-content {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+  padding: 10px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.topbar h1 {
+  font-size: 32px;
+  color: #1f2937;
+}
+
+.topbar p {
+  color: #6b7280;
+  margin-top: 5px;
 }
