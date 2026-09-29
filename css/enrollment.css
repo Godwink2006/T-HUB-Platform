@@ -1,7 +1,8 @@
 /* Table Styles */
 .table-container {
-  margin: 20px;
+  margin: 10px;
   overflow-x: auto;
+  margin-bottom: 100px;
 }
 .student-table {
   width: 100%;
@@ -58,7 +59,7 @@ tr {
   background: #ffffff;
   color: #6b7280;
   padding: 16px 28px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 5);
   align-items: center;
   justify-content: space-between; /* Spreads out contents evenly across the width */
   gap: 20px;
@@ -139,6 +140,7 @@ tr {
   font-size: 14px;
   margin-bottom: 14px;
 }
+
 .btn-primary {
   background: #4f46e5;
   color: white;
@@ -238,4 +240,62 @@ tr {
   visibility: visible;
   opacity: 1;
   transform: translateX(-50%) translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .bulk-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+    min-width: unset;
+    width: 92%;
+    bottom: 16px;
+  }
+
+  .table-container {
+    margin: 10px;
+  }
+
+  .modal-content {
+    max-width: 90%;
+    padding: 18px;
+  }
+
+  .table-container {
+    margin-bottom: 250px;
+  }
+
+  .bulk-action-bar,
+  .bulk-action-bar button,
+  .modal-content,
+  .form-control,
+  .btn-primary,
+  .btn-secondary,
+  .status-badge {
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  th,
+  td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .table-container {
+    margin-bottom: 250px;
+  }
+
+  .bulk-action-bar,
+  .bulk-action-bar button,
+  .modal-content,
+  .form-control,
+  .btn-primary,
+  .btn-secondary,
+  .status-badge,
+  #selectAll {
+    border-radius: 10px;
+  }
 }
