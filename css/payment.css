@@ -248,7 +248,7 @@ tr {
   animation: modalShow 0.25s ease;
 }
 .menu-toggle {
-  z-index: 99999;
+  z-index: 100;
 }
 
 .view-payment-modal {
