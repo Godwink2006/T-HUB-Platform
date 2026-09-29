@@ -9,21 +9,6 @@ body {
   background: rgb(231, 226, 226);
 }
 
-.back-payments-btn {
-  width: auto;
-  height: 30px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  margin-top: 5px;
-  background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
-  color: #f9fafb;
-  width: 50%;
-  justify-content: space-between;
-}
-
 .toolbar {
   display: flex;
   gap: 15px;
@@ -75,7 +60,6 @@ tr {
 }
 
 .status {
-  padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -83,16 +67,19 @@ tr {
 .payments-status-active {
   background: #dcfce7;
   color: #166534;
+  padding: 5px;
 }
 
 .payments-status-inactive {
   background: #fcdcdc;
   color: #651616;
+  padding: 5px;
 }
 
 .payments-status-partial {
-  background: rgb(255, 255, 219);
-  color: yellow;
+  background: rgb(251, 251, 159);
+  color: black;
+  padding: 5px;
 }
 
 .payments-actions-btn {
@@ -198,7 +185,7 @@ tr {
 }
 
 .recordPayment-modal-body {
-  padding: 25px;
+  padding: 10px;
 }
 
 .recordPayment-modal-footer {
@@ -277,7 +264,7 @@ tr {
 }
 
 .view-payment-body {
-  padding: 30px;
+  padding: 10px;
 }
 
 .view-payment-modal-header {
@@ -316,6 +303,43 @@ tr {
 
   .topbar h1 {
     font-size: 24px;
+  }
+
+  #closeViewPaymentModal,
+  .save-btn,
+  .cancel-btn,
+  .recordPayment-modal-header button {
+    border-radius: 10px;
+  }
+
+  .view-payment-modal-content,
+  .recordPayment-modal-content {
+    width: 95%;
+    max-width: 850px;
+    height: auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 12px;
+    background: #ffff;
+  }
+
+  .table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 20px;
+  }
+
+  .table-responsive-wrapper table {
+    min-width: 100%;
+  }
+
+  .payments-status-active,
+  .payments-status-inactive,
+  .payments-status-partial,
+  .view {
+    border-radius: 10px;
   }
 
   .topbar p {
@@ -387,21 +411,10 @@ tr {
     border-radius: 10px;
   }
 
-  .sidebar {
-    /* If you want it completely hidden on mobile: */
-    transform: translateX(-100%);
-    /* OR if you want it to collapse into a drawer/overlay instead, remove translateX and use display: none; */
-  }
-
   .payments-main-content {
     margin-left: 0 !important;
     width: 100% !important;
     padding: 10px;
-  }
-
-  .back-payments-btn {
-    width: 70px;
-    border-radius: 10px;
   }
 }
 
