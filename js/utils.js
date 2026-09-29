@@ -5,6 +5,12 @@ function renderNavigation(userRole) {
   const isStudent = userRole === "student";
   const isLibrarian = userRole === "librarian";
 
+  if (isAdmin || isStudent || isTeacher || isAccountant) {
+    document.querySelectorAll(".exclude-librarian").forEach((el) => {
+      el.style.setProperty("display", "list-item", "important");
+    });
+  }
+
   if (isAdmin || isLibrarian) {
     document.querySelectorAll(".admin-librarian-only").forEach((el) => {
       el.style.setProperty("display", "list-item", "important");
@@ -80,6 +86,8 @@ const TEACHER_STUDENT_ONLY_PAGES = ["my-timetable.html"];
 
 const TEACHER_LIBRARIAN_ONLY_PAGES = ["library.html"];
 
+const EXCLUDE_LIBRARIAN_PAGE = ["academics.html"];
+
 function isLoginPage() {
   const path = window.location.pathname.toLowerCase();
   return (
@@ -144,29 +152,6 @@ window.forceLogout = async function () {
 async function checkPageAccess() {
   const currentPage = window.location.pathname.split("/").pop();
 
-  if (currentPage === "academics.html") {
-    // <-- Put your exact academic page filename here
-    document.documentElement.style.visibility = "hidden";
-    if (window.supabaseClient) {
-      const {
-        data: { user },
-      } = await window.supabaseClient.auth.getUser();
-      if (user) {
-        const { data: profile } = await window.supabaseClient
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-
-        if (profile?.role === "librarian") {
-          await window.forceLogout();
-          return;
-        }
-      }
-    }
-    document.documentElement.style.visibility = "";
-  }
-
   const isAdminOnly = ADMIN_ONLY_PAGES.includes(currentPage);
   const isAdminOrAccountantOnly = ADMIN_ACCOUNTANT_PAGES.includes(currentPage);
   const isAdminOrTeacherOnly = ADMIN_TEACHER_PAGES.includes(currentPage);
@@ -176,6 +161,7 @@ async function checkPageAccess() {
     TEACHER_STUDENT_ONLY_PAGES.includes(currentPage);
   const isAdminOrLibrarianOnly =
     TEACHER_LIBRARIAN_ONLY_PAGES.includes(currentPage);
+  const isExcludeLibrarian = EXCLUDE_LIBRARIAN_PAGE.includes(currentPage);
 
   const isProtectedPage =
     isAdminOnly ||
@@ -184,6 +170,7 @@ async function checkPageAccess() {
     isTeacherOnly ||
     isStudentOnly ||
     isAdminOrLibrarianOnly ||
+    isExcludeLibrarian ||
     isTeacherOrStudentOnly;
 
   if (!isProtectedPage) {
@@ -246,6 +233,17 @@ async function checkPageAccess() {
   }
 
   if (isTeacherOrStudentOnly && role !== "teacher" && role !== "student") {
+    await window.forceLogout();
+    return;
+  }
+
+  if (
+    isExcludeLibrarian &&
+    role !== "teacher" &&
+    role !== "student" &&
+    role !== "admin" &&
+    role !== "accountant"
+  ) {
     await window.forceLogout();
     return;
   }
