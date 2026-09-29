@@ -50,6 +50,7 @@ tbody tr:hover {
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: left 0.3s ease;
+    z-index: 99999;
   }
 
   input[type="date"],
