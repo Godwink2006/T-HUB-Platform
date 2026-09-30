@@ -90,6 +90,251 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   });
 
+  // --- HANDLE "PROMOTE GRADE 9 TO 10 (CREATE USER)" ---
+  document
+    .getElementById("btnPromoteGrade9To10")
+    ?.addEventListener("click", async () => {
+      if (!selectedEnrollmentIds || selectedEnrollmentIds.length === 0) {
+        showToast("Please select at least one enrollment record.", "info");
+        return;
+      }
+
+      modalTitle.textContent =
+        "Promote Grade 9 to Grade 10 (Create Auth Account)";
+      modalBody.innerHTML = `<p>Loading Grade 10 classes and fee structures...</p>`;
+      modalOverlay.classList.add("active");
+
+      try {
+        const client = window.supabaseClient || supabaseClient;
+
+        // 1. Fetch selected enrollments safely without broken foreign key joins
+        const { data: sourceEnrollments, error: fetchErr } = await client
+          .from("student_enrollments")
+          .select("id, student_id, school_id, academic_year_id, classes(name)")
+          .in("id", selectedEnrollmentIds);
+
+        if (fetchErr) throw fetchErr;
+
+        // Filter or validate that they are coming from Grade 9
+        const nonGrade9 = sourceEnrollments.filter((enr) => {
+          const className = enr.classes?.name || "";
+          const match = className.match(/(\d+)/);
+          const grade = match ? parseInt(match[0]) : null;
+          return grade !== 9;
+        });
+
+        if (nonGrade9.length > 0 && sourceEnrollments.length === 1) {
+          showToast("Selected student is not in Grade 9.", "error");
+          modalOverlay.classList.remove("active");
+          return;
+        }
+
+        // 2. Fetch Grade 10 classes
+        const { data: classesData, error: classErr } = await client
+          .from("classes")
+          .select("id, name, capacity")
+          .ilike("name", "%10%")
+          .eq("status", "active");
+
+        if (classErr) throw classErr;
+
+        // 3. Fetch active fee structures for Grade 10 classes
+        const { data: feesData, error: feeErr } = await client
+          .from("fee_structures")
+          .select("id, total_amount, class_id, classes(name)")
+          .eq("status", "Active");
+
+        if (feeErr) throw feeErr;
+
+        modalConfirm.style.display = "inline-block";
+        modalBody.innerHTML = `
+        <p style="margin-bottom: 10px; color: #555;">
+          Creating auth accounts and promoting <b>${sourceEnrollments.length}</b> student(s) to Grade 10.
+        </p>
+
+        <div style="margin-bottom: 15px;">
+          <label for="targetClassSelect"><b>Target Grade 10 Class:</b></label>
+          <select id="targetClassSelect" class="form-control">
+            <option value="">-- Select Grade 10 Class --</option>
+            ${classesData.map((c) => `<option value="${c.id}" data-capacity="${c.capacity}">${c.name} (Capacity:${c.capacity})</option>`).join("")}
+          </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="targetFeeSelect"><b>Fee Structure:</b></label>
+          <select id="targetFeeSelect" class="form-control" disabled>
+            <option value="">-- Select Target Class First --</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="studentEmail"><b>Student Email:</b></label>
+          <input type="email" id="studentEmail" class="form-control" placeholder="student@school.com" />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="studentPassword"><b>Temporary Password:</b></label>
+          <input type="password" id="studentPassword" class="form-control" placeholder="Min 6 characters" />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="studentPhone"><b>Phone Number:</b></label>
+          <input type="text" id="studentPhone" class="form-control" placeholder="Phone number" />
+        </div>
+
+        <div id="capacityWarning" style="color: #d9534f; font-size: 13px; margin-top: 5px;"></div>
+      `;
+
+        const targetClassSelect = document.getElementById("targetClassSelect");
+        const targetFeeSelect = document.getElementById("targetFeeSelect");
+        const capacityWarning = document.getElementById("capacityWarning");
+
+        // Handle class selection & dynamic fee structure filtering
+        targetClassSelect.onchange = async () => {
+          const classId = targetClassSelect.value;
+          if (!classId) {
+            targetFeeSelect.innerHTML = `<option value="">-- Select Target Class First --</option>`;
+            targetFeeSelect.disabled = true;
+            capacityWarning.textContent = "";
+            return;
+          }
+
+          // Check Capacity
+          const { count, error: countErr } = await client
+            .from("student_enrollments")
+            .select("*", { count: "exact", head: true })
+            .eq("class_id", classId);
+
+          const selectedOption = targetClassSelect.selectedOptions[0];
+          const capacity =
+            parseInt(selectedOption.getAttribute("data-capacity")) || 0;
+
+          if (!countErr && count >= capacity) {
+            capacityWarning.textContent = `⚠️ Warning: Class has reached capacity (${count}/${capacity}).`;
+          } else {
+            capacityWarning.textContent = `Class occupancy: ${count || 0} / ${capacity} available.`;
+          }
+
+          // Filter matching fee structures
+          const matchingFees = feesData.filter((f) => f.class_id === classId);
+          if (matchingFees.length > 0) {
+            targetFeeSelect.innerHTML = matchingFees
+              .map(
+                (f) =>
+                  `<option value="${f.id}" data-amount="${f.total_amount}">[${f.classes?.name ?? "Class"}] Total: $${f.total_amount}</option>`,
+              )
+              .join("");
+            targetFeeSelect.disabled = false;
+          } else {
+            targetFeeSelect.innerHTML = `<option value="">-- No fee structure found for this class --</option>`;
+            targetFeeSelect.disabled = true;
+          }
+        };
+
+        // Confirm Action Binding
+        modalConfirm.onclick = async () => {
+          const targetClassId = targetClassSelect.value;
+          const feeStructureId = targetFeeSelect.value;
+          const email = document.getElementById("studentEmail").value.trim();
+          const password = document
+            .getElementById("studentPassword")
+            .value.trim();
+          const phone = document.getElementById("studentPhone").value.trim();
+
+          if (!targetClassId || !feeStructureId || !email || !password) {
+            showToast(
+              "Please fill in all required fields (Class, Fee Structure, Email, Password).",
+              "info",
+            );
+            return;
+          }
+
+          await executeGrade9To10Promotion({
+            enrollmentIds: selectedEnrollmentIds,
+            targetClassId,
+            feeStructureId,
+            email,
+            password,
+            phone,
+          });
+          closeModal();
+        };
+      } catch (err) {
+        console.error("Error setting up Grade 9 to 10 promotion modal:", err);
+        modalBody.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+      }
+    });
+
+  async function executeGrade9To10Promotion({
+    enrollmentIds,
+    targetClassId,
+    feeStructureId,
+    email,
+    password,
+    phone,
+  }) {
+    try {
+      const client = window.supabaseClient || supabaseClient;
+
+      // Get student_id from the enrollment records
+      const { data: sourceEnrollments, error: fetchErr } = await client
+        .from("student_enrollments")
+        .select("student_id")
+        .in("id", enrollmentIds);
+
+      if (fetchErr) throw fetchErr;
+
+      // 🛑 ADD THIS CHECK TO DEBUG
+      console.log("Submitting Promotion With:", {
+        targetClassId,
+        feeStructureId,
+        email,
+        phone,
+        enrollmentIds,
+      });
+
+      if (!feeStructureId) {
+        alert(
+          "Error: Fee Structure is missing or not selected in the modal dropdown!",
+        );
+        return;
+      }
+
+      for (const enr of sourceEnrollments) {
+        const { data, error: fnErr } = await client.functions.invoke(
+          "promote-grade9-to-10",
+          {
+            body: {
+              student_id: enr.student_id,
+              target_class_id: targetClassId,
+              fee_structure_id: feeStructureId,
+              email: email,
+              phone_number: phone,
+              password: password,
+            },
+          },
+        );
+
+        if (fnErr || !data?.success) {
+          throw new Error(
+            data?.message || fnErr?.message || "Promotion failed.",
+          );
+        }
+      }
+
+      showToast(
+        "Successfully promoted student(s) to Grade 10 and generated portal accounts!",
+        "success",
+      );
+      if (typeof loadStudentEnrollments === "function") {
+        loadStudentEnrollments();
+      }
+    } catch (err) {
+      console.error("Grade 9 to 10 promotion failed:", err);
+      showToast(`Promotion failed: ${err.message}`, "error");
+    }
+  }
+
   // --- HANDLE "PROMOTE STUDENTS TO NEXT CLASS (2nd SEMESTER)" ---
   document
     .getElementById("btnPromoteStudents")
@@ -425,6 +670,402 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // --- HANDLE "PROMOTE STUDENTS TO NEW ACADEMIC YEAR (1st SEMESTER)" ---
+  document
+    .getElementById("btnPromoteNextYear")
+    ?.addEventListener("click", async () => {
+      if (!selectedEnrollmentIds || selectedEnrollmentIds.length === 0) {
+        showToast("Please select at least one enrollment record.", "info");
+        return;
+      }
+
+      modalTitle.textContent =
+        "Promote Students to New Academic Year (1st Semester)";
+      modalBody.innerHTML = `<p>Loading academic years, classes, and fee structures...</p>`;
+      modalOverlay.classList.add("active");
+
+      try {
+        const client = window.supabaseClient || supabaseClient;
+
+        // 1. Fetch active Academic Years so admin can choose the target year
+        const { data: yearsData, error: yearsErr } = await client
+          .from("academic_years")
+          .select("id, year_label, status")
+          .order("year_label", { ascending: false });
+
+        if (yearsErr || !yearsData)
+          throw new Error("Could not fetch academic years.");
+
+        // 2. Fetch ALL terms so we can match 1st semester per academic year
+        const { data: termsData, error: termErr } = await client
+          .from("terms")
+          .select("id, name, academic_year_id");
+
+        if (termErr || !termsData) throw new Error("Could not fetch terms.");
+
+        // Get all 1st semester term IDs across years to fetch their fee structures
+        const firstSemesterTermIds = termsData
+          .filter((t) => t.name && t.name.toLowerCase().includes("1st"))
+          .map((t) => t.id);
+
+        // 3. Fetch all active classes
+        const { data: classesData, error: classErr } = await client
+          .from("classes")
+          .select("id, name, capacity")
+          .eq("status", "active");
+
+        if (classErr) throw classErr;
+
+        // 4. Fetch 1st Semester fee structures for all 1st semester terms
+        const { data: feesData, error: feeErr } = await client
+          .from("fee_structures")
+          .select(
+            "id, total_amount, class_id, academic_year_id, term_id, classes(name)",
+          )
+          .in(
+            "term_id",
+            firstSemesterTermIds.length > 0 ? firstSemesterTermIds : ["none"],
+          )
+          .eq("status", "Active");
+
+        if (feeErr) throw feeErr;
+
+        modalConfirm.style.display = "inline-block";
+        modalBody.innerHTML = `
+      <p style="margin-bottom: 10px; color: #555;">
+        Promoting <b>${selectedEnrollmentIds.length}</b> student(s) to a new academic year (1st Semester).
+      </p>
+
+      <div style="margin-bottom: 15px;">
+        <label for="targetAcademicYearSelect"><b>Target Academic Year:</b></label>
+        <select id="targetAcademicYearSelect" class="form-control">
+          <option value="">-- Select Target Academic Year --</option>
+          ${yearsData
+            .map(
+              (y) => `
+            <option value="${y.id}" ${y.status === "Active" ? "selected" : ""}>
+              ${y.year_label}${y.status === "Active" ? "(Active)" : ""}
+            </option>
+          `,
+            )
+            .join("")}
+        </select>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label for="targetClassSelect"><b>Target Class:</b></label>
+        <select id="targetClassSelect" class="form-control">
+          <option value="">-- Select Target Class --</option>
+          ${classesData.map((c) => `<option value="${c.id}" data-capacity="${c.capacity}">${c.name} (Capacity:${c.capacity})</option>`).join("")}
+        </select>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label for="targetFeeSelect"><b>1st Semester Fee Structure:</b></label>
+        <select id="targetFeeSelect" class="form-control" disabled>
+          <option value="">-- Select Target Year & Class First --</option>
+        </select>
+      </div>
+      <div id="capacityWarning" style="color: #d9534f; font-size: 13px; margin-top: 5px;"></div>
+    `;
+
+        const targetAcademicYearSelect = document.getElementById(
+          "targetAcademicYearSelect",
+        );
+        const targetClassSelect = document.getElementById("targetClassSelect");
+        const targetFeeSelect = document.getElementById("targetFeeSelect");
+        const capacityWarning = document.getElementById("capacityWarning");
+
+        // Helper to update available fee structures based on selected Year & Class
+        const updateFeeOptions = () => {
+          const selectedYearId = targetAcademicYearSelect.value;
+          const selectedClassId = targetClassSelect.value;
+
+          if (!selectedYearId || !selectedClassId) {
+            targetFeeSelect.innerHTML = `<option value="">-- Select Target Year & Class First --</option>`;
+            targetFeeSelect.disabled = true;
+            return;
+          }
+
+          // Find the exact 1st semester term ID for this specific academic year
+          const targetTerm = termsData.find(
+            (t) =>
+              String(t.academic_year_id) === String(selectedYearId) &&
+              t.name &&
+              t.name.toLowerCase().includes("1st"),
+          );
+
+          if (!targetTerm) {
+            targetFeeSelect.innerHTML = `<option value="">-- No 1st Semester term found for this year --</option>`;
+            targetFeeSelect.disabled = true;
+            return;
+          }
+
+          // Filter fees matching the target year, the correct 1st semester term ID, and class
+          const matchingFees = feesData.filter(
+            (f) =>
+              String(f.academic_year_id) === String(selectedYearId) &&
+              String(f.term_id) === String(targetTerm.id) &&
+              String(f.class_id) === String(selectedClassId),
+          );
+
+          if (matchingFees.length > 0) {
+            targetFeeSelect.innerHTML = matchingFees
+              .map(
+                (f) =>
+                  `<option value="${f.id}" data-class="${f.class_id}" data-amount="${f.total_amount}">[${f.classes?.name ?? "Class"}] Total: $${f.total_amount}</option>`,
+              )
+              .join("");
+            targetFeeSelect.disabled = false;
+          } else {
+            targetFeeSelect.innerHTML = `<option value="">-- No active fee structure found for this year/class --</option>`;
+            targetFeeSelect.disabled = true;
+          }
+        };
+
+        targetAcademicYearSelect.onchange = updateFeeOptions;
+
+        // Handle target class change: check capacity and update fees
+        targetClassSelect.onchange = async () => {
+          const classId = targetClassSelect.value;
+
+          if (!classId) {
+            capacityWarning.textContent = "";
+            updateFeeOptions();
+            return;
+          }
+
+          // A. Check Capacity for the target class
+          const { count, error: countErr } = await client
+            .from("student_enrollments")
+            .select("*", { count: "exact", head: true })
+            .eq("class_id", classId)
+            .eq("academic_year_id", targetAcademicYearSelect.value);
+
+          const selectedOption = targetClassSelect.selectedOptions[0];
+          const capacity =
+            parseInt(selectedOption.getAttribute("data-capacity")) || 0;
+
+          if (!countErr && count >= capacity) {
+            capacityWarning.textContent = `⚠️ Warning: Target class has reached or exceeded its capacity (${count}/${capacity}).`;
+          } else {
+            capacityWarning.textContent = `Class occupancy in target year: ${count || 0} / ${capacity} available.`;
+          }
+
+          updateFeeOptions();
+        };
+
+        // Confirm Action Binding
+        modalConfirm.onclick = async () => {
+          const targetAcademicYearId = targetAcademicYearSelect.value;
+          const targetClassId = targetClassSelect.value;
+          const feeStructureId = targetFeeSelect.value;
+
+          if (!targetAcademicYearId || !targetClassId || !feeStructureId) {
+            showToast(
+              "Please select an academic year, target class, and a valid fee structure.",
+              "info",
+            );
+            return;
+          }
+
+          // Dynamically find the correct term ID for execution
+          const targetTerm = termsData.find(
+            (t) =>
+              String(t.academic_year_id) === String(targetAcademicYearId) &&
+              t.name &&
+              t.name.toLowerCase().includes("1st"),
+          );
+
+          if (!targetTerm) {
+            showToast(
+              "Could not find a 1st Semester term for the selected academic year.",
+              "error",
+            );
+            return;
+          }
+
+          await executeYearlyPromotion(
+            selectedEnrollmentIds,
+            targetAcademicYearId,
+            targetClassId,
+            feeStructureId,
+            targetTerm.id,
+          );
+          closeModal();
+        };
+      } catch (err) {
+        console.error("Error setting up yearly promotion modal:", err);
+        modalBody.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+      }
+    });
+
+  async function executeYearlyPromotion(
+    enrollmentIds,
+    targetAcademicYearId,
+    targetClassId,
+    feeStructureId,
+    termId,
+  ) {
+    try {
+      const client = window.supabaseClient || supabaseClient;
+
+      // 1. Get target class details
+      const { data: targetClass, error: targetClassErr } = await client
+        .from("classes")
+        .select("id, name")
+        .eq("id", targetClassId)
+        .single();
+
+      if (targetClassErr || !targetClass)
+        throw new Error("Target class not found.");
+
+      function extractGradeNumber(className) {
+        const match = className.match(/(\d+)/);
+        return match ? parseInt(match[0]) : null;
+      }
+
+      const targetGrade = extractGradeNumber(targetClass.name);
+
+      // 2. Get student IDs, school IDs, and current classes
+      const { data: sourceEnrollments, error: fetchErr } = await client
+        .from("student_enrollments")
+        .select("student_id, school_id, classes(name)")
+        .in("id", enrollmentIds);
+
+      if (fetchErr) throw fetchErr;
+
+      // 3. Validate Grade 10+ user account rule
+      for (const enr of sourceEnrollments) {
+        const currentClassName = enr.classes?.name || "";
+        const currentGrade = extractGradeNumber(currentClassName);
+
+        if (
+          currentGrade !== null &&
+          currentGrade < 9 &&
+          targetGrade !== null &&
+          targetGrade >= 10
+        ) {
+          showToast(
+            `Promotion blocked: Students moving from ${currentClassName} to ${targetClass.name} require a user account. Please use the "Promote Student to User" button instead.`,
+            "error",
+          );
+          return;
+        }
+      }
+
+      // 4. Fetch fee structure details & validate compatibility
+      const { data: feeStruct, error: feeStructErr } = await client
+        .from("fee_structures")
+        .select("total_amount, class_id")
+        .eq("id", feeStructureId)
+        .single();
+
+      if (feeStructErr || !feeStruct)
+        throw new Error("Selected fee structure not found.");
+
+      if (feeStruct.class_id && feeStruct.class_id !== targetClassId) {
+        showToast(
+          `Invalid fee structure! The selected fee structure is not assigned to ${targetClass.name}.`,
+          "error",
+        );
+        return;
+      }
+
+      // Fetch matching fee structure breakdown items
+      const { data: feeItems, error: itemsErr } = await client
+        .from("fee_structure_items")
+        .select("id, fee_name, amount")
+        .eq("fee_structure_id", feeStructureId);
+
+      if (itemsErr) throw itemsErr;
+
+      for (const enr of sourceEnrollments) {
+        // A. Check if an enrollment record already exists for this student in the *new* academic year & 1st term
+        const { data: existingEnr, error: checkErr } = await client
+          .from("student_enrollments")
+          .select("id")
+          .eq("student_id", enr.student_id)
+          .eq("academic_year_id", targetAcademicYearId)
+          .eq("term_id", termId)
+          .maybeSingle();
+
+        if (checkErr) throw checkErr;
+
+        if (existingEnr) {
+          // If already enrolled in the new year/term, update it
+          const { error: updateErr } = await client
+            .from("student_enrollments")
+            .update({
+              class_id: targetClassId,
+              enrollment_status: "Promoted",
+            })
+            .eq("id", existingEnr.id);
+
+          if (updateErr) throw updateErr;
+        } else {
+          // Otherwise, insert a brand new enrollment record for the new academic year
+          const { error: insertErr } = await client
+            .from("student_enrollments")
+            .insert({
+              school_id: enr.school_id,
+              student_id: enr.student_id,
+              class_id: targetClassId,
+              academic_year_id: targetAcademicYearId,
+              term_id: termId,
+              enrollment_status: "Promoted",
+            });
+
+          if (insertErr) throw insertErr;
+        }
+
+        // B. Update student's primary class and academic year reference in `students` table
+        const { error: studentUpdateErr } = await client
+          .from("students")
+          .update({
+            class_id: targetClassId,
+            academic_year_id: targetAcademicYearId,
+          })
+          .eq("id", enr.student_id);
+
+        if (studentUpdateErr) {
+          console.warn(
+            "Could not update student table references:",
+            studentUpdateErr.message,
+          );
+        }
+
+        // C. Insert into `student_fees` for the new academic year / 1st semester
+        const { error: feeInsertErr } = await client
+          .from("student_fees")
+          .insert({
+            school_id: enr.school_id,
+            student_id: enr.student_id,
+            class_id: targetClassId,
+            academic_year_id: targetAcademicYearId,
+            term_id: termId,
+            fee_structure_id: feeStructureId,
+            total_fees: feeStruct.total_amount,
+            total_paid: 0,
+            status: "Unpaid",
+            fee_breakdown: feeItems || [],
+          });
+
+        if (feeInsertErr) throw feeInsertErr;
+      }
+
+      showToast(
+        `Successfully promoted ${sourceEnrollments.length} student(s) to the new academic year (1st Semester)!`,
+        "success",
+      );
+      if (typeof loadStudentEnrollments === "function") {
+        loadStudentEnrollments();
+      }
+    } catch (err) {
+      console.error("Yearly promotion execution failed:", err);
+      showToast(`Promotion failed: ${err.message}`, "error");
+    }
+  }
   // Execution functions
   async function executeStatusChange(enrollmentIds, newStatus) {
     try {
@@ -760,5 +1401,6 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+
 // Run when the page loads
 document.addEventListener("DOMContentLoaded", loadStudentEnrollments);

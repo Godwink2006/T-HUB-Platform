@@ -253,7 +253,7 @@ tr {
   color: #ffffff;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
-  width: 50%;
+  width: 8%;
   justify-content: space-between;
 }
 
@@ -278,7 +278,7 @@ tr {
   }
 
   .table-container {
-    margin-bottom: 250px;
+    margin-bottom: 450px;
   }
 
   .bulk-action-bar,
@@ -320,7 +320,7 @@ tr {
   }
 
   .table-container {
-    margin-bottom: 250px;
+    margin-bottom: 450px;
   }
 
   .bulk-action-bar,
