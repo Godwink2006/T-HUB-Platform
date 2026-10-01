@@ -604,19 +604,19 @@ async function loadRecentActivities(schoolId) {
       listContainer.innerHTML = activities
         .map(
           (act) => `
-        <li>
-          <span class="dashboard-dot ${act.dot_color || "green"}"></span>
-          ${act.message}
-        </li>
+  <li>
+  <i class="fas fa-bullhorn fa-2x dashboard-icon ${act.dot_color || "green"}"></i>
+  ${act.message}
+</li>
       `,
         )
         .join("");
     } else {
       listContainer.innerHTML = `
-        <li>
-          <span class="dashboard-dot green"></span>
-          No recent activities recorded yet
-        </li>
+        <div class="empty-state">
+          <i class="fas fa-bullhorn fa-10x"></i>
+          <p>No recent activities found</p>
+        </div>
       `;
     }
   } catch (err) {
