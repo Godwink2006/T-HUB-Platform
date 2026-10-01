@@ -1,5 +1,3 @@
-
-
 document.addEventListener("DOMContentLoaded", async () => {
   await initMyTimetable();
 
@@ -151,7 +149,7 @@ async function loadStudentClassSchedule(classId, schoolId) {
     timetables?.[0];
 
   if (!activeTimetable) {
-    renderEmptyState("No active timetable found for your class.");
+    renderEmptyState("No timetable found.");
     return;
   }
 
@@ -162,7 +160,7 @@ async function loadStudentClassSchedule(classId, schoolId) {
 
   if (lessonsErr || !rawLessons || rawLessons.length === 0) {
     console.error("Lessons Fetch Error:", lessonsErr);
-    renderEmptyState("No active timetable found for your class.");
+    renderEmptyState("No timetable found.");
     return;
   }
 
@@ -250,7 +248,6 @@ async function loadTeacherPersonalSchedule(teacherId) {
   renderScheduleCards(formattedLessons, "teacher");
 }
 
-
 function renderScheduleCards(lessons, roleContext) {
   const container = document.getElementById("timetableCardsGrid");
   if (!container) return;
@@ -291,7 +288,10 @@ function renderScheduleCards(lessons, roleContext) {
           <div class="day-card-body">
             ${
               dayLessons.length === 0
-                ? `<div class="empty-state"><p>No classes scheduled</p></div>`
+                ? `<div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 2rem; min-height: 250px; text-align: center; color: #64748b;">
+  <i class="fa-solid fa-calendar-days" style="font-size: 5rem; margin-bottom: 1rem; color: #cbd5e1; display: block;"></i>
+  <span style="font-size: 1.1rem; font-weight: 600; color: #334155;">No classes scheduled</span>
+</div>`
                 : dayLessons
                     .map((item) => renderLessonCardItem(item, roleContext))
                     .join("")
@@ -302,7 +302,6 @@ function renderScheduleCards(lessons, roleContext) {
     })
     .join("");
 }
-
 
 function renderLessonCardItem(item, roleContext) {
   const timeStr =
@@ -354,7 +353,7 @@ function renderEmptyState(message) {
 
   container.innerHTML = `
     <div class="empty-state">
-      <i class="fa-solid fa-calendar-xmark" style="font-size: 2.5rem; margin-bottom: 12px; color: #94a3b8;"></i>
+      <i class="fa-solid fa-calendar-xmark" style="font-size: 5.5rem; margin-bottom: 12px; color: #94a3b8;"></i>
       <p>${escapeHTML(message)}</p>
     </div>
   `;
@@ -363,7 +362,6 @@ function renderEmptyState(message) {
 let allCurrentLessons = [];
 
 async function setupTimetableFilters(schoolId) {
-  const yearSelect = document.getElementById("filterTimetableAcademicYear");
   const daySelect = document.getElementById("filterTimetableDays");
 
   if (daySelect && daySelect.options.length <= 1) {
@@ -376,60 +374,16 @@ async function setupTimetableFilters(schoolId) {
       daySelect.appendChild(opt);
     });
   }
-
-  if (yearSelect && schoolId) {
-    const { data: years, error } = await supabaseClient
-      .from("academic_years")
-      .select("*")
-      .eq("school_id", schoolId);
-
-    if (error) {
-      console.error("Error fetching academic_years:", error);
-      return;
-    }
-
-    if (years && yearSelect) {
-      yearSelect.innerHTML = '<option value="">All Academic Years</option>';
-
-      years.forEach((yr) => {
-        const yrName = yr.name || yr.year_label || yr.title || "Academic Year";
-        const isActive = yr.is_active || yr.status?.toLowerCase() === "active";
-
-        const opt = document.createElement("option");
-        opt.value = yr.id;
-        opt.textContent = isActive ? `${yrName}` : yrName;
-        if (isActive) opt.selected = true;
-        yearSelect.appendChild(opt);
-      });
-    }
-  }
-
-  if (yearSelect) {
-    yearSelect.removeEventListener("change", applyTimetableFilters);
-    yearSelect.addEventListener("change", applyTimetableFilters);
-  }
   if (daySelect) {
     daySelect.removeEventListener("change", applyTimetableFilters);
     daySelect.addEventListener("change", applyTimetableFilters);
   }
 }
 
-
 function applyTimetableFilters() {
-  const selectedYearId = document.getElementById(
-    "filterTimetableAcademicYear",
-  )?.value;
   const selectedDay = document.getElementById("filterTimetableDays")?.value;
 
   let filtered = [...allCurrentLessons];
-
-  if (selectedYearId) {
-    filtered = filtered.filter((lesson) => {
-      const lessonYearId =
-        lesson.academic_year_id || lesson.timetable?.academic_year_id;
-      return !lessonYearId || lessonYearId === selectedYearId;
-    });
-  }
 
   if (selectedDay) {
     filtered = filtered.filter(
@@ -440,4 +394,3 @@ function applyTimetableFilters() {
 
   renderScheduleCards(filtered, currentUserRole);
 }
-

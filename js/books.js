@@ -44,10 +44,10 @@ function renderBookCards(booksToRender) {
 
   if (!booksToRender || booksToRender.length === 0) {
     gridContainer.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #64748b;">
-        <i class="fa-solid fa-book-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-        No books available.
-      </div>
+     <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 2rem; min-height: 250px; text-align: center; color: #64748b;">
+  <i class="fa-solid fa-book-open" style="font-size: 10rem; margin-bottom: 1rem; color: #cbd5e1; display: block;"></i>
+  <span style="font-size: 1.1rem; font-weight: 800; color: #334155;">No books available.</span>
+</div>
     `;
     return;
   }
