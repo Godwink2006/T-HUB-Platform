@@ -119,11 +119,16 @@ tr:last-child td {
   color: #10b981;
 }
 
-.badge.unpaid,
-.badge.pending,
-.badge.partial {
+.badge.unpaid {
   background-color: rgba(239, 68, 68, 0.1);
   color: #ef4444;
+}
+
+.badge.partial,
+.badge.Partial {
+  background: rgb(251, 251, 159);
+  color: black;
+  padding: 5px;
 }
 
 .amount-bold {
