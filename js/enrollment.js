@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 3. Fetch active fee structures for Grade 10 classes
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
-          .select("id, total_amount, class_id, classes(name)")
+          .select("id, total_amount, class_id, terms(name), classes(name)")
           .eq("status", "Active");
 
         if (feeErr) throw feeErr;
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetFeeSelect.innerHTML = matchingFees
               .map(
                 (f) =>
-                  `<option value="${f.id}" data-amount="${f.total_amount}">[${f.classes?.name ?? "Class"}] Total: $${f.total_amount}</option>`,
+                  `<option value="${f.id}">[${f.classes?.name}] ${f.terms?.name ?? "Term"} - Total: $${f.total_amount}</option>`,
               )
               .join("");
             targetFeeSelect.disabled = false;

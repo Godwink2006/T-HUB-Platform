@@ -338,3 +338,7 @@ tr {
     width: 70px;
   }
 }
+
+.table-container {
+  margin-bottom: 450px;
+}
