@@ -312,10 +312,11 @@ async function loadDashboardAnnouncements() {
     // 4. Render into preview container
     if (filteredAnnouncements.length === 0) {
       previewContainer.innerHTML = `
-        <div class="announcement-item" style="padding: 20px; text-align: center; height: 250px; color: #64748b;">
-          <h4 style="margin: 0 0 4px 0; color: #334155; font-size: 25px;">No announcements yet</h4>
-          <p style="margin: 0; font-size: 0.9rem; font-size: 20px;">Published announcements will appear here.</p>
-        </div>
+     <div class="announcement-item empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; height: 280px; color: #64748b;">
+  <i class="fas fa-bullhorn fa-7x" style="color: #cbd5e1; margin-bottom: 16px;"></i>
+  <h4 style="margin: 0 0 8px 0; color: #334155; font-size: 22px; font-weight: 600;">No announcements found</h4>
+  <p style="margin: 0; font-size: 15px; color: #64748b;">Published announcements will appear here.</p>
+</div>
       `;
       return;
     }
