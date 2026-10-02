@@ -561,9 +561,18 @@ body {
   .announcement-modal-header button,
   .filter-menu,
   .enrollment-stats-body,
-  .sub-stat-item {
+  .sub-stat-item,
+  .date-modal-header button {
     border-radius: 10px;
   }
+}
+
+.date-modal-content {
+  width: 90%;
+}
+
+.date-modal-header {
+  padding: 10px;
 }
 
 .enrollment-stats-body {
