@@ -374,23 +374,23 @@ body {
 }
 
 .green {
-  background: #22c55e;
+  color: #22c55e;
 }
 
 .blue {
-  background: #2563eb;
+  color: #2563eb;
 }
 
 .orange {
-  background: #f59e0b;
+  color: #f59e0b;
 }
 
 .red {
-  background: #ef4444;
+  color: #ef4444;
 }
 
 .purple {
-  background: purple;
+  color: purple;
 }
 
 .filter-dropdown {
