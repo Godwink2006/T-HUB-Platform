@@ -1,74 +1,138 @@
+let allAttendanceRecords = [];
+
 document.addEventListener("DOMContentLoaded", async () => {
-  const studentIds = await getAllStudentIds();
-  console.log("Resolved Student IDs for Attendance:", studentIds);
-  if (studentIds.length > 0) {
-    loadStudentAttendanceData(studentIds);
-  } else {
-    console.error("No student records found for this account.");
+  // Get the logged-in user or student ID
+  const userId =
+    localStorage.getItem("userId") || "44bbd4a1-38b5-4137-9156-9b58ffd9384a";
+  console.log("Using User ID for Attendance:", userId);
+
+  if (userId) {
+    await loadStudentAttendanceData(userId);
   }
 });
 
-async function getAllStudentIds() {
-  const {
-    data: { user },
-    error: authError,
-  } = await supabaseClient.auth.getUser();
+async function loadStudentAttendanceData(userId) {
+  const client = window.supabaseClient || supabaseClient;
 
-  if (authError || !user) {
-    console.error("User not authenticated:", authError);
-    window.location.href = "/login.html";
-    return [];
+  // 1. Fetch attendance records for the student directly
+  const { data: attendanceRecords, error: arError } = await client
+    .from("attendance_records")
+    .select("id, status, created_at, student_id, attendance_id")
+    .eq("student_id", userId);
+
+  if (arError) {
+    console.error("Error loading student attendance records:", arError);
+    return;
   }
 
-  let studentUuids = [];
+  console.log(
+    "RAW attendance_records fetched from DB:",
+    attendanceRecords?.length || 0,
+  );
 
-  // 1. Find the student record associated with the current user
-  let { data: currentStudent } = await supabaseClient
-    .from("students")
-    .select("id, student_id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  // If not found by user id, try finding by email or user reference
-  if (!currentStudent) {
-    const { data: altStudent } = await supabaseClient
-      .from("students")
-      .select("id, student_id")
-      .eq("student_id", user.id)
-      .maybeSingle();
-    currentStudent = altStudent;
+  if (!attendanceRecords || attendanceRecords.length === 0) {
+    allAttendanceRecords = [];
+    populateDropdownFilters([]);
+    applyFiltersAndRender();
+    return;
   }
 
-  if (currentStudent) {
-    studentUuids.push(currentStudent.id);
+  // 2. Gather unique attendance IDs
+  const attendanceIds = [
+    ...new Set(attendanceRecords.map((r) => r.attendance_id).filter(Boolean)),
+  ];
 
-    // 2. CRITICAL: Pull ALL student rows that share the exact same student text identifier (e.g., "ST-106")
-    if (currentStudent.student_id) {
-      const { data: matchingStudents } = await supabaseClient
-        .from("students")
-        .select("id")
-        .eq("student_id", currentStudent.student_id);
+  // 3. Fetch the parent attendance sessions and all their nested relations cleanly
+  let attendanceMap = {};
+  if (attendanceIds.length > 0) {
+    const { data: attendanceSessions, error: aError } = await client
+      .from("attendance")
+      .select(
+        `
+        id,
+        date,
+        term_id,
+        academic_year_id,
+        class_id,
+        subject_id,
+        periods ( id, name ),
+        terms ( id, name ),
+        academic_years ( id, year_label ),
+        classes ( id, name ),
+        subjects ( id, name ),
+        profiles ( id, full_name )
+      `,
+      )
+      .in("id", attendanceIds);
 
-      if (matchingStudents) {
-        matchingStudents.forEach((s) => {
-          if (!studentUuids.includes(s.id)) {
-            studentUuids.push(s.id);
-          }
-        });
-      }
+    if (aError) {
+      console.error("Error loading related attendance sessions:", aError);
+    } else if (attendanceSessions) {
+      attendanceMap = Object.fromEntries(
+        attendanceSessions.map((a) => [a.id, a]),
+      );
     }
   }
 
-  // Fallback
-  if (studentUuids.length === 0) {
-    studentUuids.push(user.id);
-  }
+  // 4. Merge them together
+  allAttendanceRecords = attendanceRecords
+    .map((record) => ({
+      ...record,
+      attendance: attendanceMap[record.attendance_id] || null,
+    }))
+    .filter((r) => r.attendance !== null);
 
-  console.log("Resolved All Student UUIDs for ST-106:", studentUuids);
-  return studentUuids;
+  console.log("RAW DB Count vs Final Merged Count:", {
+    dbCount: attendanceRecords.length,
+    finalCount: allAttendanceRecords.length,
+    droppedCount: attendanceRecords.length - allAttendanceRecords.length,
+  });
+
+  console.log("MERGED ATTENDANCE RECORDS:", allAttendanceRecords);
+
+  populateDropdownFilters(allAttendanceRecords);
+  applyFiltersAndRender();
+  setupFilterEventListeners();
 }
 
-let allAttendanceRecords = []; // Stores raw fetched data
+function renderAttendanceHistory(records) {
+  const tbody = document.getElementById("attendanceHistoryTable");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  if (!records || records.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; color: #888; padding: 20px;">
+          No matching attendance records found for these filters.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  records.forEach((r) => {
+    const tr = document.createElement("tr");
+    const dateStr = r.attendance?.date
+      ? new Date(r.attendance.date).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "N/A";
+
+    const teacherName = r.attendance?.profiles?.full_name || "N/A";
+    const statusClass = r.status ? r.status.toLowerCase() : "";
+
+    tr.innerHTML = `
+      <td>${dateStr}</td>
+      <td>${r.attendance?.subjects?.name || "N/A"}</td>
+      <td>${teacherName}</td>
+      <td>${r.attendance?.periods?.name || "1st Period"}</td>
+      <td><span class="status-tag ${statusClass}">${r.status || "N/A"}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
 function setupFilterEventListeners() {
   document
@@ -107,6 +171,7 @@ function calculateOverviewStats(records) {
 
 function renderSubjectCards(records) {
   const container = document.getElementById("subjectCardsContainer");
+  if (!container) return;
   container.innerHTML = "";
 
   const subjectsMap = {};
@@ -150,92 +215,15 @@ function renderSubjectCards(records) {
   });
 }
 
-function renderAttendanceHistory(records) {
-  const tbody = document.getElementById("attendanceHistoryTable");
-  tbody.innerHTML = "";
-
-  if (records.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align: center; color: #888; padding: 20px;">
-          No matching attendance records found for these filters.
-        </td>
-      </tr>`;
-    return;
-  }
-
-  records.forEach((r) => {
-    const tr = document.createElement("tr");
-    const dateStr = new Date(r.attendance?.date).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-
-    const teacherName = r.attendance?.profiles?.full_name || "N/A";
-
-    tr.innerHTML = `
-      <td>${dateStr}</td>
-      <td>${r.attendance?.subjects?.name || "N/A"}</td>
-      <td>${teacherName}</td>
-      <td>${r.attendance?.periods?.name || "1st Period"}</td>
-      <td><span class="status-tag ${r.status.toLowerCase()}">${r.status}</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-async function loadStudentAttendanceData(studentIds) {
-  // Fetch attendance records using .in() to capture all historical IDs
-  const { data: records, error } = await supabaseClient
-    .from("attendance_records")
-    .select(
-      `
-      id,
-      status,
-      student_id,
-      attendance:attendance_id (
-        id,
-        date,
-        status,
-        academic_years ( id, year_label ),
-        terms ( id, name ),
-        classes ( id, name ),
-        subjects ( id, name ),
-        profiles:teacher_id ( full_name ),
-        periods ( name )
-      )
-    `,
-    )
-    .in("student_id", studentIds);
-
-  if (error) {
-    console.error("Error loading student attendance:", error);
-    return;
-  }
-
-  allAttendanceRecords = (records || []).filter(
-    (r) => r.attendance && r.attendance.status === "submitted",
-  );
-
-  console.log("Loaded attendance records across years:", allAttendanceRecords);
-
-  console.log(
-    "All years in loaded records:",
-    allAttendanceRecords.map((r) => r.attendance?.academic_years?.year_label),
-  );
-
-  populateDropdownFilters(allAttendanceRecords);
-  applyFiltersAndRender();
-  setupFilterEventListeners();
-}
-
 function applyFiltersAndRender() {
-  const selectedYear = document.getElementById("academicYearFilter").value;
-  const selectedTerm = document.getElementById("termFilter").value;
-  const selectedClass = document.getElementById("classFilter").value;
-  const selectedSubject = document.getElementById("subjectFilter").value;
-  const selectedStatus = document.getElementById("statusFilter").value;
+  const selectedYear =
+    document.getElementById("academicYearFilter")?.value || "all";
+  const selectedTerm = document.getElementById("termFilter")?.value || "all";
+  const selectedClass = document.getElementById("classFilter")?.value || "all";
+  const selectedSubject =
+    document.getElementById("subjectFilter")?.value || "all";
+  const selectedStatus =
+    document.getElementById("statusFilter")?.value || "all";
 
   const filteredRecords = allAttendanceRecords.filter((r) => {
     const yearName = r.attendance?.academic_years?.year_label || "";
@@ -271,6 +259,8 @@ function populateDropdownFilters(records) {
   const yearFilter = document.getElementById("academicYearFilter");
   const termFilter = document.getElementById("termFilter");
   const classFilter = document.getElementById("classFilter");
+
+  if (!subjectFilter || !yearFilter || !termFilter || !classFilter) return;
 
   subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
   yearFilter.innerHTML = '<option value="all">All Academic Years</option>';
