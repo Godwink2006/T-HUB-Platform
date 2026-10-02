@@ -1,11 +1,14 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const currentStudentId = await getCurrentStudentId();
-  if (currentStudentId) {
-    loadStudentAttendanceData(currentStudentId);
+  const studentIds = await getAllStudentIds();
+  console.log("Resolved Student IDs for Attendance:", studentIds);
+  if (studentIds.length > 0) {
+    loadStudentAttendanceData(studentIds);
+  } else {
+    console.error("No student records found for this account.");
   }
 });
 
-async function getCurrentStudentId() {
+async function getAllStudentIds() {
   const {
     data: { user },
     error: authError,
@@ -14,21 +17,55 @@ async function getCurrentStudentId() {
   if (authError || !user) {
     console.error("User not authenticated:", authError);
     window.location.href = "/login.html";
-    return null;
+    return [];
   }
 
-  const { data: student, error: studentError } = await supabaseClient
+  let studentUuids = [];
+
+  // 1. Find the student record associated with the current user
+  let { data: currentStudent } = await supabaseClient
     .from("students")
-    .select("id")
+    .select("id, student_id")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (studentError || !student) {
-    console.error("Student profile not found for user:", studentError);
-    return null;
+  // If not found by user id, try finding by email or user reference
+  if (!currentStudent) {
+    const { data: altStudent } = await supabaseClient
+      .from("students")
+      .select("id, student_id")
+      .eq("student_id", user.id)
+      .maybeSingle();
+    currentStudent = altStudent;
   }
 
-  return student.id;
+  if (currentStudent) {
+    studentUuids.push(currentStudent.id);
+
+    // 2. CRITICAL: Pull ALL student rows that share the exact same student text identifier (e.g., "ST-106")
+    if (currentStudent.student_id) {
+      const { data: matchingStudents } = await supabaseClient
+        .from("students")
+        .select("id")
+        .eq("student_id", currentStudent.student_id);
+
+      if (matchingStudents) {
+        matchingStudents.forEach((s) => {
+          if (!studentUuids.includes(s.id)) {
+            studentUuids.push(s.id);
+          }
+        });
+      }
+    }
+  }
+
+  // Fallback
+  if (studentUuids.length === 0) {
+    studentUuids.push(user.id);
+  }
+
+  console.log("Resolved All Student UUIDs for ST-106:", studentUuids);
+  return studentUuids;
 }
 
 let allAttendanceRecords = []; // Stores raw fetched data
@@ -148,14 +185,16 @@ function renderAttendanceHistory(records) {
   });
 }
 
-async function loadStudentAttendanceData(studentId) {
+async function loadStudentAttendanceData(studentIds) {
+  // Fetch attendance records using .in() to capture all historical IDs
   const { data: records, error } = await supabaseClient
     .from("attendance_records")
     .select(
       `
       id,
       status,
-      attendance:attendance_id!inner (
+      student_id,
+      attendance:attendance_id (
         id,
         date,
         status,
@@ -168,23 +207,26 @@ async function loadStudentAttendanceData(studentId) {
       )
     `,
     )
-    .eq("student_id", studentId)
-    .eq("attendance.status", "submitted");
+    .in("student_id", studentIds);
 
   if (error) {
     console.error("Error loading student attendance:", error);
     return;
   }
 
-  allAttendanceRecords = records || [];
+  allAttendanceRecords = (records || []).filter(
+    (r) => r.attendance && r.attendance.status === "submitted",
+  );
 
-  // Populate all dropdown filter options dynamically with names
+  console.log("Loaded attendance records across years:", allAttendanceRecords);
+
+  console.log(
+    "All years in loaded records:",
+    allAttendanceRecords.map((r) => r.attendance?.academic_years?.year_label),
+  );
+
   populateDropdownFilters(allAttendanceRecords);
-
-  // Apply filters and render stats, cards, and table initially
   applyFiltersAndRender();
-
-  // Attach event listeners to all dropdown filters
   setupFilterEventListeners();
 }
 
@@ -196,7 +238,6 @@ function applyFiltersAndRender() {
   const selectedStatus = document.getElementById("statusFilter").value;
 
   const filteredRecords = allAttendanceRecords.filter((r) => {
-    // Match against the names or IDs depending on what the dropdown value holds
     const yearName = r.attendance?.academic_years?.year_label || "";
     const termName = r.attendance?.terms?.name || "";
     const className = r.attendance?.classes?.name || "";
@@ -231,7 +272,6 @@ function populateDropdownFilters(records) {
   const termFilter = document.getElementById("termFilter");
   const classFilter = document.getElementById("classFilter");
 
-  // Reset dropdowns
   subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
   yearFilter.innerHTML = '<option value="all">All Academic Years</option>';
   termFilter.innerHTML = '<option value="all">All Terms</option>';

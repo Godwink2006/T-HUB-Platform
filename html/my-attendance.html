@@ -38,32 +38,95 @@
           <p>Track your class attendance and attendance rates for this year.</p>
         </div>
 
-        <div class="toolbar">
-          <div class="filters-container">
-            <select id="academicYearFilter">
+        <div
+          class="toolbar"
+          style="
+            background-color: #ffffff;
+            padding: 12px;
+            border: 2px solid rgb(219, 215, 215);
+            margin-bottom: 24px;
+          "
+        >
+          <div
+            class="filters-container"
+            style="display: flex; flex-wrap: wrap; gap: 8px"
+          >
+            <!-- Row 1: Academic Year & Semester -->
+            <select
+              id="academicYearFilter"
+              style="
+                flex: 0 0 calc(50% - 4px);
+                width: calc(50% - 4px);
+                box-sizing: border-box;
+                padding: 8px 6px;
+                font-size: 0.75rem;
+                cursor: pointer;
+              "
+            >
               <option value="all">All Academic Years</option>
             </select>
 
-            <select id="termFilter">
+            <select
+              id="termFilter"
+              style="
+                flex: 0 0 calc(50% - 4px);
+                width: calc(50% - 4px);
+                box-sizing: border-box;
+                padding: 8px 6px;
+                font-size: 0.75rem;
+                cursor: pointer;
+              "
+            >
               <option value="all">All Semesters</option>
             </select>
 
-            <select id="classFilter">
+            <!-- Row 2: Class & Subject -->
+            <select
+              id="classFilter"
+              style="
+                flex: 0 0 calc(50% - 4px);
+                width: calc(50% - 4px);
+                box-sizing: border-box;
+                padding: 8px 6px;
+                font-size: 0.75rem;
+                cursor: pointer;
+              "
+            >
               <option value="all">All Classes</option>
             </select>
 
-            <select id="subjectFilter">
+            <select
+              id="subjectFilter"
+              style="
+                flex: 0 0 calc(50% - 4px);
+                width: calc(50% - 4px);
+                box-sizing: border-box;
+                padding: 8px 6px;
+                font-size: 0.75rem;
+                cursor: pointer;
+              "
+            >
               <option value="all">All Subjects</option>
             </select>
 
-            <select id="statusFilter">
+            <!-- Row 3: Status (Takes full width or pairs up if you add a 6th element later) -->
+            <select
+              id="statusFilter"
+              style="
+                flex: 0 0 100%;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 8px 6px;
+                font-size: 0.75rem;
+                cursor: pointer;
+              "
+            >
               <option value="all">All Status</option>
               <option value="present">Present</option>
               <option value="absent">Absent</option>
             </select>
           </div>
         </div>
-
         <div class="stats-grid">
           <div class="stat-card">
             <span class="stat-label">Overall Rate</span>
