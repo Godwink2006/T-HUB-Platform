@@ -624,8 +624,7 @@ async function loadEnrollmentStats(
         )
       `,
       )
-      .eq("profiles.school_id", activeSchoolId)
-      .eq("profiles.role", "student");
+      .eq("profiles.school_id", activeSchoolId);
 
     const now = new Date();
 
