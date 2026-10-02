@@ -611,54 +611,71 @@ async function loadEnrollmentStats(
     }
 
     let query = window.supabaseClient
-      .from("profiles")
-      .select("id, status, created_at, students(gender)")
-      .eq("school_id", activeSchoolId)
-      .eq("role", "student");
+      .from("students")
+      .select(
+        `
+        id,
+        gender,
+        profiles!inner (
+          status,
+          created_at,
+          school_id,
+          role
+        )
+      `,
+      )
+      .eq("profiles.school_id", activeSchoolId)
+      .eq("profiles.role", "student");
 
     const now = new Date();
 
+    // Use profiles.created_at since created_at is in the profiles table
     if (filterType === "today") {
       const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString();
-      query = query.gte("created_at", startOfDay);
+      query = query.gte("profiles.created_at", startOfDay);
     } else if (filterType === "week") {
       const startOfWeek = new Date(
         now.setDate(now.getDate() - 7),
       ).toISOString();
-      query = query.gte("created_at", startOfWeek);
+      query = query.gte("profiles.created_at", startOfWeek);
     } else if (filterType === "month") {
       const startOfMonth = new Date(
         now.getFullYear(),
         now.getMonth(),
         1,
       ).toISOString();
-      query = query.gte("created_at", startOfMonth);
+      query = query.gte("profiles.created_at", startOfMonth);
     } else if (filterType === "year") {
       const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
-      query = query.gte("created_at", startOfYear);
+      query = query.gte("profiles.created_at", startOfYear);
     } else if (filterType === "custom" && customStart && customEnd) {
       query = query
-        .gte("created_at", `${customStart}T00:00:00`)
-        .lte("created_at", `${customEnd}T23:59:59`);
+        .gte("profiles.created_at", `${customStart}T00:00:00`)
+        .lte("profiles.created_at", `${customEnd}T23:59:59`);
     }
 
-    const { data: profiles, error } = await query;
+    const { data: students, error } = await query;
     if (error) throw error;
 
-    const total = profiles.length;
-    const active = profiles.filter(
-      (p) => (p.status || "").toLowerCase() === "active",
-    ).length;
+    const total = students.length;
+
+    // Check status inside the joined profiles object/array
+    const active = students.filter((s) => {
+      const profileData = Array.isArray(s.profiles)
+        ? s.profiles[0]
+        : s.profiles;
+      return (
+        profileData && (profileData.status || "").toLowerCase() === "active"
+      );
+    }).length;
 
     let boys = 0;
     let girls = 0;
 
-    profiles.forEach((p) => {
-      const studentData = Array.isArray(p.students)
-        ? p.students[0]
-        : p.students;
-      if (studentData && studentData.gender) {
-        const g = studentData.gender.toLowerCase();
+    students.forEach((s) => {
+      // Gender comes directly from the student record now
+      if (s.gender) {
+        const g = s.gender.toLowerCase();
         if (g === "male") boys++;
         if (g === "female") girls++;
       }
