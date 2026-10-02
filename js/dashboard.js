@@ -727,7 +727,7 @@ applyDateBtn.addEventListener("click", async () => {
   const btnSpan = document.querySelector(".filter-dropdown .selected-filter");
   if (btnSpan) btnSpan.textContent = `${startDate} to ${endDate}`;
 
-  dateModal.style.display = "flex";
+  dateModal.style.display = "none";
 
   // Call your stats function with custom date parameters
   await loadEnrollmentStats("custom", startDate, endDate);
