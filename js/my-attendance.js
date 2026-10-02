@@ -1,14 +1,16 @@
 let allAttendanceRecords = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Get the logged-in user or student ID
-  const userId =
-    localStorage.getItem("userId") || "44bbd4a1-38b5-4137-9156-9b58ffd9384a";
-  console.log("Using User ID for Attendance:", userId);
+  const client = window.supabaseClient || supabaseClient;
 
-  if (userId) {
-    await loadStudentAttendanceData(userId);
-  }
+  const {
+    data: { user },
+    error,
+  } = await client.auth.getUser();
+
+  const userId = user.id;
+
+  await loadStudentAttendanceData(userId);
 });
 
 async function loadStudentAttendanceData(userId) {
@@ -19,16 +21,6 @@ async function loadStudentAttendanceData(userId) {
     .from("attendance_records")
     .select("id, status, created_at, student_id, attendance_id")
     .eq("student_id", userId);
-
-  if (arError) {
-    console.error("Error loading student attendance records:", arError);
-    return;
-  }
-
-  console.log(
-    "RAW attendance_records fetched from DB:",
-    attendanceRecords?.length || 0,
-  );
 
   if (!attendanceRecords || attendanceRecords.length === 0) {
     allAttendanceRecords = [];
@@ -66,7 +58,7 @@ async function loadStudentAttendanceData(userId) {
       .in("id", attendanceIds);
 
     if (aError) {
-      console.error("Error loading related attendance sessions:", aError);
+      showToast("Error loading related attendance sessions:", aError);
     } else if (attendanceSessions) {
       attendanceMap = Object.fromEntries(
         attendanceSessions.map((a) => [a.id, a]),
@@ -81,14 +73,6 @@ async function loadStudentAttendanceData(userId) {
       attendance: attendanceMap[record.attendance_id] || null,
     }))
     .filter((r) => r.attendance !== null);
-
-  console.log("RAW DB Count vs Final Merged Count:", {
-    dbCount: attendanceRecords.length,
-    finalCount: allAttendanceRecords.length,
-    droppedCount: attendanceRecords.length - allAttendanceRecords.length,
-  });
-
-  console.log("MERGED ATTENDANCE RECORDS:", allAttendanceRecords);
 
   populateDropdownFilters(allAttendanceRecords);
   applyFiltersAndRender();
@@ -118,17 +102,17 @@ function renderAttendanceHistory(records) {
           month: "short",
           year: "numeric",
         })
-      : "N/A";
+      : "-";
 
-    const teacherName = r.attendance?.profiles?.full_name || "N/A";
+    const teacherName = r.attendance?.profiles?.full_name || "-";
     const statusClass = r.status ? r.status.toLowerCase() : "";
 
     tr.innerHTML = `
       <td>${dateStr}</td>
-      <td>${r.attendance?.subjects?.name || "N/A"}</td>
+      <td>${r.attendance?.subjects?.name || "-"}</td>
       <td>${teacherName}</td>
       <td>${r.attendance?.periods?.name || "1st Period"}</td>
-      <td><span class="status-tag ${statusClass}">${r.status || "N/A"}</span></td>
+      <td><span class="status-tag ${statusClass}">${r.status || "-"}</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -264,7 +248,7 @@ function populateDropdownFilters(records) {
 
   subjectFilter.innerHTML = '<option value="all">All Subjects</option>';
   yearFilter.innerHTML = '<option value="all">All Academic Years</option>';
-  termFilter.innerHTML = '<option value="all">All Terms</option>';
+  termFilter.innerHTML = '<option value="all">All Semesters</option>';
   classFilter.innerHTML = '<option value="all">All Classes</option>';
 
   const uniqueSubjects = new Set();
