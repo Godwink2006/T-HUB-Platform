@@ -687,7 +687,13 @@ async function loadEnrollmentStats(
     document.getElementById("genderBreakdownCount").textContent =
       `${boys} / ${girls}`;
   } catch (err) {
-    console.error("Error loading enrollment stats:", err);
+    const { data: students, error } = await query;
+    if (error) {
+      console.error("Supabase Query Error Details:", error);
+      throw error;
+    }
+
+    console.log("Fetched students payload:", students); // Check what comes back here in your console
   }
 }
 
