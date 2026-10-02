@@ -43,33 +43,120 @@
       </header>
 
       <!-- Student Toolbar Filters -->
-      <section class="toolbar">
-        <select id="studentAcademicYearSelect">
-          <option value="">Select Academic Year</option>
-        </select>
+      <section
+        class="toolbar"
+        style="
+          background-color: #ffffff;
+          padding: 12px;
+          border: 2px solid rgb(219, 215, 215);
+          margin-bottom: 24px;
+        "
+      >
+        <!-- Row 1: Academic Year & Semester -->
+        <div style="display: flex; gap: 8px; margin-bottom: 8px">
+          <select
+            id="studentAcademicYearSelect"
+            style="
+              flex: 0 0 calc(50% - 4px);
+              width: calc(50% - 4px);
+              box-sizing: border-box;
+              padding: 8px 6px;
+              font-size: 0.75rem;
+              cursor: pointer;
+              border: 2px solid rgb(219, 215, 215);
+            "
+          >
+            <option value="">Select Academic Year</option>
+          </select>
+          <select
+            id="studentTermSelect"
+            style="
+              flex: 0 0 calc(50% - 4px);
+              width: calc(50% - 4px);
+              box-sizing: border-box;
+              padding: 8px 6px;
+              font-size: 0.75rem;
+              cursor: pointer;
+              border: 2px solid rgb(219, 215, 215);
+            "
+          >
+            <option value="">Select Semester</option>
+          </select>
+        </div>
 
-        <select id="studentTermSelect">
-          <option value="">Select Semester</option>
-        </select>
+        <!-- Row 2: Assessment & Class -->
+        <div style="display: flex; gap: 8px; margin-bottom: 8px">
+          <select
+            id="studentAssessmentSelect"
+            style="
+              flex: 0 0 calc(50% - 4px);
+              width: calc(50% - 4px);
+              box-sizing: border-box;
+              padding: 8px 6px;
+              font-size: 0.75rem;
+              cursor: pointer;
+              border: 2px solid rgb(219, 215, 215);
+            "
+          >
+            <option value="">Select Assessment</option>
+          </select>
+          <select
+            id="studentClassSelect"
+            style="
+              flex: 0 0 calc(50% - 4px);
+              width: calc(50% - 4px);
+              box-sizing: border-box;
+              padding: 8px 6px;
+              font-size: 0.75rem;
+              cursor: pointer;
+              border: 2px solid rgb(219, 215, 215);
+            "
+          >
+            <option value="">Select Class</option>
+          </select>
+        </div>
 
-        <select id="studentAssessmentSelect">
-          <option value="">Select Assessment</option>
-        </select>
-
-        <select id="studentClassSelect">
-          <option value="">Select Class</option>
-        </select>
-
-        <select id="studentSubjectSelect">
-          <option value="">Select Subject</option>
-        </select>
-
-        <div
-          class="status-display"
-          style="text-align: center; justify-content: center; font-weight: 500"
-        >
-          Status:
-          <span id="studentStatusBadge" class="status-badge normal">...</span>
+        <!-- Row 3: Subject & Status Display (Strictly 2 on one line, neatly contained) -->
+        <div style="display: flex; gap: 6px; align-items: center; width: 100%">
+          <select
+            id="studentSubjectSelect"
+            style="
+              flex: 0 0 calc(50% - 3px);
+              width: calc(50% - 3px);
+              box-sizing: border-box;
+              padding: 6px 4px;
+              font-size: 0.7rem;
+              cursor: pointer;
+              border: 2px solid rgb(219, 215, 215);
+            "
+          >
+            <option value="">Select Subject</option>
+          </select>
+          <div
+            class="status-display"
+            style="
+              flex: 0 0 calc(50% - 3px);
+              width: calc(30% - 1px);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: 500;
+              font-size: 0.7rem;
+              padding: 5px 2px;
+              background: #f8fafc;
+              border: 2px solid rgb(219, 215, 215);
+              box-sizing: border-box;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            "
+          >
+            Status: &nbsp;<span
+              id="studentStatusBadge"
+              class="status-badge normal"
+              >...</span
+            >
+          </div>
         </div>
       </section>
 

@@ -28,25 +28,30 @@
   margin: 0;
 }
 
-/* Toolbar Filters */
+/* Toolbar Filters - Forced 2 per line */
 .toolbar {
   display: flex;
-  gap: 12px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
   background-color: #ffffff;
-  padding: 16px;
+  padding: 12px;
   border: 2px solid rgb(219, 215, 215);
   margin-bottom: 24px;
 }
 
+/* Target ONLY the select elements to be 2 per line */
 .toolbar select {
-  padding: 10px 14px;
-  border: 2px solid rgb(219, 215, 215);
-  font-size: 0.875rem;
+  flex: 0 0 calc(50% - 4px);
+  width: calc(50% - 4px);
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 0.8rem;
   color: #374151;
   background-color: #ffffff;
   outline: none;
   cursor: pointer;
-  min-width: 220px;
+  min-width: 0;
 }
 
 .back-grades-btn {
@@ -122,7 +127,6 @@
 
 #studentGradesReport {
   border-radius: 10px;
-  border: 2px solid rgb(219, 215, 215);
 }
 
 .max-marks {
@@ -148,7 +152,8 @@
   .toolbar select,
   .card,
   .toolbar,
-  .status-badge {
+  .status-badge,
+  .status-display {
     border-radius: 10px;
   }
 }

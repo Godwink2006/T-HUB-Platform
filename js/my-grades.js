@@ -296,9 +296,12 @@ async function loadStudentGrades(authUserId) {
 
   if (!termId || !assessmentId || !classId) {
     reportContainer.innerHTML = `
-      <p style="text-align: center; color: #888; padding: 20px;">
-        Please select a semester, assessment period, and class to view your grades.
-      </p>`;
+     <div style="text-align: center; color: #888; padding: 20px;">
+  <i class="fa-solid fa-clipboard-question" style="font-size: 5.5rem; margin-bottom: 10px; color: #cbd5e1;"></i>
+  <p style="margin: 0; font-size: 0.9rem;">
+    Please select a semester, assessment period, and class to view your grades.
+  </p>
+</div>`;
     return;
   }
   try {
@@ -375,7 +378,7 @@ async function loadStudentGrades(authUserId) {
     let html = "";
     grouped.forEach((items, subName) => {
       html += `
-        <div class="card" style="margin-bottom: 20px; background: #fff; border: 1px solid #e5e7eb; padding: 16px;">
+        <div class="card" style="margin-bottom: 20px; background: #fff; border: 2px solid rgb(219, 215, 215); padding: 16px;">
           <h3>${subName}</h3>
           <table class="table" style="width: 100%; border-collapse: collapse;">
             <thead>
