@@ -40,10 +40,23 @@
 
       <!-- Filter Bar -->
       <div
-        class="fees-filter-bar"
-        style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap"
+        class="toolbar"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap; /* Allows items to wrap onto two lines */
+          background-color: #ffffff;
+          padding: 16px;
+          border: 2px solid rgb(219, 215, 215);
+          margin-bottom: 24px;
+        "
       >
-        <div class="filter-group">
+        <!-- Academic Year (Takes ~48% width -> Row 1) -->
+        <div
+          class="filter-group"
+          style="flex: 0 0 calc(50% - 6px); min-width: 0"
+        >
           <label
             for="filterAcademicYear"
             style="
@@ -58,16 +71,20 @@
             id="filterAcademicYear"
             class="form-control"
             style="
+              width: 100%;
               padding: 8px 12px;
               border-radius: 6px;
-              border: 1px solid #cbd5e1;
             "
           >
             <option value="">All Academic Years</option>
           </select>
         </div>
 
-        <div class="filter-group">
+        <!-- Class (Takes ~48% width -> Row 1 alongside Academic Year) -->
+        <div
+          class="filter-group"
+          style="flex: 0 0 calc(50% - 6px); min-width: 0"
+        >
           <label
             for="filterClass"
             style="
@@ -82,16 +99,17 @@
             id="filterClass"
             class="form-control"
             style="
+              width: 100%;
               padding: 8px 12px;
               border-radius: 6px;
-              border: 1px solid #cbd5e1;
             "
           >
             <option value="">All Classes</option>
           </select>
         </div>
 
-        <div class="filter-group">
+        <!-- Semester (Takes 100% width -> Drops to Row 2) -->
+        <div class="filter-group" style="flex: 0 0 100%; min-width: 0">
           <label
             for="filterTerm"
             style="
@@ -106,9 +124,9 @@
             id="filterTerm"
             class="form-control"
             style="
+              width: 100%;
               padding: 8px 12px;
               border-radius: 6px;
-              border: 1px solid #cbd5e1;
             "
           >
             <option value="">All Semesters</option>

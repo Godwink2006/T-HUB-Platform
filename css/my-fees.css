@@ -9,6 +9,31 @@
     sans-serif;
 }
 
+.toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: center;
+  gap: 12px;
+  background-color: #ffffff;
+  padding: 16px;
+  border: 2px solid rgb(219, 215, 215);
+  margin-bottom: 24px;
+}
+
+.toolbar select,
+.toolbar input,
+.toolbar .filter-dropdown {
+  padding: 10px 14px;
+  border: 2px solid rgb(219, 215, 215);
+  font-size: 0.875rem;
+  color: #374151;
+  background-color: #ffffff;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
 body {
   background-color: #f8fafc;
   color: #1e293b;
@@ -107,6 +132,10 @@ tr:last-child td {
   border: 2px solid rgb(219, 215, 215);
 }
 
+select {
+  border: 2px solid rgb(219, 215, 215);
+}
+
 .badge {
   padding: 4px 10px;
   font-size: 12px;
@@ -166,7 +195,8 @@ tr:last-child td {
 @media (max-width: 768px) {
   .badge,
   .back-btn,
-  .card {
+  .card,
+  .toolbar {
     border-radius: 10px;
   }
 }
