@@ -164,9 +164,11 @@ async function openStudentBookHistoryModal(bookId) {
 
     if (!history || history.length === 0) {
       historyContainer.innerHTML = `
-        <p style="text-align: center; color: #64748b; padding: 2rem;">
-          You have no borrowing history for this book.
-        </p>
+      <div class="empty-state-card">
+  <i class="fa-solid fa-book-open-reader empty-icon"></i>
+  
+  <p>You have no borrowing history for this book yet.</p>
+</div>
       `;
       return;
     }

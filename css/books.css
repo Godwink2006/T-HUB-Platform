@@ -13,6 +13,26 @@
   gap: 1rem;
 }
 
+.empty-state-card {
+  text-align: center;
+  padding: 3rem 2rem;
+  margin: 2rem auto;
+  max-width: 450px;
+}
+
+.empty-icon {
+  font-size: 7rem; /* Makes the FontAwesome icon nice and big */
+  color: rgb(219, 215, 215); /* Accent color (can match your app's theme) */
+  margin-bottom: 1rem;
+}
+
+.empty-state-card p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
 .catalog-search-box {
   position: relative;
   width: 100%;
