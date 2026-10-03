@@ -610,6 +610,21 @@ async function loadEnrollmentStats(
       return;
     }
 
+    // 1. Get the current user's role to determine if they are a teacher
+    const {
+      data: { user },
+    } = await window.supabaseClient.auth.getUser();
+    let userRole = "";
+    if (user) {
+      const { data: profile } = await window.supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (profile) userRole = (profile.role || "").toLowerCase();
+    }
+
+    // 2. Base query setup for Admins / Non-teachers (shows all records)
     let query = window.supabaseClient
       .from("students")
       .select(
@@ -626,9 +641,41 @@ async function loadEnrollmentStats(
       )
       .eq("profiles.school_id", activeSchoolId);
 
+    // 3. If user is a TEACHER, restrict stats strictly to the active academic year
+    if (userRole === "teacher") {
+      const { data: activeYear } = await window.supabaseClient
+        .from("academic_years")
+        .select("id")
+        .ilike("status", "active")
+        .eq("school_id", activeSchoolId)
+        .single();
+
+      if (activeYear) {
+        query = window.supabaseClient
+          .from("students")
+          .select(
+            `
+            id,
+            gender,
+            profiles!inner (
+              status,
+              created_at,
+              school_id,
+              role
+            ),
+            student_enrollments!inner (
+              academic_year_id
+            )
+          `,
+          )
+          .eq("profiles.school_id", activeSchoolId)
+          .eq("student_enrollments.academic_year_id", activeYear.id);
+      }
+    }
+
     const now = new Date();
 
-    // Use profiles.created_at since created_at is in the profiles table
+    // Date filters applied to profiles.created_at
     if (filterType === "today") {
       const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString();
       query = query.gte("profiles.created_at", startOfDay);
@@ -672,7 +719,6 @@ async function loadEnrollmentStats(
     let girls = 0;
 
     students.forEach((s) => {
-      // Gender comes directly from the student record now
       if (s.gender) {
         const g = s.gender.toLowerCase();
         if (g === "male") boys++;
@@ -687,13 +733,7 @@ async function loadEnrollmentStats(
     document.getElementById("genderBreakdownCount").textContent =
       `${boys} / ${girls}`;
   } catch (err) {
-    const { data: students, error } = await query;
-    if (error) {
-      console.error("Supabase Query Error Details:", error);
-      throw error;
-    }
-
-    console.log("Fetched students payload:", students); // Check what comes back here in your console
+    console.error("Supabase Query Error Details:", err);
   }
 }
 
