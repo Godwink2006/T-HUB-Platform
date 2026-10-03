@@ -28,66 +28,64 @@
     />
   </head>
   <body>
-    <div class="grades-container">
-      <main class="grades-main-content">
-        <header class="topbar">
-          <div>
-            <h1>Grades</h1>
-            <p>Manage grades.</p>
+    <main class="grades-main-content">
+      <header class="topbar">
+        <div>
+          <h1>Grades</h1>
+          <p>Manage grades.</p>
 
-            <button
-              onclick="window.location.href = 'academics.html'"
-              class="back-grades-btn"
-            >
-              <i class="fa-solid fa-chevron-left"></i>
-              Back
-            </button>
-          </div>
-
-          <button id="addGrade" class="add-grades-btn">
-            <i class="fa-solid fa-plus"></i>
-            Enter Grades
+          <button
+            onclick="window.location.href = 'academics.html'"
+            class="back-grades-btn"
+          >
+            <i class="fa-solid fa-chevron-left"></i>
+            Back
           </button>
-        </header>
+        </div>
 
-        <section class="toolbar">
-          <input
-            type="text"
-            id="gradeSearchInput"
-            placeholder="Search grades..."
-          />
+        <button id="addGrade" class="add-grades-btn">
+          <i class="fa-solid fa-plus"></i>
+          Enter Grades
+        </button>
+      </header>
 
-          <select id="gradeToolbarClassSelect">
-            <option value="">All Classes</option>
-          </select>
+      <section class="toolbar">
+        <input
+          type="text"
+          id="gradeSearchInput"
+          placeholder="Search grades..."
+        />
 
-          <select id="gradeToolbarSubjectSelect">
-            <option value="">All Subjects</option>
-          </select>
+        <select id="gradeToolbarClassSelect">
+          <option value="">All Classes</option>
+        </select>
 
-          <select id="gradeToolbarCategorySelect">
-            <option value="">All Assessment Categories</option>
-          </select>
-        </section>
+        <select id="gradeToolbarSubjectSelect">
+          <option value="">All Subjects</option>
+        </select>
 
-        <section class="grade-table-card">
-          <table class="grades-table">
-            <thead>
-              <tr>
-                <th>Assessment Category</th>
-                <th>Class</th>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+        <select id="gradeToolbarCategorySelect">
+          <option value="">All Assessment Categories</option>
+        </select>
+      </section>
 
-            <tbody id="gradesTableBody"></tbody>
-          </table>
-        </section>
-      </main>
-    </div>
+      <section class="grade-table-card">
+        <table class="grades-table">
+          <thead>
+            <tr>
+              <th>Assessment Category</th>
+              <th>Class</th>
+              <th>Subject</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="gradesTableBody"></tbody>
+        </table>
+      </section>
+    </main>
 
     <div id="gradeModal" class="modal-grade">
       <div class="grade-modal-content">
