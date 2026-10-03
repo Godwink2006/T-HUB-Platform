@@ -610,130 +610,50 @@ async function loadEnrollmentStats(
       return;
     }
 
-    // 1. Get the current user's role to determine if they are a teacher
+    // 1. Get current user and role
     const {
       data: { user },
     } = await window.supabaseClient.auth.getUser();
-    let userRole = "";
-    if (user) {
-      const { data: profile } = await window.supabaseClient
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      if (profile) userRole = (profile.role || "").toLowerCase();
-    }
+    if (!user) return;
 
-    // 2. Base query setup for Admins / Non-teachers (shows all records)
-    let query = window.supabaseClient
-      .from("students")
-      .select(
-        `
-        id,
-        gender,
-        profiles!inner (
-          status,
-          created_at,
-          school_id,
-          role
-        )
-      `,
-      )
-      .eq("profiles.school_id", activeSchoolId);
+    const { data: profile } = await window.supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-    // 3. If user is a TEACHER, restrict stats strictly to the active academic year
-    if (userRole === "teacher") {
-      const { data: activeYear } = await window.supabaseClient
-        .from("academic_years")
-        .select("id")
-        .ilike("status", "active")
-        .eq("school_id", activeSchoolId)
-        .single();
+    const userRole = profile ? profile.role : "teacher";
 
-      if (activeYear) {
-        query = window.supabaseClient
-          .from("students")
-          .select(
-            `
-            id,
-            gender,
-            profiles!inner (
-              status,
-              created_at,
-              school_id,
-              role
-            ),
-            student_enrollments!inner (
-              academic_year_id
-            )
-          `,
-          )
-          .eq("profiles.school_id", activeSchoolId)
-          .eq("student_enrollments.academic_year_id", activeYear.id);
-      }
-    }
+    // 2. Format custom dates properly for PostgreSQL if provided
+    const formattedStart = customStart ? `${customStart}T00:00:00` : null;
+    const formattedEnd = customEnd ? `${customEnd}T23:59:59` : null;
 
-    const now = new Date();
+    // 3. Call database function with filter variables
+    const { data: stats, error } = await window.supabaseClient.rpc(
+      "get_dashboard_stats",
+      {
+        p_school_id: activeSchoolId,
+        p_user_id: user.id,
+        p_role: userRole,
+        p_filter_type: filterType,
+        p_custom_start: formattedStart,
+        p_custom_end: formattedEnd,
+      },
+    );
 
-    // Date filters applied to profiles.created_at
-    if (filterType === "today") {
-      const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString();
-      query = query.gte("profiles.created_at", startOfDay);
-    } else if (filterType === "week") {
-      const startOfWeek = new Date(
-        now.setDate(now.getDate() - 7),
-      ).toISOString();
-      query = query.gte("profiles.created_at", startOfWeek);
-    } else if (filterType === "month") {
-      const startOfMonth = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        1,
-      ).toISOString();
-      query = query.gte("profiles.created_at", startOfMonth);
-    } else if (filterType === "year") {
-      const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
-      query = query.gte("profiles.created_at", startOfYear);
-    } else if (filterType === "custom" && customStart && customEnd) {
-      query = query
-        .gte("profiles.created_at", `${customStart}T00:00:00`)
-        .lte("profiles.created_at", `${customEnd}T23:59:59`);
-    }
-
-    const { data: students, error } = await query;
     if (error) throw error;
 
-    const total = students.length;
-
-    // Check status inside the joined profiles object/array
-    const active = students.filter((s) => {
-      const profileData = Array.isArray(s.profiles)
-        ? s.profiles[0]
-        : s.profiles;
-      return (
-        profileData && (profileData.status || "").toLowerCase() === "active"
-      );
-    }).length;
-
-    let boys = 0;
-    let girls = 0;
-
-    students.forEach((s) => {
-      if (s.gender) {
-        const g = s.gender.toLowerCase();
-        if (g === "male") boys++;
-        if (g === "female") girls++;
-      }
-    });
-
-    document.getElementById("totalEnrollmentCount").textContent =
-      total.toLocaleString();
-    document.getElementById("activeEnrollmentCount").textContent =
-      active.toLocaleString();
+    // 4. Update the UI DOM elements
+    document.getElementById("totalEnrollmentCount").textContent = (
+      stats.total || 0
+    ).toLocaleString();
+    document.getElementById("activeEnrollmentCount").textContent = (
+      stats.active || 0
+    ).toLocaleString();
     document.getElementById("genderBreakdownCount").textContent =
-      `${boys} / ${girls}`;
+      `${stats.boys || 0} / ${stats.girls || 0}`;
   } catch (err) {
-    console.error("Supabase Query Error Details:", err);
+    console.error("Error loading enrollment stats:", err);
   }
 }
 
@@ -773,6 +693,8 @@ applyDateBtn.addEventListener("click", async () => {
   if (btnSpan) btnSpan.textContent = `${startDate} to ${endDate}`;
 
   dateModal.style.display = "none";
+
+  unLockBodyScroll();
 
   // Call your stats function with custom date parameters
   await loadEnrollmentStats("custom", startDate, endDate);
