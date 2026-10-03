@@ -116,24 +116,19 @@ function renderScheduleCards(assignments) {
 }
 
 function populateFilterDropdowns(assignments) {
-  const yearSelect = document.getElementById("filterAcademicYear");
   const subjectSelect = document.getElementById("filterSubject");
   const classSelect = document.getElementById("filterClass");
 
-  if (!yearSelect || !subjectSelect || !classSelect) return;
+  if (!subjectSelect || !classSelect) return;
 
-  const years = new Map();
   const subjects = new Map();
   const classes = new Map();
 
   assignments.forEach((item) => {
-    if (item.academic_years)
-      years.set(item.academic_years.id, item.academic_years.year_label);
     if (item.subjects) subjects.set(item.subjects.id, item.subjects.name);
     if (item.classes) classes.set(item.classes.id, item.classes.name);
   });
 
-  populateOptions(yearSelect, years, "All Academic Years");
   populateOptions(subjectSelect, subjects, "All Subjects");
   populateOptions(classSelect, classes, "All Classes");
 }
@@ -147,13 +142,11 @@ function populateOptions(selectElem, mapData, defaultText) {
 
 function bindFilterEvents() {
   const searchInput = document.getElementById("teacherSearchInput");
-  const yearSelect = document.getElementById("filterAcademicYear");
   const subjectSelect = document.getElementById("filterSubject");
   const classSelect = document.getElementById("filterClass");
 
   const applyFilters = () => {
     const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
-    const selectedYear = yearSelect ? yearSelect.value : "";
     const selectedSubject = subjectSelect ? subjectSelect.value : "";
     const selectedClass = classSelect ? classSelect.value : "";
 
@@ -161,24 +154,19 @@ function bindFilterEvents() {
       const matchQuery =
         !query ||
         item.subjects?.name?.toLowerCase().includes(query) ||
-        item.classes?.name?.toLowerCase().includes(query) ||
-        item.academic_years?.year_label?.toLowerCase().includes(query);
+        item.classes?.name?.toLowerCase().includes(query);
 
-      const matchYear =
-        !selectedYear || item.academic_years?.id === selectedYear;
       const matchSubject =
         !selectedSubject || item.subjects?.id === selectedSubject;
       const matchClass = !selectedClass || item.classes?.id === selectedClass;
 
-      return matchQuery && matchYear && matchSubject && matchClass;
+      return matchQuery && matchSubject && matchClass;
     });
 
     renderScheduleCards(filtered);
   };
 
   if (searchInput) searchInput.addEventListener("input", applyFilters);
-  if (yearSelect) yearSelect.addEventListener("change", applyFilters);
   if (subjectSelect) subjectSelect.addEventListener("change", applyFilters);
   if (classSelect) classSelect.addEventListener("change", applyFilters);
 }
-

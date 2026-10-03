@@ -40,7 +40,6 @@
   margin-bottom: 24px;
 }
 
-/* Target ONLY the select elements to be 2 per line */
 .toolbar select {
   flex: 0 0 calc(50% - 4px);
   width: calc(50% - 4px);
@@ -69,7 +68,6 @@
   border: 1px solid rgb(219, 215, 215);
 }
 
-/* Grades Container & Subject Cards */
 .grades-container {
   display: flex;
   flex-direction: column;

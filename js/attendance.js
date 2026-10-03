@@ -130,12 +130,6 @@ async function loadAcademicContext() {
       activeAssessmentId = assessmentRes.data.id;
       window.activeAssessmentId = assessmentRes.data.id;
     }
-
-    console.log("Loaded Academic Context in Background:", {
-      academicYearId: activeAcademicYearId,
-      termId: activeTermId,
-      assessmentId: activeAssessmentId,
-    });
   } catch (err) {
     console.error("Error loading academic context:", err);
   }

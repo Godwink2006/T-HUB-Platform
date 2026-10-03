@@ -46,31 +46,46 @@
 
       <div
         class="filters-bar"
-        style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          background-color: #ffffff;
+          padding: 16px;
+          border: 2px solid rgb(219, 215, 215);
+          margin-bottom: 24px;
+        "
       >
-        <div style="flex: 1; min-width: 200px">
+        <!-- First item: takes up half the width minus half the gap -->
+        <div style="flex: 0 0 calc(50% - 6px); min-width: 0">
           <input
             type="text"
             id="teacherSearchInput"
             class="form-control"
             placeholder="Search schedule..."
+            style="width: 100%; padding: 8px 12px"
           />
         </div>
 
-        <div style="min-width: 160px">
-          <select id="filterAcademicYear" class="form-control">
-            <option value="">All Academic Years</option>
-          </select>
-        </div>
-
-        <div style="min-width: 160px">
-          <select id="filterSubject" class="form-control">
+        <!-- Second item: takes up the other half -->
+        <div style="flex: 0 0 calc(50% - 6px); min-width: 0">
+          <select
+            id="filterSubject"
+            class="form-control"
+            style="width: 100%; padding: 8px 12px"
+          >
             <option value="">All Subjects</option>
           </select>
         </div>
 
-        <div style="min-width: 160px">
-          <select id="filterClass" class="form-control">
+        <!-- Third item: 100% width on the next line -->
+        <div style="flex: 0 0 100%; min-width: 0">
+          <select
+            id="filterClass"
+            class="form-control"
+            style="width: 100%; padding: 8px 12px"
+          >
             <option value="">All Classes</option>
           </select>
         </div>

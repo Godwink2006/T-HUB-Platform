@@ -12,16 +12,19 @@
   font-family: "Poppins", sans-serif;
 }
 
-.filters-bar .form-control {
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: #1e293b;
-  background-color: #f8fafc;
+.filters-bar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: center;
+  gap: 12px;
+  background-color: #ffffff;
+  padding: 16px;
   border: 2px solid rgb(219, 215, 215);
-  outline: none;
   margin-top: 10px;
+}
+
+.form-control {
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .filters-bar .form-control:hover {
@@ -185,7 +188,8 @@ h1 {
   .role-tag,
   .class-badge,
   .assignment-card,
-  .filters-bar .form-control {
+  .filters-bar .form-control,
+  .filters-bar {
     border-radius: 10px;
   }
 
