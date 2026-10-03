@@ -382,3 +382,37 @@ function validatePasswordRequirements(password) {
 
   return { isValid: true, message: "" };
 }
+
+document.addEventListener("DOMContentLoaded", async function () {
+  const saveBtn = document.getElementById("saveProfileInfo");
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabaseClient.auth.getUser();
+
+  if (authError || !user) {
+    console.error("User not logged in");
+    return;
+  }
+
+  const { data: enrollment, error: dbError } = await supabaseClient
+    .from("student_enrollments")
+    .select("school_id, enrollment_status")
+    .eq("student_id", user.id);
+
+  if (dbError || !enrollment) {
+    console.error("Could not fetch enrollment information", dbError);
+    return;
+  }
+
+  const isRestrictedType = enrollment.some(
+    (enrollment) =>
+      enrollment.enrollment_status === "Graduated" ||
+      enrollment.enrollment_status === "Transfered",
+  );
+
+  if (!isRestrictedType) {
+    saveBtn.style.display = "flex";
+  }
+});

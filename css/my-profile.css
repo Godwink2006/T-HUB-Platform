@@ -25,6 +25,11 @@
   font-size: 15 US px;
 }
 
+.profileForm,
+.save-btn {
+  display: none;
+}
+
 .my-profiles-form {
   display: flex;
   flex-direction: column;
@@ -146,7 +151,8 @@ body {
   cursor: pointer;
 }
 
-.save-btn {
+.save-btn,
+.savepassword-btn {
   padding: 12px 22px;
   border: none;
   background: #2563eb;
@@ -259,6 +265,7 @@ body {
   .form-group textarea,
   .cancel-btn,
   .save-btn,
+  .savepassword-btn,
   .upload-btn,
   .back-my-profiles-btn,
   .avatar-edit-container {
