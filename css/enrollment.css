@@ -65,9 +65,9 @@ tr {
   gap: 20px;
   z-index: 1000;
   animation: slideUp 0.2s ease-out;
-  width: 100%; /* Stretches responsively */
-  max-width: 950px; /* Caps it so it doesn't get too wide on huge monitors */
-  min-width: 420px; /* Ensures it has a solid minimum width */
+  width: 100%;
+  max-width: 950px;
+  min-width: 420px;
 }
 
 .bulk-action-bar.active {
@@ -142,7 +142,7 @@ tr {
 }
 
 .btn-primary {
-  background: #4f46e5;
+  background: #2563eb;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -150,8 +150,9 @@ tr {
   font-weight: 500;
 }
 .btn-secondary {
-  background: #e2e8f0;
-  color: #334155;
+  border: 1px solid rgb(219, 215, 215);
+  background: #1f2937;
+  color: #f9fafb;
   border: none;
   padding: 8px 16px;
   cursor: pointer;
