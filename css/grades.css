@@ -116,13 +116,6 @@
   overflow-y: auto;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
-}
-
 body {
   background: rgb(231, 226, 226);
 }
@@ -134,7 +127,14 @@ body {
 .grades-main-content {
   width: 100%;
   min-height: 100vh;
-  padding: 20px;
+  padding: 10px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
 }
 
 .topbar {
@@ -456,10 +456,6 @@ tr {
   font-size: 22px;
 }
 
-/* ==========================================
-   MOBILE RESPONSIVE STYLES (@media max-width: 768px)
-   ========================================== */
-
 @media screen and (max-width: 768px) {
   /* 1. Ensure Edit and Enter modal contents act as rigid flex boxes */
   .enterGrade-modal-content,
@@ -499,10 +495,6 @@ tr {
   /* Layout Adjustments */
   .grades-container {
     flex-direction: column;
-  }
-
-  .grades-main-content {
-    padding: 10px;
   }
 
   .topbar {
