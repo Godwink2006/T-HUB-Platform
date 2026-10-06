@@ -72,7 +72,6 @@ function filterTeachersTable() {
         <td>
           <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
           <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
-          <button class="teachers-actions-btn archive" data-id="${teacher.id}"><i class="fa-solid fa-box-archive"></i></button>
         </td>
       </tr>`;
     })
@@ -139,7 +138,6 @@ async function loadDepartmentDropdown(
     const { data: departments, error } = await supabaseClient
       .from("departments")
       .select("id, name")
-      .eq("is_archived", false)
       .order("name", { ascending: true });
 
     if (error) {
@@ -350,7 +348,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("teacherModal"),
     document.getElementById("editTeacherModal"),
     document.getElementById("viewTeacherModal"),
-    document.getElementById("archiveTeacherModal"),
   ].forEach((modal) => {
     if (!modal) return;
     modal.addEventListener("click", (e) => {
@@ -511,105 +508,6 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
     };
 
     reader.onerror = (err) => reject(err);
-  });
-}
-
-const hideArchiveModal = () => {
-  const archiveTeacherModal = document.getElementById("archiveTeacherModal");
-  if (archiveTeacherModal) {
-    archiveTeacherModal.style.display = "none";
-  }
-  unLockBodyScroll();
-};
-
-const cancelArchive = document.getElementById("cancelArchive");
-if (cancelArchive) {
-  cancelArchive.addEventListener("click", hideArchiveModal);
-}
-
-function openArchiveModal(id, teacherName = "this teacher") {
-  selectedTeacherId = id;
-
-  const nameElement = document.getElementById("archiveTeacherName");
-  if (nameElement) {
-    nameElement.textContent = teacherName;
-  }
-
-  const archiveTeacherModal = document.getElementById("archiveTeacherModal");
-  if (archiveTeacherModal) {
-    archiveTeacherModal.style.display = "flex";
-    lockBodyScroll();
-  }
-}
-
-const confirmArchive = document.getElementById("confirmArchive");
-if (confirmArchive) {
-  confirmArchive.addEventListener("click", async () => {
-    if (!selectedTeacherId) {
-      showToast("No teacher selected for archiving.", "error");
-      return;
-    }
-
-    confirmArchive.disabled = true;
-    confirmArchive.textContent = "Archiving...";
-
-    try {
-      const {
-        data: { user },
-      } = await supabaseClient.auth.getUser();
-      const { data: currentProfile } = await supabaseClient
-        .from("profiles")
-        .select("role")
-        .eq("id", user?.id)
-        .single();
-
-      if (currentProfile?.role !== "admin") {
-        throw new Error(
-          "Permission denied: Only administrators can archive teacher accounts.",
-        );
-      }
-
-      const { error: teacherErr } = await supabaseClient
-        .from("teachers")
-        .update({
-          is_archived: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", selectedTeacherId);
-
-      if (teacherErr) {
-        if (teacherErr.code === "42501") {
-          throw new Error("Permission denied by database security policy.");
-        }
-        throw teacherErr;
-      }
-
-      const { error: profileErr } = await supabaseClient
-        .from("profiles")
-        .update({
-          status: "inactive",
-          is_archived: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", selectedTeacherId);
-
-      if (profileErr) {
-        if (profileErr.code === "42501") {
-          throw new Error("Permission denied by database security policy.");
-        }
-        throw profileErr;
-      }
-
-      showToast("Teacher archived successfully!", "success");
-      hideArchiveModal();
-      loadTeachers();
-    } catch (err) {
-      console.error("Archive operation failed:", err);
-      showToast(err.message || "Failed to archive teacher record.", "error");
-    } finally {
-      confirmArchive.disabled = false;
-      confirmArchive.textContent = "Archive";
-    }
   });
 }
 
@@ -889,12 +787,11 @@ async function loadTeachers() {
       .from("teachers")
       .select(
         `
-    id, staff_id, gender, qualification, address, date_of_birth, created_at, updated_at, is_archived,
+    id, staff_id, gender, qualification, address, date_of_birth, created_at, updated_at,
     departments:department_id ( id, name ),
     profiles:id ( full_name, email, phone_number, status, photo_url )
   `,
       )
-      .eq("is_archived", false);
 
     if (error) throw error;
 
@@ -936,7 +833,6 @@ async function loadTeachers() {
             <td>
               <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
               <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
-              <button class="teachers-actions-btn archive" data-id="${teacher.id}"><i class="fa-solid fa-box-archive"></i></button>
             </td>
           </tr>`;
         })
@@ -964,9 +860,6 @@ document
       openViewModal(teacher);
     } else if (btn.classList.contains("edit")) {
       openEditModal(teacher);
-    } else if (btn.classList.contains("archive")) {
-      const teacherName = teacher.profiles?.full_name || "this teacher";
-      openArchiveModal(teacherId, teacherName);
     }
   });
 

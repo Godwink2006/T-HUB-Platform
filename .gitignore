@@ -1,0 +1,17 @@
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+
+# Logs
+npm-debug.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini

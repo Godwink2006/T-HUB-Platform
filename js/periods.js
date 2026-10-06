@@ -41,7 +41,6 @@ async function fetchFilteredPeriods() {
     id, school_level, name, start_time, end_time, status, created_at, updated_at
   `,
     )
-    .eq("is_archived", false);
 
   if (levelFilter) query = query.eq("school_level", levelFilter);
   if (statusFilter === "active") query = query.eq("status", "Active");
@@ -146,7 +145,6 @@ async function handleSavePeriod(event) {
       start_time: startTime,
       end_time: endTime,
       status: status,
-      is_archived: false,
     };
 
     if (schoolId) {
@@ -214,7 +212,6 @@ async function handleSavePeriod(event) {
 }
 async function handleTableActions(event) {
   const editBtn = event.target.closest(".edit-Period");
-  const archiveBtn = event.target.closest(".archive-Period");
 
   if (editBtn) {
     const id = editBtn.dataset.id;
@@ -222,106 +219,6 @@ async function handleTableActions(event) {
     return;
   }
 
-  if (archiveBtn) {
-    const id = archiveBtn.dataset.id;
-    await archivePeriod(id);
-  }
-}
-
-let periodToArchive = null;
-
-async function archivePeriod(id) {
-  const { data: period, error } = await supabaseClient
-    .from("periods")
-    .select("id, school_level, name")
-    .eq("id", id)
-    .single();
-
-  if (error || !period) {
-    showToast("Failed to load period details.", "error");
-    return;
-  }
-
-  periodToArchive = period;
-
-  document.getElementById("archiveSchoolLevel").textContent =
-    period.school_level;
-
-  document.getElementById("archivePeriodName").textContent = period.name;
-
-  document.getElementById("archivePeriodModal").classList.add("active");
-
-  if (typeof lockBodyScroll === "function") {
-    lockBodyScroll();
-  }
-}
-
-async function confirmArchivePeriod() {
-  if (!periodToArchive) return;
-
-  const confirmBtn = document.getElementById("confirmArchive");
-
-  try {
-    if (confirmBtn) {
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = "Archiving...";
-    }
-
-    const { data, error } = await supabaseClient
-      .from("periods")
-      .update({
-        status: "Inactive",
-        is_archived: true,
-      })
-      .eq("id", periodToArchive.id)
-      .select();
-
-    if (error) {
-      if (error.code === "42501") {
-        showToast("Permission denied: Active admin status required.", "error");
-        return;
-      }
-
-      showToast(error.message, "error");
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      showToast(
-        "Permission denied: You are not allowed to archive this period.",
-        "error",
-      );
-      return;
-    }
-
-    showToast("Period archived successfully!", "success");
-
-    closeArchivePeriodModal();
-
-    await populatePeriodFilterDropdowns();
-    await fetchFilteredPeriods();
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Archive";
-    }
-  }
-}
-
-function closeArchivePeriodModal() {
-  const modal = document.getElementById("archivePeriodModal");
-
-  if (modal) {
-    modal.classList.remove("active");
-  }
-
-  periodToArchive = null;
-
-  if (typeof unLockBodyScroll === "function") {
-    unLockBodyScroll();
-  }
 }
 
 function renderPeriodsTable(periods = [], isLoading = false) {
@@ -362,7 +259,6 @@ function renderPeriodsTable(periods = [], isLoading = false) {
       <td>${formatDateTime(period.updated_at)}</td>
       <td>
         <button class="periods-actions-btn edit-Period" data-id="${period.id}"> <i class="fa-solid fa-pen"></i></button>
-        <button class="periods-actions-btn archive-Period" data-id="${period.id}"><i class="fa-solid fa-box-archive"></i></button>
       </td>
     </tr>
   `;
@@ -377,7 +273,6 @@ async function populatePeriodFilterDropdowns() {
   const { data, error } = await supabaseClient
     .from("periods")
     .select("school_level")
-    .eq("is_archived", false);
 
   if (error || !data) return;
 
@@ -443,17 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
     editPeriodForm.addEventListener("submit", handleUpdatePeriod);
   }
 
-  const cancelArchiveBtn = document.getElementById("cancelArchive");
-
-  const confirmArchiveBtn = document.getElementById("confirmArchive");
-
-  if (cancelArchiveBtn) {
-    cancelArchiveBtn.addEventListener("click", closeArchivePeriodModal);
-  }
-
-  if (confirmArchiveBtn) {
-    confirmArchiveBtn.addEventListener("click", confirmArchivePeriod);
-  }
 });
 
 async function handleUpdatePeriod(event) {

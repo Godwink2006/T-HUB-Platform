@@ -151,11 +151,6 @@ tr {
   color: #d97706;
 }
 
-.archive-Department {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 .modal-department {
   position: fixed;
   top: 0;
@@ -397,44 +392,10 @@ tr {
   color: #6b7280;
 }
 
-.archive-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  background: #dc2626;
-  color: #ffff;
-  cursor: pointer;
-}
-
-.archive-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.archive-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
 @media screen and (max-width: 768px) {
   .confirm-icon {
     border-radius: 10px;
     padding: 10px;
-  }
-
-  .archive-confirm-btn {
-    border-radius: 10px;
   }
 
   .departments-status-active {

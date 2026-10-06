@@ -24,11 +24,6 @@ body {
   color: #2563eb;
 }
 
-.archive {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 .delete-lesson {
   background: #fee2e2;
   color: #dc2626;
@@ -392,36 +387,6 @@ tr {
   color: #6b7280;
 }
 
-.archive-timetable-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  background: #dc2626;
-  color: #ffff;
-  cursor: pointer;
-}
-
-.archive-timetable-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.archive-timetable-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
 .modal-timetable {
   position: fixed;
   top: 0;
@@ -622,8 +587,7 @@ tr {
   .timetables-status-active,
   .timetables-status-inactive,
   .timetables-actions-btn,
-  .confirm-icon,
-  .archive-timetable-confirm-btn {
+  .confirm-icon {
     border-radius: 10px;
   }
 
@@ -853,8 +817,7 @@ tr {
   .edit-timetable-modal-footer,
   .view-timetable-modal-footer,
   .lesson-modal-footer,
-  .edit-lesson-modal-footer,
-  .archive-timetable-modal-footer {
+  .edit-lesson-modal-footer{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -867,8 +830,7 @@ tr {
   }
 
   .cancel-btn,
-  .save-btn,
-  .archive-timetable-confirm-btn {
+  .save-btn{
     flex: 1;
     padding: 10px 16px;
     border: none;

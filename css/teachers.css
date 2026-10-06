@@ -259,18 +259,12 @@ tr {
   color: #d97706;
 }
 
-.archive {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 /* ==========================================================================
    5. Modals & Forms (Desktop)
    ========================================================================== */
 
 .modal-teacher,
 .view-teacher-modal,
-.archive-modal,
 .edit-modal-teacher {
   position: fixed;
   top: 0;
@@ -381,13 +375,6 @@ tr {
   margin-top: 30px;
 }
 
-.archive-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
 .cancel-btn {
   padding: 12px 22px;
   border: 1px solid rgb(219, 215, 215);
@@ -401,14 +388,6 @@ tr {
   padding: 12px 22px;
   border: none;
   background: #2563eb;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.archive-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  background: #dc2626;
   color: #ffffff;
   cursor: pointer;
 }
@@ -836,8 +815,7 @@ tr {
 
   .view-teacher-status,
   .upload-btn,
-  .avatar-edit-container,
-  .archive-confirm-btn {
+  .avatar-edit-container {
     border-radius: 10px;
   }
 

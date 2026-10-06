@@ -245,68 +245,15 @@ window.addEventListener("click", (e) => {
   }
 });
 
-const archiveSystemUserModal = document.getElementById(
-  "archiveSystemUserModal",
-);
-
-const archiveButtons = document.querySelectorAll(".archive-SystemUser");
-
-const cancelArchive = document.getElementById("cancelArchive");
-
-cancelArchive.addEventListener("click", () => {
-  archiveSystemUserModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-window.addEventListener("click", (e) => {
-  if (e.target === archiveSystemUserModal) {
-    archiveSystemUserModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-});
-
 function togglePassword(id) {
   const input = document.getElementById(id);
   input.type = input.type === "password" ? "text" : "password";
 }
 
-function deleteUser(userId, userName) {
-  targetUserToArchive = userId;
-
-  const nameElement = document.getElementById("archiveUserName");
-  if (nameElement) {
-    nameElement.textContent = userName || "this user";
-  }
-
-  const modal = document.getElementById("archiveSystemUserModal");
-  if (modal) {
-    modal.style.display = "flex";
-    if (typeof lockBodyScroll === "function") lockBodyScroll();
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const confirmArchiveBtn = document.getElementById("confirmArchiveBtn");
-
-  if (confirmArchiveBtn) {
-    confirmArchiveBtn.addEventListener("click", async () => {
-      if (targetUserToArchive) {
-        await archiveUser(targetUserToArchive, confirmArchiveBtn);
-        targetUserToArchive = null;
-      }
-    });
-  }
-});
-
 document.addEventListener("DOMContentLoaded", () => {
   const closeEditBtn = document.getElementById("closeEditSystemUserModal");
   const cancelEditBtn = document.getElementById("cancelEditSystemUserModal");
   const editModal = document.getElementById("editSystemUserModal");
-
-  const cancelArchiveBtn = document.getElementById("cancelArchive");
-  const archiveModal = document.getElementById("archiveSystemUserModal");
 
   const closeModal = (modal) => {
     if (modal) modal.style.display = "none";
@@ -317,8 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
     closeEditBtn.addEventListener("click", () => closeModal(editModal));
   if (cancelEditBtn)
     cancelEditBtn.addEventListener("click", () => closeModal(editModal));
-  if (cancelArchiveBtn)
-    cancelArchiveBtn.addEventListener("click", () => closeModal(archiveModal));
 });
 
 async function loadSystemUsers() {
@@ -338,9 +283,8 @@ async function loadSystemUsers() {
   let query = supabaseClient
     .from("profiles")
     .select(
-      "id, full_name, email, phone_number, role, status, photo_url, is_archived, created_at, updated_at",
+      "id, full_name, email, phone_number, role, status, photo_url, created_at, updated_at",
     )
-    .eq("is_archived", false)
     .in("role", ["librarian", "accountant", "receptionist"]);
 
   if (searchTerm) {
@@ -393,12 +337,6 @@ async function loadSystemUsers() {
         <button class="systemUsers-actions-btn edit-SystemUser" onclick="editUser('${user.id}')">
           <i class="fa-solid fa-pen"></i>
         </button>
-        <button 
-  class="systemUsers-actions-btn archive-SystemUser" 
-  onclick="deleteUser('${user.id}', '${user.full_name}')"
->
-  <i class="fa-solid fa-box-archive"></i>
-</button>
       </td>
     </tr>
   `,
@@ -447,83 +385,6 @@ document.addEventListener("DOMContentLoaded", () => {
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
-let targetUserToArchive = null;
-
-async function archiveUser(targetUserId, confirmBtn) {
-  if (confirmBtn) {
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = "Archiving...";
-  }
-
-  try {
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseClient.auth.getSession();
-
-    if (sessionError || !session) {
-      showToast("Your session has expired. Please log in again.", "error");
-      window.location.href = "index.html";
-      return;
-    }
-
-    if (session.user.id === targetUserId) {
-      showToast("You cannot archive your own admin account.", "error");
-
-      document.getElementById("archiveSystemUserModal").style.display = "none";
-      if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-
-      return;
-    }
-
-    const { data: adminProfile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("role, is_archived, status")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profileError || !adminProfile) {
-      showToast("Unable to verify user permissions.", "error");
-      return;
-    }
-
-    if (
-      adminProfile.role !== "admin" ||
-      adminProfile.is_archived ||
-      adminProfile.status !== "active"
-    ) {
-      showToast(
-        "Access denied: You do not have permission to perform this action.",
-        "error",
-      );
-      return;
-    }
-
-    const { error: updateError } = await supabaseClient
-      .from("profiles")
-      .update({ is_archived: true, status: "inactive" })
-      .eq("id", targetUserId);
-
-    if (updateError) {
-      console.error("Archive error:", updateError.message);
-      showToast("Failed to archive user. Check database policies.", "error");
-      return;
-    }
-
-    showToast("User successfully archived.", "success");
-    document.getElementById("archiveSystemUserModal").style.display = "none";
-    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-
-    if (typeof loadSystemUsers === "function") loadSystemUsers();
-  } catch (err) {
-    console.error("Unexpected error during archive operation:", err);
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Archive";
-    }
-  }
-}
 let targetUserToEdit = null;
 let originalUserData = null;
 

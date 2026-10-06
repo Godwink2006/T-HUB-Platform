@@ -58,18 +58,6 @@ window.addEventListener("click", (e) => {
   }
 });
 
-const archiveSubjectModal = document.getElementById("archiveSubjectModal");
-
-const cancelArchive = document.getElementById("cancelArchive");
-
-window.addEventListener("click", (e) => {
-  if (e.target === archiveSubjectModal) {
-    archiveSubjectModal.style.display = "none";
-
-    unLockBodyScroll();
-  }
-});
-
 async function populateDepartmentDropdown() {
   const departmentSelect = document.getElementById("departmentSelect");
   if (!departmentSelect) return;
@@ -78,7 +66,6 @@ async function populateDepartmentDropdown() {
     .from("departments")
     .select("id, name")
     .eq("status", "active")
-    .eq("is_archived", false)
     .order("name");
 
   const currentSelection = departmentSelect.value;
@@ -126,7 +113,6 @@ async function handleAddSubject(event) {
           department_id: departmentId,
           status,
           description: description || null,
-          is_archived: false,
         },
       ])
       .select();
@@ -134,7 +120,7 @@ async function handleAddSubject(event) {
     if (error) {
       if (error.code === "23505") {
         showToast(
-          "This subject name already exists (including in archives). Please choose a different name.",
+          "This subject name already exists. Please choose a different name.",
           "error",
         );
         return;
@@ -210,7 +196,6 @@ async function fetchFilteredSubjects() {
     departments ( id, name )
   `);
 
-  query = query.eq("is_archived", false);
 
   if (departmentId) {
     query = query.eq("department_id", departmentId);
@@ -300,9 +285,6 @@ function renderSubjectsTable(subjects, isLoading = false) {
           <button class="subjects-actions-btn edit" data-id="${subject.id}" title="Edit Subject">
             <i class="fa-solid fa-pen"></i>
           </button>
-          <button class="subjects-actions-btn archive" data-id="${subject.id}" title="Archive Subject">
-            <i class="fa-solid fa-box-archive"></i>
-          </button>
         </td>
       </tr>
     `;
@@ -324,7 +306,6 @@ async function populateSubjectFilterDropdowns() {
       departments ( id, name )
     `,
     )
-    .eq("is_archived", false);
 
   if (error) {
     console.error(
@@ -364,7 +345,6 @@ async function populateEditDepartmentDropdown() {
     .from("departments")
     .select("id, name")
     .eq("status", "active")
-    .eq("is_archived", false)
     .order("name");
 
   if (error) {
@@ -546,13 +526,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await populateDepartmentDropdown();
 
   document
-    .getElementById("confirmArchiveBtn")
-    ?.addEventListener("click", handleConfirmArchive);
-  document
-    .getElementById("cancelArchiveModal")
-    ?.addEventListener("click", closeArchiveModal);
-
-  document
     .getElementById("editSubjectForm")
     ?.addEventListener("submit", handleUpdateSubject);
   document
@@ -563,100 +536,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     ?.addEventListener("click", closeEditModal);
 });
 
-let targetSubjectIdToArchive = null;
-
-function openArchiveModal(subjectId, subjectName = "") {
-  targetSubjectIdToArchive = subjectId;
-
-  const textElem = document.getElementById("archiveModalText");
-  if (textElem) {
-    const formattedName = subjectName
-      ? `"<span style="font-weight: 600; color: green;">${escapeHTML(subjectName)}</span>"`
-      : "this subject";
-
-    textElem.innerHTML = `Are you sure you want to archive ${formattedName}? Archived subject will not show when assigning teacher to subjects`;
-  }
-
-  const modal = document.getElementById("archiveSubjectModal");
-  if (modal) modal.style.display = "flex";
-  if (typeof lockBodyScroll === "function") lockBodyScroll();
-}
-
-function closeArchiveModal() {
-  const modal = document.getElementById("archiveSubjectModal");
-  if (modal) modal.style.display = "none";
-  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-  targetSubjectIdToArchive = null;
-}
-
-async function handleConfirmArchive() {
-  if (!targetSubjectIdToArchive) return;
-
-  const confirmBtn = document.getElementById("confirmArchiveBtn");
-
-  try {
-    if (confirmBtn) {
-      confirmBtn.disabled = true;
-      confirmBtn.innerHTML = `Archiving...`;
-    }
-
-    const { data, error } = await supabaseClient
-      .from("subjects")
-      .update({
-        is_archived: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", targetSubjectIdToArchive)
-      .select();
-    if (error) {
-      showToast(error.message, "error");
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      showToast("You do not have permission to archive this subject.", "error");
-      return;
-    }
-
-    showToast("Subject archived successfully!", "success");
-    closeArchiveModal();
-
-    if (typeof populateSubjectFilterDropdowns === "function") {
-      await populateSubjectFilterDropdowns();
-    }
-    if (typeof fetchFilteredSubjects === "function") {
-      await fetchFilteredSubjects();
-    }
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Archive";
-    }
-  }
-}
-
 document.getElementById("subjectsTableBody")?.addEventListener("click", (e) => {
   const editBtn = e.target.closest(".subjects-actions-btn.edit");
-  const archiveBtn = e.target.closest(".subjects-actions-btn.archive");
 
   if (editBtn) {
     const subjectId = editBtn.dataset.id;
     if (typeof openEditSubjectModal === "function") {
       openEditSubjectModal(subjectId);
     }
-  } else if (archiveBtn) {
-    const subjectId = archiveBtn.dataset.id;
-    const row = archiveBtn.closest("tr");
-
-    const subjectName =
-      archiveBtn.dataset.name ||
-      row?.querySelector("td strong")?.textContent?.trim() ||
-      row?.querySelector("td")?.textContent?.trim() ||
-      "";
-
-    openArchiveModal(subjectId, subjectName);
   }
 });
 

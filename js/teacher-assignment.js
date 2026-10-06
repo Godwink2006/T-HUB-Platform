@@ -62,30 +62,25 @@ async function loadFormDropdowns() {
           `
       id,
       staff_id,
-      profiles!inner ( id, full_name, status, is_archived )
+      profiles!inner ( id, full_name, status )
     `,
         )
-        .eq("is_archived", false)
-        .eq("profiles.status", "active")
-        .eq("profiles.is_archived", false),
+        .eq("profiles.status", "active"),
 
       window.supabaseClient
         .from("subjects")
         .select("id, name")
-        .eq("status", "Active")
-        .eq("is_archived", false),
+        .eq("status", "Active"),
 
       window.supabaseClient
         .from("classes")
         .select("id, name")
-        .eq("status", "active")
-        .eq("is_archived", false),
+        .eq("status", "active"),
 
       window.supabaseClient
         .from("academic_years")
         .select("id, year_label")
         .eq("status", "Active")
-        .eq("is_archived", false),
     ]);
 
     const formattedTeachers = (teachersRes.data || []).map((t) => ({
@@ -488,125 +483,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-let currentArchiveAssignmentId = null;
-
-async function openArchiveModal(assignmentId) {
-  const archiveModal = document.getElementById("archiveAssignModal");
-  const modalText = document.getElementById("archiveTeacherNameClass");
-  if (!archiveModal || !modalText) return;
-
-  archiveModal.style.display = "flex";
-  document.body.style.overflow = "hidden";
-
-  try {
-    currentArchiveAssignmentId = assignmentId;
-
-    const { data: assign, error } = await window.supabaseClient
-      .from("teacher_assignments")
-      .select(
-        `
-        id,
-        profiles!teacher_id ( full_name ),
-        classes ( name )
-      `,
-      )
-      .eq("id", assignmentId)
-      .single();
-
-    if (error) throw error;
-
-    const teacherName = assign.profiles?.full_name || "this teacher";
-    const className = assign.classes?.name || "this class";
-
-    modalText.innerHTML = `Are you sure you want to archive <span style="color: green; font-weight: 600;">${teacherName}</span>'s assignment for <span style="color: green; font-weight: 600;">${className}</span>?`;
-  } catch (err) {
-    console.error("Error loading archive details:", err.message);
-    showToast("Failed to load assignment details: " + err.message, "error");
-  }
-}
-
-async function handleConfirmArchive() {
-  if (!currentArchiveAssignmentId) return;
-
-  const confirmBtn = document.getElementById("confirmArchiveModalBtn");
-  const archiveModal = document.getElementById("archiveAssignModal");
-
-  try {
-    if (confirmBtn) {
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = "Archiving...";
-    }
-
-    const { error } = await window.supabaseClient
-      .from("teacher_assignments")
-      .update({
-        is_archived: true,
-        status: "inactive",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", currentArchiveAssignmentId);
-
-    if (error) {
-      if (
-        error.code === "42501" ||
-        error.message.includes("violates row-level security policy")
-      ) {
-        throw new Error(
-          "Permission denied: Only system administrators can archive teacher assignments.",
-        );
-      }
-      throw error;
-    }
-
-    closeModal(archiveModal);
-    showToast("Teacher assignment archived successfully!", "success");
-
-    if (typeof loadAssignmentsTable === "function") {
-      await loadAssignmentsTable();
-    }
-  } catch (err) {
-    console.error("Error archiving assignment:", err.message);
-    showToast("Failed to archive teacher assignment: " + err.message, "error");
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Archive";
-    }
-    currentArchiveAssignmentId = null;
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const tableBody = document.getElementById("assignmentsTableBody");
-  if (tableBody) {
-    tableBody.addEventListener("click", (e) => {
-      const archiveBtn = e.target.closest(".assigns-actions-btn.archive");
-      if (archiveBtn) {
-        const id = archiveBtn.getAttribute("data-id");
-        openArchiveModal(id);
-      }
-    });
-  }
-
-  const confirmBtn = document.getElementById("confirmArchiveModalBtn");
-  const cancelBtn = document.getElementById("cancelArchiveModalBtn");
-  const archiveModal = document.getElementById("archiveAssignModal");
-
-  if (confirmBtn) {
-    confirmBtn.addEventListener("click", handleConfirmArchive);
-  }
-
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", () => closeModal(archiveModal));
-  }
-
-  window.addEventListener("click", (e) => {
-    if (e.target === archiveModal) {
-      closeModal(archiveModal);
-    }
-  });
-});
-
 let globalAssignmentsData = [];
 
 async function loadAssignmentsTable() {
@@ -630,7 +506,6 @@ async function loadAssignmentsTable() {
         id,
         is_class_teacher,
         status,
-        is_archived,
         created_at,
         updated_at,
         description,
@@ -640,7 +515,6 @@ async function loadAssignmentsTable() {
         academic_years ( id, year_label )
       `,
       )
-      .eq("is_archived", false)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -742,9 +616,6 @@ function renderAssignmentsTable(assignments) {
       <td>
         <button class="assigns-actions-btn edit" data-id="${assign.id}">
           <i class="fa-solid fa-pen"></i>
-        </button>
-        <button class="assigns-actions-btn archive" data-id="${assign.id}">
-          <i class="fa-solid fa-box-archive"></i>
         </button>
       </td>
     `;

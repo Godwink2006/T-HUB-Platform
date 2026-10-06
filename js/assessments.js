@@ -49,7 +49,6 @@ async function loadAssessments() {
     const { data, error } = await supabaseClient
       .from("assessments")
       .select("*")
-      .eq("is_archive", false)
       .order("created_at", { ascending: true });
 
     if (error) {
@@ -131,15 +130,6 @@ function renderAssessmentTable(assessments) {
                 <i class="fa-solid fa-pen"></i>
               </button>
 
-              <button
-                type="button"
-                class="assessment-action-btn assessment-archive-btn archive-assessment"
-                data-id="${item.id}"
-data-name="${escapeAttribute(rawName)}"
-                title="Archive Assessment"
-              >
-                <i class="fa-solid fa-box-archive"></i>
-              </button>
             </div>
           </td>
         </tr>
@@ -168,7 +158,6 @@ function closeAssessmentModal() {
   modal.classList.remove("active");
   document.body.style.overflow = "";
 }
-
 function openEditAssessmentModal(id) {
   const modal = document.getElementById("editAssessmentModal");
   const form = document.getElementById("editAssessmentForm");
@@ -221,30 +210,6 @@ function closeEditAssessmentModal() {
   document.body.style.overflow = "";
 }
 
-function openArchiveAssessmentModal(id, name) {
-  const modal = document.getElementById("archiveAssessmentModal");
-  if (!modal || !id) return;
-
-  const nameElement = document.getElementById("archiveAssessmentName");
-  if (nameElement) {
-    nameElement.textContent = name || "this assessment";
-  }
-
-  modal.dataset.id = id;
-
-  modal.classList.add("active");
-  document.body.style.overflow = "hidden";
-}
-
-function closeArchiveAssessmentModal() {
-  const modal = document.getElementById("archiveAssessmentModal");
-
-  if (!modal) return;
-
-  modal.classList.remove("active");
-  document.body.style.overflow = "";
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   const notifyUser = (message, type = "error", targetInput = null) => {
     if (typeof showToast === "function") {
@@ -254,95 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     targetInput?.focus();
   };
-
-  const confirmBtn = document.getElementById("confirmArchiveAssessment");
-  const cancelBtn = document.getElementById("cancelArchiveAssessment");
-  const archiveModal = document.getElementById("archiveAssessmentModal");
-
-  if (cancelBtn && !cancelBtn.dataset.hasListener) {
-    cancelBtn.dataset.hasListener = "true";
-    cancelBtn.addEventListener("click", () => {
-      if (typeof closeArchiveAssessmentModal === "function")
-        closeArchiveAssessmentModal();
-    });
-  }
-
-  if (confirmBtn && !confirmBtn.dataset.hasListener) {
-    confirmBtn.dataset.hasListener = "true";
-
-    confirmBtn.addEventListener("click", async function () {
-      const id = archiveModal?.dataset.id;
-      if (!id) return;
-
-      try {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = "Archiving...";
-
-        const { data, error } = await supabaseClient
-          .from("assessments")
-          .update({
-            is_archive: true,
-            status: "Inactive",
-          })
-          .eq("id", id)
-          .select();
-
-        if (!error && (!data || data.length === 0)) {
-          notifyUser(
-            "You do not have permission to archive assessments.",
-            "error",
-          );
-          return;
-        }
-
-        if (error) {
-          console.error("Supabase archive error:", error);
-
-          const isPermissionErr =
-            error.code === "42501" ||
-            error.code === "PGRST301" ||
-            error.status === 403 ||
-            error.message?.toLowerCase().includes("permission") ||
-            error.message
-              ?.toLowerCase()
-              .includes("violates row-level security");
-
-          if (isPermissionErr) {
-            notifyUser(
-              "You do not have permission to archive assessments.",
-              "error",
-            );
-            return;
-          }
-
-          notifyUser(
-            "Failed to archive assessment. Please try again.",
-            "error",
-          );
-          return;
-        }
-
-        notifyUser("Assessment archived successfully.", "success");
-
-        if (typeof closeArchiveAssessmentModal === "function") {
-          closeArchiveAssessmentModal();
-        }
-
-        if (typeof loadAssessments === "function") {
-          loadAssessments();
-        }
-      } catch (err) {
-        console.error("Unexpected runtime error:", err);
-        notifyUser(
-          "Something went wrong while processing your request.",
-          "error",
-        );
-      } finally {
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = "Archive";
-      }
-    });
-  }
 
   document
     .getElementById("addAssessment")
@@ -381,16 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const archiveBtn = e.target.closest(".archive-assessment");
-    if (archiveBtn) {
-      const id = archiveBtn.dataset.id;
-      const rawName = archiveBtn.dataset.name || "";
-
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = rawName;
-      const name = tempDiv.textContent || tempDiv.innerText || "";
-      if (id) openArchiveAssessmentModal(id, name);
-    }
   });
 
   const assessmentForm = document.getElementById("assessmentForm");
@@ -461,7 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
               description: description,
               maximum_marks: marks,
               status: normalizedStatus,
-              is_archive: false,
             },
           ])
           .select()
@@ -782,7 +647,6 @@ document.addEventListener("DOMContentLoaded", () => {
               marks: marks,
               status: normalizedStatus,
               description: description,
-              is_archived: false,
             },
           ])
           .select()
@@ -837,10 +701,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const allModalIds = [
     "assessmentModal",
     "editAssessmentModal",
-    "archiveAssessmentModal",
     "categoryModal",
     "editCategoryModal",
-    "archiveCategoryModal",
   ];
 
   allModalIds.forEach((id) => {
@@ -866,13 +728,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const archiveBtn = event.target.closest(".archive-category");
-      if (archiveBtn) {
-        openArchiveCategoryModal(
-          archiveBtn.dataset.id,
-          archiveBtn.dataset.name,
-        );
-      }
     });
   }
 
@@ -991,11 +846,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const confirmArchiveBtn = document.getElementById("confirmArchiveCategory");
-  const cancelArchiveBtn = document.getElementById("cancelArchiveCategory");
-  const archiveCategoryModal = document.getElementById("archiveCategoryModal");
-
-  cancelArchiveBtn?.addEventListener("click", closeArchiveCategoryModal);
   document
     .getElementById("closeEditCategoryModal")
     ?.addEventListener("click", closeEditCategoryModal);
@@ -1003,55 +853,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("cancelEditCategoryModal")
     ?.addEventListener("click", closeEditCategoryModal);
 
-  if (confirmArchiveBtn && !confirmArchiveBtn.dataset.hasListener) {
-    confirmArchiveBtn.dataset.hasListener = "true";
-
-    confirmArchiveBtn.addEventListener("click", async function () {
-      const id = archiveCategoryModal?.dataset.id;
-      if (!id) return;
-
-      try {
-        confirmArchiveBtn.disabled = true;
-        confirmArchiveBtn.textContent = "Archiving...";
-
-        const { data, error } = await supabaseClient
-          .from("assessment_categories")
-          .update({
-            is_archived: true,
-            status: "Inactive",
-          })
-          .eq("id", id)
-          .select();
-
-        if (!error && (!data || data.length === 0)) {
-          notifyUser(
-            "You do not have permission to archive this category.",
-            "error",
-          );
-          return;
-        }
-
-        if (error) {
-          console.error("Supabase category archive error:", error);
-          notifyUser("Failed to archive category. Please try again.", "error");
-          return;
-        }
-
-        notifyUser("Category archived successfully.", "success");
-        closeArchiveCategoryModal();
-        loadCategories();
-      } catch (err) {
-        console.error("Unexpected runtime error:", err);
-        notifyUser(
-          "Something went wrong while processing your request.",
-          "error",
-        );
-      } finally {
-        confirmArchiveBtn.disabled = false;
-        confirmArchiveBtn.textContent = "Archive";
-      }
-    });
-  }
 });
 
 let currentCategories = [];
@@ -1073,7 +874,6 @@ async function loadCategories() {
     const { data, error } = await supabaseClient
       .from("assessment_categories")
       .select("*")
-      .eq("is_archived", false)
       .order("created_at", { ascending: true });
 
     if (error) {
@@ -1147,15 +947,6 @@ function renderCategoryTable(categories) {
                 <i class="fa-solid fa-pen"></i>
               </button>
 
-              <button
-                type="button"
-                class="assessment-action-btn assessment-archive-btn archive-category"
-                data-id="${item.id}"
-                data-name="${escapeAttribute(rawName)}"
-                title="Archive Category"
-              >
-                <i class="fa-solid fa-box-archive"></i>
-              </button>
             </div>
           </td>
         </tr>
@@ -1228,28 +1019,6 @@ function closeEditCategoryModal() {
 
   const nameSelect = document.getElementById("editCategoryNameInput");
   if (nameSelect) nameSelect.disabled = false;
-
-  modal.classList.remove("active");
-  document.body.style.overflow = "";
-}
-
-function openArchiveCategoryModal(id, name) {
-  const modal = document.getElementById("archiveCategoryModal");
-  if (!modal || !id) return;
-
-  const nameElement = document.getElementById("archiveCategoryName");
-  if (nameElement) {
-    nameElement.textContent = name || "this category";
-  }
-
-  modal.dataset.id = id;
-  modal.classList.add("active");
-  document.body.style.overflow = "hidden";
-}
-
-function closeArchiveCategoryModal() {
-  const modal = document.getElementById("archiveCategoryModal");
-  if (!modal) return;
 
   modal.classList.remove("active");
   document.body.style.overflow = "";

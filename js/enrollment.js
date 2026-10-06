@@ -147,20 +147,27 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error("No active academic year found for this school.");
         }
 
-        // 3. Find the 1st Term belonging to this active academic year
-        const { data: termsData, error: termErr } = await client
+        // Find both source and target terms for the current academic year.
+        const { data: yearTerms, error: termErr } = await client
           .from("terms")
           .select("id, name")
           .eq("academic_year_id", activeYear.id)
-          .ilike("name", "%1%") // Matches "1st Term", "Term 1", etc.
-          .limit(1);
+          .eq("school_id", activeSchoolId);
 
-        if (termErr || !termsData || termsData.length === 0) {
-          throw new Error(
-            "Could not find the 1st term for the active academic year.",
-          );
+        if (termErr) throw termErr;
+        const isFirstTerm = (name) => /\b(?:1(?:st)?|first|one|i)\b/i.test(name || "");
+        const isSecondTerm = (name) => /\b(?:2(?:nd)?|second|two|ii)\b/i.test(name || "");
+        const firstTerms = (yearTerms || []).filter((term) => isFirstTerm(term.name));
+        const secondTerms = (yearTerms || []).filter((term) => isSecondTerm(term.name));
+
+        if (firstTerms.length !== 1) {
+          throw new Error("Could not identify exactly one 1st term for the active academic year.");
         }
-        const activeFirstTermId = termsData[0].id;
+        if (secondTerms.length !== 1) {
+          throw new Error("Could not identify exactly one 2nd term for the active academic year.");
+        }
+        const activeFirstTermId = firstTerms[0].id;
+        const activeSecondTermId = secondTerms[0].id;
 
         // 4. Fetch the single selected enrollment safely, including term_id if available
         const { data: sourceEnrollments, error: fetchErr } = await client
@@ -216,15 +223,18 @@ document.addEventListener("DOMContentLoaded", () => {
         // 8. Fetch active fee structures for Grade 10 classes
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
-          .select("id, total_amount, class_id, terms(name), classes(name)")
-          .eq("status", "Active");
+          .select("id, total_amount, class_id, term_id, terms(name), classes(name)")
+          .eq("status", "Active")
+          .eq("school_id", activeSchoolId)
+          .eq("academic_year_id", activeYear.id)
+          .eq("term_id", activeSecondTermId);
 
         if (feeErr) throw feeErr;
 
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
         <div style="margin-bottom: 15px; font-size: 13px; color: #555;">
-          <b>Target Academic Year:</b> ${activeYear.year_label} (Active - 1st Term)
+          <b>Promotion:</b> Grade 9, 1st Term → Grade 10, 2nd Term (${activeYear.year_label})
         </div>
 
         <div style="margin-bottom: 15px;">
@@ -292,7 +302,9 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           // Filter matching fee structures
-          const matchingFees = feesData.filter((f) => f.class_id === classId);
+          const matchingFees = feesData.filter(
+            (f) => f.class_id === classId && f.term_id === activeSecondTermId,
+          );
           if (matchingFees.length > 0) {
             targetFeeSelect.innerHTML = matchingFees
               .map(
@@ -302,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
               .join("");
             targetFeeSelect.disabled = false;
           } else {
-            targetFeeSelect.innerHTML = `<option value="">-- No fee structure found for this class --</option>`;
+            targetFeeSelect.innerHTML = `<option value="">-- No 2nd-term fee structure found for this class --</option>`;
             targetFeeSelect.disabled = true;
           }
         };
@@ -331,17 +343,31 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          await executeGrade9To10Promotion({
-            enrollmentIds: selectedEnrollmentIds,
-            studentId: enr.student_id,
-            targetClassId,
-            feeStructureId,
-            activeAcademicYearId: activeYear.id,
-            email,
-            password,
-            phone,
-          });
-          closeModal();
+          const originalConfirmText = modalConfirm.textContent;
+          const originalCancelDisabled = modalCancel.disabled;
+          modalConfirm.disabled = true;
+          modalConfirm.setAttribute("aria-busy", "true");
+          modalConfirm.textContent = "Creating...";
+          modalCancel.disabled = true;
+
+          try {
+            const created = await executeGrade9To10Promotion({
+              enrollmentIds: selectedEnrollmentIds,
+              studentId: enr.student_id,
+              targetClassId,
+              feeStructureId,
+              activeAcademicYearId: activeYear.id,
+              email,
+              password,
+              phone,
+            });
+            if (created) closeModal();
+          } finally {
+            modalConfirm.disabled = false;
+            modalConfirm.removeAttribute("aria-busy");
+            modalConfirm.textContent = originalConfirmText;
+            modalCancel.disabled = originalCancelDisabled;
+          }
         };
       } catch (err) {
         console.error("Error setting up Grade 9 to 10 promotion modal:", err);
@@ -382,7 +408,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "Error: Fee Structure is missing or not selected in the modal dropdown!",
           "error",
         );
-        return;
+        return false;
       }
 
       for (const enr of sourceEnrollments) {
@@ -390,7 +416,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "promote-grade9-to-10",
           {
             body: {
-              student_id: enr.student_id,
+              enrollment_ids: enrollmentIds,
               target_class_id: targetClassId,
               fee_structure_id: feeStructureId,
               email: email,
@@ -414,9 +440,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (typeof loadStudentEnrollments === "function") {
         loadStudentEnrollments();
       }
+      return true;
     } catch (err) {
       console.error("Grade 9 to 10 promotion failed:", err);
       showToast(`Promotion failed: ${err.message}`, "error");
+      return false;
     }
   }
 

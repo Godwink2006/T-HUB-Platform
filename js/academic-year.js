@@ -2,16 +2,8 @@ const academicYearModal = document.getElementById("academicYearModal");
 
 const editAcademicYearModal = document.getElementById("editAcademicYearModal");
 
-const archiveAcademicYearModal = document.getElementById(
-  "archiveAcademicYearModal",
-);
-
 window.addEventListener("click", (e) => {
-  const modals = [
-    academicYearModal,
-    editAcademicYearModal,
-    archiveAcademicYearModal,
-  ];
+  const modals = [academicYearModal, editAcademicYearModal];
   modals.forEach((modal) => {
     if (modal && modal.style.display === "flex" && e.target === modal) {
       closeModal(modal.id);
@@ -33,7 +25,6 @@ async function loadAcademicYears() {
   const { data, error } = await supabaseClient
     .from("academic_years")
     .select("*")
-    .eq("is_archived", false)
     .order("year_label", { ascending: false });
 
   if (error) {
@@ -85,12 +76,6 @@ function renderAcademicYearsTable() {
             <button class="academic-years-actions-btn edit-academicYear" onclick="openEditModal('${item.id}')">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button 
-  class="academic-years-actions-btn archive-AcademicYear" 
-  onclick="openArchiveModal('${item.id}', '${(item.year_label || "this Academic Year").replace(/'/g, "\\'")}')"
->
-  <i class="fa-solid fa-box-archive"></i>
-</button>
           </td>
         </tr>
       `;
@@ -160,7 +145,7 @@ async function handleAddAcademicYear(event) {
 
     const { data, error } = await supabaseClient
       .from("academic_years")
-      .insert([{ year_label: yearLabel, status, is_archived: false }])
+      .insert([{ year_label: yearLabel, status }])
       .select();
 
     if (error) {
@@ -277,57 +262,6 @@ async function handleEditAcademicYear(event) {
   }
 }
 
-function openArchiveModal(id, yearName) {
-  selectedYearId = id;
-
-  const nameElement = document.getElementById("archiveAcademicYearName");
-  if (nameElement) {
-    nameElement.textContent = yearName || "this Academic Year";
-  }
-
-  openModal("archiveAcademicYearModal");
-}
-
-async function handleConfirmArchive() {
-  if (!selectedYearId) return;
-
-  const archiveBtn = document.getElementById("confirmArchive");
-
-  try {
-    if (archiveBtn) {
-      archiveBtn.disabled = true;
-      archiveBtn.textContent = "Archiving...";
-    }
-
-    const { data, error } = await supabaseClient
-      .from("academic_years")
-      .update({ is_archived: true, status: "Inactive" })
-      .eq("id", selectedYearId)
-      .select();
-
-    if (error) {
-      showToast("Error archiving academic year: " + error.message, "error");
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      showToast("Permission denied.", "error");
-      return;
-    }
-
-    showToast("Academic year archived successfully!", "success");
-    closeModal("archiveAcademicYearModal");
-    await loadAcademicYears();
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    if (archiveBtn) {
-      archiveBtn.disabled = false;
-      archiveBtn.textContent = "Archive";
-    }
-  }
-}
-
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "flex";
@@ -341,10 +275,7 @@ function closeModal(modalId) {
 
   unLockBodyScroll();
 
-  if (
-    modalId === "editAcademicYearModal" ||
-    modalId === "archiveAcademicYearModal"
-  ) {
+  if (modalId === "editAcademicYearModal") {
     selectedYearId = null;
     originalYearData = {};
   }
@@ -373,11 +304,5 @@ function setupModalListeners() {
     .getElementById("editAcademicYearForm")
     ?.addEventListener("submit", handleEditAcademicYear);
 
-  document
-    .getElementById("cancelArchive")
-    ?.addEventListener("click", () => closeModal("archiveAcademicYearModal"));
-  document
-    .getElementById("confirmArchive")
-    ?.addEventListener("click", handleConfirmArchive);
 }
 

@@ -51,9 +51,6 @@ function renderStudentsTable(studentsToRender) {
           <button class="students-actions-btn edit" onclick="editStudent('${student.id}')">
             <i class="fa-solid fa-pen"></i>
           </button>
-          <button class="students-actions-btn archive" onclick="archiveStudent('${student.id}')">
-            <i class="fa-solid fa-box-archive"></i>
-          </button>
         </td>
       </tr>
     `;
@@ -254,8 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const closeViewBtn = document.getElementById("closeViewBtn");
 
-  const archiveStudentModal = document.getElementById("archiveStudentModal");
-  const cancelArchive = document.getElementById("cancelArchive");
 
   const editStudentModal = document.getElementById("editStudentModal");
   const closeEditStudentModal = document.getElementById(
@@ -319,20 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  document.querySelectorAll(".archive").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (archiveStudentModal) archiveStudentModal.style.display = "flex";
-      if (typeof lockBodyScroll === "function") lockBodyScroll();
-    });
-  });
-
-  if (cancelArchive) {
-    cancelArchive.addEventListener("click", () => {
-      if (archiveStudentModal) archiveStudentModal.style.display = "none";
-      if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-    });
-  }
-
   window.addEventListener("click", (e) => {
     if (e.target === editStudentModal) {
       editStudentModal.style.display = "none";
@@ -343,10 +324,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (e.target === viewStudentModal) {
       viewStudentModal.style.display = "none";
-      if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-    }
-    if (e.target === archiveStudentModal) {
-      archiveStudentModal.style.display = "none";
       if (typeof unLockBodyScroll === "function") unLockBodyScroll();
     }
   });
@@ -752,7 +729,6 @@ async function loadStudentsTable() {
         )
       `,
       )
-      .eq("is_archived", false)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -809,9 +785,6 @@ async function loadStudentsTable() {
             <button class="students-actions-btn edit" onclick="editStudent('${student.id}')">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button class="students-actions-btn archive" onclick="archiveStudent('${student.id}')">
-              <i class="fa-solid fa-box-archive"></i>
-            </button>
           </td>
         </tr>
       `;
@@ -840,14 +813,6 @@ const formatDate = (dateString) => {
   });
 };
 
-function viewStudent(id) {
-  const student = (window.allStudentsCache || []).find((s) => s.id === id);
-  if (student) {
-    openViewStudentModal(student);
-  } else {
-    console.error("Student not found in cache for ID:", id);
-  }
-}
 
 async function viewStudent(id) {
   let student = null;
@@ -1236,107 +1201,3 @@ function populateEditStudentModal(student) {
     medicalNotes: (student.medical_notes || "").trim(),
   };
 }
-
-window.archiveStudent = function (studentId) {
-  const student = (window.allStudentsCache || []).find(
-    (s) => s.id === studentId,
-  );
-  if (!student) {
-    console.error("Student not found for ID:", studentId);
-    return;
-  }
-
-  const studentName = student.profiles?.full_name || "this student";
-
-  document.getElementById("archiveStudentId").value = studentId;
-  document.getElementById("archiveStudentName").textContent = studentName;
-
-  const modal = document.getElementById("archiveStudentModal");
-  if (modal) {
-    modal.style.display = "flex";
-    if (typeof lockBodyScroll === "function") lockBodyScroll();
-  }
-};
-
-function closeArchiveStudentModal() {
-  const modal = document.getElementById("archiveStudentModal");
-  if (modal) {
-    modal.style.display = "none";
-    if (typeof unlockBodyScroll === "function") unlockBodyScroll();
-  }
-  document.getElementById("archiveStudentId").value = "";
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  document
-    .getElementById("cancelArchive")
-    ?.addEventListener("click", closeArchiveStudentModal);
-
-  const confirmBtn = document.getElementById("confirmArchive");
-  confirmBtn?.addEventListener("click", async () => {
-    const studentId = document.getElementById("archiveStudentId").value;
-    if (!studentId) return;
-
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = "Archiving...";
-
-    try {
-      const { error: profileError } = await supabaseClient
-        .from("profiles")
-        .update({ status: "inactive" })
-        .eq("id", studentId);
-
-      if (profileError) throw profileError;
-
-      const { error: studentError } = await supabaseClient
-        .from("students")
-        .update({ is_archived: true })
-        .eq("id", studentId);
-
-      if (studentError) throw studentError;
-
-      if (Array.isArray(window.allStudentsCache)) {
-        window.allStudentsCache = window.allStudentsCache.filter(
-          (s) => s.id !== studentId,
-        );
-      }
-
-      if (typeof showToast === "function") {
-        showToast("Student archived successfully.", "success");
-      }
-
-      closeArchiveStudentModal();
-
-      if (typeof loadStudentsTable === "function") {
-        loadStudentsTable();
-      }
-    } catch (err) {
-      console.error("Archive operation failed:", err);
-
-      if (
-        err.code === "42501" ||
-        (err.message &&
-          err.message.toLowerCase().includes("row-level security")) ||
-        (err.message && err.message.toLowerCase().includes("permission denied"))
-      ) {
-        if (typeof showToast === "function") {
-          showToast(
-            "Permission denied: Only Admins and Accountants can archive students.",
-            "error",
-          );
-        } else {
-          alert(
-            "Permission denied: Only Admins and Accountants can archive students.",
-          );
-        }
-      } else {
-        if (typeof showToast === "function") {
-          showToast(err.message || "Failed to archive student.", "error");
-        }
-      }
-    } finally {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Archive";
-    }
-  });
-});

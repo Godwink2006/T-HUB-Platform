@@ -512,13 +512,11 @@ function clearDraftStorage() {
           `
           id,
           status,
-          is_archived,
           classes ( id, name ),
           academic_years ( id, year_label )
         `,
         )
         .eq("school_id", state.schoolId)
-        .eq("is_archived", false)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -556,9 +554,6 @@ function clearDraftStorage() {
                 </button>
                 <button class="timetables-actions-btn edit" data-id="${escapeHTML(item.id)}" title="Edit">
                   <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="timetables-actions-btn archive" data-id="${escapeHTML(item.id)}" title="Archive">
-                  <i class="fa-solid fa-box-archive"></i>
                 </button>
               </td>
             </tr>
@@ -600,20 +595,6 @@ function clearDraftStorage() {
         }
       }
 
-      const archiveTrigger = e.target.closest(
-        ".timetables-actions-btn.archive",
-      );
-      if (archiveTrigger) {
-        e.preventDefault();
-        e.stopPropagation();
-        const timetableId =
-          archiveTrigger.dataset.id ||
-          archiveTrigger.closest("tr")?.dataset?.timetableId;
-        if (timetableId && timetableId !== "undefined") {
-          openArchiveTimetableModal(timetableId);
-        }
-        return;
-      }
     });
 
     getEl("addLessonBtn")?.addEventListener("click", (e) => {
@@ -1139,85 +1120,6 @@ function clearDraftStorage() {
     initApp();
   }
 
-  let archivingTimetableId = null;
-
-  
-  async function openArchiveTimetableModal(timetableId) {
-    try {
-      archivingTimetableId = timetableId;
-
-      const { data: timetable, error } = await supabaseClient
-        .from("timetables")
-        .select("id, class_id")
-        .eq("id", timetableId)
-        .single();
-
-      if (error) throw error;
-
-      const classObj = state.lookups.classes.find(
-        (c) => c.id === timetable.class_id,
-      );
-      const className = classObj ? classObj.name : "this class";
-
-      const classSpan = document.getElementById("editArchiveClassName");
-      if (classSpan) {
-        classSpan.textContent = className;
-      }
-
-      showModal(document.getElementById("archiveTimetableModal"));
-    } catch (err) {
-      console.error("Error opening archive modal:", err);
-      showToast(
-        `Failed: ${err.message || "Could not open archive dialog."}`,
-        "error",
-      );
-    }
-  }
-
-  
-  async function handleConfirmArchive() {
-    if (!archivingTimetableId) return;
-
-    const confirmBtn = document.getElementById("confirmArchiveTimetable");
-    if (confirmBtn) confirmBtn.disabled = true;
-
-    try {
-      const { error } = await supabaseClient
-        .from("timetables")
-        .update({
-          status: "Inactive",
-          is_archived: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", archivingTimetableId);
-
-      if (error) throw error;
-
-      showToast("Timetable archived successfully!", "success");
-      hideModal(getEl("archiveTimetableModal"));
-
-      if (typeof loadTimetables === "function") {
-        await loadTimetables();
-      }
-    } catch (err) {
-      console.error("Error archiving timetable:", err);
-      showToast(`Failed to archive: ${err.message}`, "error");
-    } finally {
-      if (confirmBtn) confirmBtn.disabled = false;
-      archivingTimetableId = null;
-    }
-  }
-
-  document
-    .getElementById("confirmArchiveTimetable")
-    ?.addEventListener("click", handleConfirmArchive);
-  document
-    .getElementById("cancelArchiveTimetable")
-    ?.addEventListener("click", () => {
-      hideModal(getEl("archiveTimetableModal"));
-      archivingTimetableId = null;
-    });
-
   let cachedTimetables = [];
 
   
@@ -1283,9 +1185,6 @@ function clearDraftStorage() {
             </button>
             <button class="timetables-actions-btn edit" data-id="${escapeHTML(item.id)}" title="Edit">
               <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="timetables-actions-btn archive" data-id="${escapeHTML(item.id)}" title="Archive">
-              <i class="fa-solid fa-box-archive"></i>
             </button>
           </td>
         </tr>
@@ -1526,7 +1425,6 @@ window.addEventListener("click", (e) => {
     "editTimetableModal",
     "lessonModal",
     "editLessonModal",
-    "archiveTimetableModal",
   ];
 
   modalIds.forEach((id) => {
@@ -1546,7 +1444,6 @@ document
   ?.addEventListener("click", (e) => {
     const viewBtn = e.target.closest(".timetables-actions-btn.view");
     const editBtn = e.target.closest(".timetables-actions-btn.edit");
-    const archiveBtn = e.target.closest(".timetables-actions-btn.archive");
 
     if (viewBtn) {
       const timetableId = viewBtn.getAttribute("data-id");
@@ -1555,10 +1452,6 @@ document
       const timetableId = editBtn.getAttribute("data-id");
       if (typeof handleEditTimetable === "function")
         handleEditTimetable(timetableId);
-    } else if (archiveBtn) {
-      const timetableId = archiveBtn.getAttribute("data-id");
-      if (typeof handleArchiveTimetable === "function")
-        handleArchiveTimetable(timetableId);
     }
   });
 

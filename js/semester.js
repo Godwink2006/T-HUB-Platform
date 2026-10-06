@@ -4,7 +4,6 @@ let originalTermData = {};
 
 const termModal = document.getElementById("termModal");
 const editTermModal = document.getElementById("editTermModal");
-const archiveTermModal = document.getElementById("archiveTermModal");
 
 document.addEventListener("DOMContentLoaded", () => {
   loadTerms();
@@ -14,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.addEventListener("click", (e) => {
-  const modals = [termModal, editTermModal, archiveTermModal];
+  const modals = [termModal, editTermModal];
   modals.forEach((modal) => {
     if (modal && modal.style.display === "flex" && e.target === modal) {
       closeModal(modal.id);
@@ -62,7 +61,6 @@ async function loadTerms() {
       academic_years ( year_label )
     `,
     )
-    .eq("is_archived", false)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -120,12 +118,6 @@ function renderTermsTable() {
             <button class="terms-actions-btn edit-term" onclick="openEditModal('${item.id}')">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button 
-  class="terms-actions-btn archive-term" 
-  onclick="openArchiveModal('${item.id}', '${(item.name || "this Semester").replace(/'/g, "\\'")}')"
->
-  <i class="fa-solid fa-box-archive"></i>
-</button>
           </td>
         </tr>
       `;
@@ -245,7 +237,6 @@ async function handleAddTerm(event) {
           start_date: startDate,
           end_date: endDate,
           status,
-          is_archived: false,
         },
       ])
       .select();
@@ -399,57 +390,6 @@ async function handleEditTerm(event) {
   }
 }
 
-function openArchiveModal(id, termName) {
-  selectedTermId = id;
-
-  const nameElement = document.getElementById("archiveTermName");
-  if (nameElement) {
-    nameElement.textContent = termName || "this Semester";
-  }
-
-  openModal("archiveTermModal");
-}
-
-async function handleConfirmArchive() {
-  if (!selectedTermId) return;
-
-  const archiveBtn = document.getElementById("confirmArchive");
-
-  try {
-    if (archiveBtn) {
-      archiveBtn.disabled = true;
-      archiveBtn.textContent = "Archiving...";
-    }
-
-    const { data, error } = await supabaseClient
-      .from("terms")
-      .update({ is_archived: true, status: "Inactive" })
-      .eq("id", selectedTermId)
-      .select();
-
-    if (error) {
-      showToast("Error archiving semester: " + error.message, "error");
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      showToast("Permission denied.", "error");
-      return;
-    }
-
-    showToast("Semester archived successfully!", "success");
-    closeModal("archiveTermModal");
-    await loadTerms();
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    if (archiveBtn) {
-      archiveBtn.disabled = false;
-      archiveBtn.textContent = "Archive";
-    }
-  }
-}
-
 function lockBodyScroll() {
   document.body.style.overflow = "hidden";
 }
@@ -499,19 +439,12 @@ function setupModalListeners() {
     .getElementById("editTermForm")
     ?.addEventListener("submit", handleEditTerm);
 
-  document
-    .getElementById("cancelTermArchive")
-    ?.addEventListener("click", () => closeModal("archiveTermModal"));
-  document
-    .getElementById("confirmArchive")
-    ?.addEventListener("click", handleConfirmArchive);
 }
 
 async function populateAcademicYearDropdowns() {
   const { data, error } = await supabaseClient
     .from("academic_years")
     .select("id, year_label, status")
-    .eq("is_archived", false)
     .order("year_label", { ascending: false });
 
   if (error) {

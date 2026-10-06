@@ -57,24 +57,6 @@ window.addEventListener("click", (e) => {
     editDepartmentModal.style.display = "none";
     unLockBodyScroll();
   }
-  if (e.target === archiveDepartmentModal) {
-    archiveDepartmentModal.style.display = "none";
-    unLockBodyScroll();
-  }
-});
-
-const archiveDepartmentModal = document.getElementById(
-  "archiveDepartmentModal",
-);
-
-const archiveButtons = document.querySelectorAll(".archive-Department");
-
-const cancelArchive = document.getElementById("cancelArchive");
-
-cancelArchive.addEventListener("click", () => {
-  archiveDepartmentModal.style.display = "none";
-
-  unLockBodyScroll();
 });
 
 function escapeAttribute(str) {
@@ -105,7 +87,6 @@ async function loadDepartments() {
     const { data, error } = await supabaseClient
       .from("departments")
       .select("*")
-      .eq("is_archived", false)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -149,9 +130,6 @@ function renderDepartmentsTable(departments) {
     <button class="departments-actions-btn edit-Department" onclick="openEditModal('${item.id}')">
       <i class="fa-solid fa-pen"></i>
     </button>
-    <button class="departments-actions-btn archive-Department" onclick="openArchiveModal('${item.id}', '${escapeAttribute(item.name)}')">
-  <i class="fa-solid fa-box-archive"></i>
-</button>
   </td>
 `;
 
@@ -201,7 +179,6 @@ async function handleAddClass(event) {
           name,
           status,
           description: description || null,
-          is_archived: false,
         },
       ])
       .select();
@@ -381,85 +358,6 @@ const editDepartmentForm = document.getElementById("editDepartmentForm");
 if (editDepartmentForm) {
   editDepartmentForm.addEventListener("submit", handleEditDepartment);
 }
-let departmentToArchiveId = null;
-
-function openArchiveModal(departmentId, departmentName) {
-  departmentToArchiveId = departmentId;
-
-  const archiveModal = document.getElementById("archiveDepartmentModal");
-  if (archiveModal) {
-    const nameElement = document.getElementById("archiveDepartmentName");
-    if (nameElement) {
-      nameElement.textContent = departmentName || "this department";
-    }
-
-    archiveModal.style.display = "flex";
-    if (typeof lockBodyScroll === "function") lockBodyScroll();
-  }
-}
-
-async function handleConfirmArchive() {
-  if (!departmentToArchiveId) return;
-
-  const confirmBtn = document.getElementById("confirmArchive");
-  const archiveModal = document.getElementById("archiveDepartmentModal");
-
-  try {
-    if (confirmBtn) {
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = "Archiving...";
-    }
-
-    const { data, error } = await supabaseClient
-      .from("departments")
-      .update({
-        is_archived: true,
-        status: "inactive",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", departmentToArchiveId)
-      .select();
-
-    if (error) {
-      showToast(
-        "Permission denied: Only active admins can archive departments.",
-        "error",
-      );
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      showToast(
-        "Permission denied: Only active admins can archive departments.",
-        "error",
-      );
-      return;
-    }
-
-    showToast("Department archived successfully!", "success");
-
-    if (archiveModal) {
-      archiveModal.style.display = "none";
-      if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-    }
-
-    departmentToArchiveId = null;
-    await loadDepartments();
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Archive";
-    }
-  }
-}
-
-const confirmArchiveBtn = document.getElementById("confirmArchive");
-if (confirmArchiveBtn) {
-  confirmArchiveBtn.addEventListener("click", handleConfirmArchive);
-}
-
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     if (typeof loadDepartments === "function") loadDepartments();

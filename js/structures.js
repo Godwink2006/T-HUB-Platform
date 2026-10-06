@@ -441,7 +441,6 @@ async function loadFeeStructures() {
         terms ( id, name )
       `,
       )
-      .eq("is_archived", false)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -494,8 +493,7 @@ function renderFeeStructuresTable(structures) {
     const academicYear = struct.academic_years?.year_label || "N/A";
     const termName = struct.terms?.name || "N/A";
 
-    const currentStatus =
-      struct.status || (struct.is_archived ? "Inactive" : "Active");
+    const currentStatus = struct.status || "Active";
     const isInactive = currentStatus.toLowerCase() === "inactive";
 
     const statusText = isInactive ? "Inactive" : "Active";
@@ -520,9 +518,6 @@ function renderFeeStructuresTable(structures) {
   </button>
   <button class="structures-actions-btn edit" data-id="${struct.id}" title="Edit">
     <i class="fa-solid fa-pen"></i>
-  </button>
-  <button class="structures-actions-btn archive" data-id="${struct.id}" data-name="${escapeAttribute(struct.name || struct.title || className || "")}" title="Archive">
-    <i class="fa-solid fa-box-archive"></i>
   </button>
 </td>
     `;
@@ -731,45 +726,6 @@ if (editFeeItemsBody) {
   });
 }
 
-let targetStructureId = null;
-
-function openArchiveModal(structureId, structureName) {
-  targetStructureId = structureId;
-
-  const nameElement = document.getElementById("archiveStructureName");
-  if (nameElement) {
-    nameElement.textContent = structureName || "this fee structure";
-  }
-
-  const archiveStructureModal = document.getElementById(
-    "archiveStructureModal",
-  );
-  if (archiveStructureModal) {
-    archiveStructureModal.style.display = "flex";
-    if (typeof lockBodyScroll === "function") lockBodyScroll();
-  }
-}
-
-function closeArchiveModal() {
-  targetStructureId = null;
-  const archiveStructureModal = document.getElementById(
-    "archiveStructureModal",
-  );
-  if (archiveStructureModal) {
-    archiveStructureModal.style.display = "none";
-    if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-  }
-}
-
-document.addEventListener("click", (e) => {
-  const archiveBtn = e.target.closest(".structures-actions-btn.archive");
-  if (archiveBtn) {
-    const id = archiveBtn.dataset.id;
-    const name = archiveBtn.dataset.name;
-    openArchiveModal(id, name);
-  }
-});
-
 document.addEventListener("DOMContentLoaded", () => {
   const addFeeItemBtn = document.getElementById("addFeeItemBtn");
   const addItemModal = document.getElementById("addItemModal");
@@ -837,18 +793,6 @@ document.addEventListener("DOMContentLoaded", () => {
     unLockBodyScroll();
   });
 
-  const archiveStructureModal = document.getElementById(
-    "archiveStructureModal",
-  );
-  const cancelArchiveStructure = document.getElementById(
-    "cancelArchiveStructure",
-  );
-
-  cancelArchiveStructure?.addEventListener("click", () => {
-    if (archiveStructureModal) archiveStructureModal.style.display = "none";
-    unLockBodyScroll();
-  });
-
   const editStructureModal = document.getElementById("editStructureModal");
   const closeEditStructureModal = document.getElementById(
     "closeEditStructureModal",
@@ -877,10 +821,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (e.target === viewStructureModal) {
       viewStructureModal.style.display = "none";
-      unLockBodyScroll();
-    }
-    if (e.target === archiveStructureModal) {
-      archiveStructureModal.style.display = "none";
       unLockBodyScroll();
     }
     if (e.target === editStructureModal) {
@@ -915,70 +855,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const archiveBtn = e.target.closest(".archive");
-      if (archiveBtn) {
-        const id = archiveBtn.getAttribute("data-id");
-        if (id) openArchiveModal(id);
-        return;
-      }
     });
   }
-
-  confirmArchiveStructure?.addEventListener("click", async () => {
-    if (!targetStructureId) {
-      if (typeof showToast === "function") {
-        showToast("Error: No fee structure selected to archive.", "error");
-      }
-      return;
-    }
-
-    const originalText = confirmArchiveStructure.innerHTML;
-    confirmArchiveStructure.disabled = true;
-    confirmArchiveStructure.innerHTML = `Archiving...`;
-
-    try {
-      const { data, error } = await supabaseClient
-        .from("fee_structures")
-        .update({ is_archived: true, status: "Inactive" })
-        .eq("id", targetStructureId)
-        .select("id");
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        if (typeof showToast === "function") {
-          showToast("Permission denied or structure already removed.", "error");
-        }
-        return;
-      }
-
-      if (typeof showToast === "function") {
-        showToast("Fee structure archived successfully!", "success");
-      }
-
-      closeArchiveModal();
-
-      closeArchiveModal();
-
-      if (typeof populateFilterDropdowns === "function") {
-        await populateFilterDropdowns();
-      }
-
-      if (typeof fetchFilteredFeeStructures === "function") {
-        await fetchFilteredFeeStructures();
-      } else if (typeof loadFeeStructures === "function") {
-        await loadFeeStructures();
-      }
-    } catch (err) {
-      console.error("Archive transaction failed:", err);
-      if (typeof showToast === "function") {
-        showToast(err.message || "An unexpected error occurred.", "error");
-      }
-    } finally {
-      confirmArchiveStructure.disabled = false;
-      confirmArchiveStructure.innerHTML = originalText;
-    }
-  });
 
   document
     .getElementById("btnUpdateStructure")
@@ -1067,7 +945,6 @@ async function fetchFilteredFeeStructures() {
   if (semesterId) query = query.eq("term_id", semesterId);
   if (classId) query = query.eq("class_id", classId);
 
-  query = query.eq("is_archived", false);
 
   if (statusFilter === "active") {
     query = query.eq("status", "Active");
@@ -1141,7 +1018,6 @@ async function populateFilterDropdowns() {
       terms ( id, name )
     `,
     )
-    .eq("is_archived", false);
 
   if (error) {
     console.error(

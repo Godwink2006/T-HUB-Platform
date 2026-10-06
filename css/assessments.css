@@ -193,17 +193,8 @@ body {
   color: #d97706;
 }
 
-.assessment-archive-btn {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 .assessment-edit-btn:hover {
   background: #fde68a;
-}
-
-.assessment-archive-btn:hover {
-  background: #fecaca;
 }
 
 /* =========================================================
@@ -422,33 +413,6 @@ body {
 }
 
 /* =========================================================
-   ARCHIVE MODAL
-   ========================================================= */
-
-.archive-modal {
-  position: fixed;
-
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-
-  justify-content: center;
-  align-items: center;
-
-  z-index: 1000;
-}
-
-.archive-modal.active {
-  display: flex;
-}
-
-/* =========================================================
    CONFIRM MODAL
    ========================================================= */
 
@@ -505,36 +469,6 @@ body {
 }
 
 /* =========================================================
-   ARCHIVE FOOTER
-   ========================================================= */
-
-.archive-modal-footer {
-  display: flex;
-
-  justify-content: space-between;
-
-  gap: 15px;
-
-  margin-top: 30px;
-}
-
-/* =========================================================
-   ARCHIVE BUTTON
-   ========================================================= */
-
-.archive-confirm-btn {
-  padding: 12px 22px;
-
-  border: none;
-
-  background: #dc2626;
-
-  color: #ffffff;
-
-  cursor: pointer;
-}
-
-/* =========================================================
    MOBILE RESPONSIVE ADAPTATION (≤ 768px)
    ========================================================= */
 
@@ -548,15 +482,6 @@ body {
 
   body {
     background: rgb(231, 226, 226);
-  }
-
-  .archive-confirm-btn {
-    padding: 12px 22px;
-    border: none;
-    background: #dc2626;
-    color: #ffffff;
-    cursor: pointer;
-    border-radius: 10px;
   }
 
   .confirm-icon {
@@ -923,9 +848,4 @@ body {
     border-radius: 10px;
   }
 
-  .assessment-archive-btn {
-    background: #fee2e2;
-    color: #dc2626;
-    border-radius: 10px;
-  }
 }

@@ -177,16 +177,6 @@ tr {
   color: #d97706;
 }
 
-.archive-AcademicYear {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.archive-term {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
 .modal-academic-year {
   position: fixed;
   top: 0;
@@ -543,45 +533,13 @@ tr {
   color: #6b7280;
 }
 
-.archive-confirm-btn {
-  padding: 12px 22px;
-  border: none;
-  background: #dc2626;
-  color: #ffff;
-  cursor: pointer;
-}
-
-.archive-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
-
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  cursor: pointer;
-}
-
-.archive-modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 30px;
-}
-
 @media screen and (max-width: 768px) {
   .terms-status-active,
   .terms-actions-btn,
   .terms-status-inactive,
   .academic-years-actions-btn,
   .academic-years-status-inactive,
-  .academic-years-status-active,
-  .archive-confirm-btn {
+  .academic-years-status-active{
     border-radius: 10px;
   }
 

@@ -30,7 +30,6 @@ if (cancelClassModal && classModal) {
 window.addEventListener("click", (e) => {
   if (e.target === classModal) closeModal("classModal");
   if (e.target === editClassModal) closeModal("editClassModal");
-  if (e.target === archiveClassModal) closeModal("archiveClassModal");
 });
 
 const closeEditClassModal = document.getElementById("closeEditClassModal");
@@ -49,87 +48,6 @@ cancelEditClassModal.addEventListener("click", () => {
 
   unLockBodyScroll();
 });
-
-const archiveClassModal = document.getElementById("archiveClassModal");
-
-const archiveButtons = document.querySelectorAll(".archive");
-
-const cancelArchive = document.getElementById("cancelArchive");
-
-cancelArchive.addEventListener("click", () => {
-  archiveClassModal.style.display = "none";
-
-  unLockBodyScroll();
-});
-
-let classToArchiveId = null;
-
-function openArchiveModal(classId, className) {
-  classToArchiveId = classId;
-
-  const nameElement = document.getElementById("archiveClassName");
-  if (nameElement) {
-    nameElement.textContent = className || "this class";
-  }
-
-  openModal("archiveClassModal");
-}
-
-async function handleConfirmArchive() {
-  if (!classToArchiveId) return;
-
-  const confirmBtn = document.getElementById("confirmArchive");
-
-  try {
-    if (confirmBtn) {
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = "Archiving...";
-    }
-
-    const { data, error } = await supabaseClient
-      .from("classes")
-      .update({
-        is_archived: true,
-        status: "inactive",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", classToArchiveId)
-      .select();
-
-    if (error) {
-      showToast(
-        "Permission denied: Only active admins can archive classes.",
-        "error",
-      );
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      showToast(
-        "Permission denied: Only active admins can archive classes.",
-        "error",
-      );
-      return;
-    }
-
-    showToast("Class archived successfully!", "success");
-
-    closeModal("archiveClassModal");
-    classToArchiveId = null;
-    await loadClasses();
-  } catch (err) {
-    showToast(err.message, "error");
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Archive";
-    }
-  }
-}
-
-document
-  .getElementById("confirmArchive")
-  ?.addEventListener("click", handleConfirmArchive);
 
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
@@ -223,7 +141,6 @@ async function loadClasses() {
     const { data, error } = await supabaseClient
       .from("classes")
       .select("*")
-      .eq("is_archived", false)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -269,9 +186,6 @@ function renderClassesTable(classes) {
         <button class="classes-actions-btn edit" onclick="openEditModal('${item.id}')">
           <i class="fa-solid fa-pen"></i>
         </button>
-       <button class="classes-actions-btn archive" onclick="openArchiveModal('${item.id}', '${escapeAttribute(item.name || "")}')">
-      <i class="fa-solid fa-box-archive"></i>
-    </button>
       </td>
     `;
 
@@ -479,7 +393,6 @@ async function handleAddClass(event) {
           capacity,
           status,
           description: description || null,
-          is_archived: false,
         },
       ])
       .select();
@@ -487,7 +400,7 @@ async function handleAddClass(event) {
     if (error) {
       if (error.code === "23505") {
         showToast(
-          "This class name already exists (including in archives). Please choose a different name.",
+          "This class name already exists. Please choose a different name.",
           "error",
         );
         return;
