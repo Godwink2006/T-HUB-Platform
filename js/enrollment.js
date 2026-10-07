@@ -37,7 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const someVisibleChecked = visibleCheckboxes.some((cb) => cb.checked);
       selectAllCheckbox.checked =
         allVisibleChecked && visibleCheckboxes.length > 0;
-      selectAllCheckbox.indeterminate = someVisibleChecked && !allVisibleChecked;
+      selectAllCheckbox.indeterminate =
+        someVisibleChecked && !allVisibleChecked;
     }
   }
 
@@ -50,10 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   enrollmentFilterIds.forEach((id) => {
-    document.getElementById(id)?.addEventListener(
-      id === "enrollmentSearch" ? "input" : "change",
-      applyEnrollmentFilters,
-    );
+    document
+      .getElementById(id)
+      ?.addEventListener(
+        id === "enrollmentSearch" ? "input" : "change",
+        applyEnrollmentFilters,
+      );
   });
 
   document
@@ -253,16 +256,26 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("school_id", activeSchoolId);
 
         if (termErr) throw termErr;
-        const isFirstTerm = (name) => /\b(?:1(?:st)?|first|one|i)\b/i.test(name || "");
-        const isSecondTerm = (name) => /\b(?:2(?:nd)?|second|two|ii)\b/i.test(name || "");
-        const firstTerms = (yearTerms || []).filter((term) => isFirstTerm(term.name));
-        const secondTerms = (yearTerms || []).filter((term) => isSecondTerm(term.name));
+        const isFirstTerm = (name) =>
+          /\b(?:1(?:st)?|first|one|i)\b/i.test(name || "");
+        const isSecondTerm = (name) =>
+          /\b(?:2(?:nd)?|second|two|ii)\b/i.test(name || "");
+        const firstTerms = (yearTerms || []).filter((term) =>
+          isFirstTerm(term.name),
+        );
+        const secondTerms = (yearTerms || []).filter((term) =>
+          isSecondTerm(term.name),
+        );
 
         if (firstTerms.length !== 1) {
-          throw new Error("Could not identify exactly one 1st term for the active academic year.");
+          throw new Error(
+            "Could not identify exactly one 1st term for the active academic year.",
+          );
         }
         if (secondTerms.length !== 1) {
-          throw new Error("Could not identify exactly one 2nd term for the active academic year.");
+          throw new Error(
+            "Could not identify exactly one 2nd term for the active academic year.",
+          );
         }
         const activeFirstTermId = firstTerms[0].id;
         const activeSecondTermId = secondTerms[0].id;
@@ -316,7 +329,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
-          .select("id, total_amount, class_id, term_id, terms(name), classes(name)")
+          .select(
+            "id, total_amount, class_id, term_id, terms(name), classes(name)",
+          )
           .eq("status", "Active")
           .eq("school_id", activeSchoolId)
           .eq("academic_year_id", activeYear.id)
@@ -544,7 +559,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       if (enrollmentIds.length !== selectedEnrollmentIds.length) {
-        showToast("The selection contains duplicate enrollment records.", "error");
+        showToast(
+          "The selection contains duplicate enrollment records.",
+          "error",
+        );
         return;
       }
 
@@ -558,7 +576,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let activeSchoolId = window.currentSchoolId;
         if (!activeSchoolId) {
-          const { data: { user }, error: userError } = await client.auth.getUser();
+          const {
+            data: { user },
+            error: userError,
+          } = await client.auth.getUser();
           if (userError) throw userError;
           if (user) {
             const { data: profile, error: profileError } = await client
@@ -570,7 +591,8 @@ document.addEventListener("DOMContentLoaded", () => {
             activeSchoolId = profile?.school_id;
           }
         }
-        if (!activeSchoolId) throw new Error("Active school could not be determined.");
+        if (!activeSchoolId)
+          throw new Error("Active school could not be determined.");
 
         const { data: activeYear, error: yearError } = await client
           .from("academic_years")
@@ -579,7 +601,9 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("status", "Active")
           .maybeSingle();
         if (yearError || !activeYear) {
-          throw new Error("Could not find one active academic year for this school.");
+          throw new Error(
+            "Could not find one active academic year for this school.",
+          );
         }
 
         const { data: yearTerms, error: termsError } = await client
@@ -589,44 +613,67 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("academic_year_id", activeYear.id);
         if (termsError) throw termsError;
 
-        const findTerm = (terms, termNumber) => terms.filter((term) => {
-          const name = (term.name || "").toLowerCase();
-          return termNumber === 1
-            ? /\b(?:1st|first|term\s*1|semester\s*1|one|i)\b/.test(name)
-            : /\b(?:2nd|second|term\s*2|semester\s*2|two|ii)\b/.test(name);
-        });
+        const findTerm = (terms, termNumber) =>
+          terms.filter((term) => {
+            const name = (term.name || "").toLowerCase();
+            return termNumber === 1
+              ? /\b(?:1st|first|term\s*1|semester\s*1|one|i)\b/.test(name)
+              : /\b(?:2nd|second|term\s*2|semester\s*2|two|ii)\b/.test(name);
+          });
         const firstTerms = findTerm(yearTerms || [], 1);
         const secondTerms = findTerm(yearTerms || [], 2);
         if (firstTerms.length !== 1 || secondTerms.length !== 1) {
-          throw new Error("The active academic year must have exactly one first term and one second term.");
+          throw new Error(
+            "The active academic year must have exactly one first term and one second term.",
+          );
         }
         const firstTermId = firstTerms[0].id;
         const secondTermId = secondTerms[0].id;
 
         const { data: sourceEnrollments, error: sourceError } = await client
           .from("student_enrollments")
-          .select("id, student_id, school_id, class_id, academic_year_id, term_id, classes(name)")
+          .select(
+            "id, student_id, school_id, class_id, academic_year_id, term_id, classes(name)",
+          )
           .in("id", enrollmentIds);
         if (sourceError) throw sourceError;
-        if (!sourceEnrollments || sourceEnrollments.length !== enrollmentIds.length) {
-          throw new Error("Some selected enrollment records could not be found.");
+        if (
+          !sourceEnrollments ||
+          sourceEnrollments.length !== enrollmentIds.length
+        ) {
+          throw new Error(
+            "Some selected enrollment records could not be found.",
+          );
         }
 
-        const studentIds = sourceEnrollments.map((enrollment) => String(enrollment.student_id));
-        const sourceClassIds = [...new Set(sourceEnrollments.map((enrollment) => String(enrollment.class_id)))];
-        const allFromFirstTerm = sourceEnrollments.every((enrollment) =>
-          String(enrollment.school_id) === String(activeSchoolId) &&
-          String(enrollment.academic_year_id) === String(activeYear.id) &&
-          String(enrollment.term_id) === String(firstTermId),
+        const studentIds = sourceEnrollments.map((enrollment) =>
+          String(enrollment.student_id),
+        );
+        const sourceClassIds = [
+          ...new Set(
+            sourceEnrollments.map((enrollment) => String(enrollment.class_id)),
+          ),
+        ];
+        const allFromFirstTerm = sourceEnrollments.every(
+          (enrollment) =>
+            String(enrollment.school_id) === String(activeSchoolId) &&
+            String(enrollment.academic_year_id) === String(activeYear.id) &&
+            String(enrollment.term_id) === String(firstTermId),
         );
         if (!allFromFirstTerm) {
-          throw new Error("Select students enrolled in the first term of this school's active academic year only.");
+          throw new Error(
+            "Select students enrolled in the first term of this school's active academic year only.",
+          );
         }
         if (sourceClassIds.length !== 1) {
-          throw new Error("Select students from one first-term class at a time.");
+          throw new Error(
+            "Select students from one first-term class at a time.",
+          );
         }
         if (new Set(studentIds).size !== studentIds.length) {
-          throw new Error("A student appears more than once in the selected enrollment records.");
+          throw new Error(
+            "A student appears more than once in the selected enrollment records.",
+          );
         }
 
         const { data: classesData, error: classErr } = await client
@@ -640,15 +687,24 @@ document.addEventListener("DOMContentLoaded", () => {
           return match ? Number(match[1]) : null;
         };
         const sourceGrade = getGradeNumber(sourceEnrollments[0].classes?.name);
-        const availableTargetClasses = (classesData || []).filter((schoolClass) => {
-          if (String(schoolClass.id) === sourceClassIds[0]) return false;
-          const targetGrade = getGradeNumber(schoolClass.name);
-          return !(sourceGrade !== null && sourceGrade <= 9 && targetGrade !== null && targetGrade >= 10);
-        });
+        const availableTargetClasses = (classesData || []).filter(
+          (schoolClass) => {
+            if (String(schoolClass.id) === sourceClassIds[0]) return false;
+            const targetGrade = getGradeNumber(schoolClass.name);
+            return !(
+              sourceGrade !== null &&
+              sourceGrade <= 9 &&
+              targetGrade !== null &&
+              targetGrade >= 10
+            );
+          },
+        );
 
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
-          .select("id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)")
+          .select(
+            "id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)",
+          )
           .eq("school_id", activeSchoolId)
           .eq("academic_year_id", activeYear.id)
           .eq("term_id", secondTermId)
@@ -707,22 +763,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const currentCount = count || 0;
           if (countErr) {
-            capacityWarning.textContent = "Could not verify capacity. It will be checked again before saving.";
-          } else if (capacity > 0 && currentCount + sourceEnrollments.length > capacity) {
+            capacityWarning.textContent =
+              "Could not verify capacity. It will be checked again before saving.";
+          } else if (
+            capacity > 0 &&
+            currentCount + sourceEnrollments.length > capacity
+          ) {
             capacityWarning.textContent = `This class would exceed capacity (${currentCount + sourceEnrollments.length}/${capacity}).`;
           } else {
-            capacityWarning.textContent = capacity > 0
-              ? `Class occupancy after promotion: ${currentCount + sourceEnrollments.length} / ${capacity}.`
-              : `Current second-term enrollment: ${currentCount}. No capacity limit is set.`;
+            capacityWarning.textContent =
+              capacity > 0
+                ? `Class occupancy after promotion: ${currentCount + sourceEnrollments.length} / ${capacity}.`
+                : `Current second-term enrollment: ${currentCount}. No capacity limit is set.`;
           }
 
           const matchingFees = (feesData || []).filter(
             (fee) => String(fee.class_id) === String(classId),
           );
           if (matchingFees.length > 0) {
-            targetFeeSelect.innerHTML = `<option value="">-- Select fee structure --</option>${matchingFees.map((fee) =>
-              `<option value="${fee.id}">[${fee.classes?.name ?? "Class"}] Total: $${fee.total_amount}</option>`,
-            ).join("")}`;
+            targetFeeSelect.innerHTML = `<option value="">-- Select fee structure --</option>${matchingFees
+              .map(
+                (fee) =>
+                  `<option value="${fee.id}">[${fee.classes?.name ?? "Class"}] Total: $${fee.total_amount}</option>`,
+              )
+              .join("")}`;
             targetFeeSelect.disabled = false;
           } else {
             targetFeeSelect.innerHTML = `<option value="">-- No active second-term fee structure for this class --</option>`;
@@ -736,7 +800,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const feeStructureId = targetFeeSelect.value;
 
           if (!targetClassId || !feeStructureId) {
-            capacityWarning.textContent = "Choose a target class and its second-term fee structure before confirming.";
+            capacityWarning.textContent =
+              "Choose a target class and its second-term fee structure before confirming.";
             showToast(
               "Please select both a target class and a valid fee structure.",
               "info",
@@ -744,7 +809,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          capacityWarning.textContent = "Validating records and saving the promotion…";
+          capacityWarning.textContent =
+            "Validating records and saving the promotion…";
           const originalText = modalConfirm.textContent;
           modalConfirm.disabled = true;
           modalConfirm.textContent = "Promoting...";
@@ -790,15 +856,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (error) throw error;
       if (!data?.success) {
-        throw new Error(data?.message || "The promotion RPC returned an unsuccessful result.");
+        throw new Error(
+          data?.message || "The promotion RPC returned an unsuccessful result.",
+        );
       }
 
       const promotedCount = data.student_count ?? enrollmentIds.length;
-      showToast(`Successfully promoted ${promotedCount} student(s) to 2nd Semester!`, "success");
-      if (typeof loadStudentEnrollments === "function") loadStudentEnrollments();
+      showToast(
+        `Successfully promoted ${promotedCount} student(s) to 2nd Semester!`,
+        "success",
+      );
+      if (typeof loadStudentEnrollments === "function")
+        loadStudentEnrollments();
       return true;
     } catch (err) {
-      const message = err?.message || "Unexpected error while promoting students.";
+      const message =
+        err?.message || "Unexpected error while promoting students.";
       console.error("Promotion RPC failed:", err);
       const status = document.getElementById("capacityWarning");
       if (status) status.textContent = `Promotion failed: ${message}`;
@@ -806,6 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
   }
+
   document
     .getElementById("btnPromoteNextYear")
     ?.addEventListener("click", async () => {
@@ -820,50 +894,97 @@ document.addEventListener("DOMContentLoaded", () => {
       openModal();
 
       try {
-        const supabaseClient = window.supabaseClient || supabaseClient;
+        const client = window.supabaseClient || supabaseClient;
+        if (!client) throw new Error("Supabase client is not available.");
 
-        const { data: yearsData, error: yearsErr } = await supabaseClient
+        let schoolId = window.currentSchoolId;
+        if (!schoolId) {
+          const { data: { user }, error: userError } = await client.auth.getUser();
+          if (userError) throw userError;
+          if (user) {
+            const { data: profile, error: profileError } = await client
+              .from("profiles")
+              .select("school_id")
+              .eq("id", user.id)
+              .single();
+            if (profileError) throw profileError;
+            schoolId = profile?.school_id;
+          }
+        }
+        if (!schoolId) throw new Error("Active school could not be determined.");
+
+        const uniqueEnrollmentIds = [...new Set(selectedEnrollmentIds.map(String))];
+        if (uniqueEnrollmentIds.length !== selectedEnrollmentIds.length) {
+          throw new Error("The selection contains duplicate enrollment records.");
+        }
+
+        const { data: sourceRows, error: sourceError } = await client
+          .from("student_enrollments")
+          .select("id, student_id, school_id, academic_year_id, class_id, classes(name)")
+          .in("id", uniqueEnrollmentIds);
+        if (sourceError) throw sourceError;
+        if (!sourceRows || sourceRows.length !== uniqueEnrollmentIds.length) {
+          throw new Error("Some selected enrollment records could not be found.");
+        }
+        if (sourceRows.some((row) => String(row.school_id) !== String(schoolId))) {
+          throw new Error("All selected students must belong to your school.");
+        }
+        if (new Set(sourceRows.map((row) => String(row.class_id))).size !== 1) {
+          throw new Error("Select students from one source class at a time.");
+        }
+        if (new Set(sourceRows.map((row) => String(row.academic_year_id))).size !== 1) {
+          throw new Error("Select students from one academic year at a time.");
+        }
+        if (new Set(sourceRows.map((row) => String(row.student_id))).size !== sourceRows.length) {
+          throw new Error("A student can appear only once in this promotion.");
+        }
+
+        const { data: yearsData, error: yearsErr } = await client
           .from("academic_years")
           .select("id, year_label, status")
+          .eq("school_id", schoolId)
           .order("year_label", { ascending: false });
 
         if (yearsErr || !yearsData)
           throw new Error("Could not fetch academic years.");
 
-        const { data: termsData, error: termErr } = await supabaseClient
+        const { data: termsData, error: termErr } = await client
           .from("terms")
-          .select("id, name, academic_year_id");
+          .select("id, name, academic_year_id")
+          .eq("school_id", schoolId);
 
         if (termErr || !termsData) throw new Error("Could not fetch terms.");
 
-        const firstSemesterTermIds = termsData
-          .filter((t) => t.name && t.name.toLowerCase().includes("1st"))
-          .map((t) => t.id);
+        const isFirstTerm = (term) =>
+          /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(term?.name || "");
+        const firstSemesterTermIds = termsData.filter(isFirstTerm).map((term) => term.id);
 
-        const { data: classesData, error: classErr } = await supabaseClient
+        const { data: classesData, error: classErr } = await client
           .from("classes")
           .select("id, name, capacity")
+          .eq("school_id", schoolId)
           .eq("status", "active");
 
         if (classErr) throw classErr;
 
-        const { data: feesData, error: feeErr } = await supabaseClient
-          .from("fee_structures")
-          .select(
-            "id, total_amount, class_id, academic_year_id, term_id, classes(name)",
-          )
-          .in(
-            "term_id",
-            firstSemesterTermIds.length > 0 ? firstSemesterTermIds : ["none"],
-          )
-          .eq("status", "Active");
-
-        if (feeErr) throw feeErr;
+        let feesData = [];
+        if (firstSemesterTermIds.length > 0) {
+          const { data, error: feeErr } = await client
+            .from("fee_structures")
+            .select(
+              "id, total_amount, class_id, academic_year_id, term_id, classes(name)",
+            )
+            .eq("school_id", schoolId)
+            .in("term_id", firstSemesterTermIds)
+            .eq("status", "Active");
+          if (feeErr) throw feeErr;
+          feesData = data || [];
+        }
 
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
       <p style="margin-bottom: 10px; color: #555;">
-        Promoting <b>${selectedEnrollmentIds.length}</b> student(s) to a new academic year (1st Semester).
+        Promoting <b>${sourceRows.length}</b> student(s) from <b>${sourceRows[0].classes?.name || "one class"}</b> to a new academic year (1st Semester).
       </p>
 
       <div style="margin-bottom: 15px;">
@@ -916,18 +1037,18 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          const targetTerm = termsData.find(
+          const matchingTerms = termsData.filter(
             (t) =>
               String(t.academic_year_id) === String(selectedYearId) &&
-              t.name &&
-              t.name.toLowerCase().includes("1st"),
+              isFirstTerm(t),
           );
 
-          if (!targetTerm) {
-            targetFeeSelect.innerHTML = `<option value="">-- No 1st Semester term found for this year --</option>`;
+          if (matchingTerms.length !== 1) {
+            targetFeeSelect.innerHTML = `<option value="">-- Expected exactly one 1st Semester term for this year --</option>`;
             targetFeeSelect.disabled = true;
             return;
           }
+          const targetTerm = matchingTerms[0];
 
           const matchingFees = feesData.filter(
             (f) =>
@@ -961,17 +1082,18 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          const { count, error: countErr } = await supabaseClient
+          const { count, error: countErr } = await client
             .from("student_enrollments")
             .select("*", { count: "exact", head: true })
+            .eq("school_id", schoolId)
             .eq("class_id", classId)
-            .eq("academic_year_id", targetAcademicYearSelect.value);
+            .eq("academic_year_id", targetAcademicYearSelect.value)
+            .in("term_id", firstSemesterTermIds);
 
           const selectedOption = targetClassSelect.selectedOptions[0];
-          const capacity =
-            parseInt(selectedOption.getAttribute("data-capacity")) || 0;
+          const capacity = parseInt(selectedOption.getAttribute("data-capacity"), 10) || 0;
 
-          if (!countErr && count >= capacity) {
+          if (!countErr && capacity > 0 && count + sourceRows.length > capacity) {
             capacityWarning.textContent = `⚠️ Warning: Target class has reached or exceeded its capacity (${count}/${capacity}).`;
           } else {
             capacityWarning.textContent = `Class occupancy in target year: ${count || 0} / ${capacity} available.`;
@@ -993,29 +1115,39 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          const targetTerm = termsData.find(
+          const matchingTerms = termsData.filter(
             (t) =>
               String(t.academic_year_id) === String(targetAcademicYearId) &&
-              t.name &&
-              t.name.toLowerCase().includes("1st"),
+              isFirstTerm(t),
           );
 
-          if (!targetTerm) {
+          if (matchingTerms.length !== 1) {
             showToast(
-              "Could not find a 1st Semester term for the selected academic year.",
+              "The selected academic year must have exactly one 1st Semester term.",
               "error",
             );
             return;
           }
 
-          await executeYearlyPromotion(
-            selectedEnrollmentIds,
-            targetAcademicYearId,
-            targetClassId,
-            feeStructureId,
-            targetTerm.id,
-          );
-          closeModal();
+          const originalText = modalConfirm.textContent;
+          modalConfirm.disabled = true;
+          modalConfirm.textContent = "Promoting...";
+          modalConfirm.setAttribute("aria-busy", "true");
+          capacityWarning.textContent = "Validating and saving the promotion…";
+          try {
+            const succeeded = await executeYearlyPromotion({
+              client,
+              enrollmentIds: uniqueEnrollmentIds,
+              targetAcademicYearId,
+              targetClassId,
+              feeStructureId,
+            });
+            if (succeeded) closeModal();
+          } finally {
+            modalConfirm.disabled = false;
+            modalConfirm.textContent = originalText;
+            modalConfirm.removeAttribute("aria-busy");
+          }
         };
       } catch (err) {
         console.error("Error setting up yearly promotion modal:", err);
@@ -1023,160 +1155,38 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-  async function executeYearlyPromotion(
+  async function executeYearlyPromotion({
+    client,
     enrollmentIds,
     targetAcademicYearId,
     targetClassId,
     feeStructureId,
-    termId,
-  ) {
+  }) {
     try {
-      const supabaseClient = window.supabaseClient || window.supabaseClient;
-
-      const { data: targetClass, error: targetClassErr } = await supabaseClient
-        .from("classes")
-        .select("id, name")
-        .eq("id", targetClassId)
-        .single();
-
-      if (targetClassErr || !targetClass)
-        throw new Error("Target class not found.");
-
-      function extractGradeNumber(className) {
-        const match = className.match(/(\d+)/);
-        return match ? parseInt(match[0]) : null;
-      }
-
-      const targetGrade = extractGradeNumber(targetClass.name);
-
-      const { data: sourceEnrollments, error: fetchErr } = await supabaseClient
-        .from("student_enrollments")
-        .select("student_id, school_id, classes(name)")
-        .in("id", enrollmentIds);
-
-      if (fetchErr) throw fetchErr;
-
-      for (const enr of sourceEnrollments) {
-        const currentClassName = enr.classes?.name || "";
-        const currentGrade = extractGradeNumber(currentClassName);
-
-        if (
-          currentGrade !== null &&
-          currentGrade < 9 &&
-          targetGrade !== null &&
-          targetGrade >= 10
-        ) {
-          showToast(
-            `Promotion blocked: Students moving from ${currentClassName} to ${targetClass.name} require a user account. Please use the "Promote Student to User" button instead.`,
-            "error",
-          );
-          return;
-        }
-      }
-
-      const { data: feeStruct, error: feeStructErr } = await supabaseClient
-        .from("fee_structures")
-        .select("total_amount, class_id")
-        .eq("id", feeStructureId)
-        .single();
-
-      if (feeStructErr || !feeStruct)
-        throw new Error("Selected fee structure not found.");
-
-      if (feeStruct.class_id && feeStruct.class_id !== targetClassId) {
-        showToast(
-          `Invalid fee structure! The selected fee structure is not assigned to ${targetClass.name}.`,
-          "error",
-        );
-        return;
-      }
-
-      const { data: feeItems, error: itemsErr } = await supabaseClient
-        .from("fee_structure_items")
-        .select("id, fee_name, amount")
-        .eq("fee_structure_id", feeStructureId);
-
-      if (itemsErr) throw itemsErr;
-
-      for (const enr of sourceEnrollments) {
-        const { data: existingEnr, error: checkErr } = await supabaseClient
-          .from("student_enrollments")
-          .select("id")
-          .eq("student_id", enr.student_id)
-          .eq("academic_year_id", targetAcademicYearId)
-          .eq("term_id", termId)
-          .maybeSingle();
-
-        if (checkErr) throw checkErr;
-
-        if (existingEnr) {
-          const { error: updateErr } = await supabaseClient
-            .from("student_enrollments")
-            .update({
-              class_id: targetClassId,
-              enrollment_status: "Promoted",
-            })
-            .eq("id", existingEnr.id);
-
-          if (updateErr) throw updateErr;
-        } else {
-          const { error: insertErr } = await supabaseClient
-            .from("student_enrollments")
-            .insert({
-              school_id: enr.school_id,
-              student_id: enr.student_id,
-              class_id: targetClassId,
-              academic_year_id: targetAcademicYearId,
-              term_id: termId,
-              enrollment_status: "Promoted",
-            });
-
-          if (insertErr) throw insertErr;
-        }
-
-        const { error: studentUpdateErr } = await supabaseClient
-          .from("students")
-          .update({
-            class_id: targetClassId,
-            academic_year_id: targetAcademicYearId,
-          })
-          .eq("id", enr.student_id);
-
-        if (studentUpdateErr) {
-          console.warn(
-            "Could not update student table references:",
-            studentUpdateErr.message,
-          );
-        }
-
-        const { error: feeInsertErr } = await supabaseClient
-          .from("student_fees")
-          .insert({
-            school_id: enr.school_id,
-            student_id: enr.student_id,
-            class_id: targetClassId,
-            academic_year_id: targetAcademicYearId,
-            term_id: termId,
-            fee_structure_id: feeStructureId,
-            total_fees: feeStruct.total_amount,
-            total_paid: 0,
-            status: "Unpaid",
-            fee_breakdown: feeItems || [],
-          });
-
-        if (feeInsertErr) throw feeInsertErr;
-      }
-
-      showToast(
-        `Successfully promoted ${sourceEnrollments.length} student(s) to the new academic year (1st Semester)!`,
-        "success",
+      const { data, error } = await client.rpc(
+        "promote_students_to_new_academic_year",
+        {
+          p_enrollment_ids: enrollmentIds,
+          p_target_academic_year_id: targetAcademicYearId,
+          p_target_class_id: targetClassId,
+          p_fee_structure_id: feeStructureId,
+        },
       );
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.message || "The promotion RPC failed.");
+
+      showToast(`Successfully promoted ${data.student_count ?? enrollmentIds.length} student(s) to the new academic year (1st Semester)!`, "success");
       if (typeof loadStudentEnrollments === "function") {
         loadStudentEnrollments();
       }
+      return true;
     } catch (err) {
       console.error("Yearly promotion execution failed:", err);
-      showToast(`Promotion failed: ${err.message}`, "error");
+      const message = err?.message || "Unexpected error while promoting students.";
+      const status = document.getElementById("capacityWarning");
+      if (status) status.textContent = `Promotion failed: ${message}`;
+      showToast(`Promotion failed: ${message}`, "error");
+      return false;
     }
   }
   async function executeStatusChange(enrollmentIds, newStatus) {
@@ -1201,10 +1211,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function executeSemesterMove(studentIds, feeStructureId) {
+  async function executeSemesterMove(studentIds, feeStructureId, confirmButton) {
+    const originalText = confirmButton?.textContent;
     try {
-      const supabaseClient = window.supabaseClient || window.supabaseClient;
-      const { error: rpcError } = await supabaseClient.rpc(
+      const client = window.supabaseClient || supabaseClient;
+      if (!client) throw new Error("Supabase client is not available.");
+      if (confirmButton) {
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Moving...";
+        confirmButton.setAttribute("aria-busy", "true");
+      }
+      const { data, error: rpcError } = await client.rpc(
         "promote_students_to_semester",
         {
           p_student_ids: studentIds,
@@ -1213,16 +1230,25 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (rpcError) throw rpcError;
+      if (!data?.success) throw new Error(data?.message || "The semester move failed.");
 
       showToast(
-        `Successfully moved ${studentIds.length} student(s) to the 2nd semester!`,
+        `Successfully moved ${data.student_count ?? studentIds.length} student(s) to the 2nd semester!`,
         "success",
       );
       if (typeof loadStudentEnrollments === "function")
         loadStudentEnrollments();
+      return true;
     } catch (err) {
       console.error("Error executing semester move:", err.message);
       showToast(`Failed to move students: ${err.message}`, "error");
+      return false;
+    } finally {
+      if (confirmButton) {
+        confirmButton.disabled = false;
+        confirmButton.textContent = originalText;
+        confirmButton.removeAttribute("aria-busy");
+      }
     }
   }
 
@@ -1232,10 +1258,18 @@ document.addEventListener("DOMContentLoaded", () => {
     oldAcademicYearId,
     newAcademicYearId,
     newTermId,
+    confirmButton,
   ) {
+    const originalText = confirmButton?.textContent;
     try {
-      const supabaseClient = window.supabaseClient || window.supabaseClient;
-      const { error: rpcError } = await supabaseClient.rpc(
+      const client = window.supabaseClient || supabaseClient;
+      if (!client) throw new Error("Supabase client is not available.");
+      if (confirmButton) {
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Moving...";
+        confirmButton.setAttribute("aria-busy", "true");
+      }
+      const { data, error: rpcError } = await client.rpc(
         "move_students_to_new_academic_year",
         {
           p_school_id: schoolId,
@@ -1247,16 +1281,25 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (rpcError) throw rpcError;
+      if (!data?.success) throw new Error(data?.message || "The academic-year move failed.");
 
       showToast(
-        `Successfully moved ${studentIds.length} student(s) to the new academic year!`,
+        `Successfully moved ${data.student_count ?? studentIds.length} student(s) to the new academic year!`,
         "success",
       );
       if (typeof loadStudentEnrollments === "function")
         loadStudentEnrollments();
+      return true;
     } catch (err) {
       console.error("Error executing new year move:", err.message);
       showToast(`Failed to move students to new year: ${err.message}`, "error");
+      return false;
+    } finally {
+      if (confirmButton) {
+        confirmButton.disabled = false;
+        confirmButton.textContent = originalText;
+        confirmButton.removeAttribute("aria-busy");
+      }
     }
   }
 
@@ -1273,54 +1316,83 @@ document.addEventListener("DOMContentLoaded", () => {
       openModal();
 
       try {
-        const supabaseClient = window.supabaseClient || window.supabaseClient;
+        const client = window.supabaseClient || supabaseClient;
+        if (!client) throw new Error("Supabase client is not available.");
+        const enrollmentIds = [...new Set(selectedEnrollmentIds.map(String))];
+        if (enrollmentIds.length !== selectedEnrollmentIds.length) {
+          throw new Error("The selected enrollments contain duplicates.");
+        }
 
-        const { data: termData, error: termErr } = await supabaseClient
-          .from("terms")
-          .select("id")
-          .ilike("name", "%2nd%")
-          .limit(1)
-          .single();
+        let schoolId = window.currentSchoolId;
+        if (!schoolId) {
+          const { data: { user }, error: userError } = await client.auth.getUser();
+          if (userError) throw userError;
+          if (user) {
+            const { data: profile, error: profileError } = await client
+              .from("profiles")
+              .select("school_id")
+              .eq("id", user.id)
+              .single();
+            if (profileError) throw profileError;
+            schoolId = profile?.school_id;
+          }
+        }
+        if (!schoolId) throw new Error("Active school could not be determined.");
 
-        if (termErr || !termData)
-          throw new Error(
-            "Could not find the 2nd Semester term in the database.",
-          );
-        const secondSemesterTermId = termData.id;
-
-        const { data: currentEnrollments, error: enrollErr } =
-          await supabaseClient
-            .from("student_enrollments")
-            .select("student_id, class_id, classes(name)")
-            .in("id", selectedEnrollmentIds);
-
+        const { data: currentEnrollments, error: enrollErr } = await client
+          .from("student_enrollments")
+          .select("id, school_id, academic_year_id, term_id, student_id, class_id, classes(name)")
+          .in("id", enrollmentIds);
         if (enrollErr) throw enrollErr;
+        if (!currentEnrollments || currentEnrollments.length !== enrollmentIds.length) {
+          throw new Error("Some selected enrollment records could not be found.");
+        }
+        if (currentEnrollments.some((row) => String(row.school_id) !== String(schoolId))) {
+          throw new Error("All selected students must belong to your school.");
+        }
+        if (new Set(currentEnrollments.map((row) => String(row.class_id))).size !== 1) {
+          throw new Error("Select students from one class at a time.");
+        }
+        if (new Set(currentEnrollments.map((row) => String(row.academic_year_id))).size !== 1) {
+          throw new Error("Select students from one academic year at a time.");
+        }
+        if (new Set(currentEnrollments.map((row) => String(row.student_id))).size !== currentEnrollments.length) {
+          throw new Error("A student can appear only once in this semester move.");
+        }
+        const sourceYearId = currentEnrollments[0].academic_year_id;
+        const { data: yearTerms, error: termsError } = await client
+          .from("terms")
+          .select("id, name")
+          .eq("school_id", schoolId)
+          .eq("academic_year_id", sourceYearId);
+        if (termsError) throw termsError;
+        const isFirstTerm = (term) => /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(term?.name || "");
+        const isSecondTerm = (term) => /(^|[^a-z0-9])(2(nd)?|second|two|ii)([^a-z0-9]|$)/i.test(term?.name || "");
+        const firstTerms = (yearTerms || []).filter(isFirstTerm);
+        const secondTerms = (yearTerms || []).filter(isSecondTerm);
+        if (firstTerms.length !== 1 || secondTerms.length !== 1) {
+          throw new Error("The source academic year must have exactly one first and one second term.");
+        }
+        if (currentEnrollments.some((row) => String(row.term_id) !== String(firstTerms[0].id))) {
+          throw new Error("Select students enrolled in the first term of the same academic year.");
+        }
+        const studentIds = currentEnrollments.map((row) => row.student_id);
 
-        const uniqueClassMap = new Map();
-        const extractedStudentIds = [];
-
-        currentEnrollments.forEach((e) => {
-          if (e.class_id)
-            uniqueClassMap.set(e.class_id, e.classes?.name || "Unknown Class");
-          if (e.student_id && !extractedStudentIds.includes(e.student_id))
-            extractedStudentIds.push(e.student_id);
-        });
-
-        const uniqueClassIds = Array.from(uniqueClassMap.keys());
-        if (uniqueClassIds.length === 0)
-          throw new Error("Could not find current class enrollments.");
-
-        const { data: feesData, error: feeErr } = await supabaseClient
+        const classId = currentEnrollments[0].class_id;
+        const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
-          .select("id, total_amount, class_id, classes(name)")
-          .in("class_id", uniqueClassIds)
-          .eq("term_id", secondSemesterTermId);
+          .select("id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)")
+          .eq("school_id", schoolId)
+          .eq("class_id", classId)
+          .eq("academic_year_id", sourceYearId)
+          .eq("term_id", secondTerms[0].id)
+          .eq("status", "Active");
 
         if (feeErr) throw feeErr;
 
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
-      <p style="margin-bottom: 10px; color: #555;">Moving students to the 2nd Semester.</p>
+      <p style="margin-bottom: 10px; color: #555;">Moving <b>${currentEnrollments.length}</b> student(s) from <b>${currentEnrollments[0].classes?.name || "their current class"}</b> to the 2nd Semester.</p>
       <div style="margin-bottom: 15px;">
         <label for="feeStructureSelect">Select Applicable Fee Structure:</label>
         <select id="feeStructureSelect" class="form-control">
@@ -1338,8 +1410,8 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("Please select a fee structure.", "info");
             return;
           }
-          await executeSemesterMove(extractedStudentIds, feeId);
-          closeModal();
+          const succeeded = await executeSemesterMove(studentIds, feeId, modalConfirm);
+          if (succeeded) closeModal();
         };
       } catch (err) {
         console.error("Error loading modal data:", err);
@@ -1360,41 +1432,77 @@ document.addEventListener("DOMContentLoaded", () => {
       openModal();
 
       try {
-        const supabaseClient = window.supabaseClient || window.supabaseClient;
+        const client = window.supabaseClient || supabaseClient;
+        if (!client) throw new Error("Supabase client is not available.");
+        const enrollmentIds = [...new Set(selectedEnrollmentIds.map(String))];
+        if (enrollmentIds.length !== selectedEnrollmentIds.length) {
+          throw new Error("The selected enrollments contain duplicates.");
+        }
 
-        const { data: currentEnrollments, error: enrollErr } =
-          await supabaseClient
-            .from("student_enrollments")
-            .select("school_id, academic_year_id, student_id")
-            .in("id", selectedEnrollmentIds);
+        let schoolId = window.currentSchoolId;
+        if (!schoolId) {
+          const { data: { user }, error: userError } = await client.auth.getUser();
+          if (userError) throw userError;
+          if (user) {
+            const { data: profile, error: profileError } = await client
+              .from("profiles")
+              .select("school_id")
+              .eq("id", user.id)
+              .single();
+            if (profileError) throw profileError;
+            schoolId = profile?.school_id;
+          }
+        }
+        if (!schoolId) throw new Error("Active school could not be determined.");
 
-        if (enrollErr || !currentEnrollments.length)
-          throw new Error("Could not retrieve enrollment context.");
+        const { data: currentEnrollments, error: enrollErr } = await client
+          .from("student_enrollments")
+          .select("id, school_id, academic_year_id, student_id, class_id, classes(name)")
+          .in("id", enrollmentIds);
+        if (enrollErr) throw enrollErr;
+        if (!currentEnrollments || currentEnrollments.length !== enrollmentIds.length) {
+          throw new Error("Some selected enrollment records could not be found.");
+        }
+        if (currentEnrollments.some((row) => String(row.school_id) !== String(schoolId))) {
+          throw new Error("All selected students must belong to your school.");
+        }
+        if (new Set(currentEnrollments.map((row) => String(row.class_id))).size !== 1) {
+          throw new Error("Select students from one source class at a time.");
+        }
+        if (new Set(currentEnrollments.map((row) => String(row.academic_year_id))).size !== 1) {
+          throw new Error("Select students from one source academic year at a time.");
+        }
+        if (new Set(currentEnrollments.map((row) => String(row.student_id))).size !== currentEnrollments.length) {
+          throw new Error("A student can appear only once in this rollover.");
+        }
 
-        const schoolId = currentEnrollments[0].school_id;
         const oldAcademicYearId = currentEnrollments[0].academic_year_id;
-        const extractedStudentIds = [
-          ...new Set(currentEnrollments.map((e) => e.student_id)),
-        ];
+        const studentIds = currentEnrollments.map((row) => row.student_id);
 
-        const [{ data: academicYears }, { data: terms }] = await Promise.all([
-          supabaseClient
+        const [{ data: academicYears, error: yearsError }, { data: terms, error: termsError }] = await Promise.all([
+          client
             .from("academic_years")
             .select("id, year_label")
             .eq("school_id", schoolId),
-          supabaseClient
+          client
             .from("terms")
-            .select("id, name")
-            .ilike("name", "%1st%")
-            .limit(1),
+            .select("id, name, academic_year_id")
+            .eq("school_id", schoolId),
         ]);
 
+        if (yearsError) throw yearsError;
+        if (termsError) throw termsError;
         if (!academicYears || academicYears.length === 0)
           throw new Error("No academic years found.");
-        if (!terms || terms.length === 0)
-          throw new Error("Could not find the 1st Semester term.");
-
-        const newTermId = terms[0].id;
+        const schoolTerms = terms || [];
+        const isFirstTerm = (term) => /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(term?.name || "");
+        const eligibleYears = academicYears.filter((year) =>
+          String(year.id) !== String(oldAcademicYearId) &&
+          schoolTerms.filter((term) => String(term.academic_year_id) === String(year.id) && isFirstTerm(term)).length === 1,
+        );
+        if (eligibleYears.length === 0) {
+          throw new Error("No other school academic year with exactly one first term is available.");
+        }
 
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
@@ -1403,7 +1511,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <label for="newAcademicYearSelect">Target Academic Year:</label>
         <select id="newAcademicYearSelect" class="form-control">
           <option value="">-- Select Academic Year --</option>
-          ${academicYears.map((ay) => `<option value="${ay.id}">${ay.year_label}</option>`).join("")}
+          ${eligibleYears.map((ay) => `<option value="${ay.id}">${ay.year_label}</option>`).join("")}
         </select>
       </div>
     `;
@@ -1417,14 +1525,22 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("Please select a target academic year.", "info");
             return;
           }
-          await executeNewYearMove(
+          const targetTerms = schoolTerms.filter(
+            (term) => String(term.academic_year_id) === String(newAcademicYearId) && isFirstTerm(term),
+          );
+          if (targetTerms.length !== 1) {
+            showToast("The target academic year must have exactly one first term.", "error");
+            return;
+          }
+          const succeeded = await executeNewYearMove(
             schoolId,
-            extractedStudentIds,
+            studentIds,
             oldAcademicYearId,
             newAcademicYearId,
-            newTermId,
+            targetTerms[0].id,
+            modalConfirm,
           );
-          closeModal();
+          if (succeeded) closeModal();
         };
       } catch (err) {
         console.error("Error loading new year modal data:", err);
@@ -1462,7 +1578,9 @@ async function loadStudentEnrollments() {
         ["filterSemester", "All semesters"],
         ["filterStatus", "All statuses"],
         ["filterClass", "All classes"],
-      ].forEach(([id, label]) => window.populateEnrollmentFilter(id, [], label));
+      ].forEach(([id, label]) =>
+        window.populateEnrollmentFilter(id, [], label),
+      );
       const resultCount = document.getElementById("enrollmentResultCount");
       if (resultCount) resultCount.textContent = "0 enrollments";
       window.updateEnrollmentSelectionState();

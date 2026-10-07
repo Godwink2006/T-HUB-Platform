@@ -199,7 +199,6 @@ body.settings-modal-open {
   width: min(100%, 460px);
   padding: 28px;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
   background: #fff;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
 }
@@ -239,16 +238,14 @@ body.settings-modal-open {
   min-height: 42px;
   padding: 10px 14px;
   border: 1px solid transparent;
-  border-radius: 8px;
   cursor: pointer;
   font: inherit;
   font-weight: 600;
 }
 
 .clear-data-cancel {
-  border-color: #cbd5e1 !important;
-  background: #fff;
-  color: #334155;
+  background: #1f2937;
+  color: #fff;
 }
 
 .clear-data-confirm {
@@ -291,6 +288,11 @@ body.settings-modal-open {
 @media screen and (max-width: 768px) {
   .settings-container {
     flex-direction: column;
+  }
+
+  .clear-data-actions button,
+  .clear-data-card {
+    border-radius: 10px;
   }
 
   .settings-main-content {
