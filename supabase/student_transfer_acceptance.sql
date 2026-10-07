@@ -3,7 +3,12 @@
 -- Source attendance, grades, fees, and payments remain unchanged; JSON snapshots
 -- are added to student_transfer_history for a future read-only history screen.
 
-create function public.preview_student_transfer(p_code_hash text)
+BEGIN;
+
+ALTER TABLE public.student_transfers
+  ADD COLUMN IF NOT EXISTS source_student_code text;
+
+create or replace function public.preview_student_transfer(p_code_hash text)
 returns jsonb
 language plpgsql
 security definer
@@ -13,6 +18,7 @@ declare
   v_actor_id uuid := auth.uid();
   v_transfer public.student_transfers%rowtype;
   v_student_name text;
+  v_source_student_code text;
   v_source_class text;
   v_source_year text;
   v_source_school_name text;
@@ -46,9 +52,12 @@ begin
     raise exception 'Transfer code is invalid, expired, already used, or not valid for your school.';
   end if;
 
-  select profile.full_name, class.name, year.year_label, school.school_name
-    into v_student_name, v_source_class, v_source_year, v_source_school_name
+  select profile.full_name, student.student_id, class.name, year.year_label, school.school_name
+    into v_student_name, v_source_student_code, v_source_class, v_source_year, v_source_school_name
   from public.profiles as profile
+  left join public.students as student
+    on student.id = profile.id
+   and student.school_id = v_transfer.source_school_id
   left join public.schools as school
     on school.id = v_transfer.source_school_id
   left join public.student_enrollments as enrollment
@@ -70,6 +79,7 @@ begin
   return pg_catalog.jsonb_build_object(
     'transfer_id', v_transfer.id,
     'student_name', v_student_name,
+    'source_student_code', v_source_student_code,
     'source_school_name', v_source_school_name,
     'source_school_id', v_transfer.source_school_id,
     'source_class_name', v_source_class,
@@ -79,12 +89,13 @@ begin
 end;
 $$;
 
-create function public.accept_student_transfer(
+create or replace function public.accept_student_transfer(
   p_code_hash text,
   p_target_class_id uuid,
   p_target_academic_year_id uuid,
   p_target_term_id uuid,
-  p_target_fee_structure_id uuid
+  p_target_fee_structure_id uuid,
+  p_target_student_code text
 )
 returns jsonb
 language plpgsql
@@ -103,6 +114,7 @@ declare
   v_target_capacity integer;
   v_target_count bigint;
   v_student_name text;
+  v_source_student_code text;
   v_table_name text;
   v_record_type text;
 begin
@@ -115,6 +127,10 @@ begin
   if p_target_class_id is null or p_target_academic_year_id is null
      or p_target_term_id is null or p_target_fee_structure_id is null then
     raise exception 'Choose a target class, academic year, term, and fee structure.';
+  end if;
+  if p_target_student_code is null or pg_catalog.length(pg_catalog.btrim(p_target_student_code)) = 0
+     or pg_catalog.length(pg_catalog.btrim(p_target_student_code)) > 64 then
+    raise exception 'Enter a receiving-school student ID of 1 to 64 characters.';
   end if;
 
   select transfer_admin.school_id into v_school_id
@@ -265,6 +281,25 @@ begin
   from public.profiles as profile
   where profile.id = v_transfer.source_student_id;
 
+  select student.student_id into v_source_student_code
+  from public.students as student
+  where student.id = v_transfer.source_student_id
+    and student.school_id = v_transfer.source_school_id;
+  if not found then
+    raise exception 'The source student record is no longer available.';
+  end if;
+
+  if exists (
+    select 1
+    from public.students as existing_student
+    where existing_student.school_id = v_school_id
+      and pg_catalog.lower(pg_catalog.btrim(existing_student.student_id)) =
+          pg_catalog.lower(pg_catalog.btrim(p_target_student_code))
+      and existing_student.id <> v_transfer.source_student_id
+  ) then
+    raise exception 'Student ID "%" is already used in this school. Choose a different receiving-school ID.', pg_catalog.btrim(p_target_student_code);
+  end if;
+
   for v_table_name, v_record_type in
     select * from (values
       ('attendance_records', 'attendance'),
@@ -296,6 +331,7 @@ begin
 
   update public.students
   set school_id = v_school_id,
+      student_id = pg_catalog.btrim(p_target_student_code),
       class_id = p_target_class_id,
       academic_year_id = p_target_academic_year_id,
       updated_at = now()
@@ -334,6 +370,7 @@ begin
   update public.student_transfers
   set target_school_id = v_school_id,
       target_student_id = v_transfer.source_student_id,
+      source_student_code = v_source_student_code,
       status = 'completed',
       accepted_by = v_actor_id,
       completed_at = now(),
@@ -344,6 +381,7 @@ begin
     'success', true,
     'transfer_id', v_transfer.id,
     'student_id', v_transfer.source_student_id,
+    'target_student_code', pg_catalog.btrim(p_target_student_code),
     'student_name', v_student_name,
     'target_school_id', v_school_id,
     'target_class_name', v_target_class_name
@@ -352,11 +390,12 @@ end;
 $$;
 
 revoke all on function public.preview_student_transfer(text) from public, anon;
-revoke all on function public.accept_student_transfer(text, uuid, uuid, uuid, uuid) from public, anon;
+revoke all on function public.accept_student_transfer(text, uuid, uuid, uuid, uuid) from public, anon, authenticated;
+revoke all on function public.accept_student_transfer(text, uuid, uuid, uuid, uuid, text) from public, anon;
 grant execute on function public.preview_student_transfer(text) to authenticated;
-grant execute on function public.accept_student_transfer(text, uuid, uuid, uuid, uuid) to authenticated;
+grant execute on function public.accept_student_transfer(text, uuid, uuid, uuid, uuid, text) to authenticated;
 
-create function public.get_my_transfer_history()
+create or replace function public.get_my_transfer_history()
 returns jsonb
 language plpgsql
 security definer
@@ -416,3 +455,7 @@ $$;
 
 revoke all on function public.get_my_transfer_history() from public, anon;
 grant execute on function public.get_my_transfer_history() to authenticated;
+
+NOTIFY pgrst, 'reload schema';
+
+COMMIT;

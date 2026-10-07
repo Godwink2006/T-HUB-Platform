@@ -271,11 +271,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="incoming-transfer-student-card">
           <strong>${escapeHtml(preview.student_name || "Student")}</strong>
           <span>Sending school: ${escapeHtml(preview.source_school_name || preview.source_school_id)}</span>
+          <span>Sending school student ID: ${escapeHtml(preview.source_student_code || "Not available")}</span>
           <span>Current class: ${escapeHtml(preview.source_class_name || "Not available")}</span>
           <span>Academic year: ${escapeHtml(preview.source_year_label || "Not available")}</span>
         </div>
         <p class="transfer-code-note">The student's existing login will move to this school. Source records stay at the sending school and are copied to read-only history.</p>
         <div class="transfer-target-fields">
+          <label for="transferTargetStudentCode">Student ID in this school</label>
+          <input id="transferTargetStudentCode" class="form-control" type="text" maxlength="64" value="${escapeHtml(preview.source_student_code || "")}" autocomplete="off" required />
           <label for="transferTargetClass">Target class</label>
           <select id="transferTargetClass" class="form-control"><option value="">Select class</option>${classOptions}</select>
           <label for="transferTargetYear">Active academic year</label>
@@ -328,13 +331,18 @@ document.addEventListener("DOMContentLoaded", () => {
   async function acceptIncomingTransfer(codeHash) {
     const values = {
       p_code_hash: codeHash,
+      p_target_student_code: document.getElementById("transferTargetStudentCode")?.value.trim(),
       p_target_class_id: document.getElementById("transferTargetClass")?.value,
       p_target_academic_year_id: document.getElementById("transferTargetYear")?.value,
       p_target_term_id: document.getElementById("transferTargetTerm")?.value,
       p_target_fee_structure_id: document.getElementById("transferTargetFee")?.value,
     };
     if (Object.values(values).some((value) => !value)) {
-      showToast("Choose the target class, academic year, term, and fee structure.", "info");
+      showToast("Enter a student ID and choose the target class, academic year, term, and fee structure.", "info");
+      return;
+    }
+    if (values.p_target_student_code.length > 64) {
+      showToast("The student ID must be 64 characters or fewer.", "info");
       return;
     }
 
@@ -348,8 +356,15 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       if (error) throw error;
       closeModal();
-      showToast(`${data.student_name} was transferred successfully.`, "success");
-      if (typeof loadStudentEnrollments === "function") await loadStudentEnrollments();
+      showToast(`${data.student_name} was transferred successfully with student ID ${data.target_student_code}.`, "success");
+      if (typeof loadStudentEnrollments === "function") {
+        try {
+          await loadStudentEnrollments();
+        } catch (refreshError) {
+          console.error("Transfer completed, but enrollments could not be refreshed:", refreshError);
+          showToast("Transfer completed. Refresh the page to update the enrollment list.", "info");
+        }
+      }
     } catch (err) {
       modalConfirm.disabled = false;
       modalCancel.disabled = false;
