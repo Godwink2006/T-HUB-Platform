@@ -43,6 +43,46 @@
       </div>
     </header>
 
+    <section class="enrollment-filters" aria-label="Filter enrollment records">
+      <div class="enrollment-search-field">
+        <label for="enrollmentSearch">Search</label>
+        <input
+          id="enrollmentSearch"
+          type="search"
+          placeholder="Search student or class..."
+          autocomplete="off"
+        />
+      </div>
+      <div class="enrollment-filter-field">
+        <label for="filterAcademicYear">Academic year</label>
+        <select id="filterAcademicYear">
+          <option value="">All academic years</option>
+        </select>
+      </div>
+      <div class="enrollment-filter-field">
+        <label for="filterSemester">Semester</label>
+        <select id="filterSemester">
+          <option value="">All semesters</option>
+        </select>
+      </div>
+      <div class="enrollment-filter-field">
+        <label for="filterStatus">Status</label>
+        <select id="filterStatus">
+          <option value="">All statuses</option>
+        </select>
+      </div>
+      <div class="enrollment-filter-field">
+        <label for="filterClass">Class</label>
+        <select id="filterClass">
+          <option value="">All classes</option>
+        </select>
+      </div>
+      <button id="clearEnrollmentFilters" type="button" class="clear-filters-btn">
+        Clear filters
+      </button>
+      <span id="enrollmentResultCount" class="enrollment-result-count" aria-live="polite"></span>
+    </section>
+
     <div class="table-container">
       <table class="student-table">
         <thead>

@@ -30,12 +30,107 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (selectAllCheckbox) {
-      const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
-      const someChecked = Array.from(checkboxes).some((cb) => cb.checked);
-      selectAllCheckbox.checked = allChecked && checkboxes.length > 0;
-      selectAllCheckbox.indeterminate = someChecked && !allChecked;
+      const visibleCheckboxes = Array.from(checkboxes).filter(
+        (checkbox) => !checkbox.closest("tr")?.hidden,
+      );
+      const allVisibleChecked = visibleCheckboxes.every((cb) => cb.checked);
+      const someVisibleChecked = visibleCheckboxes.some((cb) => cb.checked);
+      selectAllCheckbox.checked =
+        allVisibleChecked && visibleCheckboxes.length > 0;
+      selectAllCheckbox.indeterminate = someVisibleChecked && !allVisibleChecked;
     }
   }
+
+  const enrollmentFilterIds = [
+    "enrollmentSearch",
+    "filterAcademicYear",
+    "filterSemester",
+    "filterStatus",
+    "filterClass",
+  ];
+
+  enrollmentFilterIds.forEach((id) => {
+    document.getElementById(id)?.addEventListener(
+      id === "enrollmentSearch" ? "input" : "change",
+      applyEnrollmentFilters,
+    );
+  });
+
+  document
+    .getElementById("clearEnrollmentFilters")
+    ?.addEventListener("click", () => {
+      enrollmentFilterIds.forEach((id) => {
+        const field = document.getElementById(id);
+        if (field) field.value = "";
+      });
+      applyEnrollmentFilters();
+    });
+
+  function applyEnrollmentFilters() {
+    const tbody = document.getElementById("studentTableBody");
+    if (!tbody) return;
+
+    const search =
+      document.getElementById("enrollmentSearch")?.value.trim().toLowerCase() ||
+      "";
+    const filters = {
+      year: document.getElementById("filterAcademicYear")?.value || "",
+      semester: document.getElementById("filterSemester")?.value || "",
+      status: document.getElementById("filterStatus")?.value || "",
+      className: document.getElementById("filterClass")?.value || "",
+    };
+
+    let visibleCount = 0;
+    const rows = Array.from(tbody.querySelectorAll("tr[data-enrollment-row]"));
+    rows.forEach((row) => {
+      const matchesSearch = !search || row.dataset.search.includes(search);
+      const matches =
+        matchesSearch &&
+        (!filters.year || row.dataset.year === filters.year) &&
+        (!filters.semester || row.dataset.semester === filters.semester) &&
+        (!filters.status || row.dataset.status === filters.status) &&
+        (!filters.className || row.dataset.className === filters.className);
+      row.hidden = !matches;
+      if (matches) visibleCount += 1;
+    });
+
+    let emptyRow = tbody.querySelector("#enrollmentNoMatches");
+    if (!emptyRow && rows.length > 0) {
+      emptyRow = document.createElement("tr");
+      emptyRow.id = "enrollmentNoMatches";
+      emptyRow.hidden = true;
+      emptyRow.innerHTML =
+        '<td colspan="6" class="enrollment-empty-state">No enrollments match these filters.</td>';
+      tbody.appendChild(emptyRow);
+    }
+    if (emptyRow) emptyRow.hidden = visibleCount > 0 || rows.length === 0;
+
+    const resultCount = document.getElementById("enrollmentResultCount");
+    if (resultCount) {
+      resultCount.textContent = `${visibleCount} of ${rows.length} enrollment${rows.length === 1 ? "" : "s"}`;
+    }
+    updateSelectionState();
+  }
+
+  function populateEnrollmentFilter(selectId, values, defaultLabel) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const selectedValue = select.value;
+    const sortedValues = [...new Set(values.filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
+    );
+    select.innerHTML = `<option value="">${defaultLabel}</option>${sortedValues
+      .map(
+        (value) =>
+          `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`,
+      )
+      .join("")}`;
+    if (sortedValues.includes(selectedValue)) select.value = selectedValue;
+  }
+
+  window.applyEnrollmentFilters = applyEnrollmentFilters;
+  window.populateEnrollmentFilter = populateEnrollmentFilter;
+  window.updateEnrollmentSelectionState = updateSelectionState;
 
   document
     .getElementById("studentTableBody")
@@ -47,11 +142,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener("change", (e) => {
-      const checkboxes = getStudentCheckboxes();
+      const checkboxes = Array.from(getStudentCheckboxes()).filter(
+        (checkbox) => !checkbox.closest("tr")?.hidden,
+      );
       checkboxes.forEach((cb) => {
         cb.checked = e.target.checked;
       });
-      updateSelectionState();
+      window.updateEnrollmentSelectionState();
     });
   }
 
@@ -452,75 +549,134 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("btnPromoteStudents")
     ?.addEventListener("click", async () => {
-      if (!selectedEnrollmentIds || selectedEnrollmentIds.length === 0) {
+      const enrollmentIds = [...new Set(selectedEnrollmentIds || [])];
+      if (enrollmentIds.length === 0) {
         showToast("Please select at least one enrollment record.", "info");
+        return;
+      }
+      if (enrollmentIds.length !== selectedEnrollmentIds.length) {
+        showToast("The selection contains duplicate enrollment records.", "error");
         return;
       }
 
       modalTitle.textContent = "Promote Students to Next Class (2nd Semester)";
-      modalBody.innerHTML = `<p>Loading classes and fee structures...</p>`;
+      modalBody.innerHTML = `<p>Checking the active year, first-term class, and fee structures...</p>`;
       modalOverlay.classList.add("active");
 
       try {
-        const supabaseClient = window.supabaseClient || supabaseClient;
+        const client = window.supabaseClient;
+        if (!client) throw new Error("Supabase client is not initialized.");
 
-        // 1. Get 2nd Semester Term ID
-        const { data: termData, error: termErr } = await supabaseClient
+        let activeSchoolId = window.currentSchoolId;
+        if (!activeSchoolId) {
+          const { data: { user }, error: userError } = await client.auth.getUser();
+          if (userError) throw userError;
+          if (user) {
+            const { data: profile, error: profileError } = await client
+              .from("profiles")
+              .select("school_id")
+              .eq("id", user.id)
+              .single();
+            if (profileError) throw profileError;
+            activeSchoolId = profile?.school_id;
+          }
+        }
+        if (!activeSchoolId) throw new Error("Active school could not be determined.");
+
+        const { data: activeYear, error: yearError } = await client
+          .from("academic_years")
+          .select("id, year_label")
+          .eq("school_id", activeSchoolId)
+          .eq("status", "Active")
+          .maybeSingle();
+        if (yearError || !activeYear) {
+          throw new Error("Could not find one active academic year for this school.");
+        }
+
+        const { data: yearTerms, error: termsError } = await client
           .from("terms")
-          .select("id")
-          .ilike("name", "%2nd%")
-          .limit(1)
-          .single();
+          .select("id, name")
+          .eq("school_id", activeSchoolId)
+          .eq("academic_year_id", activeYear.id);
+        if (termsError) throw termsError;
 
-        if (termErr || !termData)
-          throw new Error("Could not find 2nd Semester term.");
-        const secondSemesterTermId = termData.id;
+        const findTerm = (terms, termNumber) => terms.filter((term) => {
+          const name = (term.name || "").toLowerCase();
+          return termNumber === 1
+            ? /\b(?:1st|first|term\s*1|semester\s*1|one|i)\b/.test(name)
+            : /\b(?:2nd|second|term\s*2|semester\s*2|two|ii)\b/.test(name);
+        });
+        const firstTerms = findTerm(yearTerms || [], 1);
+        const secondTerms = findTerm(yearTerms || [], 2);
+        if (firstTerms.length !== 1 || secondTerms.length !== 1) {
+          throw new Error("The active academic year must have exactly one first term and one second term.");
+        }
+        const firstTermId = firstTerms[0].id;
+        const secondTermId = secondTerms[0].id;
 
-        // 2. Fetch selected students' current class IDs so we can filter them out of the target list
-        const { data: currentEnrollments, error: currentErr } =
-          await supabaseClient
-            .from("student_enrollments")
-            .select("class_id")
-            .in("id", selectedEnrollmentIds);
+        const { data: sourceEnrollments, error: sourceError } = await client
+          .from("student_enrollments")
+          .select("id, student_id, school_id, class_id, academic_year_id, term_id, classes(name)")
+          .in("id", enrollmentIds);
+        if (sourceError) throw sourceError;
+        if (!sourceEnrollments || sourceEnrollments.length !== enrollmentIds.length) {
+          throw new Error("Some selected enrollment records could not be found.");
+        }
 
-        if (currentErr) throw currentErr;
-        const currentClassIds = [
-          ...new Set(currentEnrollments.map((e) => e.class_id)),
-        ];
+        const studentIds = sourceEnrollments.map((enrollment) => String(enrollment.student_id));
+        const sourceClassIds = [...new Set(sourceEnrollments.map((enrollment) => String(enrollment.class_id)))];
+        const allFromFirstTerm = sourceEnrollments.every((enrollment) =>
+          String(enrollment.school_id) === String(activeSchoolId) &&
+          String(enrollment.academic_year_id) === String(activeYear.id) &&
+          String(enrollment.term_id) === String(firstTermId),
+        );
+        if (!allFromFirstTerm) {
+          throw new Error("Select students enrolled in the first term of this school's active academic year only.");
+        }
+        if (sourceClassIds.length !== 1) {
+          throw new Error("Select students from one first-term class at a time.");
+        }
+        if (new Set(studentIds).size !== studentIds.length) {
+          throw new Error("A student appears more than once in the selected enrollment records.");
+        }
 
-        // 3. Fetch all active classes
-        const { data: classesData, error: classErr } = await supabaseClient
+        const { data: classesData, error: classErr } = await client
           .from("classes")
           .select("id, name, capacity")
+          .eq("school_id", activeSchoolId)
           .eq("status", "active");
-
         if (classErr) throw classErr;
+        const getGradeNumber = (name) => {
+          const match = (name || "").match(/(\d+)/);
+          return match ? Number(match[1]) : null;
+        };
+        const sourceGrade = getGradeNumber(sourceEnrollments[0].classes?.name);
+        const availableTargetClasses = (classesData || []).filter((schoolClass) => {
+          if (String(schoolClass.id) === sourceClassIds[0]) return false;
+          const targetGrade = getGradeNumber(schoolClass.name);
+          return !(sourceGrade !== null && sourceGrade <= 9 && targetGrade !== null && targetGrade >= 10);
+        });
 
-        // Filter out classes that the selected students are already currently in
-        const availableTargetClasses = classesData.filter(
-          (c) => !currentClassIds.includes(c.id),
-        );
-
-        // 4. Fetch 2nd Semester fee structures
-        const { data: feesData, error: feeErr } = await supabaseClient
+        const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
-          .select("id, total_amount, class_id, classes(name)")
-          .eq("term_id", secondSemesterTermId)
+          .select("id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)")
+          .eq("school_id", activeSchoolId)
+          .eq("academic_year_id", activeYear.id)
+          .eq("term_id", secondTermId)
           .eq("status", "Active");
-
         if (feeErr) throw feeErr;
 
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
       <p style="margin-bottom: 10px; color: #555;">
-        Promoting <b>${selectedEnrollmentIds.length}</b> student(s) to a new class for the 2nd Semester.
+        Promoting <b>${sourceEnrollments.length}</b> student(s) from <b>${sourceEnrollments[0].classes?.name || "their first-term class"}</b> for the 2nd Semester of ${activeYear.year_label}.
       </p>
 
       <div style="margin-bottom: 15px;">
         <label for="targetClassSelect"><b>Target Class:</b></label>
         <select id="targetClassSelect" class="form-control">
           <option value="">-- Select Target Class --</option>
-          ${availableTargetClasses.map((c) => `<option value="${c.id}" data-capacity="${c.capacity}">${c.name} (Capacity:${c.capacity})</option>`).join("")}
+          ${availableTargetClasses.map((c) => `<option value="${c.id}" data-capacity="${c.capacity}">${c.name} (Capacity: ${c.capacity ?? "not set"})</option>`).join("")}
         </select>
       </div>
 
@@ -528,17 +684,16 @@ document.addEventListener("DOMContentLoaded", () => {
         <label for="targetFeeSelect"><b>2nd Semester Fee Structure:</b></label>
         <select id="targetFeeSelect" class="form-control" disabled>
           <option value="">-- Select a Target Class First --</option>
-          ${feesData.map((f) => `<option value="${f.id}" data-class="${f.class_id}" data-amount="${f.total_amount}">[${f.classes?.name ?? "Class"}] Total: $${f.total_amount}</option>`).join("")}
         </select>
       </div>
-      <div id="capacityWarning" style="color: #d9534f; font-size: 13px; margin-top: 5px;"></div>
+      <div id="capacityWarning" role="status" aria-live="polite" style="color: #d9534f; font-size: 13px; margin-top: 5px;"></div>
     `;
 
         const targetClassSelect = document.getElementById("targetClassSelect");
         const targetFeeSelect = document.getElementById("targetFeeSelect");
         const capacityWarning = document.getElementById("capacityWarning");
 
-        // Handle target class change: check capacity and auto-select matching fee structure
+        // Handle target class change: check second-term capacity and matching fees.
         targetClassSelect.onchange = async () => {
           const classId = targetClassSelect.value;
 
@@ -550,41 +705,42 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // A. Check Capacity
-          const { count, error: countErr } = await supabaseClient
+          // Check occupancy for this target class in the active second term.
+          const { count, error: countErr } = await client
             .from("student_enrollments")
             .select("*", { count: "exact", head: true })
-            .eq("class_id", classId);
+            .eq("school_id", activeSchoolId)
+            .eq("class_id", classId)
+            .eq("academic_year_id", activeYear.id)
+            .eq("term_id", secondTermId);
 
           const selectedOption = targetClassSelect.selectedOptions[0];
           const capacity =
             parseInt(selectedOption.getAttribute("data-capacity")) || 0;
 
-          if (!countErr && count >= capacity) {
-            capacityWarning.textContent = `⚠️ Warning: Target class has reached or exceeded its capacity (${count}/${capacity}). Promotion may fail.`;
+          const currentCount = count || 0;
+          if (countErr) {
+            capacityWarning.textContent = "Could not verify capacity. It will be checked again before saving.";
+          } else if (capacity > 0 && currentCount + sourceEnrollments.length > capacity) {
+            capacityWarning.textContent = `This class would exceed capacity (${currentCount + sourceEnrollments.length}/${capacity}).`;
           } else {
-            capacityWarning.textContent = `Class occupancy: ${count || 0} / ${capacity} available.`;
+            capacityWarning.textContent = capacity > 0
+              ? `Class occupancy after promotion: ${currentCount + sourceEnrollments.length} / ${capacity}.`
+              : `Current second-term enrollment: ${currentCount}. No capacity limit is set.`;
           }
 
-          // B. Auto-select matching fee structure for this class
-          const matchingFee = feesData.find((f) => f.class_id === classId);
-
-          if (matchingFee) {
-            targetFeeSelect.innerHTML = `
-            <option value="${matchingFee.id}" data-class="${matchingFee.class_id}">
-              [${matchingFee.classes?.name ?? "Class"}] Total: $${matchingFee.total_amount} (Auto-matched)
-            </option>
-          `;
-            targetFeeSelect.value = matchingFee.id;
-            targetFeeSelect.disabled = false; // Unlock so they can see it's set
+          const matchingFees = (feesData || []).filter(
+            (fee) => String(fee.class_id) === String(classId),
+          );
+          if (matchingFees.length > 0) {
+            targetFeeSelect.innerHTML = `<option value="">-- Select fee structure --</option>${matchingFees.map((fee) =>
+              `<option value="${fee.id}">[${fee.classes?.name ?? "Class"}] Total: $${fee.total_amount}</option>`,
+            ).join("")}`;
+            targetFeeSelect.disabled = false;
           } else {
-            targetFeeSelect.innerHTML = `<option value="">-- No active fee structure found for this class --</option>`;
+            targetFeeSelect.innerHTML = `<option value="">-- No active second-term fee structure for this class --</option>`;
             targetFeeSelect.value = "";
             targetFeeSelect.disabled = true;
-            showToast(
-              `Warning: No 2nd Semester fee structure is assigned to this target class.`,
-              "info",
-            );
           }
         };
 
@@ -594,6 +750,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const feeStructureId = targetFeeSelect.value;
 
           if (!targetClassId || !feeStructureId) {
+            capacityWarning.textContent = "Choose a target class and its second-term fee structure before confirming.";
             showToast(
               "Please select both a target class and a valid fee structure.",
               "info",
@@ -601,13 +758,27 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          await executeNextClassPromotion(
-            selectedEnrollmentIds,
-            targetClassId,
-            feeStructureId,
-            secondSemesterTermId,
-          );
-          closeModal();
+          capacityWarning.textContent = "Validating records and saving the promotion…";
+          const originalText = modalConfirm.textContent;
+          modalConfirm.disabled = true;
+          modalConfirm.textContent = "Promoting...";
+          modalConfirm.setAttribute("aria-busy", "true");
+          try {
+            const succeeded = await executeNextClassPromotion({
+              client,
+              enrollmentIds,
+              targetClassId,
+              feeStructureId,
+            });
+            if (succeeded) closeModal();
+          } catch (err) {
+            console.error("Second-semester confirmation failed:", err);
+            capacityWarning.textContent = `Promotion failed: ${err.message || "Unexpected error."}`;
+          } finally {
+            modalConfirm.disabled = false;
+            modalConfirm.textContent = originalText;
+            modalConfirm.removeAttribute("aria-busy");
+          }
         };
       } catch (err) {
         console.error("Error setting up promotion modal:", err);
@@ -615,175 +786,40 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-  async function executeNextClassPromotion(
+  async function executeNextClassPromotion({
+    client,
     enrollmentIds,
     targetClassId,
     feeStructureId,
-    termId,
-  ) {
+  }) {
     try {
-      const supabaseClient = window.supabaseClient || supabaseClient;
-
-      // 1. Get target class details
-      const { data: targetClass, error: targetClassErr } = await supabaseClient
-        .from("classes")
-        .select("id, name")
-        .eq("id", targetClassId)
-        .single();
-
-      if (targetClassErr || !targetClass)
-        throw new Error("Target class not found.");
-
-      // Helper function to extract grade number from class name (e.g., "Grade 4" -> 4)
-      function extractGradeNumber(className) {
-        const match = className.match(/(\d+)/);
-        return match ? parseInt(match[0]) : null;
-      }
-
-      const targetGrade = extractGradeNumber(targetClass.name);
-
-      // 2. Get student IDs, school IDs, academic years, AND their current classes
-      const { data: sourceEnrollments, error: fetchErr } = await supabaseClient
-        .from("student_enrollments")
-        .select("student_id, academic_year_id, school_id, classes(name)")
-        .in("id", enrollmentIds);
-
-      if (fetchErr) throw fetchErr;
-
-      // 3. Validate Grade 10+ user account rule
-      for (const enr of sourceEnrollments) {
-        const currentClassName = enr.classes?.name || "";
-        const currentGrade = extractGradeNumber(currentClassName);
-
-        if (
-          currentGrade !== null &&
-          currentGrade < 9 &&
-          targetGrade !== null &&
-          targetGrade >= 10
-        ) {
-          showToast(
-            `Promotion blocked: Students moving from ${currentClassName} to ${targetClass.name} require a user account. Please use the "Promote Student to User" button instead.`,
-            "error",
-          );
-          return;
-        }
-      }
-
-      // 4. Fetch fee structure details AND check its assigned class compatibility
-      const { data: feeStruct, error: feeStructErr } = await supabaseClient
-        .from("fee_structures")
-        .select("total_amount, class_id") // Fetches class_id to check compatibility
-        .eq("id", feeStructureId)
-        .single();
-
-      if (feeStructErr || !feeStruct)
-        throw new Error("Selected fee structure not found.");
-
-      // 5. Validate that the fee structure matches the target class
-      if (feeStruct.class_id && feeStruct.class_id !== targetClassId) {
-        showToast(
-          `Invalid fee structure! The selected fee structure is not assigned to ${targetClass.name}.`,
-          "error",
-        );
-        return; // Stop execution
-      }
-
-      // Fetch matching fee structure breakdown items
-      const { data: feeItems, error: itemsErr } = await supabaseClient
-        .from("fee_structure_items")
-        .select("id, fee_name, amount")
-        .eq("fee_structure_id", feeStructureId);
-
-      if (itemsErr) throw itemsErr;
-
-      for (const enr of sourceEnrollments) {
-        // A. Check if a 2nd Semester enrollment record already exists
-        const { data: existingEnr, error: checkErr } = await supabaseClient
-          .from("student_enrollments")
-          .select("id")
-          .eq("student_id", enr.student_id)
-          .eq("academic_year_id", enr.academic_year_id)
-          .eq("term_id", termId)
-          .maybeSingle();
-
-        if (checkErr) throw checkErr;
-
-        let currentEnrollmentId;
-
-        if (existingEnr) {
-          const { error: updateErr } = await supabaseClient
-            .from("student_enrollments")
-            .update({
-              class_id: targetClassId,
-              enrollment_status: "Promoted",
-            })
-            .eq("id", existingEnr.id);
-
-          if (updateErr) throw updateErr;
-          currentEnrollmentId = existingEnr.id;
-        } else {
-          const { data: newEnr, error: insertErr } = await supabaseClient
-            .from("student_enrollments")
-            .insert({
-              school_id: enr.school_id,
-              student_id: enr.student_id,
-              class_id: targetClassId,
-              academic_year_id: enr.academic_year_id,
-              term_id: termId,
-              enrollment_status: "Promoted",
-            })
-            .select("id")
-            .single();
-
-          if (insertErr) throw insertErr;
-          currentEnrollmentId = newEnr.id;
-        }
-
-        // B. Update student's primary class reference in `students` table
-        const { error: studentUpdateErr } = await supabaseClient
-          .from("students")
-          .update({ class_id: targetClassId })
-          .eq("id", enr.student_id);
-
-        if (studentUpdateErr) {
-          console.warn(
-            "Could not update student table class reference:",
-            studentUpdateErr.message,
-          );
-        }
-
-        // C. Insert into `student_fees`
-        const { error: feeInsertErr } = await supabaseClient
-          .from("student_fees")
-          .insert({
-            school_id: enr.school_id,
-            student_id: enr.student_id,
-            class_id: targetClassId,
-            academic_year_id: enr.academic_year_id,
-            term_id: termId,
-            fee_structure_id: feeStructureId,
-            total_fees: feeStruct.total_amount,
-            total_paid: 0,
-            status: "Unpaid",
-            fee_breakdown: feeItems || [],
-          });
-
-        if (feeInsertErr) throw feeInsertErr;
-      }
-
-      showToast(
-        `Successfully promoted ${sourceEnrollments.length} student(s) to 2nd Semester!`,
-        "success",
+      const { data, error } = await client.rpc(
+        "promote_regular_students_to_second_term",
+        {
+          p_enrollment_ids: enrollmentIds,
+          p_target_class_id: targetClassId,
+          p_fee_structure_id: feeStructureId,
+        },
       );
-      if (typeof loadStudentEnrollments === "function") {
-        loadStudentEnrollments();
+
+      if (error) throw error;
+      if (!data?.success) {
+        throw new Error(data?.message || "The promotion RPC returned an unsuccessful result.");
       }
+
+      const promotedCount = data.student_count ?? enrollmentIds.length;
+      showToast(`Successfully promoted ${promotedCount} student(s) to 2nd Semester!`, "success");
+      if (typeof loadStudentEnrollments === "function") loadStudentEnrollments();
+      return true;
     } catch (err) {
-      console.error("Promotion execution failed:", err);
-      showToast(`Promotion failed: ${err.message}`, "error");
+      const message = err?.message || "Unexpected error while promoting students.";
+      console.error("Promotion RPC failed:", err);
+      const status = document.getElementById("capacityWarning");
+      if (status) status.textContent = `Promotion failed: ${message}`;
+      showToast(`Promotion failed: ${message}`, "error");
+      return false;
     }
   }
-
   // --- HANDLE "PROMOTE STUDENTS TO NEW ACADEMIC YEAR (1st SEMESTER)" ---
   document
     .getElementById("btnPromoteNextYear")
@@ -1469,8 +1505,38 @@ async function loadStudentEnrollments() {
     if (!enrollments || enrollments.length === 0) {
       tbody.innerHTML =
         '<tr><td colspan="6" style="text-align: center;">No enrollments found in the database.</td></tr>';
+      [
+        ["filterAcademicYear", "All academic years"],
+        ["filterSemester", "All semesters"],
+        ["filterStatus", "All statuses"],
+        ["filterClass", "All classes"],
+      ].forEach(([id, label]) => window.populateEnrollmentFilter(id, [], label));
+      const resultCount = document.getElementById("enrollmentResultCount");
+      if (resultCount) resultCount.textContent = "0 enrollments";
+      window.updateEnrollmentSelectionState();
       return;
     }
+
+    window.populateEnrollmentFilter(
+      "filterAcademicYear",
+      enrollments.map((enr) => enr.academic_years?.year_label || "N/A"),
+      "All academic years",
+    );
+    window.populateEnrollmentFilter(
+      "filterSemester",
+      enrollments.map((enr) => enr.terms?.name || "N/A"),
+      "All semesters",
+    );
+    window.populateEnrollmentFilter(
+      "filterStatus",
+      enrollments.map((enr) => enr.enrollment_status || "Normal"),
+      "All statuses",
+    );
+    window.populateEnrollmentFilter(
+      "filterClass",
+      enrollments.map((enr) => enr.classes?.name || "N/A"),
+      "All classes",
+    );
 
     // 2. Map all rows into a single HTML string in memory
     const rowsHTML = enrollments
@@ -1480,21 +1546,32 @@ async function loadStudentEnrollments() {
         const className = enr.classes?.name || "N/A";
         const academicYearName = enr.academic_years?.year_label || "N/A";
         const termName = enr.terms?.name || "N/A";
+        const searchText = `${studentName} ${className} ${academicYearName} ${termName} ${enrollmentStatus}`;
+        const statusClass = enrollmentStatus
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]/g, "-");
 
         return `
-        <tr>
+        <tr
+          data-enrollment-row
+          data-search="${escapeHtml(searchText.toLowerCase())}"
+          data-year="${escapeHtml(academicYearName)}"
+          data-semester="${escapeHtml(termName)}"
+          data-status="${escapeHtml(enrollmentStatus)}"
+          data-class-name="${escapeHtml(className)}"
+        >
           <td>
             <input 
               type="checkbox" 
               class="student-checkbox" 
-              value="${enr.id}" 
+              value="${escapeHtml(enr.id)}"
             />
           </td>
           <td>${escapeHtml(studentName)}</td>
           <td>${escapeHtml(className)}</td>
           <td>${escapeHtml(academicYearName)}</td>
           <td>${escapeHtml(termName)}</td>
-          <td><span class="status-badge ${enrollmentStatus.toLowerCase()}">${escapeHtml(enrollmentStatus)}</span></td>
+          <td><span class="status-badge ${statusClass}">${escapeHtml(enrollmentStatus)}</span></td>
         </tr>
       `;
       })
@@ -1502,6 +1579,7 @@ async function loadStudentEnrollments() {
 
     // 3. Inject everything into the table in ONE single operation
     tbody.innerHTML = rowsHTML;
+    window.applyEnrollmentFilters();
   } catch (err) {
     console.error("Error loading enrollment table:", err.message);
     tbody.innerHTML =

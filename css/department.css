@@ -664,12 +664,6 @@ tr {
     border: 1px solid rgb(219, 215, 215);
   }
 
-  .edit-department-modal-body {
-    padding: 20px;
-    overflow-y: auto;
-    flex: 1;
-  }
-
   .edit-department-modal-footer {
     display: flex;
     flex-direction: row;

@@ -156,10 +156,6 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
-}
-
-.add-teachers-btn {
   border: 2px solid rgb(219, 215, 215);
 }
 

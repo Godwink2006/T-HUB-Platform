@@ -366,28 +366,10 @@ tr {
   color: #d97706;
 }
 
-.edit {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.view {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
 .delete-addItem,
 .delete-editItem {
   background: #fee2e2;
   color: #dc2626;
-}
-
-.structures-actions-btn {
-  width: 38px;
-  height: 38px;
-  border: none;
-  cursor: pointer;
-  margin-right: 6px;
 }
 
 .addItem-modal {

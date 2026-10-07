@@ -23,6 +23,106 @@ body {
   background: rgb(231, 226, 226);
 }
 
+.enrollment-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(145px, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  margin: 16px 10px 0;
+  padding: 16px;
+  background: #fff;
+  border: 2px solid rgb(219, 215, 215);
+}
+
+.enrollment-search-field,
+.enrollment-filter-field {
+  min-width: 0;
+}
+
+.enrollment-search-field label,
+.enrollment-filter-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.enrollment-search-field input,
+.enrollment-filter-field select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 2px solid rgb(219, 215, 215);
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 13px;
+}
+
+.enrollment-search-field input:focus,
+.enrollment-filter-field select:focus {
+  outline: 2px solid rgba(37, 99, 235, 0.2);
+  border-color: #2563eb;
+}
+
+.clear-filters-btn {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 0;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.clear-filters-btn:hover {
+  background: #1f2937;
+}
+
+.enrollment-result-count {
+  grid-column: 1 / -1;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.enrollment-empty-state {
+  padding: 28px 16px;
+  color: #64748b;
+  text-align: center;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 1100px) {
+  .enrollment-filters {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+
+  .enrollment-search-field {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .enrollment-filters {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .enrollment-search-field {
+    grid-column: 1 / -1;
+  }
+
+  .clear-filters-btn {
+    grid-column: 1 / -1;
+  }
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -284,12 +384,16 @@ tr {
 
   .bulk-action-bar,
   .bulk-action-bar button,
+  .clear-filters-btn,
   .modal-content,
   .form-control,
   .btn-primary,
   .btn-secondary,
   .status-badge,
-  .back-academics-btn {
+  .back-academics-btn,
+  .enrollment-search-field input,
+  .enrollment-filter-field select,
+  .enrollment-filters {
     border-radius: 10px;
   }
 }
