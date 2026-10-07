@@ -111,6 +111,14 @@ async function initAcademicsPage() {
         Manage fees <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
+
+     <div id="nav-fees" class="academic-card">
+      <h4>My Transfer History</h4>
+      <p>View and manage your transfer history.</p>
+      <button onclick="window.location.href = 'my-history.html'" class="manage-btn">
+        Manage Transfer History <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
     `
         : ""
     }
