@@ -140,9 +140,21 @@ async function initSettingsPage() {
         `
             : ""
         }
+
+        <div class="setting-card">
+          <h4>Log Out &amp; Clear Browser Data</h4>
+          <p>Sign out on this device and remove saved data for this site, including cached files and local settings. School records are not deleted.</p>
+          <button id="clearBrowserDataBtn" type="button" class="manage-btn clear-browser-data-btn">
+            Log Out &amp; Clear Data <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
       `;
 
       containerEl.innerHTML = allCardsHTML;
+
+      document
+        .getElementById("clearBrowserDataBtn")
+        ?.addEventListener("click", clearCurrentBrowserData);
 
       if (typeof renderNavigation === "function") {
         renderNavigation(userRole);
@@ -157,4 +169,89 @@ async function initSettingsPage() {
 }
 
 document.addEventListener("DOMContentLoaded", initSettingsPage);
+
+async function clearCurrentBrowserData(event) {
+  const button = event.currentTarget;
+  if (
+    !window.confirm(
+      "Log out on this device and clear this site's saved browser data? This will not delete school records.",
+    )
+  ) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Logging out and clearing data…";
+
+  try {
+    if (window.supabaseClient?.auth) {
+      const { error } = await window.supabaseClient.auth.signOut({
+        scope: "local",
+      });
+      if (error) console.warn("Local Supabase sign-out returned an error:", error);
+    }
+  } catch (error) {
+    console.warn("Supabase sign-out failed; clearing this site's local session anyway:", error);
+  }
+
+  try {
+    window.localStorage.clear();
+  } catch (error) {
+    console.warn("Could not clear local storage:", error);
+  }
+
+  try {
+    window.sessionStorage.clear();
+  } catch (error) {
+    console.warn("Could not clear session storage:", error);
+  }
+
+  try {
+    const cacheNames = await window.caches?.keys();
+    await Promise.all((cacheNames || []).map((name) => window.caches.delete(name)));
+  } catch (error) {
+    console.warn("Could not clear this site's cached files:", error);
+  }
+
+  try {
+    const registrations = await navigator.serviceWorker?.getRegistrations();
+    await Promise.all((registrations || []).map((registration) => registration.unregister()));
+  } catch (error) {
+    console.warn("Could not unregister this site's service workers:", error);
+  }
+
+  try {
+    if (typeof window.indexedDB?.databases === "function") {
+      const databases = await window.indexedDB.databases();
+      await Promise.all(
+        databases
+          .filter((database) => database.name)
+          .map(
+            (database) =>
+              new Promise((resolve) => {
+                const request = window.indexedDB.deleteDatabase(database.name);
+                request.onsuccess = resolve;
+                request.onerror = resolve;
+                request.onblocked = resolve;
+              }),
+          ),
+      );
+    }
+  } catch (error) {
+    console.warn("Could not clear this site's IndexedDB data:", error);
+  }
+
+  try {
+    document.cookie.split(";").forEach((cookie) => {
+      const cookieName = cookie.split("=")[0].trim();
+      if (cookieName) {
+        document.cookie = `${cookieName}=; Max-Age=0; path=/; SameSite=Lax`;
+      }
+    });
+  } catch (error) {
+    console.warn("Could not clear this site's accessible cookies:", error);
+  }
+
+  window.location.replace("/index.html");
+}
 

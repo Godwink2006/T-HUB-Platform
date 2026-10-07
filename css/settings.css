@@ -163,6 +163,19 @@
   font-weight: 500;
 }
 
+.setting-card .clear-browser-data-btn {
+  background-color: #b91c1c;
+}
+
+.setting-card .clear-browser-data-btn:hover:not(:disabled) {
+  background-color: #991b1b;
+}
+
+.setting-card .clear-browser-data-btn:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
 /* ==========================================
    MOBILE & TABLET RESPONSIVENESS
    ========================================== */
