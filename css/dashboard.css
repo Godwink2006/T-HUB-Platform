@@ -29,7 +29,7 @@ body {
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  color: #6b7280; /* Muted text color */
+  color: #6b7280;
 }
 
 .empty-state i {
@@ -368,8 +368,8 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  flex-shrink: 0; /* Prevent it from shrinking or stretching */
-  align-self: flex-start; /* Lock it to the top line of the text */
+  flex-shrink: 0;
+  align-self: flex-start;
   margin-top: 6px;
 }
 

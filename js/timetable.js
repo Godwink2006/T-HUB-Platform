@@ -45,7 +45,7 @@ function clearDraftStorage() {
   const getEl = (id) => document.getElementById(id);
   const supabaseClient = window.supabaseClient || window.supabase;
 
-  
+
   function escapeHTML(str) {
     if (!str) return "";
     return String(str)
@@ -69,7 +69,7 @@ function clearDraftStorage() {
     if (form) form.reset();
   }
 
-  
+
   async function fetchUserProfileAndSchool() {
     try {
       if (!supabaseClient) throw new Error("Supabase client missing.");
@@ -96,7 +96,7 @@ function clearDraftStorage() {
     }
   }
 
-  
+
   async function loadDropdownData() {
     try {
       const [
@@ -253,7 +253,7 @@ function clearDraftStorage() {
       : "";
   }
 
-  
+
 
   function bindCascadingEvents() {
     getEl("timetableClassSelect")?.addEventListener("change", () => {
@@ -298,9 +298,9 @@ function clearDraftStorage() {
     select.innerHTML = html;
   }
 
-  
 
-  
+
+
   function resolveLessonDisplayData(lesson) {
     if (lesson.is_break) {
       const period = state.lookups?.periods?.find(
@@ -565,7 +565,7 @@ function clearDraftStorage() {
       tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#dc2626;">Failed to load data. ${escapeHTML(err.message)}</td></tr>`;
     }
   }
-  
+
   function bindEvents() {
     document.addEventListener("click", (e) => {
       const createTrigger = e.target.closest(
@@ -778,8 +778,8 @@ function clearDraftStorage() {
       state.editingLessonId = null;
     });
 
-    
-    
+
+
     function updatePeriodTimeLabel(selectEl, displayEl) {
       if (!selectEl || !displayEl) return;
 
@@ -801,7 +801,7 @@ function clearDraftStorage() {
       displayEl.textContent = timeText || "--:--";
     }
 
-    
+
     function setupPeriodTimeDisplay(selectId, displayId) {
       const select = getEl(selectId);
       const display = getEl(displayId);
@@ -813,7 +813,7 @@ function clearDraftStorage() {
       });
     }
 
-    
+
     function ensureDropdownOptionsExist(prefix) {
       const subjectSelect =
         getEl(`${prefix}SubjectSelect`) || getEl(`${prefix}Subject`);
@@ -851,7 +851,7 @@ function clearDraftStorage() {
       }
     }
 
-    
+
     function populateEditFormValues(lesson) {
       const isBreak = Boolean(lesson.is_break);
 
@@ -890,7 +890,7 @@ function clearDraftStorage() {
       updatePeriodTimeLabel(periodSelect, editTimeDisplay);
     }
 
-    
+
     function extractLessonFormData(prefix) {
       const isBreak =
         getEl(`${prefix}IsBreakCheckbox`)?.checked ||
@@ -1122,7 +1122,7 @@ function clearDraftStorage() {
 
   let cachedTimetables = [];
 
-  
+
   function applyTimetableFilters() {
     const searchQuery = (getEl("timetableSearchInput")?.value || "")
       .toLowerCase()
@@ -1153,7 +1153,7 @@ function clearDraftStorage() {
     renderTimetablesTable(filtered);
   }
 
-  
+
   function renderTimetablesTable(list) {
     const tbody = getEl("timetablesTableBody");
     if (!tbody) return;
@@ -1193,7 +1193,7 @@ function clearDraftStorage() {
       .join("");
   }
 
-  
+
   function populateAcademicYearFilterOptions(timetables) {
     const yearSelect = getEl("academicYearFilter");
     if (!yearSelect) return;

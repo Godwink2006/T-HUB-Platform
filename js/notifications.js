@@ -3,21 +3,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const markAllReadBtn = document.getElementById("markAllReadBtn");
   const tabs = document.querySelectorAll(".notif-tab");
 
-  let currentFilter = "all"; // Options: 'all', 'unread', 'read'
+  let currentFilter = "all";
   let notificationsData = [];
 
-  // 1. Get current logged-in user session
+
   const {
     data: { session },
     error: sessionError,
   } = await window.supabaseClient.auth.getSession();
   if (sessionError || !session) {
-    window.location.href = "login.html"; // Redirect if not logged in
+    window.location.href = "login.html";
     return;
   }
   const userId = session.user.id;
 
-  // 2. Fetch Notifications from Supabase
+
   async function fetchNotifications() {
     try {
       const { data, error } = await window.supabaseClient
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 3. Render Notifications Based on Active Filter
+
   function renderNotifications() {
     let filtered = notificationsData;
 
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       )
       .join("");
 
-    // Attach event listeners to individual "Mark as read" buttons
+
     document.querySelectorAll(".mark-read-single").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         e.stopPropagation();
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 4. Mark Single Notification as Read
+
   async function markAsRead(id) {
     try {
       const { error } = await window.supabaseClient
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (error) throw error;
 
-      // Update local state and re-render
+
       notificationsData = notificationsData.map((n) =>
         n.id === id ? { ...n, is_read: true } : n,
       );
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 5. Mark All as Read Action
+
   markAllReadBtn.addEventListener("click", async () => {
     try {
       const unreadIds = notificationsData
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 6. Filter Tab Handling
+
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       tabs.forEach((t) => {
@@ -143,6 +143,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // Initial Load
+
   fetchNotifications();
 });

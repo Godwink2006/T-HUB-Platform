@@ -457,16 +457,16 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
-  /* 1. Ensure Edit and Enter modal contents act as rigid flex boxes */
+
   .enterGrade-modal-content,
   .editGrade-modal-content {
     display: flex;
     flex-direction: column;
     height: 500px;
-    overflow: hidden; /* Stops the outer container from scrolling */
+    overflow: hidden;
   }
 
-  /* 2. Lock headers and footers */
+
   .enterGrade-modal-header,
   .editGrade-modal-header,
   .enterGrade-modal-footer,
@@ -474,7 +474,7 @@ tr {
     flex-shrink: 0;
   }
 
-  /* 3. Let the modal body stack its inner contents via flex */
+
   .enterGrade-modal-body,
   .editGrade-modal-body {
     display: flex;
@@ -483,16 +483,16 @@ tr {
     padding: 10px;
   }
 
-  /* 4. Turn the table card container into the exclusive scrolling element */
+
   .enterGrade-table-card,
   .editGrade-table-card {
     flex: 1;
-    overflow-y: auto; /* Makes ONLY the table scrollable */
+    overflow-y: auto;
     border: 2px solid rgb(219, 215, 215);
     margin-top: 10px;
   }
 
-  /* Layout Adjustments */
+
   .grades-container {
     flex-direction: column;
   }
@@ -563,7 +563,7 @@ tr {
     margin-top: 0;
   }
 
-  /* Toolbar Controls */
+
   .toolbar {
     display: flex;
     flex-direction: row;
@@ -587,7 +587,7 @@ tr {
     width: auto;
   }
 
-  /* Table Card & Horizontal Scroll */
+
   .grade-table-card {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -663,7 +663,7 @@ tr {
     border-bottom-right-radius: 10px;
   }
 
-  /* Form Grids inside Modals */
+
   .form-grid,
   .details-grid {
     grid-template-columns: 1fr;
@@ -685,7 +685,7 @@ tr {
     padding: 10px 12px;
   }
 
-  /* Buttons inside Modals */
+
   .cancel-btn,
   .save-btn {
     flex: 1;

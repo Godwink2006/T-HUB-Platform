@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadStudentAttendanceData(userId) {
   const client = window.supabaseClient || supabaseClient;
 
-  // 1. Fetch attendance records for the student directly
+
   const { data: attendanceRecords, error: arError } = await client
     .from("attendance_records")
     .select("id, status, created_at, student_id, attendance_id")
@@ -29,12 +29,12 @@ async function loadStudentAttendanceData(userId) {
     return;
   }
 
-  // 2. Gather unique attendance IDs
+
   const attendanceIds = [
     ...new Set(attendanceRecords.map((r) => r.attendance_id).filter(Boolean)),
   ];
 
-  // 3. Fetch the parent attendance sessions and all their nested relations cleanly
+
   let attendanceMap = {};
   if (attendanceIds.length > 0) {
     const { data: attendanceSessions, error: aError } = await client
@@ -66,7 +66,7 @@ async function loadStudentAttendanceData(userId) {
     }
   }
 
-  // 4. Merge them together
+
   allAttendanceRecords = attendanceRecords
     .map((record) => ({
       ...record,

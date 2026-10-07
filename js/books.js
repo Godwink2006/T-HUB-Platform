@@ -4,7 +4,7 @@ async function loadBookCatalog() {
   const gridContainer = document.getElementById("bookCardGrid");
   if (!gridContainer) return;
 
-  // Show loading state
+
   gridContainer.innerHTML = `
     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #64748b;">
       <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem; font-size: 1.2rem;"></i>
@@ -71,9 +71,9 @@ function renderBookCards(booksToRender) {
     card.innerHTML = `
       <div class="book-card-img-wrapper">
         <span class="book-card-badge ${badgeClass}">${badgeText}</span>
-        <img 
-          src="${escapeHtml(coverSrc)}" 
-          alt="${escapeHtml(book.title)}" 
+        <img
+          src="${escapeHtml(coverSrc)}"
+          alt="${escapeHtml(book.title)}"
           onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';"
         />
       </div>
@@ -94,7 +94,7 @@ function renderBookCards(booksToRender) {
   });
 }
 
-// Live Search Filter Listener for Students
+
 const catalogSearchInput = document.getElementById("catalogSearchInput");
 if (catalogSearchInput) {
   catalogSearchInput.addEventListener("input", (e) => {
@@ -118,7 +118,7 @@ if (catalogSearchInput) {
   });
 }
 
-// Initial trigger on page load
+
 document.addEventListener("DOMContentLoaded", () => {
   loadBookCatalog();
 });
@@ -166,7 +166,7 @@ async function openStudentBookHistoryModal(bookId) {
       historyContainer.innerHTML = `
       <div class="empty-state-card">
   <i class="fa-solid fa-book-open-reader empty-icon"></i>
-  
+
   <p>You have no borrowing history for this book yet.</p>
 </div>
       `;
@@ -196,7 +196,7 @@ async function openStudentBookHistoryModal(bookId) {
   }
 }
 
-// Helper function to format dates into readable strings (e.g., "August 24, 2026")
+
 function formatDate(dateString) {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -209,7 +209,7 @@ function formatDate(dateString) {
   }).format(date);
 }
 
-// Shared HTML sanitizer to prevent XSS errors across scripts
+
 function escapeHtml(str) {
   if (!str) return "";
   return String(str)
@@ -220,7 +220,7 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Close function for the student history modal
+
 function closeStudentHistoryModal() {
   const studentModal = document.getElementById("studentHistoryModal");
   if (studentModal) {
@@ -231,7 +231,7 @@ function closeStudentHistoryModal() {
   }
 }
 
-// Global window listener to close the modal when clicking the dark backdrop outside of it
+
 window.addEventListener("click", (e) => {
   const studentModal = document.getElementById("studentHistoryModal");
   if (studentModal && e.target === studentModal) {

@@ -304,11 +304,11 @@ async function handleClassSelectChange(classId) {
       .from("timetable_lessons")
       .select(
         `
-        period_id, 
-        subject_id, 
+        period_id,
+        subject_id,
         teacher_id,
-        is_break, 
-        periods:period_id(id, name, start_time, end_time), 
+        is_break,
+        periods:period_id(id, name, start_time, end_time),
         subjects:subject_id(id, name)
       `,
       )
@@ -437,7 +437,7 @@ async function loadRosterIntoModal(classId) {
     const cleanClassId = classId ? classId.trim() : "";
     console.log("Querying active students via RPC for class_id:", cleanClassId);
 
-    // Call the secure database function that filters out graduated/transferred students server-side
+
     const { data: activeStudents, error: studentErr } =
       await supabaseClient.rpc("get_active_class_students", {
         p_class_id: cleanClassId,
@@ -456,7 +456,7 @@ async function loadRosterIntoModal(classId) {
       return;
     }
 
-    // Render rows directly
+
     tbody.innerHTML = "";
     activeStudents.forEach((student) => {
       const displayName =
@@ -676,7 +676,7 @@ async function loadAttendanceTable() {
     const user = (await supabaseClient.auth.getUser()).data?.user;
     if (!user) return;
 
-    // 1. Fetch user role
+
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("role")
@@ -687,7 +687,7 @@ async function loadAttendanceTable() {
       console.error("Error fetching profile role:", profileError);
     }
 
-    // 2. Build the query
+
     let query = supabaseClient.from("attendance").select(
       `
     id,
@@ -705,14 +705,14 @@ async function loadAttendanceTable() {
     );
 
     if (profile?.role === "teacher") {
-      // Teachers see all their own records (drafts & submitted)
+
       query = query.eq("teacher_id", user.id);
     } else {
-      // Admins & other roles ONLY see submitted records
+
       query = query.eq("status", "submitted");
     }
 
-    // Execute query
+
     const { data: attendanceList, error } = await query.order("date", {
       ascending: false,
     });

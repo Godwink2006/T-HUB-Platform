@@ -281,9 +281,9 @@ body.settings-modal-open {
   }
 }
 
-/* ==========================================
-   MOBILE & TABLET RESPONSIVENESS
-   ========================================== */
+
+
+
 
 @media screen and (max-width: 768px) {
   .settings-container {

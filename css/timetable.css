@@ -573,9 +573,9 @@ tr {
   font-size: 22px;
 }
 
-/* ==========================================
-   Mobile Responsive Layout (<= 768px)
-   ========================================== */
+
+
+
 
 @media screen and (max-width: 768px) {
   th,

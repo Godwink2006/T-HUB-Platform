@@ -1,8 +1,8 @@
--- Atomic SECURITY INVOKER RPC for moving first-term enrollments into second term.
--- No existing enrollment or fee rows are overwritten. Caller grants and RLS remain in force.
+
+
 
 create or replace function public.promote_students_to_semester(
-  -- Student IDs are resolved only to their first-term enrollments in the active school year.
+
   p_student_ids uuid[],
   p_fee_structure_id uuid
 )
@@ -131,7 +131,7 @@ begin
     raise exception 'The source class is not active in this school.' using errcode = '23503';
   end if;
 
-  -- Serialize overlapping calls for the same students and class/term.
+
   for v_student_id in
     select e.student_id
     from public.student_enrollments as e

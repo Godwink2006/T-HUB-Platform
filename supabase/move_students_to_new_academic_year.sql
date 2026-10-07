@@ -1,6 +1,6 @@
--- Atomic SECURITY INVOKER RPC for rolling students into a new academic year.
--- The supplied school ID is checked against the caller's active administrator profile.
--- Existing target-year enrollments and fee records are never overwritten.
+
+
+
 
 create or replace function public.move_students_to_new_academic_year(
   p_school_id uuid,

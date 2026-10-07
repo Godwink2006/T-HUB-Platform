@@ -1,5 +1,5 @@
--- Atomic, SECURITY INVOKER RPC for regular second-term class promotions.
--- The caller's grants and RLS policies remain in force throughout this function.
+
+
 
 create or replace function public.promote_regular_students_to_second_term(
   p_enrollment_ids uuid[],
@@ -9,9 +9,9 @@ create or replace function public.promote_regular_students_to_second_term(
 returns jsonb
 language plpgsql
 security invoker
--- RLS policies in this project may reference public tables such as `classes`
--- without schema qualification. Keep public available to those policies;
--- pg_temp is last so temp objects cannot shadow public relations.
+
+
+
 set search_path = public, auth, pg_temp
 as $function$
 declare
@@ -124,7 +124,7 @@ begin
     raise exception 'Select students from one first-term class at a time.' using errcode = '23514';
   end if;
 
-  -- Serialize overlapping batches and capacity checks without changing RLS behavior.
+
   for v_student_id in
     select e.student_id
     from public.student_enrollments as e
@@ -168,7 +168,7 @@ begin
     raise exception 'Fee structure must be active and match the target class, school, active year, and second term.' using errcode = '23503';
   end if;
 
-  -- Prevent two simultaneous calls for the same class/term from exceeding capacity.
+
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(v_school_id::text || ':class:' || p_target_class_id::text || ':' || v_second_term_id::text, 0)
   );

@@ -222,7 +222,7 @@ async function handleFormSubmit() {
   const logoFile = logoInput?.files[0];
 
   let hasChanges = Boolean(logoFile);
-  const changedFields = []; // Track exact fields that changed
+  const changedFields = [];
   if (logoFile) changedFields.push("School Logo");
 
   for (const key in formData) {
@@ -231,7 +231,7 @@ async function handleFormSubmit() {
 
     if (currentValue.toString().trim() !== originalValue.toString().trim()) {
       hasChanges = true;
-      // Convert snake_case to a clean readable format (e.g., "principal_name" -> "principal name")
+
       changedFields.push(key.replace(/_/g, " "));
     }
   }
@@ -387,7 +387,7 @@ async function handleFormSubmit() {
       if (isNewRecord) {
         activityMessage = `School profile initialized: ${savedRecord.school_name || "New School"}`;
       } else if (changedFields.length > 0) {
-        // Capitalize fields for a clean look
+
         const formattedFields = changedFields
           .map((f) => f.charAt(0).toUpperCase() + f.slice(1))
           .join(", ");
@@ -397,8 +397,8 @@ async function handleFormSubmit() {
       await logActivity(
         schoolId,
         activityMessage,
-        "purple", // Distinct color for system/school updates
-        "Everyone", // Broadcast to all roles in the school
+        "purple",
+        "Everyone",
       );
     }
   } catch (err) {

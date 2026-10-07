@@ -196,7 +196,7 @@ if (saveBookBtn) {
 async function handleSaveBook() {
   const saveButton = document.getElementById("saveBook");
 
-  // Extract values from your modal inputs
+
   const book_code = document.getElementById("bookCode").value.trim();
   const title = document.getElementById("bookTitle").value.trim();
   const author = document.getElementById("bookAuthor").value.trim();
@@ -213,7 +213,7 @@ async function handleSaveBook() {
     ? statusInput.value.trim().toLowerCase()
     : "active";
 
-  // Basic validation
+
   if (
     !book_code ||
     !title ||
@@ -349,8 +349,8 @@ async function loadDepartmentDropdown() {
     if (departments && departments.length > 0) {
       departments.forEach((dept) => {
         const option = document.createElement("option");
-        option.value = dept.id; // Usually the UUID or primary key
-        option.textContent = dept.name; // The display name
+        option.value = dept.id;
+        option.textContent = dept.name;
         departmentSelect.appendChild(option);
       });
     } else {
@@ -385,7 +385,7 @@ async function loadBooksTable() {
   if (!tableBody) return;
 
   try {
-    // 1. Fetch books and departments
+
     const { data: books, error } = await window.supabaseClient
       .from("books")
       .select(
@@ -400,7 +400,7 @@ async function loadBooksTable() {
 
     if (error) throw error;
 
-    // 2. Fetch all active borrowings to calculate availability dynamically
+
     const { data: allBorrowings, error: borrowError } =
       await window.supabaseClient
         .from("book_borrowings")
@@ -430,13 +430,13 @@ async function loadBooksTable() {
         "https://cdn-icons-png.flaticon.com/512/29/29302.png";
       const departmentName = book.departments ? book.departments.name : "-";
 
-      // 3. Calculate how many copies are currently borrowed for this specific book
+
       const activeBorrowedCount = allBorrowings
         ? allBorrowings.filter((b) => b.book_id === book.id).length
         : 0;
 
       const totalCopies = book.total_copies || 0;
-      // 4. Compute true available copies
+
       const availableCopies = Math.max(0, totalCopies - activeBorrowedCount);
 
       tr.innerHTML = `
@@ -693,7 +693,7 @@ async function handleUpdateBook() {
     const photoInput = document.getElementById("editAvatarInput");
     let coverBase64 = null;
 
-    // Compress new cover if user uploaded one
+
     if (photoInput && photoInput.files[0]) {
       saveBtn.textContent = "Compressing cover...";
       const compressedBlob = await compressImageToBlob(
@@ -704,7 +704,7 @@ async function handleUpdateBook() {
       coverBase64 = await blobToBase64(compressedBlob);
     }
 
-    // If your modal already displays the borrowed count or you have it in an object, grab it here:
+
     const currentBorrowed =
       currentOriginalBookData && currentOriginalBookData.active_borrowed_count
         ? currentOriginalBookData.active_borrowed_count
@@ -712,7 +712,7 @@ async function handleUpdateBook() {
 
     const newTotal = parseInt(copies_total, 10);
 
-    // Calculate available copies dynamically
+
     const newAvailable = Math.max(0, newTotal - currentBorrowed);
 
     const updateData = {
@@ -809,7 +809,7 @@ async function openViewBookModal(bookId) {
     document.getElementById("viewBookDescription").textContent =
       book.description || "-";
 
-    // 1. Fetch borrowings first (move this block up before calculating copies)
+
     const { data: borrowings, error: borrowError } = await window.supabaseClient
       .from("book_borrowings")
       .select(`*, profiles ( full_name )`)
@@ -818,13 +818,13 @@ async function openViewBookModal(bookId) {
 
     if (borrowError) throw borrowError;
 
-    // 2. Count active borrowings dynamically from the fetched records
+
     const currentlyBorrowed = borrowings
       ? borrowings.filter((r) => r.status === "borrowed").length
       : 0;
 
     const total = book.total_copies || 0;
-    // 3. Calculate available copies dynamically so it is always accurate
+
     const available = Math.max(0, total - currentlyBorrowed);
 
     document.getElementById("viewTotalCopies").textContent = total;
@@ -901,8 +901,8 @@ async function loadStudentsDropdown(searchTerm = "") {
       .from("students")
       .select(
         `
-        id, 
-        student_id, 
+        id,
+        student_id,
         profiles ( id, full_name )
       `,
       )
@@ -1071,8 +1071,8 @@ async function openReturnModal(bookId) {
         borrow_date,
         due_date,
         borrower_id,
-        profiles ( 
-          id, 
+        profiles (
+          id,
           full_name,
           students ( student_id )
         )
@@ -1217,7 +1217,7 @@ if (returnForm) {
   });
 }
 
-// Close button listeners
+
 document
   .getElementById("closeReturnBorrowModal")
   ?.addEventListener("click", () => {
@@ -1236,7 +1236,7 @@ document
 
     document.getElementById("viewBookModal").style.display = "none";
 
-    // Open return modal
+
     openReturnModal(currentViewBookId);
   });
 

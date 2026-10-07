@@ -52,12 +52,12 @@ function filterTeachersTable() {
       return `
       <tr>
         <td>
-          <img 
-            src="${photoUrl}" 
-            class="teacher-photo" 
-            alt="Photo" 
-            loading="lazy" 
-            onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" 
+          <img
+            src="${photoUrl}"
+            class="teacher-photo"
+            alt="Photo"
+            loading="lazy"
+            onerror="this.onerror=null; this.src=DEFAULT_AVATAR;"
           />
         </td>
         <td>${teacher.staff_id || "-"}</td>
@@ -813,12 +813,12 @@ async function loadTeachers() {
           return `
           <tr>
             <td>
-              <img 
-                src="${photoUrl}" 
-                class="teacher-photo" 
-                alt="Photo" 
-                loading="lazy" 
-                onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" 
+              <img
+                src="${photoUrl}"
+                class="teacher-photo"
+                alt="Photo"
+                loading="lazy"
+                onerror="this.onerror=null; this.src=DEFAULT_AVATAR;"
               />
             </td>
             <td>${teacher.staff_id || "-"}</td>

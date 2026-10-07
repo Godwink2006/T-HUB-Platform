@@ -1,4 +1,4 @@
-/* Page Layout */
+
 .notifications-page {
   padding: 10px;
 }
@@ -29,7 +29,7 @@
   font-size: 14px;
 }
 
-/* Action Button */
+
 .btn-primary-action {
   background: #2563eb;
   color: white;
@@ -44,7 +44,7 @@
   background: #1d4ed8;
 }
 
-/* Filter Tabs Container */
+
 .notif-tabs-container {
   display: flex;
   gap: 12px;
@@ -53,7 +53,7 @@
   padding-bottom: 12px;
 }
 
-/* Base Filter Tab Style */
+
 .notif-tab {
   background: #f3f4f6;
   color: #4b5563;
@@ -78,14 +78,14 @@
   color: #f9fafb;
 }
 
-/* Active Filter Tab Modifier */
+
 .notif-tab.active {
   background: #eff6ff;
   color: #2563eb;
   font-weight: 600;
 }
 
-/* Notifications List Container */
+
 .notifications-card-list {
   background: white;
   border: 2px solid rgb(219, 215, 215);

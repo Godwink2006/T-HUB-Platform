@@ -21,8 +21,8 @@
 }
 
 .empty-icon {
-  font-size: 7rem; /* Makes the FontAwesome icon nice and big */
-  color: rgb(219, 215, 215); /* Accent color (can match your app's theme) */
+  font-size: 7rem;
+  color: rgb(219, 215, 215);
   margin-bottom: 1rem;
 }
 
@@ -55,14 +55,14 @@
   transition: border-color 0.2s;
 }
 
-/* Responsive Grid */
+
 .book-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
 }
 
-/* Individual Book Card */
+
 .book-card {
   background: #ffffff;
   overflow: hidden;
@@ -251,7 +251,7 @@ body {
   min-height: 100vh;
 }
 
-/* Modal Overlay Background */
+
 .student-modal-overlay {
   position: fixed;
   top: 0;

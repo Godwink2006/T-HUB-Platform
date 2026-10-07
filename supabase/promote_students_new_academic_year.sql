@@ -1,6 +1,6 @@
--- Atomic SECURITY INVOKER RPC for annual student promotion.
--- Install this function in the Supabase SQL Editor, then refresh the API schema cache if needed.
--- Caller grants and RLS policies remain in force.
+
+
+
 
 create or replace function public.promote_students_to_new_academic_year(
   p_enrollment_ids uuid[],
@@ -146,7 +146,7 @@ begin
     raise exception 'Fee structure must be active and match the target class, school, year, and first term.' using errcode = '23503';
   end if;
 
-  -- Serialize overlapping student and target class/year/term promotions.
+
   for v_student_id in
     select e.student_id
     from public.student_enrollments as e

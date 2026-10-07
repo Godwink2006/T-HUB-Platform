@@ -1,5 +1,5 @@
--- Keep the promotion RPC's database-side validation aligned with the
--- Grade 10 second-term fee structure selected by the Edge Function.
+
+
 
 create or replace function public.promote_grade9_students_transaction(
   p_school_id uuid,

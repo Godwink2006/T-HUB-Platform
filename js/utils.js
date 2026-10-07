@@ -639,10 +639,10 @@ async function subscribeToRecentActivities(schoolId, userRole) {
         const activity = payload.new;
         const targetAudience = activity.target_audience || "Everyone";
 
-        // Split comma-separated audiences (e.g., "Teachers, Students")
+
         const allowedAudiences = targetAudience.split(",").map((a) => a.trim());
 
-        // Only display if it matches the user's role or is for everyone/all
+
         if (
           allowedAudiences.includes("Everyone") ||
           allowedAudiences.includes("All") ||
@@ -693,7 +693,7 @@ window.sendNotification = async function (
       is_read: false,
     };
 
-    // Only add school_id if it's provided, otherwise let the DB trigger handle it
+
     if (schoolId) {
       payload.school_id = schoolId;
     }

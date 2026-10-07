@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 
-// Offline end-to-end workflow test. Every API response comes from the
-// in-memory mock below; this file never reads .env or calls the real network.
+
+
 const API_URL = "https://supabase-mock.invalid";
 const ANON_KEY = "mock-publishable-key";
 const SERVICE_KEY = "mock-service-role-key";

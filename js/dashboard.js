@@ -87,7 +87,7 @@ window.addEventListener("click", (e) => {
   }
 });
 
-const newAnnouncementTrigger = document.querySelector(".new-announcement-btn"); // Adjust selector if your trigger button has a specific ID
+const newAnnouncementTrigger = document.querySelector(".new-announcement-btn");
 const closeAnnouncementBtn = document.getElementById("closeAnnouncementModal");
 const cancelAnnouncementBtn = document.getElementById(
   "cancelAnnouncementModal",
@@ -118,7 +118,7 @@ if (saveAnnouncementBtn) {
       document.getElementById("announcementExpiry").value || null;
     const message = document.getElementById("announcementMessage").value.trim();
 
-    // 1. Gather all checked audience values
+
     const checkedAudiences = Array.from(
       document.querySelectorAll('input[name="announcementAudience"]:checked'),
     ).map((cb) => cb.value);
@@ -135,7 +135,7 @@ if (saveAnnouncementBtn) {
       return;
     }
 
-    // Join them into a comma-separated string for storage (e.g., "Teachers, Librarians")
+
     const target_audience = checkedAudiences.join(", ");
 
     saveAnnouncementBtn.disabled = true;
@@ -242,7 +242,7 @@ async function loadDashboardAnnouncements() {
   `;
 
   try {
-    // 1. Get current user and profile (school_id & role)
+
     const {
       data: { user },
       error: authError,
@@ -263,7 +263,7 @@ async function loadDashboardAnnouncements() {
     if (welcomeText) {
       welcomeText.textContent = `Welcome back, ${profile.full_name || "User"}`;
     }
-    // 1. Admin-only buttons check
+
     if (profile.role === "admin") {
       if (openAnnouncementBtn) openAnnouncementBtn.style.display = "flex";
       if (openClassBtn) openClassBtn.style.display = "block";
@@ -271,7 +271,7 @@ async function loadDashboardAnnouncements() {
       if (openTeacherBtn) openTeacherBtn.style.display = "block";
     }
 
-    // 2. Staff roles check for enrollment button (using .includes() instead of commas)
+
     const allowedStaffRoles = ["admin", "teacher", "accountant", "librarian"];
 
     if (allowedStaffRoles.includes(profile.role)) {
@@ -286,7 +286,7 @@ async function loadDashboardAnnouncements() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // 2. Fetch announcements for this school that haven't expired
+
     const { data: announcements, error: fetchError } =
       await window.supabaseClient
         .from("announcements")
@@ -297,7 +297,7 @@ async function loadDashboardAnnouncements() {
 
     if (fetchError) throw fetchError;
 
-    // 3. Filter by role/audience
+
     const filteredAnnouncements = (announcements || []).filter((ann) => {
       if (profile.role === "admin") return true;
       const audiences = (ann.target_audience || "").split(",").map((a) => {
@@ -309,7 +309,7 @@ async function loadDashboardAnnouncements() {
       return audiences.includes("all") || audiences.includes(userRole);
     });
 
-    // 4. Render into preview container
+
     if (filteredAnnouncements.length === 0) {
       previewContainer.innerHTML = `
      <div class="announcement-item empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; height: 280px; color: #64748b;">
@@ -323,7 +323,7 @@ async function loadDashboardAnnouncements() {
 
     previewContainer.innerHTML = filteredAnnouncements
       .map((ann) => {
-        // Dynamic styling based on status
+
         let statusBg = "#e2e8f0";
         let statusColor = "#475569";
         let borderColor = "#3b82f6";
@@ -358,7 +358,7 @@ async function loadDashboardAnnouncements() {
   }
 }
 
-// Automatically load when the dashboard page opens
+
 document.addEventListener("DOMContentLoaded", () => {
   loadDashboardAnnouncements();
 });
@@ -391,7 +391,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadDashboardStats(schoolId) {
   try {
-    // 1. Fetch Total & Active Students
+
     const { data: studentsData, error: studentError } =
       await window.supabaseClient
         .from("profiles")
@@ -414,7 +414,7 @@ async function loadDashboardStats(schoolId) {
         "0 Active / 0 Total";
     }
 
-    // 2. Fetch Total & Active Teachers
+
     const { data: teachersData, error: teacherError } =
       await window.supabaseClient
         .from("profiles")
@@ -457,7 +457,7 @@ async function loadDashboardStats(schoolId) {
         "0 Active / 0 Total";
     }
 
-    const today = new Date().toISOString().split("T")[0]; // e.g., "2026-09-24"
+    const today = new Date().toISOString().split("T")[0];
 
     const { data: attendanceData, error: attError } =
       await window.supabaseClient
@@ -473,7 +473,7 @@ async function loadDashboardStats(schoolId) {
         .lte("created_at", `${today}T23:59:59`);
 
     if (!attError && attendanceData && attendanceData.length > 0) {
-      // Filter only student records belonging to an attendance session whose status is "submitted"
+
       const submittedRecords = attendanceData.filter(
         (row) => (row.attendance?.status || "").toLowerCase() === "submitted",
       );
@@ -489,22 +489,22 @@ async function loadDashboardStats(schoolId) {
         document.getElementById("attendanceCount").textContent =
           `${percentage}%`;
 
-        // Determine dynamic status subtext
+
         let statusLabel = "Normal";
         let statusColor = "#475569";
 
         if (percentage >= 90) {
           statusLabel = "Excellent";
-          statusColor = "#16a34a"; // Green
+          statusColor = "#16a34a";
         } else if (percentage >= 75) {
           statusLabel = "Normal";
-          statusColor = "#2563eb"; // Blue
+          statusColor = "#2563eb";
         } else if (percentage >= 50) {
           statusLabel = "Needs Attention";
-          statusColor = "#d97706"; // Amber/Orange
+          statusColor = "#d97706";
         } else {
           statusLabel = "Bad";
-          statusColor = "#dc2626"; // Red
+          statusColor = "#dc2626";
         }
 
         const subtextEl = document.getElementById("attendanceSubtext");
@@ -512,7 +512,7 @@ async function loadDashboardStats(schoolId) {
         subtextEl.style.color = statusColor;
         subtextEl.style.fontWeight = "600";
       } else {
-        // Triggered if there are records today, but none of them are officially submitted yet
+
         document.getElementById("attendanceCount").textContent = "0%";
         const subtextEl = document.getElementById("attendanceSubtext");
         subtextEl.textContent = "No submitted records";
@@ -520,7 +520,7 @@ async function loadDashboardStats(schoolId) {
         subtextEl.style.fontWeight = "normal";
       }
     } else {
-      // Triggered automatically when a new day starts and no records exist yet
+
       document.getElementById("attendanceCount").textContent = "0%";
       const subtextEl = document.getElementById("attendanceSubtext");
       subtextEl.textContent = "No records today";
@@ -534,7 +534,7 @@ async function loadDashboardStats(schoolId) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    // 1. Get the current logged-in user from Supabase Auth
+
     const {
       data: { user },
       error: authError,
@@ -544,7 +544,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 2. Fetch the user's profile to get their school_id
+
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
       .select("school_id")
@@ -573,24 +573,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function updateNotificationBadge(userId) {
   try {
-    // Query unread notifications for the user
+
     const { error, count } = await window.supabaseClient
       .from("notifications")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
-      .eq("is_read", false); // Adjust to .eq("status", "unread") if your DB uses a text column instead of boolean
+      .eq("is_read", false);
 
     const badge = document.getElementById("sidebarNotificationBadge");
     if (!badge) return;
 
-    // Use nullish coalescing to ensure count defaults to 0 safely
+
     const unreadCount = count ?? 0;
 
     if (!error && unreadCount > 0) {
       badge.textContent = unreadCount;
-      badge.style.display = "inline-block"; // Makes it visible!
+      badge.style.display = "inline-block";
     } else {
-      badge.style.display = "none"; // Hide if zero or error occurs
+      badge.style.display = "none";
     }
   } catch (err) {
     console.error("Error fetching notifications:", err);
@@ -610,7 +610,7 @@ async function loadEnrollmentStats(
       return;
     }
 
-    // 1. Get current user and role
+
     const {
       data: { user },
     } = await window.supabaseClient.auth.getUser();
@@ -624,11 +624,11 @@ async function loadEnrollmentStats(
 
     const userRole = profile ? profile.role : "teacher";
 
-    // 2. Format custom dates properly for PostgreSQL if provided
+
     const formattedStart = customStart ? `${customStart}T00:00:00` : null;
     const formattedEnd = customEnd ? `${customEnd}T23:59:59` : null;
 
-    // 3. Call database function with filter variables
+
     const { data: stats, error } = await window.supabaseClient.rpc(
       "get_dashboard_stats",
       {
@@ -643,7 +643,7 @@ async function loadEnrollmentStats(
 
     if (error) throw error;
 
-    // 4. Update the UI DOM elements
+
     document.getElementById("totalEnrollmentCount").textContent = (
       stats.total || 0
     ).toLocaleString();
@@ -662,18 +662,18 @@ const closeDateModalBtn = document.getElementById("closeDateModal");
 const cancelDateModalBtn = document.getElementById("cancelDateModal");
 const applyDateBtn = document.getElementById("applyDateBtn");
 
-// 1. Open modal when "Custom Date Range" is clicked in the dropdown
+
 document
   .querySelector(".filter-menu a.custom-date")
   .addEventListener("click", (e) => {
     e.preventDefault();
-    dateModal.style.display = "flex"; // Or whatever class/display style your app uses for modals
+    dateModal.style.display = "flex";
   });
 
 closeDateModalBtn.addEventListener("click", closeDateModal);
 cancelDateModalBtn.addEventListener("click", closeDateModal);
 
-// 3. Apply custom date filter
+
 applyDateBtn.addEventListener("click", async () => {
   const startDate = document.getElementById("startDateInput").value;
   const endDate = document.getElementById("endDateInput").value;
@@ -688,7 +688,7 @@ applyDateBtn.addEventListener("click", async () => {
     return;
   }
 
-  // Update the dropdown button text to show the active custom range
+
   const btnSpan = document.querySelector(".filter-dropdown .selected-filter");
   if (btnSpan) btnSpan.textContent = `${startDate} to ${endDate}`;
 
@@ -696,23 +696,23 @@ applyDateBtn.addEventListener("click", async () => {
 
   unLockBodyScroll();
 
-  // Call your stats function with custom date parameters
+
   await loadEnrollmentStats("custom", startDate, endDate);
 });
-// Handle dropdown filter menu clicks
+
 document.querySelectorAll(".filter-menu a").forEach((link) => {
   link.addEventListener("click", (e) => {
     e.preventDefault();
     const filterText = e.target.textContent;
     const filterType = e.target.getAttribute("data-filter");
 
-    // Update button text
+
     const btnSpan = e.target
       .closest(".filter-dropdown")
       .querySelector(".selected-filter");
     if (btnSpan) btnSpan.textContent = filterText;
 
-    // Reload stats with the selected range
+
     loadEnrollmentStats(filterType);
   });
 });

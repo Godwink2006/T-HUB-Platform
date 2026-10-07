@@ -8,7 +8,7 @@ const cancelAddRecordPaymentModal = document.getElementById(
   "cancelAddRecordPaymentModal",
 );
 
-// When opening the Record Payment Modal
+
 const recordPaymentBtn = document.getElementById("addRecordPayment");
 const recordModal = document.getElementById("addRecordPaymentModal");
 
@@ -20,10 +20,10 @@ if (recordPaymentBtn) {
       return;
     }
 
-    // Show the modal
+
     if (recordModal) recordModal.style.display = "flex";
 
-    // 💡 CALL THE LOADER HERE so items populate instantly!
+
     loadFeeItemAllocations(activeFeeId);
   });
 }
@@ -83,7 +83,7 @@ async function loadStudentFees() {
     '<tr><td colspan="7" style="text-align: center; color: grey;"><i class="fas fa-spinner fa-spin" style="color: grey"></i>  Loading fees...</td></tr>';
 
   try {
-    // 1. Fetch student fees and join classes
+
     const { data: fees, error: feeError } = await supabaseClient
       .from("student_fees")
       .select(
@@ -107,7 +107,7 @@ async function loadStudentFees() {
       return;
     }
 
-    // 2. Fetch all profiles for student names
+
     const { data: profiles, error: profileError } = await supabaseClient
       .from("profiles")
       .select("id, full_name");
@@ -121,14 +121,14 @@ async function loadStudentFees() {
       });
     }
 
-    // 3. Fetch student enrollment statuses so we can filter out inactive students
+
     const { data: enrollments, error: enrollmentError } = await supabaseClient
       .from("student_enrollments")
       .select("student_id, enrollment_status");
 
     if (enrollmentError) throw enrollmentError;
 
-    // Create a lookup map for the student's latest enrollment status
+
     const enrollmentStatusMap = {};
     if (enrollments) {
       enrollments.forEach((e) => {
@@ -136,7 +136,7 @@ async function loadStudentFees() {
       });
     }
 
-    // 4. FILTER: Exclude students whose status is Graduated or Transferred
+
     const activeFees = fees.filter((fee) => {
       const status = enrollmentStatusMap[fee.student_id] || "";
       const lowerStatus = status.toLowerCase();
@@ -145,7 +145,7 @@ async function loadStudentFees() {
         lowerStatus.includes("graduated") ||
         lowerStatus.includes("transferred")
       ) {
-        return false; // Skip this student
+        return false;
       }
       return true;
     });
@@ -156,7 +156,7 @@ async function loadStudentFees() {
       return;
     }
 
-    // 5. Clear and populate table rows with active fees only
+
     tbody.innerHTML = "";
 
     activeFees.forEach((fee) => {
@@ -192,9 +192,9 @@ async function loadStudentFees() {
   }
 }
 
-// Function to open and load the payment details modal
+
 async function viewFeeDetails(feeId) {
-  console.log("Opening fee details for fee.id:", feeId); // <-- Check your console for this!
+  console.log("Opening fee details for fee.id:", feeId);
   if (!feeId || feeId === "undefined") {
     console.error("Invalid feeId passed to viewFeeDetails!");
     showToast("Error: Invalid fee record ID.", "error");
@@ -203,11 +203,11 @@ async function viewFeeDetails(feeId) {
   const modal = document.getElementById("viewPaymentModal");
   if (!modal) return;
 
-  // Show modal
+
   modal.style.display = "flex";
 
   try {
-    // 1. Fetch fee record with joined class, academic year, and term
+
     const { data: fee, error: feeError } = await supabaseClient
       .from("student_fees")
       .select(
@@ -234,7 +234,7 @@ async function viewFeeDetails(feeId) {
       recordPaymentBtn.setAttribute("data-student-id", fee.student_id);
     }
 
-    // Fetch student profile name
+
     let studentName = "Unknown Student";
     if (fee.student_id) {
       const { data: profile } = await supabaseClient
@@ -259,12 +259,12 @@ async function viewFeeDetails(feeId) {
         )
       `,
       )
-      .eq("student_fee_id", feeId) // <--- Fixed: changed activeFeeId to feeId
+      .eq("student_fee_id", feeId)
       .order("created_at", { descending: true });
 
     if (txError) throw txError;
 
-    // 3. Populate Header / Info Grid using exact IDs
+
     document.getElementById("modal-student-name").textContent = studentName;
     document.getElementById("modal-academic-year").textContent =
       fee.academic_years?.year_label || "N/A";
@@ -273,7 +273,7 @@ async function viewFeeDetails(feeId) {
     document.getElementById("modal-class").textContent =
       fee.classes?.name || "N/A";
 
-    // 4. Populate Fees Summary Table
+
     const feeSummaryTbody = document.getElementById("modal-fee-summary-tbody");
     if (feeSummaryTbody) {
       feeSummaryTbody.innerHTML = `
@@ -296,7 +296,7 @@ async function viewFeeDetails(feeId) {
       `;
     }
 
-    // 5. Populate Payment History Table with Itemized Breakdown
+
     const historyTbody = document.getElementById("modal-payment-history-tbody");
     if (historyTbody) {
       if (!transactions || transactions.length === 0) {
@@ -314,12 +314,12 @@ async function viewFeeDetails(feeId) {
             },
           );
 
-          // Build itemized breakdown sub-list using snapshot item_name with fallback
+
           let allocationsHtml =
             '<ul style="margin: 4px 0 0 15px; padding: 0; font-size: 0.9em; color: #555;">';
           if (tx.payment_allocations && tx.payment_allocations.length > 0) {
             tx.payment_allocations.forEach((alloc) => {
-              // Prioritize the frozen snapshot item_name, fallback to live join or default
+
               const itemName =
                 alloc.item_name ||
                 alloc.fee_structure_items?.fee_name ||
@@ -349,7 +349,7 @@ async function viewFeeDetails(feeId) {
     showToast("Could not load payment details.", "error");
   }
 }
-// Close Modal Event Listeners
+
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("viewPaymentModal");
   const closeBtn = document.getElementById("closeViewPaymentModal");
@@ -398,7 +398,7 @@ if (savePaymentBtn) {
     ).value;
     const notes = document.getElementById("payment-notes-input")?.value || null;
 
-    // Collect itemized allocations and compute total payment
+
     let totalPayment = 0;
     const allocations = [];
 
@@ -428,7 +428,7 @@ if (savePaymentBtn) {
     );
 
     try {
-      // Call the Supabase RPC function
+
       const { data: transactionId, error } = await supabaseClient.rpc(
         "record_itemized_payment",
         {
@@ -450,7 +450,7 @@ if (savePaymentBtn) {
       if (recordModal) recordModal.style.display = "none";
       document.getElementById("recordPaymentForm")?.reset();
 
-      // Refresh views
+
       if (typeof viewFeeDetails === "function") viewFeeDetails(activeFeeId);
       if (typeof loadStudentFees === "function") loadStudentFees();
     } catch (err) {
@@ -464,7 +464,7 @@ async function loadFeeItemAllocations(feeId) {
   container.innerHTML = "Loading items...";
 
   try {
-    // 1. Get the frozen fee_breakdown snapshot from the student_fees record
+
     const { data: feeRecord, error: feeErr } = await supabaseClient
       .from("student_fees")
       .select("fee_breakdown")
@@ -485,7 +485,7 @@ async function loadFeeItemAllocations(feeId) {
 
     const items = feeRecord.fee_breakdown;
 
-    // 2. Render the input rows cleanly using the snapshot data
+
     container.innerHTML = "";
     items.forEach((item) => {
       const itemRow = document.createElement("div");
@@ -493,7 +493,7 @@ async function loadFeeItemAllocations(feeId) {
       itemRow.style.cssText =
         "display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;";
 
-      // Note: Make sure the property matches what you used in jsonb_build_object ('name' vs 'fee_name')
+
       const itemName = item.name || item.fee_name || "Fee Item";
 
       itemRow.innerHTML = `
@@ -501,13 +501,13 @@ async function loadFeeItemAllocations(feeId) {
           <strong>${itemName}</strong><br>
           <small>Amount: RWF ${Number(item.amount || 0).toLocaleString()}</small>
         </div>
-        <input 
-          type="number" 
-          class="item-payment-input" 
-          data-item-id="${item.id}" 
+        <input
+          type="number"
+          class="item-payment-input"
+          data-item-id="${item.id}"
           data-max="${item.amount}"
-          placeholder="0.00" 
-          min="0" 
+          placeholder="0.00"
+          min="0"
           max="${item.amount}"
           style="width: 120px; padding: 6px;"
         />
@@ -515,7 +515,7 @@ async function loadFeeItemAllocations(feeId) {
       container.appendChild(itemRow);
     });
 
-    // Attach listener for real-time total calculation
+
     document.querySelectorAll(".item-payment-input").forEach((input) => {
       input.addEventListener("input", updateAllocationTotal);
     });
@@ -553,7 +553,7 @@ function updateResponseTypeTotal() {
     const val = parseFloat(input.value) || 0;
     const max = parseFloat(input.getAttribute("data-max"));
 
-    // Validation: prevent entering more than the remaining balance for this item
+
     if (val > max) {
       alert(
         `Payment for this item cannot exceed the remaining balance of ${max}`,

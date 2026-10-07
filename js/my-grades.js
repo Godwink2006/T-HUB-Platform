@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function initStudentContext() {
   const client = window.supabaseClient || supabaseClient;
 
-  // 1. Get logged-in user session
+
   const {
     data: { user },
     error: userErr,
@@ -19,7 +19,7 @@ async function initStudentContext() {
   const yearSelect = document.getElementById("studentAcademicYearSelect");
   const termSelect = document.getElementById("studentTermSelect");
 
-  // Helper function to load terms dynamically by selected academic year
+
   async function loadTermsForYear(selectedYearId, preselectTermId = null) {
     if (!termSelect) return;
 
@@ -43,7 +43,7 @@ async function initStudentContext() {
         opt.value = t.id;
         opt.textContent = t.name;
 
-        // Preselect matching term if provided, otherwise select the first one
+
         if (preselectTermId ? t.id === preselectTermId : t === terms[0]) {
           opt.selected = true;
         }
@@ -52,7 +52,7 @@ async function initStudentContext() {
     }
   }
 
-  // 2. Fetch the student's actual grade records first to find their valid year & term IDs
+
   const { data: userGrades } = await client
     .from("grade_records")
     .select(
@@ -64,10 +64,10 @@ async function initStudentContext() {
   const targetYearId = userGrades?.[0]?.grades?.academic_year_id;
   const targetTermId = userGrades?.[0]?.grades?.term_id;
   const targetAssessmentId = userGrades?.[0]?.grades?.assessment_id;
-  const targetClassId = userGrades?.[0]?.grades?.class_id; // <-- Grab class ID
+  const targetClassId = userGrades?.[0]?.grades?.class_id;
   const targetSubjectId = userGrades?.[0]?.grades?.subject_id;
 
-  // 3. Load Academic Years into dropdown
+
   const { data: years, error: yearsErr } = await client
     .from("academic_years")
     .select("id, year_label, status")
@@ -89,7 +89,7 @@ async function initStudentContext() {
       opt.value = y.id;
       opt.textContent = y.year_label;
 
-      // Select the year that actually has grades for this student (or fallback to first)
+
       if (targetYearId ? y.id === targetYearId : y === years[0]) {
         opt.selected = true;
       }
@@ -97,7 +97,7 @@ async function initStudentContext() {
     });
   }
 
-  // 4. Load terms for the currently selected year
+
   const activeYearId = yearSelect?.value;
   if (activeYearId) {
     await loadTermsForYear(activeYearId, targetTermId);
@@ -174,7 +174,7 @@ async function initStudentContext() {
     );
   }
 
-  // >>> ADD THESE LINES HERE ON INITIAL LOAD <<<
+
   if (activeYearId && activeTermId && assessmentSelect?.value) {
     await loadClassesForSelection(
       activeYearId,
@@ -195,7 +195,7 @@ async function initStudentContext() {
     }
   }
 
-  // 6. Initial fetch
+
   await loadStudentGrades(user.id);
 }
 
@@ -210,7 +210,7 @@ async function loadAssessmentsForYearAndTerm(
   assessmentSelect.innerHTML = `<option value="">Select Assessment / Period</option>`;
   if (!academicYearId || !termId) return;
 
-  // Query the grades table to find assessments tied to this specific year and term
+
   const { data: gradeEntries, error } = await supabaseClient
     .from("grades")
     .select("assessment_id, assessments ( id, name )")
@@ -222,7 +222,7 @@ async function loadAssessmentsForYearAndTerm(
     return;
   }
 
-  // Use a Map to extract unique assessments (so duplicates don't show up in the dropdown)
+
   const uniqueAssessments = new Map();
   gradeEntries?.forEach((entry) => {
     if (entry.assessments) {
@@ -237,7 +237,7 @@ async function loadAssessmentsForYearAndTerm(
       opt.value = id;
       opt.textContent = name;
 
-      // Auto-select matching assessment or default to the first one
+
       if (preselectAssessmentId ? id === preselectAssessmentId : index === 0) {
         opt.selected = true;
       }
@@ -307,7 +307,7 @@ async function loadStudentGrades(authUserId) {
   try {
     const client = window.supabaseClient || supabaseClient;
 
-    // 1. Fetch grade records with all relations embedded in a single query
+
     let query = client
       .from("grade_records")
       .select(
@@ -337,7 +337,7 @@ async function loadStudentGrades(authUserId) {
       .eq("student_id", authUserId)
       .eq("grades.status", "submitted");
 
-    // Apply term and academic year filters using Supabase dot-notation
+
     if (termId) query = query.eq("grades.term_id", termId);
     if (yearId) query = query.eq("grades.academic_year_id", yearId);
     if (assessmentId) query = query.eq("grades.assessment_id", assessmentId);
@@ -356,7 +356,7 @@ async function loadStudentGrades(authUserId) {
       return;
     }
 
-    // 2. Group records by Subject Name
+
     const grouped = new Map();
 
     records.forEach((rec) => {
@@ -374,7 +374,7 @@ async function loadStudentGrades(authUserId) {
       grouped.get(subName).push({ catName, score: rec.score, weight });
     });
 
-    // 3. Build HTML Output
+
     let html = "";
     grouped.forEach((items, subName) => {
       html += `
@@ -419,7 +419,7 @@ async function loadStudentGrades(authUserId) {
   }
 }
 
-// Load classes available for the selected Year, Term, and Assessment
+
 async function loadClassesForSelection(
   yearId,
   termId,
@@ -464,7 +464,7 @@ async function loadClassesForSelection(
   });
 }
 
-// Load subjects available for the selected Class, Year, Term, and Assessment
+
 async function loadSubjectsForSelection(
   yearId,
   termId,

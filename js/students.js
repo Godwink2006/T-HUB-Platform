@@ -30,10 +30,10 @@ function renderStudentsTable(studentsToRender) {
       return `
       <tr>
         <td>
-          <img 
-            src="${photoSrc}" 
-            class="student-photo" 
-            alt="${profile.full_name || "Student"}" 
+          <img
+            src="${photoSrc}"
+            class="student-photo"
+            alt="${profile.full_name || "Student"}"
             onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';"
           />
         </td>
@@ -764,10 +764,10 @@ async function loadStudentsTable() {
         return `
         <tr>
           <td>
-            <img 
-              src="${photoSrc}" 
-              class="student-photo" 
-              alt="${profile.full_name || "Student"}" 
+            <img
+              src="${photoSrc}"
+              class="student-photo"
+              alt="${profile.full_name || "Student"}"
               onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';"
             />
           </td>
@@ -817,7 +817,7 @@ const formatDate = (dateString) => {
 async function viewStudent(id) {
   let student = null;
 
-  // 1. Try to fetch fresh student data from Supabase directly
+
   try {
     const { data, error } = await supabaseClient
       .from("students")
@@ -842,7 +842,7 @@ async function viewStudent(id) {
     );
   }
 
-  // 2. Fallback to cache if network fetch failed
+
   if (!student) {
     student = (window.allStudentsCache || []).find((s) => s.id === id);
   }
@@ -853,7 +853,7 @@ async function viewStudent(id) {
     return;
   }
 
-  // 3. Populate modal fields directly
+
   const profile = student.profiles || {};
 
   document.getElementById("viewStudentName").textContent =
@@ -905,7 +905,7 @@ async function viewStudent(id) {
     student.updated_at || profile.updated_at,
   );
 
-  // 4. Open the modal
+
   const viewStudentModal = document.getElementById("viewStudentModal");
   if (viewStudentModal) {
     viewStudentModal.style.display = "flex";

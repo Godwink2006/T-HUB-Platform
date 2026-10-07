@@ -626,10 +626,10 @@ async function openEditStructureModal(structureId) {
       .from("fee_structures")
       .select(
         `
-        id, 
-        academic_year_id, 
-        term_id, 
-        class_id, 
+        id,
+        academic_year_id,
+        term_id,
+        class_id,
         status,
         classes ( name ),
         academic_years ( year_label ),

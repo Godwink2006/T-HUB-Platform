@@ -1,5 +1,5 @@
--- Atomic database half of the Grade 9 -> Grade 10 promotion.
--- This migration is a local artifact; it has not been applied to any database.
+
+
 
 grant usage on schema public to service_role;
 grant select on table
@@ -87,8 +87,8 @@ begin
     raise exception 'Fee structure does not match the school, class, year, and term.' using errcode = '23503';
   end if;
 
-  -- Serialize promotions for the same student rows and reject duplicates
-  -- before changing any profile, class, enrollment, or fee data.
+
+
   perform s.id
   from public.students s
   where s.id = any(p_student_ids) and s.school_id = p_school_id

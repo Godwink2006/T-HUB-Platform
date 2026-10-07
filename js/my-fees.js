@@ -16,11 +16,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const userId = session.user.id;
 
-  // Initialize filters and load data
+
   await populateFilterDropdowns(userId, client);
   await loadStudentFeesAndHistory(userId, {});
 
-  // Bind filter change events
+
   document
     .getElementById("filterAcademicYear")
     .addEventListener("change", () => triggerFilter(userId));
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     .addEventListener("change", () => triggerFilter(userId));
 });
 
-// Populate dropdowns dynamically based on user's records
+
 async function populateFilterDropdowns(authUserId, client) {
   try {
     const { data: fees } = await client
@@ -79,7 +79,7 @@ async function populateFilterDropdowns(authUserId, client) {
           (termSelect.innerHTML += `<option value="${id}">${name}</option>`),
       ),
     );
-    // Clear and re-populate term select properly
+
     termSelect.innerHTML = `<option value="">All Semesters</option>`;
     termsMap.forEach(
       (name, id) =>
@@ -122,7 +122,7 @@ function renderFeesTable(fees, container) {
     const termName = fee.terms?.name || "-";
     const className = fee.classes?.name || "-";
 
-    // Fixed fee breakdown naming extraction for structures/balances
+
     let breakdownHtml = `<span style="color: var(--text-muted); font-style: italic;">No items specified</span>`;
     if (fee.fee_breakdown) {
       try {
@@ -222,7 +222,7 @@ async function loadStudentFeesAndHistory(authUserId, filters = {}) {
 
     renderFeesTable(fees, feesContainer);
 
-    // Extract the exact fee record IDs currently displayed
+
     const activeFeeIds = fees.map((f) => f.id);
     await loadFilteredTransactions(
       authUserId,
@@ -242,7 +242,7 @@ async function loadFilteredTransactions(
   client,
 ) {
   try {
-    // Query payment transactions where student_fee_id matches the active student fee IDs
+
     const { data: transactions, error } = await client
       .from("payment_transactions")
       .select(
