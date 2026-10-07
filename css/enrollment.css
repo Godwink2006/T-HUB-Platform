@@ -1,4 +1,4 @@
-/* Table Styles */
+
 .table-container {
   margin: 10px;
   overflow-x: auto;
@@ -154,7 +154,7 @@ tr {
   border: 2px solid rgb(219, 215, 215);
 }
 
-/* Floating Action Toolbar */
+
 .bulk-action-bar {
   display: none;
   position: fixed;
@@ -166,7 +166,7 @@ tr {
   padding: 16px 28px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 5);
   align-items: center;
-  justify-content: space-between; /* Spreads out contents evenly across the width */
+  justify-content: space-between;
   gap: 20px;
   z-index: 1000;
   animation: slideUp 0.2s ease-out;
@@ -203,7 +203,7 @@ tr {
   }
 }
 
-/* Modal Overlay & Content */
+
 .modal-overlay {
   display: none;
   position: fixed;
@@ -270,7 +270,7 @@ tr {
   font-weight: 500;
 }
 
-/* Base status badge styling */
+
 .status-badge {
   padding: 4px 10px;
   font-size: 12px;
@@ -279,49 +279,49 @@ tr {
   display: inline-block;
 }
 
-/* Individual status color themes */
+
 .status-badge.normal {
   background-color: #e2e8f0;
-  color: #475569; /* Slate gray */
+  color: #475569;
 }
 
 .status-badge.promoted {
   background-color: #dcfce7;
-  color: #166534; /* Green */
+  color: #166534;
 }
 
 .status-badge.repeating {
   background-color: #fef9c3;
-  color: #854d0e; /* Yellow/Amber */
+  color: #854d0e;
 }
 
 .status-badge.transferred {
   background-color: #e0f2fe;
-  color: #0369a1; /* Light Blue */
+  color: #0369a1;
 }
 
 .status-badge.graduated {
   background-color: #f3e8ff;
-  color: #6b21a8; /* Purple */
+  color: #6b21a8;
 }
 
-/* Tooltip Container */
+
 .tooltip-container {
   position: relative;
   display: inline-block;
 }
 
-/* The Hover Card Box */
+
 .tooltip-container .tooltip-card {
   visibility: hidden;
   width: 280px;
-  background-color: #fff; /* Sleek dark theme */
+  background-color: #fff;
   color: #000;
   text-align: left;
   padding: 12px;
   position: absolute;
   z-index: 1000;
-  bottom: 135%; /* Positions right above the button */
+  bottom: 135%;
   left: 50%;
   transform: translateX(-50%);
   opacity: 0;
@@ -347,7 +347,7 @@ tr {
   border-color: #1e293b transparent transparent transparent;
 }
 
-/* Show on Hover */
+
 .tooltip-container:hover .tooltip-card {
   visibility: visible;
   opacity: 1;
@@ -430,7 +430,7 @@ tr {
   }
 }
 
-/* Page Header */
+
 .topbar {
   margin-bottom: 14px;
   padding: 10px;

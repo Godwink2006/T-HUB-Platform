@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const checkboxes = getStudentCheckboxes();
     selectedEnrollmentIds = Array.from(checkboxes)
       .filter((cb) => cb.checked)
-      .map((cb) => cb.value); // This MUST be the enrollment table primary key (enrollment.id)
+      .map((cb) => cb.value);
 
     selectedCountSpan.textContent = `${selectedEnrollmentIds.length} record${selectedEnrollmentIds.length === 1 ? "" : "s"} selected`;
 
@@ -167,7 +167,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === modalOverlay) closeModal();
   });
 
-  // --- 1. HANDLE "CHANGE STATUS" ---
   document.getElementById("btnChangeStatus").addEventListener("click", () => {
     modalTitle.textContent = "Change Enrollment Status";
     modalBody.innerHTML = `
@@ -193,7 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   });
 
-  // --- HANDLE "PROMOTE GRADE 9 TO 10 (CREATE USER)" ---
   document
     .getElementById("btnPromoteGrade9To10")
     ?.addEventListener("click", async () => {
@@ -218,7 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const client = window.supabaseClient || supabaseClient;
 
-        // 1. Ensure we have the school ID
         let activeSchoolId = window.currentSchoolId;
         if (!activeSchoolId) {
           const {
@@ -238,7 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error("Active school ID could not be determined.");
         }
 
-        // 2. Fetch the current Active Academic Year safely
         const { data: activeYear, error: yearErr } = await client
           .from("academic_years")
           .select("id, year_label")
@@ -250,7 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error("No active academic year found for this school.");
         }
 
-        // Find both source and target terms for the current academic year.
         const { data: yearTerms, error: termErr } = await client
           .from("terms")
           .select("id, name")
@@ -272,7 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const activeFirstTermId = firstTerms[0].id;
         const activeSecondTermId = secondTerms[0].id;
 
-        // 4. Fetch the single selected enrollment safely, including term_id if available
         const { data: sourceEnrollments, error: fetchErr } = await client
           .from("student_enrollments")
           .select(
@@ -283,7 +277,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (fetchErr) throw fetchErr;
         const enr = sourceEnrollments[0];
 
-        // 5. Validate that the student belongs to the active academic year & 1st term
         if (enr.academic_year_id !== activeYear.id) {
           showToast(
             "Selected student is not enrolled in the active academic year.",
@@ -302,7 +295,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // 6. Validate that the student is in Grade 9
         const className = enr.classes?.name || "";
         const match = className.match(/(\d+)/);
         const grade = match ? parseInt(match[0]) : null;
@@ -313,7 +305,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // 7. Fetch Grade 10 classes for the active school
         const { data: classesData, error: classErr } = await client
           .from("classes")
           .select("id, name, capacity")
@@ -323,7 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (classErr) throw classErr;
 
-        // 8. Fetch active fee structures for Grade 10 classes
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
           .select("id, total_amount, class_id, term_id, terms(name), classes(name)")
@@ -377,7 +367,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetFeeSelect = document.getElementById("targetFeeSelect");
         const capacityWarning = document.getElementById("capacityWarning");
 
-        // Handle class selection & dynamic fee structure filtering
         targetClassSelect.onchange = async () => {
           const classId = targetClassSelect.value;
           if (!classId) {
@@ -387,7 +376,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // Check Capacity for the active academic year
           const { count, error: countErr } = await client
             .from("student_enrollments")
             .select("*", { count: "exact", head: true })
@@ -404,7 +392,6 @@ document.addEventListener("DOMContentLoaded", () => {
             capacityWarning.textContent = `Class occupancy: ${count || 0} / ${capacity} available.`;
           }
 
-          // Filter matching fee structures
           const matchingFees = feesData.filter(
             (f) => f.class_id === classId && f.term_id === activeSecondTermId,
           );
@@ -422,7 +409,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         };
 
-        // Confirm Action Binding
         modalConfirm.onclick = async () => {
           const targetClassId = targetClassSelect.value;
           const feeStructureId = targetFeeSelect.value;
@@ -489,7 +475,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const supabaseClient = window.supabaseClient || supabaseClient;
 
-      // Get student_id from the enrollment records
       const { data: sourceEnrollments, error: fetchErr } = await supabaseClient
         .from("student_enrollments")
         .select("student_id")
@@ -497,7 +482,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (fetchErr) throw fetchErr;
 
-      // 🛑 ADD THIS CHECK TO DEBUG
       console.log("Submitting Promotion With:", {
         targetClassId,
         feeStructureId,
@@ -551,7 +535,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- HANDLE "PROMOTE STUDENTS TO NEXT CLASS (2nd SEMESTER)" ---
   document
     .getElementById("btnPromoteStudents")
     ?.addEventListener("click", async () => {
@@ -699,7 +682,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetFeeSelect = document.getElementById("targetFeeSelect");
         const capacityWarning = document.getElementById("capacityWarning");
 
-        // Handle target class change: check second-term capacity and matching fees.
         targetClassSelect.onchange = async () => {
           const classId = targetClassSelect.value;
 
@@ -711,7 +693,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // Check occupancy for this target class in the active second term.
           const { count, error: countErr } = await client
             .from("student_enrollments")
             .select("*", { count: "exact", head: true })
@@ -750,7 +731,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         };
 
-        // Confirm Action Binding
         modalConfirm.onclick = async () => {
           const targetClassId = targetClassSelect.value;
           const feeStructureId = targetFeeSelect.value;
@@ -826,7 +806,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
   }
-  // --- HANDLE "PROMOTE STUDENTS TO NEW ACADEMIC YEAR (1st SEMESTER)" ---
   document
     .getElementById("btnPromoteNextYear")
     ?.addEventListener("click", async () => {
@@ -843,7 +822,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const supabaseClient = window.supabaseClient || supabaseClient;
 
-        // 1. Fetch active Academic Years so admin can choose the target year
         const { data: yearsData, error: yearsErr } = await supabaseClient
           .from("academic_years")
           .select("id, year_label, status")
@@ -852,19 +830,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (yearsErr || !yearsData)
           throw new Error("Could not fetch academic years.");
 
-        // 2. Fetch ALL terms so we can match 1st semester per academic year
         const { data: termsData, error: termErr } = await supabaseClient
           .from("terms")
           .select("id, name, academic_year_id");
 
         if (termErr || !termsData) throw new Error("Could not fetch terms.");
 
-        // Get all 1st semester term IDs across years to fetch their fee structures
         const firstSemesterTermIds = termsData
           .filter((t) => t.name && t.name.toLowerCase().includes("1st"))
           .map((t) => t.id);
 
-        // 3. Fetch all active classes
         const { data: classesData, error: classErr } = await supabaseClient
           .from("classes")
           .select("id, name, capacity")
@@ -872,7 +847,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (classErr) throw classErr;
 
-        // 4. Fetch 1st Semester fee structures for all 1st semester terms
         const { data: feesData, error: feeErr } = await supabaseClient
           .from("fee_structures")
           .select(
@@ -932,7 +906,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetFeeSelect = document.getElementById("targetFeeSelect");
         const capacityWarning = document.getElementById("capacityWarning");
 
-        // Helper to update available fee structures based on selected Year & Class
         const updateFeeOptions = () => {
           const selectedYearId = targetAcademicYearSelect.value;
           const selectedClassId = targetClassSelect.value;
@@ -943,7 +916,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // Find the exact 1st semester term ID for this specific academic year
           const targetTerm = termsData.find(
             (t) =>
               String(t.academic_year_id) === String(selectedYearId) &&
@@ -957,7 +929,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // Filter fees matching the target year, the correct 1st semester term ID, and class
           const matchingFees = feesData.filter(
             (f) =>
               String(f.academic_year_id) === String(selectedYearId) &&
@@ -981,7 +952,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         targetAcademicYearSelect.onchange = updateFeeOptions;
 
-        // Handle target class change: check capacity and update fees
         targetClassSelect.onchange = async () => {
           const classId = targetClassSelect.value;
 
@@ -991,7 +961,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // A. Check Capacity for the target class
           const { count, error: countErr } = await supabaseClient
             .from("student_enrollments")
             .select("*", { count: "exact", head: true })
@@ -1011,7 +980,6 @@ document.addEventListener("DOMContentLoaded", () => {
           updateFeeOptions();
         };
 
-        // Confirm Action Binding
         modalConfirm.onclick = async () => {
           const targetAcademicYearId = targetAcademicYearSelect.value;
           const targetClassId = targetClassSelect.value;
@@ -1025,7 +993,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // Dynamically find the correct term ID for execution
           const targetTerm = termsData.find(
             (t) =>
               String(t.academic_year_id) === String(targetAcademicYearId) &&
@@ -1066,7 +1033,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const supabaseClient = window.supabaseClient || window.supabaseClient;
 
-      // 1. Get target class details
       const { data: targetClass, error: targetClassErr } = await supabaseClient
         .from("classes")
         .select("id, name")
@@ -1083,7 +1049,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const targetGrade = extractGradeNumber(targetClass.name);
 
-      // 2. Get student IDs, school IDs, and current classes
       const { data: sourceEnrollments, error: fetchErr } = await supabaseClient
         .from("student_enrollments")
         .select("student_id, school_id, classes(name)")
@@ -1091,7 +1056,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (fetchErr) throw fetchErr;
 
-      // 3. Validate Grade 10+ user account rule
       for (const enr of sourceEnrollments) {
         const currentClassName = enr.classes?.name || "";
         const currentGrade = extractGradeNumber(currentClassName);
@@ -1110,7 +1074,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // 4. Fetch fee structure details & validate compatibility
       const { data: feeStruct, error: feeStructErr } = await supabaseClient
         .from("fee_structures")
         .select("total_amount, class_id")
@@ -1128,7 +1091,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Fetch matching fee structure breakdown items
       const { data: feeItems, error: itemsErr } = await supabaseClient
         .from("fee_structure_items")
         .select("id, fee_name, amount")
@@ -1137,7 +1099,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (itemsErr) throw itemsErr;
 
       for (const enr of sourceEnrollments) {
-        // A. Check if an enrollment record already exists for this student in the *new* academic year & 1st term
         const { data: existingEnr, error: checkErr } = await supabaseClient
           .from("student_enrollments")
           .select("id")
@@ -1149,7 +1110,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (checkErr) throw checkErr;
 
         if (existingEnr) {
-          // If already enrolled in the new year/term, update it
           const { error: updateErr } = await supabaseClient
             .from("student_enrollments")
             .update({
@@ -1160,7 +1120,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (updateErr) throw updateErr;
         } else {
-          // Otherwise, insert a brand new enrollment record for the new academic year
           const { error: insertErr } = await supabaseClient
             .from("student_enrollments")
             .insert({
@@ -1175,7 +1134,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (insertErr) throw insertErr;
         }
 
-        // B. Update student's primary class and academic year reference in `students` table
         const { error: studentUpdateErr } = await supabaseClient
           .from("students")
           .update({
@@ -1191,7 +1149,6 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
-        // C. Insert into `student_fees` for the new academic year / 1st semester
         const { error: feeInsertErr } = await supabaseClient
           .from("student_fees")
           .insert({
@@ -1222,13 +1179,12 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast(`Promotion failed: ${err.message}`, "error");
     }
   }
-  // Execution functions
   async function executeStatusChange(enrollmentIds, newStatus) {
     try {
       const { error } = await supabaseClient
         .from("student_enrollments")
         .update({ enrollment_status: newStatus })
-        .in("id", enrollmentIds); // <-- Target the exact enrollment rows by their unique primary key 'id'
+        .in("id", enrollmentIds);
 
       if (error) throw error;
 
@@ -1245,7 +1201,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- 1. EXECUTE 2ND SEMESTER MOVE ---
   async function executeSemesterMove(studentIds, feeStructureId) {
     try {
       const supabaseClient = window.supabaseClient || window.supabaseClient;
@@ -1271,7 +1226,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- 2. EXECUTE NEW ACADEMIC YEAR MOVE ---
   async function executeNewYearMove(
     schoolId,
     studentIds,
@@ -1306,7 +1260,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- 3. EVENT HANDLER: "MOVE TO 2ND SEMESTER" BUTTON ---
   document
     .getElementById("btnSemesterMove")
     ?.addEventListener("click", async () => {
@@ -1322,7 +1275,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const supabaseClient = window.supabaseClient || window.supabaseClient;
 
-        // Find 2nd Semester term ID
         const { data: termData, error: termErr } = await supabaseClient
           .from("terms")
           .select("id")
@@ -1336,7 +1288,6 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         const secondSemesterTermId = termData.id;
 
-        // Fetch current enrollments
         const { data: currentEnrollments, error: enrollErr } =
           await supabaseClient
             .from("student_enrollments")
@@ -1359,7 +1310,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (uniqueClassIds.length === 0)
           throw new Error("Could not find current class enrollments.");
 
-        // Fetch matching fee structures
         const { data: feesData, error: feeErr } = await supabaseClient
           .from("fee_structures")
           .select("id, total_amount, class_id, classes(name)")
@@ -1397,7 +1347,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-  // --- 4. EVENT HANDLER: "MOVE TO NEW ACADEMIC YEAR" BUTTON ---
   document
     .getElementById("btnNewYearMove")
     ?.addEventListener("click", async () => {
@@ -1413,7 +1362,6 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const supabaseClient = window.supabaseClient || window.supabaseClient;
 
-        // Fetch selected enrollments to get school_id and old academic_year_id
         const { data: currentEnrollments, error: enrollErr } =
           await supabaseClient
             .from("student_enrollments")
@@ -1429,7 +1377,6 @@ document.addEventListener("DOMContentLoaded", () => {
           ...new Set(currentEnrollments.map((e) => e.student_id)),
         ];
 
-        // Fetch available academic years and 1st semester terms
         const [{ data: academicYears }, { data: terms }] = await Promise.all([
           supabaseClient
             .from("academic_years")
@@ -1494,7 +1441,6 @@ async function loadStudentEnrollments() {
     '<tr><td colspan="6" style="text-align: center;">Loading enrollment records...</td></tr>';
 
   try {
-    // 1. Fetch enrollments with all related names in ONE single query using Supabase joins
     const { data: enrollments, error: enrollError } = await supabaseClient.from(
       "student_enrollments",
     ).select(`
@@ -1544,7 +1490,6 @@ async function loadStudentEnrollments() {
       "All classes",
     );
 
-    // 2. Map all rows into a single HTML string in memory
     const rowsHTML = enrollments
       .map((enr) => {
         const studentName = enr.profiles?.full_name || "Unknown Student";
@@ -1567,9 +1512,9 @@ async function loadStudentEnrollments() {
           data-class-name="${escapeHtml(className)}"
         >
           <td>
-            <input 
-              type="checkbox" 
-              class="student-checkbox" 
+            <input
+              type="checkbox"
+              class="student-checkbox"
               value="${escapeHtml(enr.id)}"
             />
           </td>
@@ -1583,7 +1528,6 @@ async function loadStudentEnrollments() {
       })
       .join("");
 
-    // 3. Inject everything into the table in ONE single operation
     tbody.innerHTML = rowsHTML;
     window.applyEnrollmentFilters();
   } catch (err) {
@@ -1602,5 +1546,4 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-// Run when the page loads
 document.addEventListener("DOMContentLoaded", loadStudentEnrollments);
