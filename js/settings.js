@@ -154,7 +154,17 @@ async function initSettingsPage() {
 
       document
         .getElementById("clearBrowserDataBtn")
+        ?.addEventListener("click", openClearDataDialog);
+      document
+        .getElementById("cancelClearDataBtn")
+        ?.addEventListener("click", closeClearDataDialog);
+      document
+        .getElementById("confirmClearDataBtn")
         ?.addEventListener("click", clearCurrentBrowserData);
+      document.getElementById("clearDataDialog")?.addEventListener("click", (event) => {
+        if (event.target.id === "clearDataDialog") closeClearDataDialog();
+      });
+      document.addEventListener("keydown", handleClearDataDialogKeydown);
 
       if (typeof renderNavigation === "function") {
         renderNavigation(userRole);
@@ -170,18 +180,70 @@ async function initSettingsPage() {
 
 document.addEventListener("DOMContentLoaded", initSettingsPage);
 
-async function clearCurrentBrowserData(event) {
-  const button = event.currentTarget;
-  if (
-    !window.confirm(
-      "Log out on this device and clear this site's saved browser data? This will not delete school records.",
-    )
-  ) {
+let clearDataDialogTrigger = null;
+
+function openClearDataDialog(event) {
+  const dialog = document.getElementById("clearDataDialog");
+  if (!dialog) return;
+
+  clearDataDialogTrigger = event.currentTarget;
+  dialog.hidden = false;
+  dialog.setAttribute("aria-hidden", "false");
+  document.body.classList.add("settings-modal-open");
+  requestAnimationFrame(() => {
+    document.getElementById("cancelClearDataBtn")?.focus();
+  });
+}
+
+function closeClearDataDialog() {
+  const dialog = document.getElementById("clearDataDialog");
+  if (!dialog || dialog.dataset.busy === "true") return;
+
+  dialog.hidden = true;
+  dialog.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("settings-modal-open");
+  clearDataDialogTrigger?.focus();
+}
+
+function handleClearDataDialogKeydown(event) {
+  const dialog = document.getElementById("clearDataDialog");
+  if (!dialog || dialog.hidden) return;
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeClearDataDialog();
     return;
   }
 
-  button.disabled = true;
-  button.textContent = "Logging out and clearing data…";
+  if (event.key === "Tab") {
+    const buttons = [
+      document.getElementById("cancelClearDataBtn"),
+      document.getElementById("confirmClearDataBtn"),
+    ].filter((button) => button && !button.disabled);
+    if (buttons.length === 0) return;
+
+    const firstButton = buttons[0];
+    const lastButton = buttons[buttons.length - 1];
+    if (event.shiftKey && document.activeElement === firstButton) {
+      event.preventDefault();
+      lastButton.focus();
+    } else if (!event.shiftKey && document.activeElement === lastButton) {
+      event.preventDefault();
+      firstButton.focus();
+    }
+  }
+}
+
+async function clearCurrentBrowserData() {
+  const dialog = document.getElementById("clearDataDialog");
+  const confirmButton = document.getElementById("confirmClearDataBtn");
+  const cancelButton = document.getElementById("cancelClearDataBtn");
+  if (!dialog || !confirmButton || dialog.dataset.busy === "true") return;
+
+  dialog.dataset.busy = "true";
+  confirmButton.disabled = true;
+  confirmButton.textContent = "Logging out and clearing data…";
+  if (cancelButton) cancelButton.disabled = true;
 
   try {
     if (window.supabaseClient?.auth) {

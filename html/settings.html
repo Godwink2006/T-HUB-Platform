@@ -186,6 +186,34 @@
       </main>
     </div>
 
+    <div id="clearDataDialog" class="clear-data-modal" aria-hidden="true" hidden>
+      <section
+        class="clear-data-card"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="clearDataDialogTitle"
+        aria-describedby="clearDataDialogDescription"
+        tabindex="-1"
+      >
+        <div class="clear-data-icon" aria-hidden="true">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </div>
+        <h2 id="clearDataDialogTitle">Log out and clear browser data?</h2>
+        <p id="clearDataDialogDescription">
+          This signs you out on this device and clears saved data for this site.
+          It will not delete school records or sign you out on other devices.
+        </p>
+        <div class="clear-data-actions">
+          <button id="cancelClearDataBtn" type="button" class="clear-data-cancel">
+            Cancel
+          </button>
+          <button id="confirmClearDataBtn" type="button" class="clear-data-confirm">
+            Log Out &amp; Clear Data
+          </button>
+        </div>
+      </section>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
