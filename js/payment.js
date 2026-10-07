@@ -374,6 +374,8 @@ let activeFeeIdForPayment = null;
 const savePaymentBtn = document.getElementById("savePaymentBtn");
 if (savePaymentBtn) {
   savePaymentBtn.addEventListener("click", async () => {
+    if (savePaymentBtn.disabled) return;
+
     const recordPaymentBtn = document.getElementById("addRecordPayment");
     const activeFeeId = recordPaymentBtn
       ? recordPaymentBtn.getAttribute("data-fee-id")
@@ -427,6 +429,10 @@ if (savePaymentBtn) {
       recordPaymentBtn?.getAttribute("data-student-id"),
     );
 
+    savePaymentBtn.disabled = true;
+    const originalButtonText = savePaymentBtn.textContent;
+    savePaymentBtn.textContent = "Saving...";
+
     try {
 
       const { data: transactionId, error } = await supabaseClient.rpc(
@@ -456,6 +462,9 @@ if (savePaymentBtn) {
     } catch (err) {
       console.error("Error saving itemized payment:", err.message);
       showToast("Failed to save payment: " + err.message, "error");
+    } finally {
+      savePaymentBtn.disabled = false;
+      savePaymentBtn.textContent = originalButtonText;
     }
   });
 }

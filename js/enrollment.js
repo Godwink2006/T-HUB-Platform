@@ -163,12 +163,293 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeModal() {
     modalOverlay.classList.remove("active");
     document.body.classList.remove("modal-open");
+    modalConfirm.style.display = "";
+    modalConfirm.disabled = false;
+    modalConfirm.textContent = "Confirm";
+    modalConfirm.onclick = null;
+    modalCancel.disabled = false;
+    modalCancel.textContent = "Cancel";
   }
 
   modalCancel.addEventListener("click", closeModal);
   modalOverlay.addEventListener("click", (e) => {
     if (e.target === modalOverlay) closeModal();
   });
+
+  document
+    .getElementById("btnReceiveStudentTransfer")
+    ?.addEventListener("click", () => {
+      modalTitle.textContent = "Receive a student transfer";
+      modalBody.innerHTML = `
+        <p class="transfer-code-description">Enter the code provided by the sending school. The code expires after five days and can only be used once.</p>
+        <label for="incomingTransferCode">Transfer code</label>
+        <input id="incomingTransferCode" class="form-control" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" />
+        <div id="incomingTransferPreview" class="incoming-transfer-preview" aria-live="polite"></div>
+      `;
+      modalConfirm.style.display = "inline-block";
+      modalConfirm.textContent = "Preview code";
+      modalConfirm.onclick = () => previewIncomingTransfer();
+      openModal();
+    });
+
+  async function getTransferCodeHash() {
+    const rawCode = (document.getElementById("incomingTransferCode")?.value || "")
+      .replace(/[-\s]/g, "")
+      .toUpperCase();
+    if (!/^[0-9A-F]{32}$/.test(rawCode)) {
+      throw new Error("Enter the complete 32-character transfer code.");
+    }
+    const digest = await window.crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(rawCode),
+    );
+    const codeHash = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    return codeHash;
+  }
+
+  async function loadTransferTargetOptions(client) {
+    const { data: { user }, error: authError } = await client.auth.getUser();
+    if (authError || !user) throw new Error("Your session has expired. Sign in again.");
+
+    const { data: profile, error: profileError } = await client
+      .from("profiles")
+      .select("role, status, school_id")
+      .eq("id", user.id)
+      .single();
+    if (profileError) throw profileError;
+    if (profile.role !== "admin" || String(profile.status).toLowerCase() !== "active") {
+      throw new Error("Only an active school administrator can receive a transfer.");
+    }
+    if (!profile.school_id) throw new Error("Your admin profile is not linked to a school.");
+
+    const [classesResult, yearsResult, termsResult, feesResult] = await Promise.all([
+      client.from("classes").select("id, name, status, capacity")
+        .eq("school_id", profile.school_id).ilike("status", "active"),
+      client.from("academic_years").select("id, year_label, status")
+        .eq("school_id", profile.school_id).ilike("status", "active"),
+      client.from("terms").select("id, name, academic_year_id")
+        .eq("school_id", profile.school_id),
+      client.from("fee_structures").select("id, class_id, academic_year_id, term_id, total_amount, status")
+        .eq("school_id", profile.school_id).ilike("status", "active"),
+    ]);
+    for (const result of [classesResult, yearsResult, termsResult, feesResult]) {
+      if (result.error) throw result.error;
+    }
+    return {
+      schoolId: profile.school_id,
+      classes: classesResult.data || [],
+      years: yearsResult.data || [],
+      terms: termsResult.data || [],
+      fees: feesResult.data || [],
+    };
+  }
+
+  async function previewIncomingTransfer() {
+    const client = window.supabaseClient;
+    const previewContainer = document.getElementById("incomingTransferPreview");
+    if (!client || !previewContainer) return;
+
+    modalConfirm.disabled = true;
+    modalConfirm.textContent = "Checking...";
+    try {
+      const codeHash = await getTransferCodeHash();
+      const [{ data: preview, error: previewError }, targetOptions] = await Promise.all([
+        client.rpc("preview_student_transfer", { p_code_hash: codeHash }),
+        loadTransferTargetOptions(client),
+      ]);
+      if (previewError) throw previewError;
+
+      const classOptions = targetOptions.classes.map((item) =>
+        `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`,
+      ).join("");
+      const yearOptions = targetOptions.years.map((item) =>
+        `<option value="${escapeHtml(item.id)}">${escapeHtml(item.year_label)}</option>`,
+      ).join("");
+      previewContainer.innerHTML = `
+        <div class="incoming-transfer-student-card">
+          <strong>${escapeHtml(preview.student_name || "Student")}</strong>
+          <span>Sending school: ${escapeHtml(preview.source_school_name || preview.source_school_id)}</span>
+          <span>Current class: ${escapeHtml(preview.source_class_name || "Not available")}</span>
+          <span>Academic year: ${escapeHtml(preview.source_year_label || "Not available")}</span>
+        </div>
+        <p class="transfer-code-note">The student's existing login will move to this school. Source records stay at the sending school and are copied to read-only history.</p>
+        <div class="transfer-target-fields">
+          <label for="transferTargetClass">Target class</label>
+          <select id="transferTargetClass" class="form-control"><option value="">Select class</option>${classOptions}</select>
+          <label for="transferTargetYear">Active academic year</label>
+          <select id="transferTargetYear" class="form-control"><option value="">Select year</option>${yearOptions}</select>
+          <label for="transferTargetTerm">Term</label>
+          <select id="transferTargetTerm" class="form-control"><option value="">Select academic year first</option></select>
+          <label for="transferTargetFee">Active fee structure</label>
+          <select id="transferTargetFee" class="form-control"><option value="">Choose class, year, and term first</option></select>
+        </div>
+      `;
+      const refreshTermsAndFees = () => {
+        const classId = document.getElementById("transferTargetClass").value;
+        const yearId = document.getElementById("transferTargetYear").value;
+        const termSelect = document.getElementById("transferTargetTerm");
+        const feeSelect = document.getElementById("transferTargetFee");
+        const terms = targetOptions.terms.filter((term) => String(term.academic_year_id) === yearId);
+        termSelect.innerHTML = `<option value="">Select term</option>${terms.map((term) =>
+          `<option value="${escapeHtml(term.id)}">${escapeHtml(term.name)}</option>`,
+        ).join("")}`;
+        feeSelect.innerHTML = '<option value="">Choose class, year, and term first</option>';
+      };
+      const refreshFees = () => {
+        const classId = document.getElementById("transferTargetClass").value;
+        const yearId = document.getElementById("transferTargetYear").value;
+        const termId = document.getElementById("transferTargetTerm").value;
+        const feeSelect = document.getElementById("transferTargetFee");
+        const fees = targetOptions.fees.filter((fee) =>
+          String(fee.class_id) === classId &&
+          String(fee.academic_year_id) === yearId &&
+          String(fee.term_id) === termId,
+        );
+        feeSelect.innerHTML = `<option value="">Select fee structure</option>${fees.map((fee) =>
+          `<option value="${escapeHtml(fee.id)}">Total: ${escapeHtml(fee.total_amount)}</option>`,
+        ).join("")}`;
+      };
+      document.getElementById("transferTargetClass").addEventListener("change", refreshFees);
+      document.getElementById("transferTargetYear").addEventListener("change", refreshTermsAndFees);
+      document.getElementById("transferTargetTerm").addEventListener("change", refreshFees);
+
+      modalConfirm.textContent = "Accept transfer";
+      modalConfirm.onclick = () => acceptIncomingTransfer(codeHash, targetOptions.schoolId);
+    } catch (err) {
+      previewContainer.textContent = err.message || "Could not validate this transfer code.";
+    } finally {
+      modalConfirm.disabled = false;
+      if (modalConfirm.textContent === "Checking...") modalConfirm.textContent = "Preview code";
+    }
+  }
+
+  async function acceptIncomingTransfer(codeHash) {
+    const values = {
+      p_code_hash: codeHash,
+      p_target_class_id: document.getElementById("transferTargetClass")?.value,
+      p_target_academic_year_id: document.getElementById("transferTargetYear")?.value,
+      p_target_term_id: document.getElementById("transferTargetTerm")?.value,
+      p_target_fee_structure_id: document.getElementById("transferTargetFee")?.value,
+    };
+    if (Object.values(values).some((value) => !value)) {
+      showToast("Choose the target class, academic year, term, and fee structure.", "info");
+      return;
+    }
+
+    modalConfirm.disabled = true;
+    modalCancel.disabled = true;
+    modalConfirm.textContent = "Transferring...";
+    try {
+      const { data, error } = await window.supabaseClient.rpc(
+        "accept_student_transfer",
+        values,
+      );
+      if (error) throw error;
+      closeModal();
+      showToast(`${data.student_name} was transferred successfully.`, "success");
+      if (typeof loadStudentEnrollments === "function") await loadStudentEnrollments();
+    } catch (err) {
+      modalConfirm.disabled = false;
+      modalCancel.disabled = false;
+      modalConfirm.textContent = "Accept transfer";
+      showToast(`Transfer failed: ${err.message}`, "error");
+    }
+  }
+
+  document
+    .getElementById("btnGenerateTransferCode")
+    ?.addEventListener("click", async () => {
+      const enrollmentIds = [...new Set(selectedEnrollmentIds.map(String))];
+      if (enrollmentIds.length !== 1) {
+        showToast("Select exactly one student enrollment to generate a transfer code.", "info");
+        return;
+      }
+
+      const client = window.supabaseClient;
+      if (!client) {
+        showToast("The database client is not ready. Refresh and try again.", "error");
+        return;
+      }
+
+      const button = document.getElementById("btnGenerateTransferCode");
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      button.textContent = "Generating...";
+
+      try {
+        const { data: enrollment, error: enrollmentError } = await client
+          .from("student_enrollments")
+          .select("id, student_id, school_id")
+          .eq("id", enrollmentIds[0])
+          .maybeSingle();
+
+        if (enrollmentError) throw enrollmentError;
+        if (!enrollment?.student_id || !enrollment?.school_id) {
+          throw new Error("Could not verify this enrollment's school and student.");
+        }
+
+        if (!window.crypto?.getRandomValues || !window.crypto?.subtle) {
+          throw new Error("Secure code generation is unavailable in this browser.");
+        }
+
+        const randomBytes = new Uint8Array(16);
+        window.crypto.getRandomValues(randomBytes);
+        const rawCode = Array.from(randomBytes, (byte) =>
+          byte.toString(16).padStart(2, "0"),
+        ).join("").toUpperCase();
+        const transferCode = rawCode.match(/.{1,8}/g).join("-");
+        const digest = await window.crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(rawCode),
+        );
+        const codeHash = Array.from(new Uint8Array(digest), (byte) =>
+          byte.toString(16).padStart(2, "0"),
+        ).join("");
+
+        const { data: transfer, error: rpcError } = await client.rpc(
+          "generate_student_transfer_code",
+          {
+            p_source_enrollment_id: enrollment.id,
+            p_code_hash: codeHash,
+          },
+        );
+        if (rpcError) throw rpcError;
+
+        const expiry = new Date(transfer.expires_at).toLocaleString();
+        modalTitle.textContent = "Student transfer code";
+        modalBody.innerHTML = `
+          <p class="transfer-code-description">Share this code with the receiving school. It expires in five days and is shown only once.</p>
+          <div class="transfer-code-card">
+            <code id="generatedTransferCode"></code>
+            <button id="copyTransferCode" type="button" class="btn-secondary">Copy code</button>
+          </div>
+          <p class="transfer-code-expiry">Expires: ${escapeHtml(expiry)}</p>
+          <p class="transfer-code-note">Generating a new code for this student invalidates their previous unused code.</p>
+        `;
+        document.getElementById("generatedTransferCode").textContent = transferCode;
+        document.getElementById("copyTransferCode").addEventListener("click", async (event) => {
+          try {
+            await navigator.clipboard.writeText(transferCode);
+            event.currentTarget.textContent = "Copied";
+          } catch {
+            showToast("Copy failed. Select and copy the code manually.", "error");
+          }
+        });
+        modalConfirm.style.display = "none";
+        modalCancel.textContent = "Close";
+        openModal();
+      } catch (err) {
+        console.error("Error generating student transfer code:", err);
+        showToast(`Could not generate transfer code: ${err.message}`, "error");
+      } finally {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+        button.innerHTML = originalText;
+      }
+    });
 
   document.getElementById("btnChangeStatus").addEventListener("click", () => {
     modalTitle.textContent = "Change Enrollment Status";

@@ -39,6 +39,24 @@ body.modal-open {
   border: 2px solid rgb(219, 215, 215);
 }
 
+.enrollment-transfer-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 10px 12px;
+}
+
+#btnReceiveStudentTransfer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
 .enrollment-search-field,
 .enrollment-filter-field {
   min-width: 0;
@@ -114,6 +132,15 @@ body.modal-open {
 }
 
 @media (max-width: 640px) {
+  .enrollment-transfer-toolbar {
+    justify-content: stretch;
+  }
+
+  #btnReceiveStudentTransfer {
+    width: 100%;
+    justify-content: center;
+  }
+
   .enrollment-filters {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -177,6 +204,7 @@ tr {
 
 .bulk-action-bar.active {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .bulk-action-bar button {
@@ -186,6 +214,13 @@ tr {
   padding: 8px 14px;
   cursor: pointer;
   font-weight: 500;
+}
+
+.bulk-action-bar #btnGenerateTransferCode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .bulk-action-bar button:hover {
@@ -232,6 +267,63 @@ tr {
   overflow-y: auto;
   overscroll-behavior: contain;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.transfer-code-description,
+.transfer-code-note,
+.transfer-code-expiry {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.transfer-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 10px;
+  padding: 14px;
+  border: 2px solid rgb(219, 215, 215);
+  background: #f8fafc;
+}
+
+.transfer-code-card code {
+  overflow-wrap: anywhere;
+  color: #0f172a;
+  font-size: clamp(16px, 4vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.transfer-code-note {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.incoming-transfer-preview {
+  margin-top: 14px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.incoming-transfer-student-card,
+.transfer-target-fields {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 2px solid rgb(219, 215, 215);
+  background: #f8fafc;
+  color: #334155;
+}
+
+.transfer-target-fields label {
+  margin-top: 4px;
+}
+
+.incoming-transfer-student-card strong {
+  color: #0f172a;
+  font-size: 17px;
 }
 .modal-content h3 {
   margin: 0 0 8px 0;

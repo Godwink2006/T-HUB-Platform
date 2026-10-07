@@ -1,0 +1,121 @@
+* {
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.history-page {
+  width: min(100% - 32px, 1000px);
+  margin: 28px auto;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+}
+
+.history-header h1 {
+  margin: 0 0 4px;
+  font-size: clamp(22px, 4vw, 30px);
+}
+
+.history-header p,
+.history-state,
+.transfer-source {
+  color: #64748b;
+}
+
+.history-header p {
+  margin: 0;
+}
+
+.history-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #1f2937;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.transfer-history-card {
+  margin-bottom: 16px;
+  padding: 18px;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+}
+
+.transfer-history-card h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.transfer-source {
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+
+.history-record {
+  border-top: 1px solid #e2e8f0;
+}
+
+.history-record summary {
+  padding: 12px 0;
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.history-record dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.history-record dl div {
+  min-width: 0;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.history-record dt {
+  color: #64748b;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.history-record dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .history-page {
+    width: min(100% - 20px, 1000px);
+    margin: 10px auto;
+  }
+
+  .history-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-record dl {
+    grid-template-columns: 1fr;
+  }
+}

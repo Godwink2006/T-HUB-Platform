@@ -50,6 +50,13 @@
       </div>
     </header>
 
+    <div class="enrollment-transfer-toolbar">
+      <button id="btnReceiveStudentTransfer" type="button" class="btn-primary">
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+        Receive student transfer
+      </button>
+    </div>
+
     <section class="enrollment-filters" aria-label="Filter enrollment records">
       <div class="enrollment-search-field">
         <label for="enrollmentSearch">Search</label>
@@ -110,6 +117,10 @@
 
     <div id="bulkActionBar" class="bulk-action-bar">
       <span id="selectedCount">0 students selected</span>
+      <button id="btnGenerateTransferCode" type="button" class="btn-primary">
+        <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+        Generate transfer code
+      </button>
       <div class="tooltip-container">
         <button id="btnChangeStatus" class="btn-secondary">
           Change Status

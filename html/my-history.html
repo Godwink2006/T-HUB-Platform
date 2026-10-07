@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Transfer History</title>
+    <link rel="stylesheet" href="/css/my-history.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  </head>
+  <body>
+    <main class="history-page">
+      <header class="history-header">
+        <div>
+          <h1>My Transfer History</h1>
+          <p>Read-only records from schools you transferred from.</p>
+        </div>
+        <a href="dashboard.html" class="history-back-link"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Dashboard</a>
+      </header>
+      <section id="transferHistoryList" class="transfer-history-list" aria-live="polite">
+        <p class="history-state">Loading your transfer history...</p>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/my-history.js"></script>
+  </body>
+</html>
