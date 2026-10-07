@@ -152,8 +152,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function openModal() {
+    modalOverlay.classList.add("active");
+    document.body.classList.add("modal-open");
+  }
+
   function closeModal() {
     modalOverlay.classList.remove("active");
+    document.body.classList.remove("modal-open");
   }
 
   modalCancel.addEventListener("click", closeModal);
@@ -174,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <option value="Graduated">Graduated</option>
       </select>
     `;
-    modalOverlay.classList.add("active");
+    openModal();
 
     modalConfirm.onclick = async () => {
       const newStatus = document.getElementById("statusSelect").value;
@@ -207,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
       modalTitle.textContent =
         "Promote Grade 9 to Grade 10 (Create Auth Account)";
       modalBody.innerHTML = `<p>Loading student details, classes, and fee structures...</p>`;
-      modalOverlay.classList.add("active");
+      openModal();
 
       try {
         const client = window.supabaseClient || supabaseClient;
@@ -283,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
             "Selected student is not enrolled in the active academic year.",
             "error",
           );
-          modalOverlay.classList.remove("active");
+          closeModal();
           return;
         }
 
@@ -292,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
             "Selected student must be enrolled in the 1st Term of the active year.",
             "error",
           );
-          modalOverlay.classList.remove("active");
+          closeModal();
           return;
         }
 
@@ -303,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (grade !== 9) {
           showToast("Selected student is not in Grade 9.", "error");
-          modalOverlay.classList.remove("active");
+          closeModal();
           return;
         }
 
@@ -561,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       modalTitle.textContent = "Promote Students to Next Class (2nd Semester)";
       modalBody.innerHTML = `<p>Checking the active year, first-term class, and fee structures...</p>`;
-      modalOverlay.classList.add("active");
+      openModal();
 
       try {
         const client = window.supabaseClient;
@@ -832,7 +838,7 @@ document.addEventListener("DOMContentLoaded", () => {
       modalTitle.textContent =
         "Promote Students to New Academic Year (1st Semester)";
       modalBody.innerHTML = `<p>Loading academic years, classes, and fee structures...</p>`;
-      modalOverlay.classList.add("active");
+      openModal();
 
       try {
         const supabaseClient = window.supabaseClient || supabaseClient;
@@ -1311,7 +1317,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       modalTitle.textContent = "Move Students to 2nd Semester";
       modalBody.innerHTML = `<p>Loading student details and fee structures...</p>`;
-      modalOverlay.classList.add("active");
+      openModal();
 
       try {
         const supabaseClient = window.supabaseClient || window.supabaseClient;
@@ -1402,7 +1408,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       modalTitle.textContent = "Move Students to New Academic Year";
       modalBody.innerHTML = `<p>Loading academic years and terms...</p>`;
-      modalOverlay.classList.add("active");
+      openModal();
 
       try {
         const supabaseClient = window.supabaseClient || window.supabaseClient;
