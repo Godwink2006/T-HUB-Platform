@@ -8,6 +8,43 @@ BEGIN;
 ALTER TABLE public.student_transfers
   ADD COLUMN IF NOT EXISTS source_student_code text;
 
+-- Preserve the sender-school identity on the historical enrollment itself.
+-- The student's live profile moves to the receiving school during acceptance.
+ALTER TABLE public.student_enrollments
+  ADD COLUMN IF NOT EXISTS student_name_snapshot text,
+  ADD COLUMN IF NOT EXISTS student_code_snapshot text;
+
+-- Backfill older completed transfers where the source enrollment still exists.
+UPDATE public.student_enrollments AS enrollment
+SET student_name_snapshot = coalesce(
+      enrollment.student_name_snapshot,
+      (SELECT profile.full_name
+       FROM public.profiles AS profile
+       WHERE profile.id = enrollment.student_id)
+    ),
+    student_code_snapshot = coalesce(
+      enrollment.student_code_snapshot,
+      (SELECT transfer.source_student_code
+       FROM public.student_transfers AS transfer
+       WHERE transfer.source_student_id = enrollment.student_id
+         AND transfer.source_school_id = enrollment.school_id
+       ORDER BY transfer.created_at DESC
+       LIMIT 1),
+      (SELECT student.student_id
+       FROM public.students AS student
+       WHERE student.id = enrollment.student_id)
+    )
+WHERE EXISTS (
+    SELECT 1
+    FROM public.student_transfers AS transfer
+    WHERE transfer.status = 'completed'
+      AND (transfer.source_enrollment_id = enrollment.id
+           OR (transfer.source_student_id = enrollment.student_id
+               AND transfer.source_school_id = enrollment.school_id))
+  )
+  AND (enrollment.student_name_snapshot IS NULL
+       OR enrollment.student_code_snapshot IS NULL);
+
 create or replace function public.preview_student_transfer(p_code_hash text)
 returns jsonb
 language plpgsql
@@ -320,8 +357,18 @@ begin
             v_transfer.source_student_id, v_record_type;
   end loop;
 
+  -- Snapshot identity on every source-school enrollment for this student,
+  -- including older rows marked Promoted, before moving the live profile.
   update public.student_enrollments
-  set enrollment_status = 'Transferred'
+  set student_name_snapshot = coalesce(student_name_snapshot, v_student_name),
+      student_code_snapshot = coalesce(student_code_snapshot, v_source_student_code)
+  where student_id = v_transfer.source_student_id
+    and school_id = v_transfer.source_school_id;
+
+  update public.student_enrollments
+  set enrollment_status = 'Transferred',
+      student_name_snapshot = v_student_name,
+      student_code_snapshot = v_source_student_code
   where id = v_transfer.source_enrollment_id
     and student_id = v_transfer.source_student_id
     and school_id = v_transfer.source_school_id;

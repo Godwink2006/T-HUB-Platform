@@ -1857,7 +1857,10 @@ async function loadStudentEnrollments() {
       "student_enrollments",
     ).select(`
         id,
+        student_id,
         enrollment_status,
+        student_name_snapshot,
+        student_code_snapshot,
         profiles (full_name, status),
         classes (name),
         academic_years (year_label),
@@ -1883,6 +1886,22 @@ async function loadStudentEnrollments() {
       return;
     }
 
+    const studentIds = [...new Set(enrollments.map((enr) => enr.student_id).filter(Boolean))];
+    const studentCodesById = new Map();
+    if (studentIds.length) {
+      const { data: studentRows, error: studentRowsError } = await supabaseClient
+        .from("students")
+        .select("id, student_id")
+        .in("id", studentIds);
+      if (studentRowsError) {
+        console.warn("Could not load current student IDs:", studentRowsError);
+      } else {
+        (studentRows || []).forEach((student) => {
+          studentCodesById.set(student.id, student.student_id);
+        });
+      }
+    }
+
     window.populateEnrollmentFilter(
       "filterAcademicYear",
       enrollments.map((enr) => enr.academic_years?.year_label || "N/A"),
@@ -1906,7 +1925,12 @@ async function loadStudentEnrollments() {
 
     const rowsHTML = enrollments
       .map((enr) => {
-        const studentName = enr.profiles?.full_name || "Unknown Student";
+        const studentName =
+          enr.student_name_snapshot ||
+          enr.profiles?.full_name ||
+          "Unknown Student";
+        const studentCode =
+          enr.student_code_snapshot || studentCodesById.get(enr.student_id) || "";
         const enrollmentStatus = enr.enrollment_status || "Normal";
         const className = enr.classes?.name || "N/A";
         const academicYearName = enr.academic_years?.year_label || "N/A";
@@ -1932,7 +1956,10 @@ async function loadStudentEnrollments() {
               value="${escapeHtml(enr.id)}"
             />
           </td>
-          <td>${escapeHtml(studentName)}</td>
+          <td>
+            ${escapeHtml(studentName)}
+            ${studentCode ? `<small class="enrollment-student-code">${escapeHtml(studentCode)}</small>` : ""}
+          </td>
           <td>${escapeHtml(className)}</td>
           <td>${escapeHtml(academicYearName)}</td>
           <td>${escapeHtml(termName)}</td>

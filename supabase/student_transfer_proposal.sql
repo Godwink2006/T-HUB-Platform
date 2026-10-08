@@ -80,7 +80,7 @@ revoke all on table public.student_transfer_admins from public, anon, authentica
 revoke all on table public.student_transfers from public, anon, authenticated;
 revoke all on table public.student_transfer_history from public, anon, authenticated;
 
-create function public.generate_student_transfer_code(
+create or replace function public.generate_student_transfer_code(
   p_source_enrollment_id uuid,
   p_code_hash text
 )
@@ -94,6 +94,10 @@ declare
   v_school_id uuid;
   v_student_id uuid;
   v_transfer_id uuid;
+  v_active_year_id uuid;
+  v_active_term_id uuid;
+  v_active_year_count bigint;
+  v_active_term_count bigint;
   v_expires_at timestamptz := now() + interval '5 days';
 begin
   if v_actor_id is null then
@@ -102,6 +106,39 @@ begin
 
   if p_code_hash is null or p_code_hash !~ '^[0-9a-fA-F]{64}$' then
     raise exception 'A valid SHA-256 code hash is required.';
+  end if;
+
+  if not public.is_active_user()
+     or not (public.is_admin() or public.is_accountant()) then
+    raise exception 'Only an active school administrator or accountant can generate a transfer code.';
+  end if;
+
+  v_school_id := public.get_user_school_id();
+  if v_school_id is null then
+    raise exception 'Your account is not linked to a school.';
+  end if;
+
+  -- Only issue a transfer code for a student enrolled in the sending
+  -- school's single active academic year and active term.
+  select count(*), (array_agg(year.id))[1]
+    into v_active_year_count, v_active_year_id
+  from public.academic_years as year
+  where year.school_id = v_school_id
+    and lower(year.status::text) = 'active';
+
+  if v_active_year_count <> 1 then
+    raise exception 'The sending school must have exactly one active academic year.';
+  end if;
+
+  select count(*), (array_agg(term.id))[1]
+    into v_active_term_count, v_active_term_id
+  from public.terms as term
+  where term.school_id = v_school_id
+    and term.academic_year_id = v_active_year_id
+    and lower(term.status::text) = 'active';
+
+  if v_active_term_count <> 1 then
+    raise exception 'The active academic year must have exactly one active term.';
   end if;
 
   select enrollment.student_id, enrollment.school_id
@@ -114,10 +151,13 @@ begin
     on transfer_admin.school_id = enrollment.school_id
    and transfer_admin.user_id = v_actor_id
   where enrollment.id = p_source_enrollment_id
+    and enrollment.school_id = v_school_id
+    and enrollment.academic_year_id = v_active_year_id
+    and enrollment.term_id = v_active_term_id
     and coalesce(enrollment.enrollment_status, 'Normal') not in ('Transferred', 'Graduated');
 
   if v_student_id is null then
-    raise exception 'You are not authorized for this school, or the selected enrollment is unavailable or ineligible.';
+    raise exception 'You are not authorized, or the student is not enrolled in the active academic year and term.';
   end if;
 
   update public.student_transfers as transfer
