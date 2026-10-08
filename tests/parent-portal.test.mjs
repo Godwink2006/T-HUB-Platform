@@ -14,7 +14,7 @@ const contextFixPath = path.join(projectRoot, "supabase", "parent_portal_context
 async function loadParentRecordHelpers() {
   const source = await readFile(jsPath, "utf8");
   const context = vm.createContext({ document: { addEventListener() {} }, Intl, URLSearchParams });
-  vm.runInContext(`${source}\nglobalThis.helpers = { parentEscape, parseBreakdown, renderFeesAndPayments, parentRecordState };`, context);
+  vm.runInContext(`${source}\nglobalThis.helpers = { parentEscape, parseBreakdown, renderFeesAndPayments, buildParentSchoolMap, getParentRecordContext, matchesParentRecordFilters, parentRecordState };`, context);
   return context.helpers;
 }
 
@@ -44,6 +44,32 @@ test("parent record renderers escape database text before inserting HTML", async
   assert.ok(html.includes("&lt;script&gt;school&lt;/script&gt;"));
   assert.ok(html.includes("&lt;b&gt;Tuition&lt;/b&gt;"));
   assert.ok(!html.includes("<script>school</script>"));
+});
+
+test("parent record school labels use the schools.school_name column", async () => {
+  const helpers = await loadParentRecordHelpers();
+  const schools = helpers.buildParentSchoolMap([
+    { id: "school-1", school_name: "North High School" },
+  ]);
+  assert.equal(schools.get("school-1"), "North High School");
+  assert.equal(schools.has("school-2"), false);
+  helpers.parentRecordState.schools = schools;
+  const html = helpers.renderFeesAndPayments([{
+    id: "fee-1", school_id: "school-1", total_fees: 0, total_paid: 0, balance: 0,
+    fee_breakdown: [],
+  }]);
+  assert.ok(html.includes("<td>North High School</td>"));
+});
+
+test("grade records can be filtered by their assessment period", async () => {
+  const helpers = await loadParentRecordHelpers();
+  const context = helpers.getParentRecordContext({
+    grades: { assessment_id: "period-1", assessments: { name: "Midterm" } },
+  }, "grades");
+  assert.equal(context.periodName, "Midterm");
+  assert.equal(context.periodId, "period-1");
+  assert.equal(helpers.matchesParentRecordFilters(context, { periodId: "period-1" }), true);
+  assert.equal(helpers.matchesParentRecordFilters(context, { periodId: "period-2" }), false);
 });
 
 test("attendance recursion fix replaces only parent portal policies", async () => {

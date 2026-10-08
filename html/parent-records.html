@@ -3,43 +3,100 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
     <title>Student records | T-HUB Family Portal</title>
     <link rel="stylesheet" href="/css/parent-portal.css" />
     <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
   </head>
   <body class="parent-portal">
     <header class="parent-topbar">
-      <a class="parent-brand" href="parent-dashboard.html"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span>T-HUB <small>Family Portal</small></span></a>
-      <button id="parentSignOut" class="parent-signout" type="button"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Sign out</button>
+      <a class="parent-brand"
+        ><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i
+        ><span>HSMS <small>Family Portal</small></span></a
+      >
+      <button id="parentSignOut" class="parent-signout" type="button">
+        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+        Sign out
+      </button>
     </header>
     <main class="parent-main parent-records-main">
       <section class="parent-welcome">
-        <a class="parent-back-link" href="parent-dashboard.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All students</a>
+        <a class="parent-back-link" href="parent-dashboard.html"
+          ><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All
+          students</a
+        >
         <p class="parent-eyebrow">Selected student</p>
         <h1 id="recordStudentName">Loading student…</h1>
         <p id="recordStudentDetails">Checking your secure student selection…</p>
       </section>
       <nav class="parent-record-tabs" aria-label="Student record pages">
-        <a href="parent-records.html?view=fees" data-record-view="fees"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Fees & payments</a>
-        <a href="parent-records.html?view=attendance" data-record-view="attendance"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Attendance</a>
-        <a href="parent-records.html?view=grades" data-record-view="grades"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Grades</a>
+        <a href="parent-records.html?view=fees" data-record-view="fees"
+          ><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>
+          Fees & payments</a
+        >
+        <a
+          href="parent-records.html?view=attendance"
+          data-record-view="attendance"
+          ><i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+          Attendance</a
+        >
+        <a href="parent-records.html?view=grades" data-record-view="grades"
+          ><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Grades</a
+        >
       </nav>
       <section class="parent-record-panel">
         <div class="parent-record-heading">
-          <div><p class="parent-eyebrow">Student records</p><h2 id="recordViewTitle">Loading records…</h2></div>
+          <div>
+            <p class="parent-eyebrow">Student records</p>
+            <h2 id="recordViewTitle">Loading records…</h2>
+          </div>
         </div>
         <div id="recordFilters" class="parent-record-filters" hidden>
-          <label>School<select id="recordSchoolFilter"><option value="">All schools</option></select></label>
-          <label>Academic year<select id="recordYearFilter"><option value="">All academic years</option></select></label>
-          <label>Class<select id="recordClassFilter"><option value="">All classes</option></select></label>
-          <label>Term / semester<select id="recordTermFilter"><option value="">All terms</option></select></label>
+          <label
+            >School<select id="recordSchoolFilter">
+              <option value="">All schools</option>
+            </select></label
+          >
+          <label
+            >Academic year<select id="recordYearFilter">
+              <option value="">All academic years</option>
+            </select></label
+          >
+          <label
+            >Class<select id="recordClassFilter">
+              <option value="">All classes</option>
+            </select></label
+          >
+          <label
+            >Semester<select id="recordTermFilter">
+              <option value="">All semesters</option>
+            </select></label
+          >
+          <label id="recordPeriodFilterField" hidden
+            >Period<select id="recordPeriodFilter">
+              <option value="">All periods</option>
+            </select></label
+          >
         </div>
-        <div id="parentRecordsContent" class="parent-record-content" aria-live="polite" aria-busy="true">
+        <div
+          id="parentRecordsContent"
+          class="parent-record-content"
+          aria-live="polite"
+          aria-busy="true"
+        >
           <p class="parent-state">Loading the selected student's records…</p>
         </div>
       </section>

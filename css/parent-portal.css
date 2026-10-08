@@ -268,7 +268,7 @@ body.parent-portal {
 }
 .parent-record-content th,
 .parent-record-content td {
-  border-bottom: 2px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 12px 10px;
   text-align: left;
   vertical-align: top;
