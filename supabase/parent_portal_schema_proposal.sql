@@ -32,6 +32,7 @@ alter table public.parent_student_links enable row level security;
 
 revoke all on table public.parent_student_links from public, anon, authenticated;
 grant select on table public.parent_student_links to authenticated;
+grant all on table public.parent_student_links to service_role;
 
 drop policy if exists "Parents can view their active student links"
   on public.parent_student_links;

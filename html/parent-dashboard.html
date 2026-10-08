@@ -36,7 +36,11 @@
           <div><p class="parent-eyebrow">Selected student</p><h2 id="selectedStudentName"></h2><p id="selectedStudentDetails"></p></div>
           <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
         </div>
-        <p class="portal-coming-soon">Student information pages are being connected to this secure selection. Your chosen student will stay selected as you move through the portal.</p>
+        <nav class="parent-record-links" aria-label="Selected student information">
+          <a class="parent-record-link" href="parent-records.html?view=fees"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Fees & payments</a>
+          <a class="parent-record-link" href="parent-records.html?view=attendance"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Attendance</a>
+          <a class="parent-record-link" href="parent-records.html?view=grades"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Grades</a>
+        </nav>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

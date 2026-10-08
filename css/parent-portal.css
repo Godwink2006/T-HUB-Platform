@@ -53,6 +53,28 @@ body.parent-portal {
 .selected-student-heading { align-items: center; display: flex; justify-content: space-between; }
 .selected-student-heading > i { color: #16a36a; font-size: 1.6rem; }
 .portal-coming-soon { background: #f7f9fc; border-radius: 10px; color: var(--parent-muted); font-size: .9rem; line-height: 1.6; margin: 20px 0 0; padding: 15px; }
+.parent-record-links, .parent-record-tabs { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); margin-top: 20px; }
+.parent-record-link, .parent-record-tabs a { align-items: center; background: #f7f9fc; border: 1px solid var(--parent-line); border-radius: 10px; color: var(--parent-ink); display: flex; font-size: .9rem; font-weight: 600; gap: 10px; justify-content: center; padding: 14px; text-decoration: none; }
+.parent-record-link i, .parent-record-tabs i { color: var(--parent-blue); }
+.parent-record-link:hover, .parent-record-tabs a:hover, .parent-record-tabs a.is-active { background: #eaf1ff; border-color: var(--parent-blue); color: #1747ad; }
+.parent-records-main { max-width: 1180px; }
+.parent-back-link { color: var(--parent-blue); display: inline-flex; font-size: .9rem; font-weight: 600; gap: 8px; margin-bottom: 24px; text-decoration: none; }
+.parent-record-panel { background: var(--parent-panel); border: 1px solid var(--parent-line); border-radius: 16px; box-shadow: 0 8px 30px rgb(24 43 76 / 5%); margin-top: 20px; padding: 24px; }
+.parent-record-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 18px; }
+.parent-record-heading h2 { font-size: 1.25rem; margin: 0; }
+.parent-record-filters { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 20px; }
+.parent-record-filters label { color: var(--parent-muted); display: grid; font-size: .8rem; font-weight: 600; gap: 6px; }
+.parent-record-filters select { background: #fff; border: 1px solid var(--parent-line); border-radius: 8px; color: var(--parent-ink); font: inherit; min-height: 42px; padding: 8px; width: 100%; }
+.parent-record-content { overflow-x: auto; }
+.parent-record-content table { border-collapse: collapse; min-width: 680px; width: 100%; }
+.parent-record-content th, .parent-record-content td { border-bottom: 1px solid var(--parent-line); padding: 12px 10px; text-align: left; vertical-align: top; }
+.parent-record-content th { color: var(--parent-muted); font-size: .77rem; text-transform: uppercase; }
+.parent-record-content td { font-size: .88rem; }
+.parent-record-content .parent-empty { color: var(--parent-muted); padding: 28px 12px; text-align: center; }
+.parent-record-content .parent-error { color: #b42318; }
+.parent-record-content ul { margin: 0; padding-left: 18px; }
+.parent-record-content .money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.parent-record-content .status-pill { background: #eef2f7; border-radius: 99px; display: inline-block; padding: 4px 9px; white-space: nowrap; }
 .parent-form-main { max-width: 700px; }
 .parent-form { display: grid; gap: 10px; padding: 24px; }
 .parent-form label { font-size: .88rem; font-weight: 600; margin-top: 8px; }
@@ -68,6 +90,8 @@ body.parent-portal {
   .parent-topbar { min-height: 64px; padding: 10px 15px; }
   .parent-main { padding: 28px 15px 48px; }
   .children-section, .selected-student-panel { padding: 18px; }
+  .parent-record-panel { padding: 18px; }
+  .parent-record-content table { min-width: 620px; }
   .parent-child-card { align-items: flex-start; flex-direction: column; }
   .parent-child-card button { width: 100%; }
 }
