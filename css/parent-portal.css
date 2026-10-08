@@ -248,6 +248,9 @@ body.parent-portal {
   font-weight: 600;
   gap: 6px;
 }
+.parent-record-filters label[hidden] {
+  display: none !important;
+}
 .parent-record-filters select {
   background: #fff;
   border: 2px solid rgb(219, 215, 215);

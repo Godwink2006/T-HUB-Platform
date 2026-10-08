@@ -99,6 +99,11 @@ test("attendance records can be filtered by subject", async () => {
   assert.equal(helpers.matchesParentRecordFilters(context, { subjectId: "subject-2" }), false);
 });
 
+test("inactive record filters stay hidden despite grid label styling", async () => {
+  const css = await readFile(path.join(projectRoot, "css", "parent-portal.css"), "utf8");
+  assert.match(css, /\.parent-record-filters label\[hidden\]\s*\{\s*display:\s*none\s*!important;/);
+});
+
 test("attendance recursion fix replaces only parent portal policies", async () => {
   const sql = await readFile(attendanceFixPath, "utf8");
   assert.ok(sql.includes("private.parent_portal_can_read_attendance(attendance.id)"));
