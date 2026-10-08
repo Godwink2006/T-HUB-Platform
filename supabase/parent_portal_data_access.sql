@@ -26,6 +26,26 @@ as $$
 $$;
 revoke all on function private.current_profile_role() from public, anon;
 grant execute on function private.current_profile_role() to authenticated;
+-- SECURITY DEFINER prevents attendance/attendance_records RLS policies from
+-- recursively evaluating each other. The result is scoped to auth.uid().
+create or replace function private.parent_portal_can_read_attendance(p_attendance_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.attendance_records as ar
+    join public.parent_student_links as link on link.student_id = ar.student_id
+    where ar.attendance_id = p_attendance_id
+      and link.parent_user_id = (select auth.uid())
+      and link.status = 'active'
+  )
+$$;
+revoke all on function private.parent_portal_can_read_attendance(uuid) from public, anon;
+grant execute on function private.parent_portal_can_read_attendance(uuid) to authenticated;
 
 -- A parent can read only their own profile and the profiles of linked students.
 drop policy if exists "parent_portal_profile_select_scope" on public.profiles;
@@ -148,23 +168,13 @@ create policy "parent_portal_attendance_records_select_scope"
 drop policy if exists "parent_portal_attendance_sessions_linked_select" on public.attendance;
 create policy "parent_portal_attendance_sessions_linked_select"
   on public.attendance for select to authenticated
-  using (exists (
-    select 1 from public.attendance_records ar
-    join public.parent_student_links l on l.student_id = ar.student_id
-    where ar.attendance_id = attendance.id
-      and l.parent_user_id = (select auth.uid()) and l.status = 'active'
-  ));
+  using (private.parent_portal_can_read_attendance(attendance.id));
 drop policy if exists "parent_portal_attendance_sessions_select_scope" on public.attendance;
 create policy "parent_portal_attendance_sessions_select_scope"
   on public.attendance as restrictive for select to authenticated
   using (
     coalesce(private.current_profile_role() <> 'parent', true)
-    or exists (
-      select 1 from public.attendance_records ar
-      join public.parent_student_links l on l.student_id = ar.student_id
-      where ar.attendance_id = attendance.id
-        and l.parent_user_id = (select auth.uid()) and l.status = 'active'
-    )
+    or private.parent_portal_can_read_attendance(attendance.id)
   );
 
 -- Grades: score rows and their parent assessment rows are limited to linked
@@ -303,7 +313,7 @@ using (exists (
   select 1 from public.grades g
   join public.grade_records gr on gr.grade_id = g.id
   join public.parent_student_links l on l.student_id = gr.student_id
-  where g.assessment_category_id = assessment_categories.id and l.parent_user_id = (select auth.uid()) and l.status = 'active'
+  where g.category_id = assessment_categories.id and l.parent_user_id = (select auth.uid()) and l.status = 'active'
 ));
 
 -- Allow school names only when an active linked child has data for that school.

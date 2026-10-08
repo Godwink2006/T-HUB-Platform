@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const jsPath = path.join(projectRoot, "js", "parent-records.js");
 const sqlPath = path.join(projectRoot, "supabase", "parent_portal_data_access.sql");
+const attendanceFixPath = path.join(projectRoot, "supabase", "parent_portal_attendance_recursion_fix.sql");
 
 async function loadParentRecordHelpers() {
   const source = await readFile(jsPath, "utf8");
@@ -31,6 +32,17 @@ test("parent record renderers escape database text before inserting HTML", async
   assert.ok(!html.includes("<script>school</script>"));
 });
 
+test("attendance recursion fix replaces only parent portal policies", async () => {
+  const sql = await readFile(attendanceFixPath, "utf8");
+  assert.ok(sql.includes("private.parent_portal_can_read_attendance(attendance.id)"));
+  const droppedPolicies = [...sql.matchAll(/drop policy if exists "([^"]+)"/gi)].map((match) => match[1]);
+  assert.deepEqual(droppedPolicies, [
+    "parent_portal_attendance_sessions_linked_select",
+    "parent_portal_attendance_sessions_select_scope",
+  ]);
+  assert.ok(sql.includes("security definer"));
+  assert.ok(sql.includes("link.parent_user_id = (select auth.uid())"));
+});
 test("parent data SQL scopes sensitive reads to active child links and blocks parent writes", async () => {
   const sql = await readFile(sqlPath, "utf8");
   for (const policy of ["parent_portal_students_select_scope", "parent_portal_enrollments_select_scope", "parent_portal_fees_select_scope", "parent_portal_payments_select_scope", "parent_portal_attendance_records_select_scope", "parent_portal_grade_records_select_scope"]) {
@@ -39,10 +51,15 @@ test("parent data SQL scopes sensitive reads to active child links and blocks pa
   assert.ok(sql.includes("as restrictive for select"), "must narrow existing permissive school policies for parents");
   assert.ok(sql.includes("parent_portal_read_only_' || table_name || '_' || op"), "must prevent parents from writing school records");
   assert.ok(sql.includes("link.status = 'active'"), "inactive or revoked links must not authorize reads");
+  assert.ok(sql.includes('g.category_id = assessment_categories.id'), 'assessment category must use the actual grades.category_id column');
+  assert.ok(!sql.includes('g.assessment_category_id'), 'do not reference a nonexistent grades column');
   assert.ok(sql.includes("private.current_profile_role()"), "role checks must avoid recursive profiles RLS queries");
+  assert.ok(sql.includes("private.parent_portal_can_read_attendance(attendance.id)"), "attendance policies must use the recursion-safe helper");
+  const attendancePolicySection = sql.split("-- Grades:")[0].split("-- Attendance details")[1];
+  assert.ok(attendancePolicySection.includes("private.parent_portal_can_read_attendance(attendance.id)"));
   const droppedPolicies = [...sql.matchAll(/drop policy if exists "([^"]+)"/gi)].map((match) => match[1]);
   assert.ok(droppedPolicies.length > 0);
   assert.ok(droppedPolicies.every((name) => name.startsWith("parent_portal_")), "only policies owned by this patch may be replaced");
-  assert.ok(!/alter table public\\.[a-z_]+ enable row level security/i.test(sql), "do not toggle existing table RLS configuration");
+  assert.ok(!/alter table public\.[a-z_]+ enable row level security/i.test(sql), "do not toggle existing table RLS configuration");
   assert.ok(!sql.includes('"Users can view their own profile row"'), "do not replace any existing profile policy");
 });
