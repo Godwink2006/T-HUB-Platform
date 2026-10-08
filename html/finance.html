@@ -14,7 +14,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/payment.css" />
-    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="/css/utils.css" />
     <link
@@ -34,7 +34,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
   </head>
-  <body>
+  <body class="finance-page">
     <div class="finances-container">
       <button
         class="menu-toggle"
@@ -131,31 +131,30 @@
             </div>
           </header>
 
-          <section class="toolbar">
-            <input type="text" placeholder="Search students..." />
+          <section class="toolbar" aria-label="Filter payment records">
+            <input id="financeStudentSearch" type="search" placeholder="Search student name or ID…" aria-label="Search students by name or ID" autocomplete="off" />
 
-            <select>
-              <option>Semester</option>
-              <option></option>
+            <select id="financeTermFilter" aria-label="Filter by semester">
+              <option value="all">All semesters</option>
             </select>
 
-            <select>
-              <option>Class</option>
+            <select id="financeClassFilter" aria-label="Filter by class">
+              <option value="all">All classes</option>
             </select>
 
-            <select>
-              <option>Academic Year</option>
+            <select id="financeYearFilter" aria-label="Filter by academic year">
+              <option value="all">All academic years</option>
             </select>
 
-            <select>
-              <option>All Status</option>
-              <option>Paid</option>
-              <option>Unpaid</option>
-              <option>Partial</option>
+            <select id="financeStatusFilter" aria-label="Filter by payment status">
+              <option value="all">All statuses</option>
+              <option value="Paid">Paid</option>
+              <option value="Unpaid">Unpaid</option>
+              <option value="Partial">Partial</option>
             </select>
           </section>
 
-          <section class="payments-table-card">
+          <section class="payments-table-card" tabindex="0" aria-label="Payment records table; scroll horizontally to see all columns">
             <table>
               <thead>
                 <tr>
@@ -170,39 +169,7 @@
               </thead>
 
               <tbody id="student-fees-tbody">
-                <tr>
-                  <td>John Doe</td>
-                  <td>Grade 8A</td>
-                  <td>RWF 500,000</td>
-                  <td>RWF 200,000</td>
-                  <td>RWF 300,000</td>
-                  <td>
-                    <span class="payments-status-inactive">Patial</span>
-                  </td>
-
-                  <td>
-                    <button class="payments-actions-btn view">
-                      <i class="fa-solid fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td>Sarah Doe</td>
-                  <td>Grade 7B</td>
-                  <td>RWF 450,000</td>
-                  <td>RWF 450,000</td>
-                  <td>RWF 0</td>
-                  <td>
-                    <span class="payments-status-active">Paid</span>
-                  </td>
-
-                  <td>
-                    <button class="payments-actions-btn view">
-                      <i class="fa-solid fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
+                <tr><td colspan="7" class="payments-empty-state">Loading payment records…</td></tr>
               </tbody>
             </table>
           </section>

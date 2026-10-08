@@ -8,6 +8,8 @@ const cancelAddRecordPaymentModal = document.getElementById(
   "cancelAddRecordPaymentModal",
 );
 
+let financeFeeRows = [];
+
 
 const recordPaymentBtn = document.getElementById("addRecordPayment");
 const recordModal = document.getElementById("addRecordPaymentModal");
@@ -78,6 +80,7 @@ window.addEventListener("click", (e) => {
 async function loadStudentFees() {
   const tbody = document.getElementById("student-fees-tbody");
   if (!tbody) return;
+  financeFeeRows = [];
 
   tbody.innerHTML =
     '<tr><td colspan="7" style="text-align: center; color: grey;"><i class="fas fa-spinner fa-spin" style="color: grey"></i>  Loading fees...</td></tr>';
@@ -94,7 +97,12 @@ async function loadStudentFees() {
         balance,
         status,
         student_id,
-        classes:class_id (name)
+        class_id,
+        academic_year_id,
+        term_id,
+        classes:class_id (id, name),
+        academic_years:academic_year_id (year_label),
+        terms:term_id (name)
       `,
       )
       .order("created_at", { ascending: false });
@@ -108,19 +116,22 @@ async function loadStudentFees() {
     }
 
 
-    const { data: profiles, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("id, full_name");
-
+    const studentIds = [...new Set(fees.map((fee) => fee.student_id).filter(Boolean))];
+    const [{ data: profiles, error: profileError }, { data: studentRecords, error: studentError }] = await Promise.all([
+      studentIds.length
+        ? supabaseClient.from("profiles").select("id, full_name").in("id", studentIds)
+        : Promise.resolve({ data: [], error: null }),
+      studentIds.length
+        ? supabaseClient.from("students").select("id, student_id").in("id", studentIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
     if (profileError) throw profileError;
+    if (studentError) throw studentError;
 
     const profileMap = {};
-    if (profiles) {
-      profiles.forEach((p) => {
-        profileMap[p.id] = p.full_name;
-      });
-    }
-
+    (profiles || []).forEach((profile) => { profileMap[profile.id] = profile.full_name || "Unknown Student"; });
+    const studentCodeMap = {};
+    (studentRecords || []).forEach((student) => { studentCodeMap[student.id] = student.student_id || ""; });
 
     const { data: enrollments, error: enrollmentError } = await supabaseClient
       .from("student_enrollments")
@@ -128,70 +139,133 @@ async function loadStudentFees() {
 
     if (enrollmentError) throw enrollmentError;
 
-
     const enrollmentStatusMap = {};
     if (enrollments) {
-      enrollments.forEach((e) => {
-        enrollmentStatusMap[e.student_id] = e.enrollment_status;
+      enrollments.forEach((enrollment) => {
+        enrollmentStatusMap[enrollment.student_id] = enrollment.enrollment_status;
       });
     }
-
 
     const activeFees = fees.filter((fee) => {
       const status = enrollmentStatusMap[fee.student_id] || "";
       const lowerStatus = status.toLowerCase();
-
-      if (
-        lowerStatus.includes("graduated") ||
-        lowerStatus.includes("transferred")
-      ) {
-        return false;
-      }
-      return true;
+      return !lowerStatus.includes("graduated") && !lowerStatus.includes("transferred");
     });
 
-    if (activeFees.length === 0) {
-      tbody.innerHTML =
-        '<tr><td colspan="7" style="text-align: center;">No active student fee records found.</td></tr>';
-      return;
-    }
+    financeFeeRows = activeFees.map((fee) => ({
+      fee,
+      studentName: profileMap[fee.student_id] || "Unknown Student",
+      studentCode: studentCodeMap[fee.student_id] || "",
+      className: fee.classes?.name || "Unassigned",
+      classId: fee.class_id || fee.classes?.id || "",
+      yearLabel: fee.academic_years?.year_label || "Unassigned",
+      yearId: fee.academic_year_id || "",
+      termName: fee.terms?.name || "Unassigned",
+      termId: fee.term_id || "",
+    }));
 
-
-    tbody.innerHTML = "";
-
-    activeFees.forEach((fee) => {
-      const studentName = profileMap[fee.student_id] || "Unknown Student";
-      const className = fee.classes?.name || "Unassigned";
-
-      let statusClass = "payments-status-inactive";
-      if (fee.status === "Paid") statusClass = "payments-status-active";
-      if (fee.status === "Partial") statusClass = "payments-status-partial";
-
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${escapeHTML(studentName)}</td>
-        <td>${escapeHTML(className)}</td>
-        <td>USD ${Number(fee.total_fees || 0).toLocaleString()}</td>
-        <td>USD ${Number(fee.total_paid || 0).toLocaleString()}</td>
-        <td>USD ${Number(fee.balance || 0).toLocaleString()}</td>
-        <td>
-          <span class="${statusClass}">${escapeHTML(fee.status || "Unpaid")}</span>
-        </td>
-        <td>
-          <button class="payments-actions-btn view" onclick="viewFeeDetails('${escapeHTML(fee.id)}')">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
+    populateFinanceFilterOptions("financeTermFilter", financeFeeRows, "termId", "termName", "All semesters");
+    populateFinanceFilterOptions("financeClassFilter", financeFeeRows, "classId", "className", "All classes");
+    populateFinanceFilterOptions("financeYearFilter", financeFeeRows, "yearId", "yearLabel", "All academic years");
+    renderFinanceFeeRows();
   } catch (err) {
     console.error("Error loading student fees:", err.message);
-    tbody.innerHTML =
-      '<tr><td colspan="7" style="text-align: center; color: red;">Failed to load fee data.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="payments-empty-state is-error">Payment records could not be loaded. Refresh the page or contact an administrator.</td></tr>';
   }
 }
 
+function populateFinanceFilterOptions(selectId, rows, valueKey, labelKey, placeholder) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  const selectedValue = select.value || "all";
+  const values = new Map();
+  rows.forEach((row) => {
+    if (row[valueKey]) values.set(String(row[valueKey]), String(row[labelKey] || "Unassigned"));
+  });
+  select.replaceChildren(new Option(placeholder, "all"));
+  [...values.entries()]
+    .sort((a, b) => a[1].localeCompare(b[1], undefined, { numeric: true, sensitivity: "base" }))
+    .forEach(([value, label]) => select.add(new Option(label, value)));
+  if ([...values.keys()].includes(selectedValue)) select.value = selectedValue;
+}
+
+function matchesFinanceFeeFilters(row, filters) {
+  const query = String(filters.search || "").trim().toLocaleLowerCase();
+  const searchableText = `${row.studentName || ""} ${row.studentCode || ""}`.toLocaleLowerCase();
+  return (!query || searchableText.includes(query))
+    && (filters.term === "all" || String(row.termId) === String(filters.term))
+    && (filters.classId === "all" || String(row.classId) === String(filters.classId))
+    && (filters.year === "all" || String(row.yearId) === String(filters.year))
+    && (filters.status === "all" || String(row.fee?.status || "Unpaid").toLowerCase() === String(filters.status).toLowerCase());
+}
+
+function renderFinanceFeeRows() {
+  const tbody = document.getElementById("student-fees-tbody");
+  if (!tbody) return;
+  const filters = {
+    search: document.getElementById("financeStudentSearch")?.value || "",
+    term: document.getElementById("financeTermFilter")?.value || "all",
+    classId: document.getElementById("financeClassFilter")?.value || "all",
+    year: document.getElementById("financeYearFilter")?.value || "all",
+    status: document.getElementById("financeStatusFilter")?.value || "all",
+  };
+  const matches = financeFeeRows.filter((row) => matchesFinanceFeeFilters(row, filters));
+  if (!matches.length) {
+    const hasRecords = financeFeeRows.length > 0;
+    tbody.innerHTML = `<tr><td colspan="7" class="payments-empty-state">${hasRecords ? "No payment records match these filters." : "No active student fee records found."}</td></tr>`;
+    return;
+  }
+
+  tbody.replaceChildren(...matches.map(({ fee, studentName, studentCode, className }) => {
+    const row = document.createElement("tr");
+    const studentCell = document.createElement("td");
+    studentCell.appendChild(document.createTextNode(studentName));
+    if (studentCode) {
+      const studentId = document.createElement("span");
+      studentId.className = "finance-student-id";
+      studentId.textContent = ` · ${studentCode}`;
+      studentCell.appendChild(studentId);
+    }
+    row.appendChild(studentCell);
+    const cells = [
+      className,
+      `USD ${Number(fee.total_fees || 0).toLocaleString()}`,
+      `USD ${Number(fee.total_paid || 0).toLocaleString()}`,
+      `USD ${Number(fee.balance || 0).toLocaleString()}`,
+    ];
+    cells.forEach((value) => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.appendChild(cell);
+    });
+    const statusCell = document.createElement("td");
+    const status = document.createElement("span");
+    const normalizedStatus = String(fee.status || "Unpaid").toLowerCase();
+    status.className = normalizedStatus === "paid" ? "payments-status-active" : normalizedStatus === "partial" ? "payments-status-partial" : "payments-status-inactive";
+    status.textContent = fee.status || "Unpaid";
+    statusCell.appendChild(status);
+    row.appendChild(statusCell);
+    const actionCell = document.createElement("td");
+    const viewButton = document.createElement("button");
+    viewButton.type = "button";
+    viewButton.className = "payments-actions-btn view";
+    viewButton.setAttribute("aria-label", `View payment details for ${studentName}`);
+    viewButton.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
+    viewButton.addEventListener("click", () => viewFeeDetails(fee.id));
+    actionCell.appendChild(viewButton);
+    row.appendChild(actionCell);
+    return row;
+  }));
+}
+
+function initializeFinanceFilters() {
+  ["financeStudentSearch", "financeTermFilter", "financeClassFilter", "financeYearFilter", "financeStatusFilter"]
+    .forEach((id) => document.getElementById(id)?.addEventListener("input", renderFinanceFeeRows));
+  ["financeTermFilter", "financeClassFilter", "financeYearFilter", "financeStatusFilter"]
+    .forEach((id) => document.getElementById(id)?.addEventListener("change", renderFinanceFeeRows));
+}
+
+document.addEventListener("DOMContentLoaded", initializeFinanceFilters);
 
 async function viewFeeDetails(feeId) {
   console.log("Opening fee details for fee.id:", feeId);

@@ -889,3 +889,176 @@ body {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Finance page follows the system's square desktop card style. */
+.finance-page .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.finance-page .toolbar input {
+  flex: 2 1 240px;
+  min-width: 0;
+}
+
+.finance-page .toolbar select {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+.finance-page .toolbar input,
+.finance-page .toolbar select {
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 0;
+  color: #111827;
+}
+
+.finance-page .payments-table-card {
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.finance-page .payments-actions-btn {
+  border-radius: 0;
+}
+
+.payments-empty-state {
+  color: #64748b !important;
+  padding: 28px 18px !important;
+  text-align: center;
+}
+
+.payments-empty-state.is-error {
+  color: #b91c1c !important;
+}
+
+@media screen and (max-width: 768px) {
+  .finance-page .toolbar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 12px;
+  }
+
+  .finance-page .toolbar input {
+    grid-column: 1 / -1;
+  }
+
+  .finance-page .toolbar input,
+  .finance-page .toolbar select {
+    width: 100%;
+    min-width: 0;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .finance-page .payments-table-card {
+    border-radius: 12px;
+  }
+
+  .finance-page .payments-actions-btn {
+    border-radius: 6px;
+  }
+}
+
+/* Keep finance styling consistent with the other system pages. */
+.finance-page .sidebar {
+  background: #1d4ed8;
+  box-shadow: none;
+}
+
+.finance-page .menu li a {
+  color: #ffffff;
+  border-radius: 0;
+}
+
+.finance-page .menu li a:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0;
+}
+
+.finance-page .menu li.active a {
+  color: #1d4ed8;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.finance-page .payments-status-active,
+.finance-page .payments-status-inactive,
+.finance-page .payments-status-partial {
+  border-radius: 0;
+}
+
+.finance-page .finance-student-id {
+  color: #64748b;
+  font-size: 0.92em;
+}
+
+.finance-page .recordPayment-modal-content,
+.finance-page .view-payment-modal-content,
+.finance-page .payment-table-card,
+.finance-page .details-grid {
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.finance-page .recordPayment-modal-header,
+.finance-page .view-payment-modal-header {
+  border-bottom: 2px solid rgb(219, 215, 215);
+}
+
+.finance-page .recordPayment-modal-header button,
+.finance-page #closeViewPaymentModal {
+  border: 0;
+  border-radius: 0;
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.finance-page .cancel-btn {
+  border: 0;
+  border-radius: 0;
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.finance-page .save-btn {
+  border-radius: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .finance-page .payments-status-active,
+  .finance-page .payments-status-inactive,
+  .finance-page .payments-status-partial,
+  .finance-page .recordPayment-modal-content,
+  .finance-page .view-payment-modal-content,
+  .finance-page .payment-table-card,
+  .finance-page .details-grid,
+  .finance-page .recordPayment-modal-header button,
+  .finance-page #closeViewPaymentModal,
+  .finance-page .cancel-btn {
+    border-radius: 12px;
+  }
+
+  .finance-page .menu li a,
+  .finance-page .menu li a:hover,
+  .finance-page .menu li.active a {
+    border-radius: 12px;
+  }
+
+  .finance-page .payments-table-card {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .finance-page .payments-table-card table {
+    width: max-content;
+    min-width: 720px;
+  }
+}

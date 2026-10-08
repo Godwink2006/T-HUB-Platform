@@ -79,6 +79,24 @@ test("parent announcement policy is additive and only exposes linked-school audi
   assert.match(source, /'students'.*'parent'.*'parents'/s);
   assert.doesNotMatch(source, /drop policy if exists .*on public\.(?!announcements)/i);
 });
+test("finance filters match student search, term, class, academic year, and status", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
+  const functionSource = source.match(/function matchesFinanceFeeFilters\(row, filters\) \{[\s\S]*?\n\}/)?.[0];
+  assert.ok(functionSource, "finance filter matcher exists");
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.matches = matchesFinanceFeeFilters;`, context);
+  const row = {
+    studentName: "Wilkin Rugs", studentCode: "ST-1010", termId: "term-a",
+    classId: "class-9", yearId: "year-26", fee: { status: "Partial" },
+  };
+  const base = { search: "wilkin", term: "term-a", classId: "class-9", year: "year-26", status: "Partial" };
+  assert.equal(context.matches(row, base), true);
+  assert.equal(context.matches(row, { ...base, search: "ST-1010" }), true);
+  assert.equal(context.matches(row, { ...base, term: "term-b" }), false);
+  assert.equal(context.matches(row, { ...base, classId: "class-8" }), false);
+  assert.equal(context.matches(row, { ...base, year: "year-25" }), false);
+  assert.equal(context.matches(row, { ...base, status: "Paid" }), false);
+});
 test("parent record renderers escape database text before inserting HTML", async () => {
   const helpers = await loadParentRecordHelpers();
   assert.equal(helpers.parentEscape(`<img src=x onerror="alert(1)">`), "&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
