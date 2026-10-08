@@ -53,25 +53,25 @@ function filterTeachersTable() {
       <tr>
         <td>
           <img
-            src="${photoUrl}"
+            src="${escapeHTML(photoUrl)}"
             class="teacher-photo"
             alt="Photo"
             loading="lazy"
             onerror="this.onerror=null; this.src=DEFAULT_AVATAR;"
           />
         </td>
-        <td>${teacher.staff_id || "-"}</td>
-        <td>${profile.full_name || "-"}</td>
-        <td>${teacher.gender || "-"}</td>
-        <td>${profile.email || "-"}</td>
+        <td>${escapeHTML(teacher.staff_id || "-")}</td>
+        <td>${escapeHTML(profile.full_name || "-")}</td>
+        <td>${escapeHTML(teacher.gender || "-")}</td>
+        <td>${escapeHTML(profile.email || "-")}</td>
         <td>
-          <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
-            ${profile.status || "Active"}
+          <span class="teachers-status-${String(profile.status || "active").toLowerCase() === "inactive" ? "inactive" : "active"}">
+            ${escapeHTML(profile.status || "Active")}
           </span>
         </td>
         <td>
-          <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
-          <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
+          <button class="teachers-actions-btn view" data-id="${escapeHTML(teacher.id)}"><i class="fa-solid fa-eye"></i></button>
+          <button class="teachers-actions-btn edit" data-id="${escapeHTML(teacher.id)}"><i class="fa-solid fa-pen"></i></button>
         </td>
       </tr>`;
     })
@@ -814,25 +814,25 @@ async function loadTeachers() {
           <tr>
             <td>
               <img
-                src="${photoUrl}"
+                src="${escapeHTML(photoUrl)}"
                 class="teacher-photo"
                 alt="Photo"
                 loading="lazy"
                 onerror="this.onerror=null; this.src=DEFAULT_AVATAR;"
               />
             </td>
-            <td>${teacher.staff_id || "-"}</td>
-            <td>${profile.full_name || "-"}</td>
-            <td>${teacher.gender || "-"}</td>
-            <td>${profile.email || "-"}</td>
+            <td>${escapeHTML(teacher.staff_id || "-")}</td>
+            <td>${escapeHTML(profile.full_name || "-")}</td>
+            <td>${escapeHTML(teacher.gender || "-")}</td>
+            <td>${escapeHTML(profile.email || "-")}</td>
             <td>
-              <span class="teachers-status-${(profile.status || "active").toLowerCase()}">
-                ${profile.status || "Active"}
+              <span class="teachers-status-${String(profile.status || "active").toLowerCase() === "inactive" ? "inactive" : "active"}">
+                ${escapeHTML(profile.status || "Active")}
               </span>
             </td>
             <td>
-              <button class="teachers-actions-btn view" data-id="${teacher.id}"><i class="fa-solid fa-eye"></i></button>
-              <button class="teachers-actions-btn edit" data-id="${teacher.id}"><i class="fa-solid fa-pen"></i></button>
+              <button class="teachers-actions-btn view" data-id="${escapeHTML(teacher.id)}"><i class="fa-solid fa-eye"></i></button>
+              <button class="teachers-actions-btn edit" data-id="${escapeHTML(teacher.id)}"><i class="fa-solid fa-pen"></i></button>
             </td>
           </tr>`;
         })

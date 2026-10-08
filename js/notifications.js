@@ -53,16 +53,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     notificationList.innerHTML = filtered
       .map(
         (item) => `
-            <div data-id="${item.id}" class="notif-item" style="padding: 16px 20px; border-bottom: 1px solid #f3f4f6; background: ${item.is_read ? "white" : "#f8fafc"}; display: flex; justify-content: space-between; align-items: flex-start; transition: background 0.2s; cursor: pointer;">
+            <div data-id="${escapeHTML(item.id)}" class="notif-item" style="padding: 16px 20px; border-bottom: 1px solid #f3f4f6; background: ${item.is_read ? "white" : "#f8fafc"}; display: flex; justify-content: space-between; align-items: flex-start; transition: background 0.2s; cursor: pointer;">
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
                     <div style="margin-top: 4px; flex-shrink: 0; width: 12px; height: 12px; border-radius: 50%; background: ${item.is_read ? "transparent" : "#2563eb"};"></div>
                     <div>
-                        <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: ${item.is_read ? "500" : "600"}; color: #111827;">${item.title}</h4>
-                        <p style="margin: 0 0 6px 0; font-size: 13px; color: #4b5563; line-height: 1.4;">${item.message}</p>
+                        <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: ${item.is_read ? "500" : "600"}; color: #111827;">${escapeHTML(item.title || "")}</h4>
+                        <p style="margin: 0 0 6px 0; font-size: 13px; color: #4b5563; line-height: 1.4;">${escapeHTML(item.message || "")}</p>
                         <span style="font-size: 11px; color: #9ca3af;">${new Date(item.created_at).toLocaleString()}</span>
                     </div>
                 </div>
-                ${!item.is_read ? `<button class="mark-read-single" data-id="${item.id}" style="background: none; border: none; color: #2563eb; font-size: 12px; cursor: pointer; font-weight: 500; white-space: nowrap;">Mark as read</button>` : ""}
+                ${!item.is_read ? `<button class="mark-read-single" data-id="${escapeHTML(item.id)}" style="background: none; border: none; color: #2563eb; font-size: 12px; cursor: pointer; font-weight: 500; white-space: nowrap;">Mark as read</button>` : ""}
             </div>
         `,
       )

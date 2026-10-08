@@ -779,7 +779,7 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
 
     if (studentErr) {
       console.error("Error fetching active students:", studentErr);
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">Error loading students: ${studentErr.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">Error loading students: ${escapeHTML(studentErr.message)}</td></tr>`;
       return;
     }
 
@@ -805,13 +805,13 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td style="padding: 12px; font-weight: 600; color: #374151;">${studentCode}</td>
+        <td style="padding: 12px; font-weight: 600; color: #374151;">${escapeHTML(studentCode)}</td>
         <td style="padding: 12px; font-weight: 500; color: #111827;">${displayName}</td>
         <td class="form-group" style="padding: 12px;">
           <input
             type="number"
             class="student-score-input"
-            data-student-id="${student.id}"
+            data-student-id="${escapeHTML(student.id)}"
             placeholder="${placeholderText}"
             min="0"
             ${maxAttr}
@@ -1078,7 +1078,7 @@ async function handleViewGrades(gradeId) {
           return `
             <tr>
               <td>${idDisplay}</td>
-              <td>${studentName}</td>
+              <td>${escapeHTML(studentName)}</td>
               <td><p>${scoreDisplay}</p></td>
             </tr>`;
         })
@@ -1260,14 +1260,14 @@ async function handleEditGrades(gradeId) {
 
           return `
  <tr data-record-id="${rec.id}">
-          <td>${studentId}</td>
-          <td>${studentName}</td>
+          <td>${escapeHTML(studentId)}</td>
+          <td>${escapeHTML(studentName)}</td>
           <td class="form-group">
             <input
               type="number"
               class="edit-score-input"
               data-record-id="${rec.id}"
-              data-student-id="${rec.student_id}"
+              data-student-id="${escapeHTML(rec.student_id)}"
               data-initial-value="${scoreVal}"
               value="${scoreVal}"
               placeholder="0 - ${finalMaxMarks ?? "Max"}"

@@ -68,12 +68,12 @@ function renderAcademicYearsTable() {
 
       return `
         <tr>
-          <td>${item.year_label}</td>
-          <td><span class="${statusClass}">${item.status}</span></td>
+          <td>${escapeHTML(item.year_label || "")}</td>
+          <td><span class="${statusClass}">${escapeHTML(item.status || "")}</span></td>
           <td>${formatDateTime(item.created_at)}</td>
           <td>${formatDateTime(item.updated_at)}</td>
           <td>
-            <button class="academic-years-actions-btn edit-academicYear" onclick="openEditModal('${item.id}')">
+            <button class="academic-years-actions-btn edit-academicYear" data-id="${escapeHTML(item.id)}">
               <i class="fa-solid fa-pen"></i>
             </button>
           </td>
@@ -281,6 +281,10 @@ function closeModal(modalId) {
   }
 }
 function setupModalListeners() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".edit-academicYear[data-id]");
+    if (button) openEditModal(button.dataset.id);
+  });
   document
     .getElementById("addAcademicYear")
     ?.addEventListener("click", () => openModal("academicYearModal"));

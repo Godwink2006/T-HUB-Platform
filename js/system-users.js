@@ -320,21 +320,21 @@ async function loadSystemUsers() {
       (user) => `
     <tr>
            <td>
-          <img src="${user.photo_url ? user.photo_url : DEFAULT_AVATAR}" class="systemUser-photo" alt="Profile" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" />
+          <img src="${escapeHTML(user.photo_url ? user.photo_url : DEFAULT_AVATAR)}" class="systemUser-photo" alt="Profile" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" />
         </td>
-      <td>${user.full_name || "-"}</td>
-      <td>${user.email || "-"}</td>
-      <td>${user.phone_number || "-"}</td>
-      <td>${user.role || "-"}</td>
+      <td>${escapeHTML(user.full_name || "-")}</td>
+      <td>${escapeHTML(user.email || "-")}</td>
+      <td>${escapeHTML(user.phone_number || "-")}</td>
+      <td>${escapeHTML(user.role || "-")}</td>
        <td>${formatDateTime(user.created_at)}</td>
       <td>${formatDateTime(user.updated_at)}</td>
       <td>
-        <span class="systemUsers-status-${(user.status || "inactive").toLowerCase()}">
-          ${user.status || "Inactive"}
+        <span class="systemUsers-status-${String(user.status || "inactive").toLowerCase() === "active" ? "active" : "inactive"}">
+          ${escapeHTML(user.status || "Inactive")}
         </span>
       </td>
       <td>
-        <button class="systemUsers-actions-btn edit-SystemUser" onclick="editUser('${user.id}')">
+        <button class="systemUsers-actions-btn edit-SystemUser" onclick="editUser('${escapeHTML(user.id)}')">
           <i class="fa-solid fa-pen"></i>
         </button>
       </td>

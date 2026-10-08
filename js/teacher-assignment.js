@@ -602,19 +602,19 @@ function renderAssignmentsTable(assignments) {
       : "Inactive";
 
     tr.innerHTML = `
-      <td>${teacherName}</td>
-      <td>${subjectName}</td>
-      <td>${className}</td>
-      <td>${academicYear}</td>
+      <td>${escapeHTML(teacherName || "-")}</td>
+      <td>${escapeHTML(subjectName || "-")}</td>
+      <td>${escapeHTML(className || "-")}</td>
+      <td>${escapeHTML(academicYear || "-")}</td>
       <td>${isClassTeacherText}</td>
-      <td>${assign.description || "-"}</td>
+      <td>${escapeHTML(assign.description || "-")}</td>
       <td>${formatDate(assign.created_at)}</td>
       <td>${formatDate(assign.updated_at)}</td>
       <td>
-        <span class="${statusClass}">${statusText}</span>
+        <span class="${statusClass}">${escapeHTML(statusText)}</span>
       </td>
       <td>
-        <button class="assigns-actions-btn edit" data-id="${assign.id}">
+        <button class="assigns-actions-btn edit" data-id="${escapeHTML(assign.id)}">
           <i class="fa-solid fa-pen"></i>
         </button>
       </td>

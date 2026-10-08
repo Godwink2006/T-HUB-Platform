@@ -130,7 +130,7 @@ function renderFeesTable(fees, container) {
           items.forEach((item) => {
             const itemName = item.fee_name || "Fee Item";
             const itemAmount = item.amount || 0;
-            breakdownHtml += `<li>${itemName}: <strong>$${Number(itemAmount).toFixed(2)}</strong></li>`;
+            breakdownHtml += `<li>${escapeHTML(itemName)}: <strong>$${Number(itemAmount).toFixed(2)}</strong></li>`;
           });
           breakdownHtml += `</ul>`;
         }

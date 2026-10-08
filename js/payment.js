@@ -169,16 +169,16 @@ async function loadStudentFees() {
 
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${studentName}</td>
-        <td>${className}</td>
+        <td>${escapeHTML(studentName)}</td>
+        <td>${escapeHTML(className)}</td>
         <td>USD ${Number(fee.total_fees || 0).toLocaleString()}</td>
         <td>USD ${Number(fee.total_paid || 0).toLocaleString()}</td>
         <td>USD ${Number(fee.balance || 0).toLocaleString()}</td>
         <td>
-          <span class="${statusClass}">${fee.status || "Unpaid"}</span>
+          <span class="${statusClass}">${escapeHTML(fee.status || "Unpaid")}</span>
         </td>
         <td>
-          <button class="payments-actions-btn view" onclick="viewFeeDetails('${fee.id}')">
+          <button class="payments-actions-btn view" onclick="viewFeeDetails('${escapeHTML(fee.id)}')">
             <i class="fa-solid fa-eye"></i>
           </button>
         </td>
@@ -291,7 +291,7 @@ async function viewFeeDetails(feeId) {
         </tr>
         <tr>
           <td>Status</td>
-          <td>${fee.status || "Unpaid"}</td>
+          <td>${escapeHTML(fee.status || "Unpaid")}</td>
         </tr>
       `;
     }
@@ -324,7 +324,7 @@ async function viewFeeDetails(feeId) {
                 alloc.item_name ||
                 alloc.fee_structure_items?.fee_name ||
                 "General Fee";
-              allocationsHtml += `<li><strong>${itemName}:</strong> RWF ${Number(alloc.amount || 0).toLocaleString()}</li>`;
+              allocationsHtml += `<li><strong>${escapeHTML(itemName)}:</strong> RWF ${Number(alloc.amount || 0).toLocaleString()}</li>`;
             });
           } else {
             allocationsHtml += `<li><em>No specific item breakdown</em></li>`;
@@ -507,17 +507,17 @@ async function loadFeeItemAllocations(feeId) {
 
       itemRow.innerHTML = `
         <div class="item-info">
-          <strong>${itemName}</strong><br>
+          <strong>${escapeHTML(itemName)}</strong><br>
           <small>Amount: RWF ${Number(item.amount || 0).toLocaleString()}</small>
         </div>
         <input
           type="number"
           class="item-payment-input"
-          data-item-id="${item.id}"
-          data-max="${item.amount}"
+          data-item-id="${escapeHTML(item.id)}"
+          data-max="${Number(item.amount) || 0}"
           placeholder="0.00"
           min="0"
-          max="${item.amount}"
+          max="${Number(item.amount) || 0}"
           style="width: 120px; padding: 6px;"
         />
       `;
@@ -530,7 +530,7 @@ async function loadFeeItemAllocations(feeId) {
     });
   } catch (err) {
     console.error("Detailed Supabase Error:", err.message || err);
-    container.innerHTML = `<p style="color: red;">Error: ${err.message || "Check console for details"}</p>`;
+    container.innerHTML = `<p style="color: red;">Error: ${escapeHTML(err.message || "Check console for details")}</p>`;
   }
 }
 

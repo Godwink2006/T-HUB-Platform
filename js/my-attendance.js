@@ -115,10 +115,10 @@ function renderAttendanceHistory(records) {
 
     tr.innerHTML = `
       <td>${dateStr}</td>
-      <td>${r.attendance?.subjects?.name || "-"}</td>
-      <td>${teacherName}</td>
-      <td>${r.attendance?.periods?.name || "1st Period"}</td>
-      <td><span class="status-tag ${statusClass}">${r.status || "-"}</span></td>
+      <td>${escapeHTML(r.attendance?.subjects?.name || "-")}</td>
+      <td>${escapeHTML(teacherName || "-")}</td>
+      <td>${escapeHTML(r.attendance?.periods?.name || "1st Period")}</td>
+      <td><span class="status-tag ${statusClass}">${escapeHTML(r.status || "-")}</span></td>
     `;
     tbody.appendChild(tr);
   });

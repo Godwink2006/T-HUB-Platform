@@ -445,7 +445,7 @@ async function loadRosterIntoModal(classId) {
 
     if (studentErr) {
       console.error("Error fetching active students:", studentErr);
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Error loading students: ${studentErr.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Error loading students: ${escapeHtml(studentErr.message)}</td></tr>`;
       return;
     }
 
@@ -467,9 +467,9 @@ async function loadRosterIntoModal(classId) {
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td style="padding: 10px 12px; font-weight: 500;">${displayName}</td>
+        <td style="padding: 10px 12px; font-weight: 500;">${escapeHtml(displayName)}</td>
         <td style="padding: 10px 12px;">
-          <select class="attendance-status-dropdown" data-student-id="${student.id}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;">
+          <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;">
             <option value="present">Present</option>
             <option value="absent">Absent</option>
           </select>
@@ -719,7 +719,7 @@ async function loadAttendanceTable() {
 
     if (error) {
       console.error("Error loading attendance table:", error);
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Error: ${error.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Error: ${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
@@ -767,10 +767,10 @@ async function loadAttendanceTable() {
         : `<span class="status-badge status-submitted">Submitted</span>`;
 
       const actionButton = isDraft
-        ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${item.id}" title="Edit Draft">
+        ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
              <i class="fa-solid fa-pen-to-square"></i>
            </button>`
-        : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${item.id}" title="View Details">
+        : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
              <i class="fa-solid fa-eye"></i>
            </button>`;
 
@@ -929,10 +929,10 @@ async function renderFilteredAttendanceTable(attendanceList) {
       : `<span class="status-badge status-submitted">Submitted</span>`;
 
     const actionButton = isDraft
-      ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${item.id}" title="Edit Draft">
+      ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
            <i class="fa-solid fa-pen-to-square"></i>
          </button>`
-      : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${item.id}" title="View Details">
+      : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
            <i class="fa-solid fa-eye"></i>
          </button>`;
 
@@ -1280,7 +1280,7 @@ async function openEditAttendanceModal(attendanceId) {
         tr.innerHTML = `
           <td>${escapeHtml(studentName)}</td>
           <td>
-            <select class="edit-status-dropdown" data-student-id="${record.student_id}">
+            <select class="edit-status-dropdown" data-student-id="${escapeHtml(record.student_id)}">
               <option value="present" ${record.status === "present" ? "selected" : ""}>Present</option>
               <option value="absent" ${record.status === "absent" ? "selected" : ""}>Absent</option>
             </select>

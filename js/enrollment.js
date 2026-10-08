@@ -675,14 +675,14 @@ document.addEventListener("DOMContentLoaded", () => {
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
         <div style="margin-bottom: 15px; font-size: 13px; color: #555;">
-          <b>Promotion:</b> Grade 9, 1st Term → Grade 10, 2nd Term (${activeYear.year_label})
+          <b>Promotion:</b> Grade 9, 1st Term → Grade 10, 2nd Term (${escapeHtml(activeYear.year_label)})
         </div>
 
         <div style="margin-bottom: 15px;">
           <label for="targetClassSelect"><b>Target Grade 10 Class:</b></label>
           <select id="targetClassSelect" class="form-control">
             <option value="">-- Select Grade 10 Class --</option>
-            ${classesData.map((c) => `<option value="${c.id}" data-capacity="${c.capacity}">${c.name} (Capacity:${c.capacity})</option>`).join("")}
+            ${classesData.map((c) => `<option value="${escapeHtml(c.id)}" data-capacity="${Number(c.capacity) || 0}">${escapeHtml(c.name)} (Capacity:${Number(c.capacity) || 0})</option>`).join("")}
           </select>
         </div>
 
@@ -747,7 +747,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetFeeSelect.innerHTML = matchingFees
               .map(
                 (f) =>
-                  `<option value="${f.id}">[${f.classes?.name}] ${f.terms?.name ?? "Term"} - Total: $${f.total_amount}</option>`,
+                  `<option value="${escapeHtml(f.id)}">[${escapeHtml(f.classes?.name || "Class")}] ${escapeHtml(f.terms?.name ?? "Term")} - Total: $${Number(f.total_amount) || 0}</option>`,
               )
               .join("");
             targetFeeSelect.disabled = false;
@@ -808,7 +808,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error setting up Grade 9 to 10 promotion modal:", err);
-        modalBody.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+        modalBody.innerHTML = `<p style="color: red;">Error: ${escapeHtml(err.message || "Unknown error")}</p>`;
       }
     });
 
@@ -821,7 +821,8 @@ document.addEventListener("DOMContentLoaded", () => {
     phone,
   }) {
     try {
-      const supabaseClient = window.supabaseClient || supabaseClient;
+      const supabaseClient = window.supabaseClient;
+      if (!supabaseClient) throw new Error("Supabase client is not available.");
 
       const { data: sourceEnrollments, error: fetchErr } = await supabaseClient
         .from("student_enrollments")
@@ -1047,14 +1048,14 @@ document.addEventListener("DOMContentLoaded", () => {
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
       <p style="margin-bottom: 10px; color: #555;">
-        Promoting <b>${sourceEnrollments.length}</b> student(s) from <b>${sourceEnrollments[0].classes?.name || "their first-term class"}</b> for the 2nd Semester of ${activeYear.year_label}.
+        Promoting <b>${sourceEnrollments.length}</b> student(s) from <b>${escapeHtml(sourceEnrollments[0].classes?.name || "their first-term class")}</b> for the 2nd Semester of ${escapeHtml(activeYear.year_label)}.
       </p>
 
       <div style="margin-bottom: 15px;">
         <label for="targetClassSelect"><b>Target Class:</b></label>
         <select id="targetClassSelect" class="form-control">
           <option value="">-- Select Target Class --</option>
-          ${availableTargetClasses.map((c) => `<option value="${c.id}" data-capacity="${c.capacity}">${c.name} (Capacity: ${c.capacity ?? "not set"})</option>`).join("")}
+          ${availableTargetClasses.map((c) => `<option value="${escapeHtml(c.id)}" data-capacity="${Number(c.capacity) || 0}">${escapeHtml(c.name)} (Capacity: ${Number(c.capacity) || "not set"})</option>`).join("")}
         </select>
       </div>
 
@@ -1117,7 +1118,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetFeeSelect.innerHTML = `<option value="">-- Select fee structure --</option>${matchingFees
               .map(
                 (fee) =>
-                  `<option value="${fee.id}">[${fee.classes?.name ?? "Class"}] Total: $${fee.total_amount}</option>`,
+                  `<option value="${escapeHtml(fee.id)}">[${escapeHtml(fee.classes?.name ?? "Class")}] Total: $${Number(fee.total_amount) || 0}</option>`,
               )
               .join("")}`;
             targetFeeSelect.disabled = false;
@@ -1167,7 +1168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error setting up promotion modal:", err);
-        modalBody.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+        modalBody.innerHTML = `<p style="color: red;">Error: ${escapeHtml(err.message || "Unknown error")}</p>`;
       }
     });
 
@@ -1317,7 +1318,7 @@ document.addEventListener("DOMContentLoaded", () => {
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
       <p style="margin-bottom: 10px; color: #555;">
-        Promoting <b>${sourceRows.length}</b> student(s) from <b>${sourceRows[0].classes?.name || "one class"}</b> to a new academic year (1st Semester).
+        Promoting <b>${sourceRows.length}</b> student(s) from <b>${escapeHtml(sourceRows[0].classes?.name || "one class")}</b> to a new academic year (1st Semester).
       </p>
 
       <div style="margin-bottom: 15px;">
@@ -1327,8 +1328,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ${yearsData
             .map(
               (y) => `
-            <option value="${y.id}" ${y.status === "Active" ? "selected" : ""}>
-              ${y.year_label}${y.status === "Active" ? "(Active)" : ""}
+            <option value="${escapeHtml(y.id)}" ${y.status === "Active" ? "selected" : ""}>
+              ${escapeHtml(y.year_label)}${y.status === "Active" ? "(Active)" : ""}
             </option>
           `,
             )
@@ -1340,7 +1341,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <label for="targetClassSelect"><b>Target Class:</b></label>
         <select id="targetClassSelect" class="form-control">
           <option value="">-- Select Target Class --</option>
-          ${classesData.map((c) => `<option value="${c.id}" data-capacity="${c.capacity}">${c.name} (Capacity:${c.capacity})</option>`).join("")}
+          ${classesData.map((c) => `<option value="${escapeHtml(c.id)}" data-capacity="${Number(c.capacity) || 0}">${escapeHtml(c.name)} (Capacity:${Number(c.capacity) || 0})</option>`).join("")}
         </select>
       </div>
 
@@ -1394,7 +1395,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetFeeSelect.innerHTML = matchingFees
               .map(
                 (f) =>
-                  `<option value="${f.id}" data-class="${f.class_id}" data-amount="${f.total_amount}">[${f.classes?.name ?? "Class"}] Total: $${f.total_amount}</option>`,
+                  `<option value="${escapeHtml(f.id)}" data-class="${escapeHtml(f.class_id)}" data-amount="${Number(f.total_amount) || 0}">[${escapeHtml(f.classes?.name ?? "Class")}] Total: $${Number(f.total_amount) || 0}</option>`,
               )
               .join("");
             targetFeeSelect.disabled = false;
@@ -1484,7 +1485,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error setting up yearly promotion modal:", err);
-        modalBody.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+        modalBody.innerHTML = `<p style="color: red;">Error: ${escapeHtml(err.message || "Unknown error")}</p>`;
       }
     });
 
@@ -1725,12 +1726,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         modalConfirm.style.display = "inline-block";
         modalBody.innerHTML = `
-      <p style="margin-bottom: 10px; color: #555;">Moving <b>${currentEnrollments.length}</b> student(s) from <b>${currentEnrollments[0].classes?.name || "their current class"}</b> to the 2nd Semester.</p>
+      <p style="margin-bottom: 10px; color: #555;">Moving <b>${currentEnrollments.length}</b> student(s) from <b>${escapeHtml(currentEnrollments[0].classes?.name || "their current class")}</b> to the 2nd Semester.</p>
       <div style="margin-bottom: 15px;">
         <label for="feeStructureSelect">Select Applicable Fee Structure:</label>
         <select id="feeStructureSelect" class="form-control">
           <option value="">-- Select Fee Structure --</option>
-          ${feesData.map((f) => `<option value="${f.id}">[${f.classes?.name ?? "Class"}] Total: $${f.total_amount}</option>`).join("")}
+          ${feesData.map((f) => `<option value="${escapeHtml(f.id)}">[${escapeHtml(f.classes?.name ?? "Class")}] Total: $${Number(f.total_amount) || 0}</option>`).join("")}
         </select>
       </div>
     `;
@@ -1748,7 +1749,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error loading modal data:", err);
-        modalBody.innerHTML = `<p style="color: red;">Failed to load form options: ${err.message}</p>`;
+        modalBody.innerHTML = `<p style="color: red;">Failed to load form options: ${escapeHtml(err.message || "Unknown error")}</p>`;
       }
     });
 
@@ -1877,7 +1878,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error loading new year modal data:", err);
-        modalBody.innerHTML = `<p style="color: red;">Failed to load options: ${err.message}</p>`;
+        modalBody.innerHTML = `<p style="color: red;">Failed to load options: ${escapeHtml(err.message || "Unknown error")}</p>`;
       }
     });
 });

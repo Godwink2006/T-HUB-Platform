@@ -250,15 +250,15 @@ function renderPeriodsTable(periods = [], isLoading = false) {
 
       return `
     <tr>
-      <td>${period.school_level}</td>
-      <td>${period.name}</td>
-      <td>${period.start_time}</td>
-      <td>${period.end_time}</td>
+      <td>${escapeHTML(period.school_level || "")}</td>
+      <td>${escapeHTML(period.name || "")}</td>
+      <td>${escapeHTML(period.start_time || "")}</td>
+      <td>${escapeHTML(period.end_time || "")}</td>
       <td><span class="${statusClass}">${statusText}</span></td>
       <td>${formatDateTime(period.created_at)}</td>
       <td>${formatDateTime(period.updated_at)}</td>
       <td>
-        <button class="periods-actions-btn edit-Period" data-id="${period.id}"> <i class="fa-solid fa-pen"></i></button>
+        <button class="periods-actions-btn edit-Period" data-id="${escapeHTML(period.id)}"> <i class="fa-solid fa-pen"></i></button>
       </td>
     </tr>
   `;
@@ -554,7 +554,7 @@ async function loadClassesIntoSchoolLevelDropdown() {
           ? activeClasses
               .map(
                 (cls) =>
-                  `<option value="${cls.name}" data-level="${cls.school_level}">${cls.name}</option>`,
+                  `<option value="${escapeHTML(cls.name)}" data-level="${escapeHTML(cls.school_level)}">${escapeHTML(cls.name)}</option>`,
               )
               .join("")
           : `<option disabled>No active classes found</option>`

@@ -107,15 +107,15 @@ function renderTermsTable() {
 
       return `
         <tr>
-          <td>${item.name}</td>
-          <td>${yearLabel}</td>
-          <td><span class="${statusClass}">${item.status}</span></td>
+          <td>${escapeHTML(item.name || "")}</td>
+          <td>${escapeHTML(yearLabel)}</td>
+          <td><span class="${statusClass}">${escapeHTML(item.status || "")}</span></td>
           <td>${formatDate(item.start_date)}</td>
 <td>${formatDate(item.end_date)}</td>
 <td>${formatDateTime(item.created_at)}</td>
 <td>${formatDateTime(item.updated_at)}</td>
           <td>
-            <button class="terms-actions-btn edit-term" onclick="openEditModal('${item.id}')">
+            <button class="terms-actions-btn edit-term" data-id="${escapeHTML(item.id)}">
               <i class="fa-solid fa-pen"></i>
             </button>
           </td>
@@ -281,7 +281,7 @@ async function openEditModal(id) {
 
   if (editSelect) {
     const yearLabel = item.academic_years?.year_label || "N/A";
-    editSelect.innerHTML = `<option value="${item.academic_year_id}">${yearLabel}</option>`;
+    editSelect.innerHTML = `<option value="${escapeHTML(item.academic_year_id)}">${escapeHTML(yearLabel)}</option>`;
     editSelect.value = item.academic_year_id || "";
     editSelect.disabled = true;
   }
@@ -416,6 +416,10 @@ function closeModal(modalId) {
 }
 
 function setupModalListeners() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".edit-term[data-id]");
+    if (button) openEditModal(button.dataset.id);
+  });
   document
     .getElementById("addTerm")
     ?.addEventListener("click", () => openModal("termModal"));
@@ -470,7 +474,7 @@ async function populateAcademicYearDropdowns() {
     addSelect.innerHTML = activeYears.length
       ? activeYears
           .map(
-            (item) => `<option value="${item.id}">${item.year_label}</option>`,
+            (item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.year_label || "")}</option>`,
           )
           .join("")
       : `<option value="">No Active Academic Years Available</option>`;
@@ -478,7 +482,7 @@ async function populateAcademicYearDropdowns() {
 
   if (editSelect && editTermModal?.style.display !== "flex") {
     editSelect.innerHTML = data
-      .map((item) => `<option value="${item.id}">${item.year_label}</option>`)
+      .map((item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.year_label || "")}</option>`)
       .join("");
   }
 }

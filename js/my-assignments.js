@@ -93,7 +93,7 @@ function renderScheduleCards(assignments) {
                   ? `
                 <div class="detail-item">
                   <i class="fa-solid fa-align-left"></i>
-                  <span>${item.description}</span>
+                  <span>${escapeHTML(item.description || "")}</span>
                 </div>
               `
                   : ""

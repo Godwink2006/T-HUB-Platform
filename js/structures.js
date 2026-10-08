@@ -161,7 +161,7 @@ function renderTempFeeItems() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${item.name}</td>
+      <td>${escapeHTML(item.name || "")}</td>
       <td>$${Number(item.amount).toFixed(2)}</td>
       <td style="text-align: right;">
         <button type="button" class="structures-actions-btn delete-addItem" data-index="${index}">
@@ -252,7 +252,7 @@ async function populateInitialDropdowns() {
 
       classSelect.innerHTML = `<option value="">Select Class</option>`;
       classes?.forEach((cls) => {
-        classSelect.innerHTML += `<option value="${cls.id}">${cls.name}</option>`;
+        classSelect.innerHTML += `<option value="${escapeHTML(cls.id)}">${escapeHTML(cls.name || "")}</option>`;
       });
     }
   } catch (err) {
@@ -286,7 +286,7 @@ async function fetchSemestersForYear(academicYearId) {
     }
 
     terms.forEach((tm) => {
-      semesterSelect.innerHTML += `<option value="${tm.id}">${tm.name}</option>`;
+        semesterSelect.innerHTML += `<option value="${escapeHTML(tm.id)}">${escapeHTML(tm.name || "")}</option>`;
     });
   } catch (err) {
     console.error("Error fetching semesters for year:", err.message);
@@ -590,7 +590,7 @@ async function openViewStructureModal(structureId) {
       items.forEach((item) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${item.fee_name}</td>
+          <td>${escapeHTML(item.fee_name || "")}</td>
           <td>$${Number(item.amount).toFixed(2)}</td>
         `;
         itemsBody.appendChild(tr);
@@ -700,7 +700,7 @@ function renderEditTempFeeItems() {
     grandTotal += Number(item.amount);
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${item.name}</td>
+      <td>${escapeHTML(item.name || "")}</td>
       <td>$${Number(item.amount).toFixed(2)}</td>
       <td style="text-align: right;">
         <button type="button" class="structures-actions-btn delete-editItem" data-index="${index}" title="Remove Item">

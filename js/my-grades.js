@@ -427,7 +427,7 @@ async function loadStudentGrades(authUserId) {
     console.error("Error loading student grades:", err);
     reportContainer.innerHTML = `
       <p style="text-align: center; color: #ef4444; padding: 20px;">
-        Failed to load grades: ${err.message}
+        Failed to load grades: ${escapeHTML(err.message || "Unknown error")}
       </p>`;
   }
 }

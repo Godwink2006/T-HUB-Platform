@@ -457,8 +457,8 @@ async function loadBooksTable() {
         <td>${escapeHtml(departmentName)}</td>
         <td>${totalCopies}</td>
         <td>${availableCopies}</td>
-        <td><span class="books-status-${(book.status || "inactive").toLowerCase()}">
-          ${book.status || "Inactive"}
+        <td><span class="books-status-${String(book.status || "inactive").toLowerCase() === "active" ? "active" : "inactive"}">
+          ${escapeHTML(book.status || "Inactive")}
         </span></td>
         <td>
          <button class="books-actions-btn edit" data-id="${book.id}">
@@ -859,8 +859,8 @@ async function openViewBookModal(bookId) {
 
       tr.innerHTML = `
         <td>${escapeHtml(borrowerName)}</td>
-        <td>${record.borrow_date}</td>
-        <td>${record.due_date}</td>
+        <td>${escapeHTML(record.borrow_date || "-")}</td>
+        <td>${escapeHTML(record.due_date || "-")}</td>
         <td>${returnDateText}</td>
         <td><span class="${statusClass}">${escapeHtml(record.status)}</span></td>
       `;

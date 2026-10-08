@@ -20,7 +20,7 @@ function renderStudentsTable(studentsToRender) {
     .map((student) => {
       const profile = student.profiles || {};
       const className = student.classes?.name || "N/A";
-      const photoSrc = profile.photo_url ? profile.photo_url : DEFAULT_AVATAR;
+      const photoSrc = escapeHTML(profile.photo_url ? profile.photo_url : DEFAULT_AVATAR);
       const status = (profile.status || "active").toLowerCase();
       const statusClass =
         status === "active"
@@ -33,14 +33,14 @@ function renderStudentsTable(studentsToRender) {
           <img
             src="${photoSrc}"
             class="student-photo"
-            alt="${profile.full_name || "Student"}"
+            alt="${escapeHTML(profile.full_name || "Student")}"
             onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';"
           />
         </td>
-        <td>${student.student_id || "N/A"}</td>
-        <td>${profile.full_name || "N/A"}</td>
-        <td>${student.gender || "N/A"}</td>
-        <td>${className}</td>
+        <td>${escapeHTML(student.student_id || "N/A")}</td>
+        <td>${escapeHTML(profile.full_name || "N/A")}</td>
+        <td>${escapeHTML(student.gender || "N/A")}</td>
+        <td>${escapeHTML(className)}</td>
         <td>
           <span class="${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
         </td>
@@ -767,14 +767,14 @@ async function loadStudentsTable() {
             <img
               src="${photoSrc}"
               class="student-photo"
-              alt="${profile.full_name || "Student"}"
+              alt="${escapeHTML(profile.full_name || "Student")}"
               onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';"
             />
           </td>
-          <td>${student.student_id || "N/A"}</td>
-          <td>${profile.full_name || "N/A"}</td>
-          <td>${student.gender || "N/A"}</td>
-          <td>${className}</td>
+          <td>${escapeHTML(student.student_id || "N/A")}</td>
+          <td>${escapeHTML(profile.full_name || "N/A")}</td>
+          <td>${escapeHTML(student.gender || "N/A")}</td>
+          <td>${escapeHTML(className)}</td>
           <td>
             <span class="${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
           </td>
@@ -795,7 +795,7 @@ async function loadStudentsTable() {
     tableBody.innerHTML = `
       <tr>
         <td colspan="7" style="text-align: center; color: red; padding: 20px;">
-          Failed to load students: ${err.message}
+          Failed to load students: ${escapeHTML(err.message || "Unknown error")}
         </td>
       </tr>
     `;

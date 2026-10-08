@@ -185,7 +185,7 @@ async function checkPageAccess() {
   document.documentElement.style.visibility = "hidden";
 
   if (!window.supabaseClient) {
-    document.documentElement.style.visibility = "";
+    window.location.replace("/index.html?error=service_unavailable");
     return;
   }
 
@@ -423,6 +423,7 @@ window.addEventListener("pageshow", async (event) => {
 
   if (!window.supabaseClient) {
     console.error("Supabase client not initialized in window.supabaseClient");
+    if (!isLogin) window.location.replace("/index.html?error=service_unavailable");
     return;
   }
 
@@ -607,8 +608,8 @@ async function loadRecentActivities(schoolId) {
         .map(
           (act) => `
   <li>
-  <i class="fas fa-bullhorn fa-2x dashboard-icon ${act.dot_color || "green"}"></i>
-  ${act.message}
+  <i class="fas fa-bullhorn fa-2x dashboard-icon ${/^(green|blue|red|yellow|orange)$/.test(act.dot_color) ? act.dot_color : "green"}"></i>
+  ${escapeHTML(act.message || "")}
 </li>
       `,
         )
@@ -675,8 +676,8 @@ function prependActivityToUI(activity) {
 
   const li = document.createElement("li");
   li.innerHTML = `
-    <span class="dashboard-dot ${activity.dot_color || "green"}"></span>
-    ${activity.message}
+    <span class="dashboard-dot ${/^(green|blue|red|yellow|orange)$/.test(activity.dot_color) ? activity.dot_color : "green"}"></span>
+    ${escapeHTML(activity.message || "")}
   `;
 
   listContainer.prepend(li);

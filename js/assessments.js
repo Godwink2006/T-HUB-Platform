@@ -108,7 +108,7 @@ function renderAssessmentTable(assessments) {
       const rawName = item.name || "";
 
       return `
-        <tr data-id="${item.id}">
+        <tr data-id="${escapeHTML(item.id)}">
          <td>${escapeHTML(item.name || "-")}</td>
           <td>${escapeHTML(item.description || "—")}</td>
           <td>${escapeHTML(item.maximum_marks ?? "-")}</td>
@@ -124,7 +124,7 @@ function renderAssessmentTable(assessments) {
               <button
                 type="button"
                 class="assessment-action-btn assessment-edit-btn edit-assessment"
-                data-id="${item.id}"
+                data-id="${escapeHTML(item.id)}"
                 title="Edit Assessment"
               >
                 <i class="fa-solid fa-pen"></i>
@@ -925,10 +925,10 @@ function renderCategoryTable(categories) {
       const rawName = item.name || "";
 
       return `
-        <tr data-id="${item.id}">
+        <tr data-id="${escapeHTML(item.id)}">
           <td>${escapeHTML(item.name)}</td>
           <td>${escapeHTML(item.description) || "-"}</td>
-          <td>${item.marks}</td>
+          <td>${escapeHTML(item.marks ?? "-")}</td>
           <td>
             <span class="assessment-status ${statusClass}">
               ${statusLabel}
@@ -941,7 +941,7 @@ function renderCategoryTable(categories) {
               <button
                 type="button"
                 class="assessment-action-btn assessment-edit-btn edit-category"
-                data-id="${item.id}"
+                data-id="${escapeHTML(item.id)}"
                 title="Edit Category"
               >
                 <i class="fa-solid fa-pen"></i>
