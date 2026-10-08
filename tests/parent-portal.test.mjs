@@ -9,6 +9,7 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const jsPath = path.join(projectRoot, "js", "parent-records.js");
 const sqlPath = path.join(projectRoot, "supabase", "parent_portal_data_access.sql");
 const attendanceFixPath = path.join(projectRoot, "supabase", "parent_portal_attendance_recursion_fix.sql");
+const contextFixPath = path.join(projectRoot, "supabase", "parent_portal_context_performance_fix.sql");
 
 async function loadParentRecordHelpers() {
   const source = await readFile(jsPath, "utf8");
@@ -17,6 +18,19 @@ async function loadParentRecordHelpers() {
   return context.helpers;
 }
 
+test("invitation student search matches names and student IDs without case sensitivity", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "parent-invitations.js"), "utf8");
+  const context = vm.createContext({ document: { addEventListener() {} } });
+  vm.runInContext(`${source}\nglobalThis.filterStudents = filterParentInviteStudents;`, context);
+  const students = [
+    { student_id: "ST-1010", profiles: { full_name: "Wilkin Rugs" } },
+    { student_id: "ST-2044", profiles: { full_name: "Thomas Boimah" } },
+  ];
+  assert.equal(context.filterStudents(students, "wilkin").length, 1);
+  assert.equal(context.filterStudents(students, "st-2044").length, 1);
+  assert.equal(context.filterStudents(students, "missing").length, 0);
+  assert.equal(context.filterStudents(students, "").length, 2);
+});
 test("parent record renderers escape database text before inserting HTML", async () => {
   const helpers = await loadParentRecordHelpers();
   assert.equal(helpers.parentEscape(`<img src=x onerror="alert(1)">`), "&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
@@ -41,7 +55,16 @@ test("attendance recursion fix replaces only parent portal policies", async () =
     "parent_portal_attendance_sessions_select_scope",
   ]);
   assert.ok(sql.includes("security definer"));
-  assert.ok(sql.includes("link.parent_user_id = (select auth.uid())"));
+  assert.ok(sql.includes("parent_user_id = (select auth.uid())"));
+});
+test("parent context policy fix uses private scoped lookups and only replaces owned policies", async () => {
+  const sql = await readFile(contextFixPath, "utf8");
+  assert.ok(sql.includes("private.parent_portal_can_view_context('school', schools.id)"));
+  assert.ok(sql.includes("security definer"));
+  assert.ok(sql.includes("parent_user_id = (select auth.uid())"));
+  const droppedPolicies = [...sql.matchAll(/drop policy if exists "([^"]+)"/gi)].map((match) => match[1]);
+  assert.equal(droppedPolicies.length, 8);
+  assert.ok(droppedPolicies.every((name) => name.startsWith("parent_portal_")));
 });
 test("parent data SQL scopes sensitive reads to active child links and blocks parent writes", async () => {
   const sql = await readFile(sqlPath, "utf8");
@@ -51,7 +74,7 @@ test("parent data SQL scopes sensitive reads to active child links and blocks pa
   assert.ok(sql.includes("as restrictive for select"), "must narrow existing permissive school policies for parents");
   assert.ok(sql.includes("parent_portal_read_only_' || table_name || '_' || op"), "must prevent parents from writing school records");
   assert.ok(sql.includes("link.status = 'active'"), "inactive or revoked links must not authorize reads");
-  assert.ok(sql.includes('g.category_id = assessment_categories.id'), 'assessment category must use the actual grades.category_id column');
+  assert.ok(sql.includes('g.category_id = p_id'), 'assessment category must use the actual grades.category_id column');
   assert.ok(!sql.includes('g.assessment_category_id'), 'do not reference a nonexistent grades column');
   assert.ok(sql.includes("private.current_profile_role()"), "role checks must avoid recursive profiles RLS queries");
   assert.ok(sql.includes("private.parent_portal_can_read_attendance(attendance.id)"), "attendance policies must use the recursion-safe helper");

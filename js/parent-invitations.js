@@ -1,10 +1,12 @@
+let parentInviteStudents = [];
 document.addEventListener("DOMContentLoaded", initializeParentInvitations);
 
 async function initializeParentInvitations() {
   const client = window.supabaseClient;
   const form = document.getElementById("parentInviteForm");
   const select = document.getElementById("parentStudentSelect");
-  if (!client || !form || !select) return;
+  const search = document.getElementById("parentStudentSearch");
+  if (!client || !form || !select || !search) return;
 
   try {
     const { data: { user }, error: authError } = await client.auth.getUser();
@@ -29,13 +31,11 @@ async function initializeParentInvitations() {
       .select("id, student_id, profiles(full_name)")
       .eq("school_id", profile.school_id);
     if (studentsError) throw studentsError;
-    const sortedStudents = [...(students || [])].sort((a, b) =>
+    parentInviteStudents = [...(students || [])].sort((a, b) =>
       String(a.profiles?.full_name || "").localeCompare(String(b.profiles?.full_name || ""), undefined, { sensitivity: "base" }),
     );
-    select.innerHTML = '<option value="">Choose a student</option>' + sortedStudents.map((student) => {
-      const name = student.profiles?.full_name || "Student";
-      return `<option value="${escapeParentInvite(student.id)}">${escapeParentInvite(name)}${student.student_id ? ` · ${escapeParentInvite(student.student_id)}` : ""}</option>`;
-    }).join("");
+    renderParentInviteStudentOptions(select, search.value);
+    search.addEventListener("input", () => renderParentInviteStudentOptions(select, search.value));
   } catch (error) {
     console.error("Could not initialize parent invitations:", error);
     showParentInviteMessage("Could not load students. Refresh the page or contact an administrator.", true);
@@ -62,7 +62,9 @@ async function sendParentInvitation(event) {
     if (error || !data?.success) throw new Error(data?.message || error?.message || "The invitation could not be sent.");
     showParentInviteMessage(data.message, false, true);
     form.reset();
-    document.getElementById("parentStudentSelect").selectedIndex = 0;
+    const select = document.getElementById("parentStudentSelect");
+    select.selectedIndex = 0;
+    renderParentInviteStudentOptions(select, "");
   } catch (error) {
     let message = error?.message || "The invitation could not be sent.";
     if (error?.context) {
@@ -83,6 +85,32 @@ function showParentInviteMessage(message, isError = false, isSuccess = false) {
   element.textContent = message;
   element.classList.toggle("is-error", isError);
   element.classList.toggle("is-success", isSuccess);
+}
+
+function filterParentInviteStudents(students, query) {
+  const normalizedQuery = String(query || "").trim().toLocaleLowerCase();
+  if (!normalizedQuery) return [...students];
+  return students.filter((student) => {
+    const searchableText = `${student.profiles?.full_name || ""} ${student.student_id || ""}`.toLocaleLowerCase();
+    return searchableText.includes(normalizedQuery);
+  });
+}
+
+function renderParentInviteStudentOptions(select, query) {
+  const selectedId = select.value;
+  const filteredStudents = filterParentInviteStudents(parentInviteStudents, query);
+  select.replaceChildren(new Option("Choose a student", ""));
+  filteredStudents.forEach((student) => {
+    const name = student.profiles?.full_name || "Student";
+    const label = student.student_id ? `${name} · ${student.student_id}` : name;
+    select.add(new Option(label, student.id));
+  });
+  if (!filteredStudents.length) {
+    const emptyOption = new Option("No students match your search", "");
+    emptyOption.disabled = true;
+    select.add(emptyOption);
+  }
+  if (filteredStudents.some((student) => student.id === selectedId)) select.value = selectedId;
 }
 
 function escapeParentInvite(value) {

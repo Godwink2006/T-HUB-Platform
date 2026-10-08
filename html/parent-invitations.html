@@ -8,27 +8,87 @@
     <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
   </head>
-  <body class="parent-portal">
+  <body class="parent-portal parent-invitation-page">
     <header class="parent-topbar">
-      <a class="parent-brand" href="dashboard.html"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span>T-HUB <small>School Management</small></span></a>
-      <a class="parent-signout" href="students.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to students</a>
+      <a class="parent-brand"
+        ><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i
+        ><span>HSMS <small>School Management</small></span></a
+      >
+      <a class="parent-signout" href="students.html"
+        ><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back</a
+      >
     </header>
     <main class="parent-main parent-form-main">
-      <section class="parent-welcome"><p class="parent-eyebrow">Family portal setup</p><h1>Invite a parent or guardian</h1><p>They’ll receive an email to finish setting up their account and view this student.</p></section>
+      <section class="parent-welcome">
+        <p class="parent-eyebrow">Family portal setup</p>
+        <h1>Invite a parent or guardian</h1>
+        <p>
+          They’ll receive an email to finish setting up their account and view
+          this student.
+        </p>
+      </section>
       <form id="parentInviteForm" class="parent-form" novalidate>
+        <label for="parentStudentSearch">Search students</label>
+        <input
+          id="parentStudentSearch"
+          type="search"
+          autocomplete="off"
+          placeholder="Search by student name or ID"
+          aria-describedby="parentStudentSearchHint"
+        />
+        <small id="parentStudentSearchHint" class="parent-form-hint"
+          >Type a name or student ID to find them.</small
+        >
         <label for="parentStudentSelect">Student</label>
-        <select id="parentStudentSelect" name="student_id" required><option value="">Loading students…</option></select>
+        <select id="parentStudentSelect" name="student_id" required>
+          <option value="">Loading students…</option>
+        </select>
         <label for="parentFullName">Parent or guardian name</label>
-        <input id="parentFullName" name="full_name" autocomplete="name" maxlength="120" required />
+        <input
+          id="parentFullName"
+          name="full_name"
+          autocomplete="name"
+          maxlength="120"
+          required
+        />
         <label for="parentEmail">Email address</label>
-        <input id="parentEmail" name="email" type="email" autocomplete="email" maxlength="254" required />
+        <input
+          id="parentEmail"
+          name="email"
+          type="email"
+          autocomplete="email"
+          maxlength="254"
+          required
+        />
         <label for="parentRelationship">Relationship</label>
-        <select id="parentRelationship" name="relationship"><option>Parent</option><option>Guardian</option><option>Other</option></select>
-        <div id="parentInviteMessage" class="parent-form-message" role="status" aria-live="polite"></div>
-        <button id="sendParentInvite" class="parent-primary-button" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send invitation</button>
+        <select id="parentRelationship" name="relationship">
+          <option>Parent</option>
+          <option>Guardian</option>
+          <option>Other</option>
+        </select>
+        <div
+          id="parentInviteMessage"
+          class="parent-form-message"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <button
+          id="sendParentInvite"
+          class="parent-primary-button"
+          type="submit"
+        >
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send
+          invitation
+        </button>
       </form>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
