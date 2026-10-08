@@ -207,9 +207,12 @@ body.parent-portal {
   text-align: center;
 }
 .parent-linked-parents { margin-top: 22px; }
+.parent-link-search-label { color: #475569; display: block; font-size: 13px; margin: 0 0 6px; }
+.parent-portal .parent-link-search { border: 2px solid rgb(219, 215, 215); border-radius: 0; color: #0f172a; font: inherit; font-size: 13px; margin-bottom: 14px; min-height: 40px; padding: 8px 10px; width: 100%; }
+.parent-portal .parent-link-search:focus { border-color: #2563eb; outline: 2px solid rgb(37 99 235 / 20%); }
 .parent-links-list { display: grid; gap: 10px; }
 .parent-link-row {
-  align-items: center; border: 2px solid rgb(219, 215, 215); display: flex;
+  align-items: center; border: 2px solid #cbd5e1; display: flex;
   gap: 16px; justify-content: space-between; padding: 14px;
 }
 .parent-link-row strong, .parent-link-row span { display: block; }
@@ -219,6 +222,18 @@ body.parent-portal {
   font: inherit; font-size: .85rem; font-weight: 600; padding: 9px 12px;
 }
 .parent-link-row button:disabled { cursor: wait; opacity: .6; }
+.parent-unlink-dialog { border: 0; box-shadow: 0 24px 70px rgb(15 23 42 / 28%); color: #0f172a; max-width: min(440px, calc(100vw - 32px)); padding: 0; width: 100%; }
+.parent-unlink-dialog::backdrop { background: rgb(15 23 42 / 58%); }
+.parent-unlink-dialog-content { padding: 26px; }
+.parent-unlink-icon { align-items: center; background: #fee2e2; color: #b91c1c; display: inline-flex; height: 44px; justify-content: center; width: 44px; }
+.parent-unlink-dialog h2 { font-size: 1.15rem; margin: 16px 0 8px; }
+.parent-unlink-dialog p { color: #475569; line-height: 1.55; margin: 0; }
+.parent-unlink-dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+.parent-unlink-dialog-actions button { cursor: pointer; font: inherit; font-size: .9rem; font-weight: 600; padding: 10px 14px; }
+.parent-unlink-cancel { background: #1f2937; border: 2px solid #1f2937; color: #fff; }
+.parent-unlink-cancel:hover { background: #111827; border-color: #111827; }
+.parent-unlink-confirm { background: #b91c1c; border: 2px solid #b91c1c; color: white; }
+.parent-unlink-dialog-actions button:focus-visible { outline: 3px solid rgb(37 99 235 / 45%); outline-offset: 2px; }
 .parent-announcements { border-top: 2px solid rgb(219, 215, 215); margin-top: 22px; padding-top: 18px; }
 .parent-announcements h3 { margin: 0 0 14px; }
 .parent-announcement { border: 2px solid rgb(219, 215, 215); margin-bottom: 12px; padding: 16px; }
@@ -592,11 +607,16 @@ body.parent-portal {
   .parent-portal .parent-child-card,
   .parent-portal .parent-record-link,
   .parent-portal .parent-record-tabs a,
-  .parent-portal .portal-coming-soon {
+  .parent-portal .portal-coming-soon,
+  .parent-portal .parent-link-row {
     border-radius: 9px;
   }
   .parent-portal .parent-primary-button,
-  .parent-portal .parent-child-card button {
+  .parent-portal .parent-child-card button,
+  .parent-portal .parent-link-row button,
+  .parent-portal .parent-unlink-dialog,
+  .parent-portal .parent-unlink-icon,
+  .parent-portal .parent-unlink-dialog-actions button {
     border-radius: 6px;
   }
   .parent-portal .parent-back-link {

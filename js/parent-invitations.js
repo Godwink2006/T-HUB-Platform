@@ -1,4 +1,5 @@
 let parentInviteStudents = [];
+let parentInviteLinks = [];
 document.addEventListener("DOMContentLoaded", initializeParentInvitations);
 
 async function initializeParentInvitations() {
@@ -36,6 +37,7 @@ async function initializeParentInvitations() {
     );
     renderParentInviteStudentOptions(select, search.value);
     search.addEventListener("input", () => renderParentInviteStudentOptions(select, search.value));
+    document.getElementById("parentLinkSearch")?.addEventListener("input", (event) => renderParentLinks(event.currentTarget.value));
     await loadParentLinks();
   } catch (error) {
     console.error("Could not initialize parent invitations:", error);
@@ -55,12 +57,31 @@ async function loadParentLinks() {
       body: { action: "list" },
     });
     if (error || !data?.success) throw new Error(data?.message || error?.message || "Could not load parent links.");
-    const links = data.links || [];
-    if (!links.length) {
-      list.innerHTML = '<p class="parent-state">No active parent links for this school.</p>';
-      return;
-    }
-    list.replaceChildren(...links.map((link) => {
+    parentInviteLinks = data.links || [];
+    const search = document.getElementById("parentLinkSearch");
+    if (search) search.hidden = parentInviteLinks.length === 0;
+    renderParentLinks(search?.value || "");
+  } catch (error) {
+    console.error("Could not load parent links:", error);
+    list.innerHTML = '<p class="parent-state">Could not load parent links. Refresh the page or contact an administrator.</p>';
+  } finally {
+    list.setAttribute("aria-busy", "false");
+  }
+}
+
+function renderParentLinks(query = "") {
+  const list = document.getElementById("parentLinksList");
+  if (!list) return;
+  if (!parentInviteLinks.length) {
+    list.innerHTML = '<p class="parent-state">No active parent links for this school.</p>';
+    return;
+  }
+  const links = parentInviteLinks.filter((link) => matchesParentLinkSearch(link, query));
+  if (!links.length) {
+    list.innerHTML = '<p class="parent-state">No parent links match your search.</p>';
+    return;
+  }
+  list.replaceChildren(...links.map((link) => {
       const row = document.createElement("div");
       row.className = "parent-link-row";
       const details = document.createElement("div");
@@ -77,17 +98,19 @@ async function loadParentLinks() {
       row.append(details, button);
       return row;
     }));
-  } catch (error) {
-    console.error("Could not load parent links:", error);
-    list.innerHTML = '<p class="parent-state">Could not load parent links. Refresh the page or contact an administrator.</p>';
-  } finally {
-    list.setAttribute("aria-busy", "false");
-  }
+}
+
+function matchesParentLinkSearch(link, query) {
+  const normalizedQuery = String(query || "").trim().toLocaleLowerCase();
+  if (!normalizedQuery) return true;
+  const searchableText = [link.parent_name, link.parent_email, link.student_name, link.student_code, link.relationship]
+    .filter(Boolean).join(" ").toLocaleLowerCase();
+  return searchableText.includes(normalizedQuery);
 }
 
 async function unlinkParentStudent(link, button) {
   const parentLabel = link.parent_name || link.parent_email || "this parent";
-  if (!window.confirm(`Remove ${parentLabel}'s access to ${link.student_name || "this student"}?`)) return;
+  if (!await confirmParentUnlink(link)) return;
   button.disabled = true;
   try {
     const { data, error } = await window.supabaseClient.functions.invoke("manage-parent-links", {
@@ -100,6 +123,19 @@ async function unlinkParentStudent(link, button) {
     showParentInviteMessage(error?.message || "Could not unlink the parent.", true);
     button.disabled = false;
   }
+}
+
+function confirmParentUnlink(link) {
+  const dialog = document.getElementById("parentUnlinkDialog");
+  const message = document.getElementById("parentUnlinkMessage");
+  if (!dialog || !message || typeof dialog.showModal !== "function") return Promise.resolve(false);
+  const parent = link.parent_name || link.parent_email || "this parent";
+  const student = link.student_name || "this student";
+  message.textContent = `Remove ${parent}'s access to ${student}? They will no longer be able to view this student's school records.`;
+  return new Promise((resolve) => {
+    dialog.addEventListener("close", () => resolve(dialog.returnValue === "confirm"), { once: true });
+    dialog.showModal();
+  });
 }
 
 async function sendParentInvitation(event) {

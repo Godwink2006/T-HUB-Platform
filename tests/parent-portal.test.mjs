@@ -31,6 +31,29 @@ test("invitation student search matches names and student IDs without case sensi
   assert.equal(context.filterStudents(students, "missing").length, 0);
   assert.equal(context.filterStudents(students, "").length, 2);
 });
+test("linked parent search matches parent, email, student, and student ID", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "parent-invitations.js"), "utf8");
+  const context = vm.createContext({ document: { addEventListener() {} } });
+  vm.runInContext(`${source}\nglobalThis.matchesLink = matchesParentLinkSearch;`, context);
+  const link = { parent_name: "Momodu Kamara", parent_email: "momodu@example.com", student_name: "Wilkin Rugs", student_code: "ST-1010" };
+  assert.equal(context.matchesLink(link, "momodu"), true);
+  assert.equal(context.matchesLink(link, "EXAMPLE.COM"), true);
+  assert.equal(context.matchesLink(link, "wilkin"), true);
+  assert.equal(context.matchesLink(link, "st-1010"), true);
+  assert.equal(context.matchesLink(link, "not here"), false);
+});
+test("parent unlink confirmation uses a styled accessible dialog instead of a browser popup", async () => {
+  const html = await readFile(path.join(projectRoot, "html", "parent-invitations.html"), "utf8");
+  const source = await readFile(path.join(projectRoot, "js", "parent-invitations.js"), "utf8");
+  const css = await readFile(path.join(projectRoot, "css", "parent-portal.css"), "utf8");
+  assert.match(html, /<dialog id="parentUnlinkDialog"/);
+  assert.match(html, /aria-labelledby="parentUnlinkTitle" aria-describedby="parentUnlinkMessage"/);
+  assert.match(source, /dialog\.showModal\(\)/);
+  assert.doesNotMatch(source, /window\.confirm/);
+  assert.match(css, /\.parent-portal \.parent-link-row \{\s*border-radius: 9px;/s);
+  assert.match(css, /\.parent-portal \.parent-link-row button,/);
+  assert.match(css, /\.parent-unlink-cancel \{ background: #1f2937; border: 2px solid #1f2937; color: #fff; \}/);
+});
 test("parent dashboard shows announcements for parents, students, and everyone only", async () => {
   const source = await readFile(path.join(projectRoot, "js", "parent-dashboard.js"), "utf8");
   const context = vm.createContext({ document: { addEventListener() {} } });

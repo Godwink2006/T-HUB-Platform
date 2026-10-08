@@ -98,11 +98,24 @@
             <p>Remove a parent's access to a student from your school.</p>
           </div>
         </div>
+        <label class="parent-link-search-label" for="parentLinkSearch">Search linked parents</label>
+        <input id="parentLinkSearch" class="parent-link-search" type="search" placeholder="Search by parent, email, student, or student ID" autocomplete="off" />
         <div id="parentLinksList" class="parent-links-list" aria-live="polite" aria-busy="true">
           <p class="parent-state">Loading parent links…</p>
         </div>
       </section>
     </main>
+    <dialog id="parentUnlinkDialog" class="parent-unlink-dialog" aria-labelledby="parentUnlinkTitle" aria-describedby="parentUnlinkMessage">
+      <div class="parent-unlink-dialog-content">
+        <span class="parent-unlink-icon" aria-hidden="true"><i class="fa-solid fa-link-slash"></i></span>
+        <h2 id="parentUnlinkTitle">Unlink parent?</h2>
+        <p id="parentUnlinkMessage"></p>
+        <form method="dialog" class="parent-unlink-dialog-actions">
+          <button type="submit" value="cancel" class="parent-unlink-cancel">Cancel</button>
+          <button type="submit" value="confirm" class="parent-unlink-confirm">Unlink parent</button>
+        </form>
+      </div>
+    </dialog>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
