@@ -57,8 +57,12 @@ form.addEventListener("submit", async (e) => {
 
     showToast("Login successful!", "success");
 
+    const destination = profile.role === "parent"
+      ? "/html/parent-dashboard.html"
+      : "/html/dashboard.html";
+
     setTimeout(() => {
-      window.location.replace("/html/dashboard.html");
+      window.location.replace(destination);
     }, 800);
   } catch (err) {
     showToast(err.message, "error");

@@ -72,9 +72,12 @@ const ADMIN_ONLY_PAGES = [
 
 const ADMIN_ACCOUNTANT_PAGES = [
   "students.html",
+  "parent-invitations.html",
   "finance.html",
   "enrollment.html",
 ];
+
+const PARENT_ONLY_PAGES = ["parent-dashboard.html"];
 
 const ADMIN_TEACHER_PAGES = ["attendance.html", "grades.html"];
 
@@ -162,6 +165,7 @@ async function checkPageAccess() {
   const isAdminOrLibrarianOnly =
     TEACHER_LIBRARIAN_ONLY_PAGES.includes(currentPage);
   const isExcludeLibrarian = EXCLUDE_LIBRARIAN_PAGE.includes(currentPage);
+  const isParentOnly = PARENT_ONLY_PAGES.includes(currentPage);
 
   const isProtectedPage =
     isAdminOnly ||
@@ -171,6 +175,7 @@ async function checkPageAccess() {
     isStudentOnly ||
     isAdminOrLibrarianOnly ||
     isExcludeLibrarian ||
+    isParentOnly ||
     isTeacherOrStudentOnly;
 
   if (!isProtectedPage) {
@@ -201,6 +206,11 @@ async function checkPageAccess() {
     .single();
 
   const role = profile?.role;
+
+  if (isParentOnly && role !== "parent") {
+    await window.forceLogout();
+    return;
+  }
 
   if (isAdminOnly && role !== "admin") {
     await window.forceLogout();

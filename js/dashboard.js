@@ -258,6 +258,11 @@ async function loadDashboardAnnouncements() {
     if (profileError || !profile)
       throw new Error("Could not fetch user profile.");
 
+    if (profile.role === "parent") {
+      window.location.replace("/html/parent-dashboard.html");
+      return;
+    }
+
     loadDashboardStats(profile.school_id);
 
     if (welcomeText) {
