@@ -14,7 +14,7 @@ const contextFixPath = path.join(projectRoot, "supabase", "parent_portal_context
 async function loadParentRecordHelpers() {
   const source = await readFile(jsPath, "utf8");
   const context = vm.createContext({ document: { addEventListener() {} }, Intl, URLSearchParams });
-  vm.runInContext(`${source}\nglobalThis.helpers = { parentEscape, parseBreakdown, renderFeesAndPayments, buildParentSchoolMap, getParentRecordContext, matchesParentRecordFilters, parentRecordState };`, context);
+  vm.runInContext(`${source}\nglobalThis.helpers = { parentEscape, parseBreakdown, renderFeesAndPayments, buildParentSchoolMap, getParentRecordContext, matchesParentRecordFilters, parentStatusClass, parentRecordState };`, context);
   return context.helpers;
 }
 
@@ -64,12 +64,28 @@ test("parent record school labels use the schools.school_name column", async () 
 test("grade records can be filtered by their assessment period", async () => {
   const helpers = await loadParentRecordHelpers();
   const context = helpers.getParentRecordContext({
-    grades: { assessment_id: "period-1", assessments: { name: "Midterm" } },
+    grades: {
+      assessment_id: "period-1", assessments: { name: "Midterm" },
+      subject_id: "subject-1", subjects: { name: "Mathematics" },
+    },
   }, "grades");
   assert.equal(context.periodName, "Midterm");
   assert.equal(context.periodId, "period-1");
+  assert.equal(context.subjectName, "Mathematics");
+  assert.equal(context.subjectId, "subject-1");
   assert.equal(helpers.matchesParentRecordFilters(context, { periodId: "period-1" }), true);
   assert.equal(helpers.matchesParentRecordFilters(context, { periodId: "period-2" }), false);
+  assert.equal(helpers.matchesParentRecordFilters(context, { subjectId: "subject-1" }), true);
+  assert.equal(helpers.matchesParentRecordFilters(context, { subjectId: "subject-2" }), false);
+});
+
+test("record statuses receive matching color classes", async () => {
+  const helpers = await loadParentRecordHelpers();
+  assert.equal(helpers.parentStatusClass("Paid"), "status-success");
+  assert.equal(helpers.parentStatusClass("Absent"), "status-danger");
+  assert.equal(helpers.parentStatusClass("Late"), "status-warning");
+  assert.equal(helpers.parentStatusClass("Excused"), "status-info");
+  assert.equal(helpers.parentStatusClass("Unknown"), "status-neutral");
 });
 
 test("attendance recursion fix replaces only parent portal policies", async () => {

@@ -304,6 +304,11 @@ body.parent-portal {
   padding: 4px 9px;
   white-space: nowrap;
 }
+.parent-record-content .status-success { background: #dcfce7; color: #166534; }
+.parent-record-content .status-danger { background: #fee2e2; color: #b91c1c; }
+.parent-record-content .status-warning { background: #fef3c7; color: #92400e; }
+.parent-record-content .status-info { background: #dbeafe; color: #1d4ed8; }
+.parent-record-content .status-neutral { background: #eef2f7; color: #475569; }
 .parent-form-main {
   max-width: 700px;
 }

@@ -113,6 +113,7 @@ async function initializeParentRecords() {
       "recordClassFilter",
       "recordTermFilter",
       "recordPeriodFilter",
+      "recordSubjectFilter",
     ].forEach((id) => {
       document
         .getElementById(id)
@@ -238,6 +239,8 @@ function getParentRecordContext(row, type) {
     termName: item.terms?.name,
     periodId: item.assessment_id,
     periodName: item.assessments?.name,
+    subjectId: item.subject_id,
+    subjectName: item.subjects?.name,
   };
 }
 
@@ -257,9 +260,13 @@ function buildParentRecordFilters() {
     ["recordTermFilter", "termId", "termName", "All semesters"],
   ];
   const periodFilterField = document.getElementById("recordPeriodFilterField");
+  const subjectFilterField = document.getElementById("recordSubjectFilterField");
   periodFilterField.hidden = type !== "grades";
-  if (type === "grades")
+  subjectFilterField.hidden = type !== "grades";
+  if (type === "grades") {
     filterSets.push(["recordPeriodFilter", "periodId", "periodName", "All periods"]);
+    filterSets.push(["recordSubjectFilter", "subjectId", "subjectName", "All subjects"]);
+  }
   filterSets.forEach(([selectId, idKey, labelKey, defaultLabel]) => {
     const select = document.getElementById(selectId);
     const selected = select.value;
@@ -301,6 +308,10 @@ function renderParentRecords() {
       type === "grades"
         ? document.getElementById("recordPeriodFilter").value
         : "",
+    subjectId:
+      type === "grades"
+        ? document.getElementById("recordSubjectFilter").value
+        : "",
   };
   const visible = rows.filter((row) => {
     const ctx = getParentRecordContext(row, type);
@@ -324,6 +335,15 @@ function matchesParentRecordFilters(context, filters) {
   );
 }
 
+function parentStatusClass(status) {
+  const normalized = String(status || "").trim().toLowerCase();
+  if (["paid", "present", "completed"].includes(normalized)) return "status-success";
+  if (["unpaid", "absent", "overdue"].includes(normalized)) return "status-danger";
+  if (["partial", "late", "pending"].includes(normalized)) return "status-warning";
+  if (["excused", "transferred"].includes(normalized)) return "status-info";
+  return "status-neutral";
+}
+
 function renderFeesAndPayments(fees) {
   const feeIds = new Set(fees.map((fee) => fee.id));
   const payments = parentRecordState.payments.filter((payment) =>
@@ -332,7 +352,8 @@ function renderFeesAndPayments(fees) {
   const feeRows = fees
     .map((fee) => {
       const breakdown = parseBreakdown(fee.fee_breakdown);
-      return `<tr><td>${parentEscape(getParentRecordContext(fee, "fees").schoolName || "-")}</td><td>${parentEscape(fee.academic_years?.year_label || "-")}</td><td>${parentEscape(fee.classes?.name || "-")}</td><td>${parentEscape(fee.terms?.name || "-")}</td><td>${breakdown.length ? `<ul>${breakdown.map((item) => `<li>${parentEscape(item.fee_name || "Fee item")}: ${parentMoney(item.amount)}</li>`).join("")}</ul>` : "-"}</td><td class="money">${parentMoney(fee.total_fees)}</td><td class="money">${parentMoney(fee.total_paid)}</td><td class="money">${parentMoney(fee.balance)}</td><td><span class="status-pill">${parentEscape(fee.status || "Unpaid")}</span></td></tr>`;
+      const status = fee.status || "Unpaid";
+      return `<tr><td>${parentEscape(getParentRecordContext(fee, "fees").schoolName || "-")}</td><td>${parentEscape(fee.academic_years?.year_label || "-")}</td><td>${parentEscape(fee.classes?.name || "-")}</td><td>${parentEscape(fee.terms?.name || "-")}</td><td>${breakdown.length ? `<ul>${breakdown.map((item) => `<li>${parentEscape(item.fee_name || "Fee item")}: ${parentMoney(item.amount)}</li>`).join("")}</ul>` : "-"}</td><td class="money">${parentMoney(fee.total_fees)}</td><td class="money">${parentMoney(fee.total_paid)}</td><td class="money">${parentMoney(fee.balance)}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
     })
     .join("");
   const paymentRows = payments
@@ -349,7 +370,8 @@ function renderAttendance(records) {
     .map((row) => {
       const session = row.attendance || {};
       const ctx = getParentRecordContext(row, "attendance");
-      return `<tr><td>${parentDate(session.date)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(session.subjects?.name || "-")}</td><td>${parentEscape(session.periods?.name || "-")}</td><td><span class="status-pill">${parentEscape(row.status || "-")}</span></td></tr>`;
+      const status = row.status || "-";
+      return `<tr><td>${parentDate(session.date)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(session.subjects?.name || "-")}</td><td>${parentEscape(session.periods?.name || "-")}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
     })
     .join("")}</tbody></table>`;
 }
