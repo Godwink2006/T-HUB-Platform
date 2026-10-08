@@ -36,6 +36,7 @@ async function initializeParentInvitations() {
     );
     renderParentInviteStudentOptions(select, search.value);
     search.addEventListener("input", () => renderParentInviteStudentOptions(select, search.value));
+    await loadParentLinks();
   } catch (error) {
     console.error("Could not initialize parent invitations:", error);
     showParentInviteMessage("Could not load students. Refresh the page or contact an administrator.", true);
@@ -43,6 +44,62 @@ async function initializeParentInvitations() {
   }
 
   form.addEventListener("submit", sendParentInvitation);
+}
+
+async function loadParentLinks() {
+  const list = document.getElementById("parentLinksList");
+  if (!list) return;
+  list.setAttribute("aria-busy", "true");
+  try {
+    const { data, error } = await window.supabaseClient.functions.invoke("manage-parent-links", {
+      body: { action: "list" },
+    });
+    if (error || !data?.success) throw new Error(data?.message || error?.message || "Could not load parent links.");
+    const links = data.links || [];
+    if (!links.length) {
+      list.innerHTML = '<p class="parent-state">No active parent links for this school.</p>';
+      return;
+    }
+    list.replaceChildren(...links.map((link) => {
+      const row = document.createElement("div");
+      row.className = "parent-link-row";
+      const details = document.createElement("div");
+      const parent = document.createElement("strong");
+      parent.textContent = link.parent_name || link.parent_email || "Parent";
+      const student = document.createElement("span");
+      student.textContent = `${link.student_name || "Student"}${link.student_code ? ` · ${link.student_code}` : ""} · ${link.relationship || "Parent"}`;
+      details.append(parent, student);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Unlink";
+      button.setAttribute("aria-label", `Unlink ${parent.textContent} from ${link.student_name || "student"}`);
+      button.addEventListener("click", () => unlinkParentStudent(link, button));
+      row.append(details, button);
+      return row;
+    }));
+  } catch (error) {
+    console.error("Could not load parent links:", error);
+    list.innerHTML = '<p class="parent-state">Could not load parent links. Refresh the page or contact an administrator.</p>';
+  } finally {
+    list.setAttribute("aria-busy", "false");
+  }
+}
+
+async function unlinkParentStudent(link, button) {
+  const parentLabel = link.parent_name || link.parent_email || "this parent";
+  if (!window.confirm(`Remove ${parentLabel}'s access to ${link.student_name || "this student"}?`)) return;
+  button.disabled = true;
+  try {
+    const { data, error } = await window.supabaseClient.functions.invoke("manage-parent-links", {
+      body: { action: "unlink", link_id: link.id },
+    });
+    if (error || !data?.success) throw new Error(data?.message || error?.message || "Could not unlink the parent.");
+    showParentInviteMessage(data.message || "Parent unlinked.", false, true);
+    await loadParentLinks();
+  } catch (error) {
+    showParentInviteMessage(error?.message || "Could not unlink the parent.", true);
+    button.disabled = false;
+  }
 }
 
 async function sendParentInvitation(event) {

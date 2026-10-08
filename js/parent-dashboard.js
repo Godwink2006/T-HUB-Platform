@@ -1,4 +1,5 @@
 const selectedParentStudentStorageKey = "tHubParentSelectedStudentId";
+let parentAnnouncementRequestId = 0;
 
 document.addEventListener("DOMContentLoaded", loadParentDashboard);
 
@@ -122,6 +123,57 @@ function selectParentStudent(student) {
   document.getElementById("selectedStudentDetails").textContent = `Student ID: ${student.student_id || "Not assigned"}`;
   setParentStudentPhoto(document.getElementById("selectedStudentPhoto"), student.photoUrl, student.fullName);
   document.getElementById("selectedStudentPanel").hidden = false;
+  loadParentAnnouncements(student);
+}
+
+async function loadParentAnnouncements(student) {
+  const container = document.getElementById("parentAnnouncements");
+  if (!container) return;
+  const requestId = ++parentAnnouncementRequestId;
+  container.setAttribute("aria-busy", "true");
+  container.innerHTML = '<p class="parent-state">Loading announcements…</p>';
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await window.supabaseClient
+      .from("announcements")
+      .select("id, title, message, status, target_audience, expiry_date, created_at")
+      .eq("school_id", student.school_id)
+      .or(`expiry_date.is.null,expiry_date.gte.${today}`)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    if (requestId !== parentAnnouncementRequestId) return;
+    const visible = (data || []).filter(isParentAnnouncementVisible);
+    if (!visible.length) {
+      container.innerHTML = '<p class="parent-state">There are no current announcements for this student.</p>';
+      return;
+    }
+    container.replaceChildren(...visible.map((announcement) => {
+      const article = document.createElement("article");
+      article.className = "parent-announcement";
+      article.dataset.status = ["Important", "Urgent"].includes(announcement.status) ? announcement.status : "Normal";
+      const title = document.createElement("h4");
+      title.textContent = announcement.title || "Announcement";
+      const message = document.createElement("p");
+      message.textContent = announcement.message || "";
+      const meta = document.createElement("div");
+      meta.className = "parent-announcement-meta";
+      meta.textContent = `${announcement.status || "Normal"} · ${announcement.created_at ? new Date(announcement.created_at).toLocaleDateString() : ""}`;
+      article.append(title, message, meta);
+      return article;
+    }));
+  } catch (error) {
+    if (requestId !== parentAnnouncementRequestId) return;
+    console.error("Could not load parent announcements:", error);
+    container.innerHTML = '<p class="parent-state">Announcements could not be loaded. Refresh the page or contact the school.</p>';
+  } finally {
+    if (requestId === parentAnnouncementRequestId) container.setAttribute("aria-busy", "false");
+  }
+}
+
+function isParentAnnouncementVisible(announcement) {
+  const audiences = String(announcement?.target_audience || "")
+    .split(",").map((item) => item.trim().toLowerCase().replace(/s$/, ""));
+  return audiences.some((audience) => ["all", "everyone", "student", "parent"].includes(audience));
 }
 
 function setParentStudentPhoto(shell, photoUrl, name) {

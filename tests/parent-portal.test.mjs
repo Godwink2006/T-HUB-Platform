@@ -31,6 +31,31 @@ test("invitation student search matches names and student IDs without case sensi
   assert.equal(context.filterStudents(students, "missing").length, 0);
   assert.equal(context.filterStudents(students, "").length, 2);
 });
+test("parent dashboard shows announcements for parents, students, and everyone only", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "parent-dashboard.js"), "utf8");
+  const context = vm.createContext({ document: { addEventListener() {} } });
+  vm.runInContext(`${source}\nglobalThis.isVisible = isParentAnnouncementVisible;`, context);
+  assert.equal(context.isVisible({ target_audience: "All" }), true);
+  assert.equal(context.isVisible({ target_audience: "Students, Teachers" }), true);
+  assert.equal(context.isVisible({ target_audience: "Parents" }), true);
+  assert.equal(context.isVisible({ target_audience: "Teachers, Accountants" }), false);
+});
+test("parent link management is staff-authorized and school-scoped server-side", async () => {
+  const source = await readFile(path.join(projectRoot, "supabase", "functions", "manage-parent-links", "index.ts"), "utf8");
+  assert.match(source, /\["admin", "accountant"\]\.includes\(staff\.role\)/);
+  assert.match(source, /\.eq\("school_id", staff\.school_id\)/);
+  assert.match(source, /status: "revoked"/);
+  assert.doesNotMatch(source, /\.delete\(\)/);
+});
+test("parent announcement policy is additive and only exposes linked-school audiences", async () => {
+  const source = await readFile(path.join(projectRoot, "supabase", "parent_portal_announcements_policy.sql"), "utf8");
+  assert.match(source, /create policy "parent_portal_announcements_linked_students_select"/i);
+  assert.match(source, /link\.parent_user_id = \(select auth\.uid\(\)\)/);
+  assert.match(source, /link\.school_id = announcements\.school_id/);
+  assert.match(source, /link\.status = 'active'/);
+  assert.match(source, /'students'.*'parent'.*'parents'/s);
+  assert.doesNotMatch(source, /drop policy if exists .*on public\.(?!announcements)/i);
+});
 test("parent record renderers escape database text before inserting HTML", async () => {
   const helpers = await loadParentRecordHelpers();
   assert.equal(helpers.parentEscape(`<img src=x onerror="alert(1)">`), "&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");

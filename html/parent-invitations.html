@@ -90,6 +90,18 @@
           invitation
         </button>
       </form>
+      <section class="parent-form parent-linked-parents" aria-labelledby="linkedParentsTitle">
+        <div class="section-heading">
+          <div>
+            <p class="parent-eyebrow">Current links</p>
+            <h2 id="linkedParentsTitle">Linked parents</h2>
+            <p>Remove a parent's access to a student from your school.</p>
+          </div>
+        </div>
+        <div id="parentLinksList" class="parent-links-list" aria-live="polite" aria-busy="true">
+          <p class="parent-state">Loading parent links…</p>
+        </div>
+      </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
     <script src="/js/supabase.js"></script>

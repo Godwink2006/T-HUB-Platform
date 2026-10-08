@@ -206,6 +206,27 @@ body.parent-portal {
   padding: 18px 0;
   text-align: center;
 }
+.parent-linked-parents { margin-top: 22px; }
+.parent-links-list { display: grid; gap: 10px; }
+.parent-link-row {
+  align-items: center; border: 2px solid rgb(219, 215, 215); display: flex;
+  gap: 16px; justify-content: space-between; padding: 14px;
+}
+.parent-link-row strong, .parent-link-row span { display: block; }
+.parent-link-row span { color: #60708a; font-size: .85rem; margin-top: 4px; }
+.parent-link-row button {
+  background: #b91c1c; border: 0; color: white; cursor: pointer;
+  font: inherit; font-size: .85rem; font-weight: 600; padding: 9px 12px;
+}
+.parent-link-row button:disabled { cursor: wait; opacity: .6; }
+.parent-announcements { border-top: 2px solid rgb(219, 215, 215); margin-top: 22px; padding-top: 18px; }
+.parent-announcements h3 { margin: 0 0 14px; }
+.parent-announcement { border: 2px solid rgb(219, 215, 215); margin-bottom: 12px; padding: 16px; }
+.parent-announcement h4 { margin: 0 0 8px; }
+.parent-announcement p { margin: 0 0 10px; white-space: pre-wrap; }
+.parent-announcement-meta { color: #60708a; font-size: .82rem; }
+.parent-announcement[data-status="Important"] { border-left: 5px solid #f59e0b; }
+.parent-announcement[data-status="Urgent"] { border-left: 5px solid #dc2626; }
 .selected-student-panel {
   margin-top: 22px;
   padding: 24px;
