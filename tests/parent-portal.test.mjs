@@ -88,6 +88,17 @@ test("record statuses receive matching color classes", async () => {
   assert.equal(helpers.parentStatusClass("Unknown"), "status-neutral");
 });
 
+test("attendance records can be filtered by subject", async () => {
+  const helpers = await loadParentRecordHelpers();
+  const context = helpers.getParentRecordContext({
+    attendance: { subject_id: "subject-1", subjects: { name: "Mathematics" } },
+  }, "attendance");
+  assert.equal(context.subjectName, "Mathematics");
+  assert.equal(context.subjectId, "subject-1");
+  assert.equal(helpers.matchesParentRecordFilters(context, { subjectId: "subject-1" }), true);
+  assert.equal(helpers.matchesParentRecordFilters(context, { subjectId: "subject-2" }), false);
+});
+
 test("attendance recursion fix replaces only parent portal policies", async () => {
   const sql = await readFile(attendanceFixPath, "utf8");
   assert.ok(sql.includes("private.parent_portal_can_read_attendance(attendance.id)"));

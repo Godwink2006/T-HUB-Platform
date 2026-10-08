@@ -225,6 +225,8 @@ function getParentRecordContext(row, type) {
       termName: item.terms?.name,
       periodId: undefined,
       periodName: undefined,
+      subjectId: item.subject_id,
+      subjectName: item.subjects?.name,
     };
   }
   const item = row.grades || {};
@@ -262,11 +264,12 @@ function buildParentRecordFilters() {
   const periodFilterField = document.getElementById("recordPeriodFilterField");
   const subjectFilterField = document.getElementById("recordSubjectFilterField");
   periodFilterField.hidden = type !== "grades";
-  subjectFilterField.hidden = type !== "grades";
+  subjectFilterField.hidden = type === "fees";
   if (type === "grades") {
     filterSets.push(["recordPeriodFilter", "periodId", "periodName", "All periods"]);
-    filterSets.push(["recordSubjectFilter", "subjectId", "subjectName", "All subjects"]);
   }
+  if (type === "grades" || type === "attendance")
+    filterSets.push(["recordSubjectFilter", "subjectId", "subjectName", "All subjects"]);
   filterSets.forEach(([selectId, idKey, labelKey, defaultLabel]) => {
     const select = document.getElementById(selectId);
     const selected = select.value;
@@ -309,7 +312,7 @@ function renderParentRecords() {
         ? document.getElementById("recordPeriodFilter").value
         : "",
     subjectId:
-      type === "grades"
+      type !== "fees"
         ? document.getElementById("recordSubjectFilter").value
         : "",
   };
