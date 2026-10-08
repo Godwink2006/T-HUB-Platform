@@ -129,6 +129,52 @@ body.parent-portal {
 .parent-child-info {
   min-width: 0;
 }
+.parent-student-avatar-shell {
+  align-items: center;
+  background: #eaf1ff;
+  border: 1px solid #dce4ee;
+  border-radius: 50%;
+  color: #2563eb;
+  display: inline-flex;
+  flex: 0 0 52px;
+  height: 52px;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  width: 52px;
+}
+.parent-student-avatar-large {
+  flex-basis: 72px;
+  height: 72px;
+  width: 72px;
+}
+.parent-student-avatar-shell img {
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+.parent-student-avatar-shell img[hidden] {
+  display: none;
+}
+.parent-student-avatar-initials {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.selected-student-identity,
+.record-student-heading {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  min-width: 0;
+}
+.record-student-heading h1 {
+  margin: 0;
+}
+.record-student-heading p {
+  color: #60708a;
+  margin: 9px 0 0;
+}
 .parent-child-info strong {
   display: block;
   font-size: 0.98rem;

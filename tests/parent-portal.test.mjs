@@ -143,4 +143,19 @@ test("parent data SQL scopes sensitive reads to active child links and blocks pa
   assert.ok(droppedPolicies.every((name) => name.startsWith("parent_portal_")), "only policies owned by this patch may be replaced");
   assert.ok(!/alter table public\.[a-z_]+ enable row level security/i.test(sql), "do not toggle existing table RLS configuration");
   assert.ok(!sql.includes('"Users can view their own profile row"'), "do not replace any existing profile policy");
+  assert.ok(sql.includes('"parent_portal_profiles_linked_select"'), "linked parents need additive profile access across schools");
+  assert.match(sql, /parent_user_id = \(select auth\.uid\(\)\)[\s\S]*student_id = profiles\.id[\s\S]*link\.status = 'active'/, "profile reads must stay limited to actively linked students");
+});
+
+test("parent dashboard and record header request and display linked student photos", async () => {
+  const dashboard = await readFile(path.join(projectRoot, "js", "parent-dashboard.js"), "utf8");
+  const records = await readFile(jsPath, "utf8");
+  const dashboardHtml = await readFile(path.join(projectRoot, "html", "parent-dashboard.html"), "utf8");
+  const recordsHtml = await readFile(path.join(projectRoot, "html", "parent-records.html"), "utf8");
+  assert.match(dashboard, /profiles\(full_name, photo_url\)/);
+  assert.match(records, /profiles\(full_name, photo_url\)/);
+  assert.match(dashboardHtml, /id="selectedStudentPhoto"/);
+  assert.match(recordsHtml, /id="recordStudentPhoto"/);
+  assert.match(dashboard, /parsedPhotoUrl\.protocol/);
+  assert.match(records, /parsedPhotoUrl\.protocol/);
 });

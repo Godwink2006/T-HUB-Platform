@@ -62,6 +62,20 @@ create policy "parent_portal_profile_select_scope"
     )
   );
 
+-- Additive access for parents to the profile of each actively linked student.
+-- Keep this separate from existing school/admin policies so those remain intact.
+drop policy if exists "parent_portal_profiles_linked_select" on public.profiles;
+create policy "parent_portal_profiles_linked_select"
+  on public.profiles for select to authenticated
+  using (
+    exists (
+      select 1 from public.parent_student_links as link
+      where link.parent_user_id = (select auth.uid())
+        and link.student_id = profiles.id
+        and link.status = 'active'
+    )
+  );
+
 -- Students: linked parents get the selected child, not the school roster.
 drop policy if exists "parent_portal_students_linked_select" on public.students;
 create policy "parent_portal_students_linked_select"

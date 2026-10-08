@@ -63,10 +63,16 @@
         aria-live="polite"
       >
         <div class="selected-student-heading">
-          <div>
-            <p class="parent-eyebrow">Selected student</p>
-            <h2 id="selectedStudentName"></h2>
-            <p id="selectedStudentDetails"></p>
+          <div class="selected-student-identity">
+            <span id="selectedStudentPhoto" class="parent-student-avatar-shell parent-student-avatar-large" aria-hidden="true">
+              <img class="parent-student-avatar" alt="" />
+              <span class="parent-student-avatar-initials"></span>
+            </span>
+            <div>
+              <p class="parent-eyebrow">Selected student</p>
+              <h2 id="selectedStudentName"></h2>
+              <p id="selectedStudentDetails"></p>
+            </div>
           </div>
           <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
         </div>

@@ -49,7 +49,7 @@ async function loadParentDashboard() {
 
     const { data: students, error: studentsError } = await client
       .from("students")
-      .select("id, student_id, school_id, profiles(full_name)")
+      .select("id, student_id, school_id, profiles(full_name, photo_url)")
       .in("id", [...new Set(links.map((link) => link.student_id))]);
     if (studentsError) throw studentsError;
 
@@ -58,6 +58,7 @@ async function loadParentDashboard() {
       ...student,
       relationship: relationshipByStudent.get(student.id) || "Parent/guardian",
       fullName: student.profiles?.full_name || "Student",
+      photoUrl: student.profiles?.photo_url || "",
     })).sort((a, b) => a.fullName.localeCompare(b.fullName));
 
     if (!children.length) {
@@ -83,6 +84,10 @@ function renderParentChildren(children) {
   const container = document.getElementById("parentChildren");
   container.innerHTML = children.map((child) => `
     <article class="parent-child-card" data-student-id="${escapeParentPortal(child.id)}">
+      <span class="parent-student-avatar-shell" data-student-avatar aria-hidden="true">
+        <img class="parent-student-avatar" alt="" />
+        <span class="parent-student-avatar-initials"></span>
+      </span>
       <div class="parent-child-info">
         <strong>${escapeParentPortal(child.fullName)}</strong>
         <span>Student ID: ${escapeParentPortal(child.student_id || "Not assigned")}</span>
@@ -91,6 +96,11 @@ function renderParentChildren(children) {
       <button type="button" data-select-student="${escapeParentPortal(child.id)}" aria-pressed="false">Choose student</button>
     </article>
   `).join("");
+
+  container.querySelectorAll("[data-student-avatar]").forEach((image) => {
+    const child = children.find((item) => item.id === image.closest("[data-student-id]")?.dataset.studentId);
+    setParentStudentPhoto(image, child?.photoUrl, child?.fullName || "Student");
+  });
 
   container.querySelectorAll("[data-select-student]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -110,7 +120,36 @@ function selectParentStudent(student) {
   });
   document.getElementById("selectedStudentName").textContent = student.fullName;
   document.getElementById("selectedStudentDetails").textContent = `Student ID: ${student.student_id || "Not assigned"}`;
+  setParentStudentPhoto(document.getElementById("selectedStudentPhoto"), student.photoUrl, student.fullName);
   document.getElementById("selectedStudentPanel").hidden = false;
+}
+
+function setParentStudentPhoto(shell, photoUrl, name) {
+  if (!shell) return;
+  const image = shell.querySelector("img");
+  const initials = shell.querySelector(".parent-student-avatar-initials");
+  const firstLetters = String(name || "Student").trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  if (initials) initials.textContent = firstLetters || "S";
+  if (!image) return;
+  image.alt = `${name || "Student"} photo`;
+  image.hidden = true;
+  image.removeAttribute("src");
+  if (photoUrl) {
+    try {
+      const parsedPhotoUrl = new URL(photoUrl, window.location.href);
+      if (["https:", "http:"].includes(parsedPhotoUrl.protocol)) {
+        image.src = parsedPhotoUrl.href;
+        image.hidden = false;
+      }
+    } catch {
+      // Leave the styled initials placeholder when a profile photo URL is invalid.
+    }
+  }
+  image.onerror = () => {
+    image.onerror = null;
+    image.hidden = true;
+    image.removeAttribute("src");
+  };
 }
 
 function escapeParentPortal(value) {

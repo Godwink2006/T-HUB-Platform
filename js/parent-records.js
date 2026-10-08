@@ -95,12 +95,17 @@ async function initializeParentRecords() {
 
     const { data: student, error: studentError } = await client
       .from("students")
-      .select("id, student_id, school_id, profiles(full_name)")
+      .select("id, student_id, school_id, profiles(full_name, photo_url)")
       .eq("id", selectedStudentId)
       .single();
     if (studentError) throw studentError;
     document.getElementById("recordStudentName").textContent =
       student.profiles?.full_name || "Student";
+    setRecordStudentPhoto(
+      document.getElementById("recordStudentPhoto"),
+      student.profiles?.photo_url,
+      student.profiles?.full_name || "Student",
+    );
     document.getElementById("recordStudentDetails").textContent =
       `Student ID: ${student.student_id || "Not assigned"}`;
 
@@ -198,6 +203,34 @@ function buildParentSchoolMap(schools) {
   return new Map(
     (schools || []).map((school) => [school.id, school.school_name]),
   );
+}
+
+function setRecordStudentPhoto(shell, photoUrl, name) {
+  if (!shell) return;
+  const image = shell.querySelector("img");
+  const initials = shell.querySelector(".parent-student-avatar-initials");
+  const firstLetters = String(name || "Student").trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  if (initials) initials.textContent = firstLetters || "S";
+  if (!image) return;
+  image.alt = `${name || "Student"} photo`;
+  image.hidden = true;
+  image.removeAttribute("src");
+  if (photoUrl) {
+    try {
+      const parsedPhotoUrl = new URL(photoUrl, window.location.href);
+      if (["https:", "http:"].includes(parsedPhotoUrl.protocol)) {
+        image.src = parsedPhotoUrl.href;
+        image.hidden = false;
+      }
+    } catch {
+      // Keep the initials placeholder when a profile photo URL is invalid.
+    }
+  }
+  image.onerror = () => {
+    image.onerror = null;
+    image.hidden = true;
+    image.removeAttribute("src");
+  };
 }
 
 function getParentRecordContext(row, type) {
