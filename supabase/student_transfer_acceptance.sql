@@ -349,8 +349,52 @@ begin
       'insert into public.student_transfer_history
          (transfer_id, source_school_id, target_school_id, source_student_id,
           target_student_id, record_type, source_record_id, record_snapshot)
-       select $1, $2, $3, $4, $4, $5, source_row.id::text, pg_catalog.to_jsonb(source_row)
+       select $1, $2, $3, $4, $4, $5, source_row.id::text,
+         pg_catalog.to_jsonb(source_row) || pg_catalog.jsonb_build_object(
+           ''history_class_id'', context.class_id,
+           ''history_class_name'', class_row.name,
+           ''history_academic_year_id'', context.academic_year_id,
+           ''history_academic_year'', year_row.year_label,
+           ''history_term_id'', context.term_id,
+           ''history_term_name'', term_row.name
+         )
        from public.%I as source_row
+       left join lateral (
+         select
+           coalesce(
+             nullif(pg_catalog.to_jsonb(source_row)->>''class_id'', '''')::uuid,
+             (select a.class_id from public.attendance as a
+              where a.id = nullif(pg_catalog.to_jsonb(source_row)->>''attendance_id'', '''')::uuid),
+             (select g.class_id from public.grades as g
+              where g.id = nullif(pg_catalog.to_jsonb(source_row)->>''grade_id'', '''')::uuid),
+             (select f.class_id from public.student_fees as f
+              where f.id = nullif(pg_catalog.to_jsonb(source_row)->>''student_fee_id'', '''')::uuid)
+           ) as class_id,
+           coalesce(
+             nullif(pg_catalog.to_jsonb(source_row)->>''academic_year_id'', '''')::uuid,
+             (select a.academic_year_id from public.attendance as a
+              where a.id = nullif(pg_catalog.to_jsonb(source_row)->>''attendance_id'', '''')::uuid),
+             (select g.academic_year_id from public.grades as g
+              where g.id = nullif(pg_catalog.to_jsonb(source_row)->>''grade_id'', '''')::uuid),
+             (select f.academic_year_id from public.student_fees as f
+              where f.id = nullif(pg_catalog.to_jsonb(source_row)->>''student_fee_id'', '''')::uuid)
+           ) as academic_year_id,
+           coalesce(
+             nullif(pg_catalog.to_jsonb(source_row)->>''term_id'', '''')::uuid,
+             (select a.term_id from public.attendance as a
+              where a.id = nullif(pg_catalog.to_jsonb(source_row)->>''attendance_id'', '''')::uuid),
+             (select g.term_id from public.grades as g
+              where g.id = nullif(pg_catalog.to_jsonb(source_row)->>''grade_id'', '''')::uuid),
+             (select f.term_id from public.student_fees as f
+              where f.id = nullif(pg_catalog.to_jsonb(source_row)->>''student_fee_id'', '''')::uuid)
+           ) as term_id
+       ) as context on true
+       left join public.classes as class_row
+         on class_row.id = context.class_id and class_row.school_id = $2
+       left join public.academic_years as year_row
+         on year_row.id = context.academic_year_id and year_row.school_id = $2
+       left join public.terms as term_row
+         on term_row.id = context.term_id and term_row.school_id = $2
        where source_row.student_id = $4 and source_row.school_id = $2',
       v_table_name
     ) using v_transfer.id, v_transfer.source_school_id, v_school_id,
@@ -471,6 +515,7 @@ begin
         'transfer_id', transfer.id,
         'source_school_id', transfer.source_school_id,
         'source_school_name', school.school_name,
+        'source_student_code', transfer.source_student_code,
         'completed_at', transfer.completed_at,
         'records', coalesce(history.records, '[]'::jsonb)
       ) order by transfer.completed_at desc
@@ -489,12 +534,13 @@ begin
     ) as records
     from public.student_transfer_history as record
     where record.transfer_id = transfer.id
+      and record.source_student_id = v_student_id
       and record.target_student_id = v_student_id
-      and record.target_school_id = v_school_id
   ) as history on true
   where transfer.status = 'completed'
+    and transfer.source_student_id = v_student_id
     and transfer.target_student_id = v_student_id
-    and transfer.target_school_id = v_school_id;
+    and transfer.completed_at is not null;
 
   return v_history;
 end;

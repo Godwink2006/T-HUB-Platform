@@ -1,3 +1,5 @@
+let myTransferHistory = [];
+
 document.addEventListener("DOMContentLoaded", loadMyTransferHistory);
 
 const HISTORY_RECORDS = {
@@ -31,6 +33,7 @@ const HIDDEN_HISTORY_FIELDS = new Set([
   "attendance_id", "grade_id", "class_id", "subject_id", "term_id",
   "academic_year_id", "assessment_id", "assessment_category_id",
   "fee_structure_id", "student_fee_id", "payment_transaction_id",
+  "history_class_id", "history_academic_year_id", "history_term_id",
   "created_by", "updated_by", "deleted_at", "updated_at",
 ]);
 
@@ -40,16 +43,23 @@ async function loadMyTransferHistory() {
   if (!container || !client) return;
 
   try {
-    const { data, error } = await client.rpc("get_my_transfer_history");
-    if (error) throw error;
-
-    const transfers = Array.isArray(data) ? data : [];
+    const historyIndex = await window.getStudentTransferHistoryIndex(client);
+    myTransferHistory = historyIndex.transfers.filter(
+      (transfer) => String(transfer.source_school_id || "").toLowerCase() !== historyIndex.currentSchoolId,
+    );
+    const transfers = myTransferHistory;
     if (transfers.length === 0) {
       container.innerHTML = '<div class="history-empty"><i class="fa-regular fa-folder-open" aria-hidden="true"></i><h2>No transfer history yet</h2><p>Records from a previous school will appear here after a transfer is completed.</p></div>';
       return;
     }
 
-    container.innerHTML = transfers.map(renderTransfer).join("");
+    populateHistoryFilters(transfers);
+    ["historySearch", "historySchoolFilter", "historyYearFilter", "historyClassFilter", "historyTypeFilter"]
+      .forEach((id) => document.getElementById(id)?.addEventListener(
+        id === "historySearch" ? "input" : "change",
+        applyHistoryFilters,
+      ));
+    applyHistoryFilters();
   } catch (error) {
     console.error("Could not load transfer history:", error);
     container.innerHTML = '<div class="history-empty history-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><h2>History could not be loaded</h2><p>Refresh the page or contact your school administrator.</p></div>';
@@ -87,10 +97,88 @@ function renderTransfer(transfer) {
         </div>
         <span class="history-date"><i class="fa-regular fa-calendar" aria-hidden="true"></i>${escapeHistoryHtml(formatHistoryDate(transfer.completed_at, { dateOnly: true }))}</span>
       </div>
-      <p class="transfer-source">Transfer completed ${escapeHistoryHtml(formatHistoryDate(transfer.completed_at))}</p>
+      <p class="transfer-source">Transfer completed ${escapeHistoryHtml(formatHistoryDate(transfer.completed_at))}${transfer.source_student_code ? ` · Student ID ${escapeHistoryHtml(transfer.source_student_code)}` : ""}</p>
       ${recordSections || '<p class="history-state">No source records were captured for this transfer.</p>'}
     </article>
   `;
+}
+
+function populateHistoryFilters(transfers) {
+  const schools = new Map();
+  const years = new Set();
+  const classes = new Set();
+
+  for (const transfer of transfers) {
+    const schoolKey = String(transfer.source_school_id || transfer.source_school_name || "");
+    if (schoolKey) schools.set(schoolKey, transfer.source_school_name || "Previous school");
+    for (const record of Array.isArray(transfer.records) ? transfer.records : []) {
+      const snapshot = record.record_snapshot || {};
+      const year = historyYear(snapshot);
+      const className = historyClass(snapshot);
+      if (year) years.add(year);
+      if (className) classes.add(className);
+    }
+  }
+
+  fillHistorySelect("historySchoolFilter", schools, "All schools");
+  fillHistorySelect("historyYearFilter", new Map([...years].map((value) => [value, value])), "All years");
+  fillHistorySelect("historyClassFilter", new Map([...classes].map((value) => [value, value])), "All classes");
+}
+
+function fillHistorySelect(id, options, placeholder) {
+  const select = document.getElementById(id);
+  if (!select) return;
+  select.innerHTML = `<option value="">${escapeHistoryHtml(placeholder)}</option>` +
+    [...options.entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])))
+      .map(([value, label]) => `<option value="${escapeHistoryHtml(value)}">${escapeHistoryHtml(label)}</option>`)
+      .join("");
+}
+
+function applyHistoryFilters() {
+  const container = document.getElementById("transferHistoryList");
+  if (!container) return;
+
+  const search = document.getElementById("historySearch")?.value.trim().toLowerCase() || "";
+  const school = document.getElementById("historySchoolFilter")?.value || "";
+  const year = document.getElementById("historyYearFilter")?.value || "";
+  const className = document.getElementById("historyClassFilter")?.value || "";
+  const type = document.getElementById("historyTypeFilter")?.value || "";
+  let recordCount = 0;
+
+  const cards = myTransferHistory.map((transfer) => {
+    const schoolKey = String(transfer.source_school_id || transfer.source_school_name || "");
+    if (school && school !== schoolKey) return "";
+    const records = (Array.isArray(transfer.records) ? transfer.records : []).filter((record) => {
+      const snapshot = record.record_snapshot || {};
+      if (year && historyYear(snapshot) !== year) return false;
+      if (className && historyClass(snapshot) !== className) return false;
+      if (type && normalizeRecordType(record.record_type) !== type) return false;
+      if (search) {
+        const searchable = [transfer.source_school_name, transfer.source_student_code,
+          record.record_type, ...Object.values(snapshot).map((value) =>
+            typeof value === "object" && value !== null ? JSON.stringify(value) : value,
+          )].join(" ").toLowerCase();
+        if (!searchable.includes(search)) return false;
+      }
+      return true;
+    });
+    recordCount += records.length;
+    return records.length ? renderTransfer({ ...transfer, records }) : "";
+  }).filter(Boolean);
+
+  const count = document.getElementById("historyResultCount");
+  if (count) count.textContent = `${recordCount} record${recordCount === 1 ? "" : "s"}`;
+  container.innerHTML = cards.length
+    ? cards.join("")
+    : '<div class="history-empty"><i class="fa-regular fa-folder-open" aria-hidden="true"></i><h2>No matching history</h2><p>Try changing or clearing your filters.</p></div>';
+}
+
+function historyYear(snapshot) {
+  return String(snapshot.history_academic_year || snapshot.academic_year || snapshot.year_label || snapshot.academic_year_id || "");
+}
+
+function historyClass(snapshot) {
+  return String(snapshot.history_class_name || snapshot.class_name || snapshot.class_id || "");
 }
 
 function renderRecord(record, type) {

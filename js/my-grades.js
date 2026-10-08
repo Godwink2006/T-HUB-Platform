@@ -16,6 +16,10 @@ async function initStudentContext() {
     return;
   }
 
+  // The transfer history RPC identifies records that must stay out of the
+  // current-school grade view. Load it before choosing a default grade period.
+  const historyIndex = await window.getStudentTransferHistoryIndex(client);
+
   const yearSelect = document.getElementById("studentAcademicYearSelect");
   const termSelect = document.getElementById("studentTermSelect");
 
@@ -55,17 +59,20 @@ async function initStudentContext() {
 
   const { data: userGrades } = await client
     .from("grade_records")
-    .select(
-      "grades!inner(academic_year_id, term_id, assessment_id, class_id, subject_id)",
-    )
+    .select("id, grades!inner(academic_year_id, term_id, assessment_id, class_id, subject_id)")
     .eq("student_id", user.id)
-    .limit(1);
+    .order("created_at", { ascending: false });
 
-  const targetYearId = userGrades?.[0]?.grades?.academic_year_id;
-  const targetTermId = userGrades?.[0]?.grades?.term_id;
-  const targetAssessmentId = userGrades?.[0]?.grades?.assessment_id;
-  const targetClassId = userGrades?.[0]?.grades?.class_id;
-  const targetSubjectId = userGrades?.[0]?.grades?.subject_id;
+  const historicalGradeIds = historyIndex?.recordIds?.grade || new Set();
+  const currentUserGrade = (userGrades || []).find(
+    (record) => !historicalGradeIds.has(String(record.id)),
+  );
+
+  const targetYearId = currentUserGrade?.grades?.academic_year_id;
+  const targetTermId = currentUserGrade?.grades?.term_id;
+  const targetAssessmentId = currentUserGrade?.grades?.assessment_id;
+  const targetClassId = currentUserGrade?.grades?.class_id;
+  const targetSubjectId = currentUserGrade?.grades?.subject_id;
 
 
   const { data: years, error: yearsErr } = await client
@@ -306,6 +313,8 @@ async function loadStudentGrades(authUserId) {
   }
   try {
     const client = window.supabaseClient || supabaseClient;
+    const historyIndex = await window.getStudentTransferHistoryIndex(client);
+    const historicalGradeIds = historyIndex?.recordIds?.grade || new Set();
 
 
     let query = client
@@ -344,9 +353,13 @@ async function loadStudentGrades(authUserId) {
     if (classId) query = query.eq("grades.class_id", classId);
     if (subjectId) query = query.eq("grades.subject_id", subjectId);
 
-    const { data: records, error } = await query;
+    const { data: fetchedRecords, error } = await query;
 
     if (error) throw error;
+
+    const records = (fetchedRecords || []).filter(
+      (record) => !historicalGradeIds.has(String(record.id)),
+    );
 
     if (!records || records.length === 0) {
       reportContainer.innerHTML = `

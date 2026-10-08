@@ -10,10 +10,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const userId = user.id;
 
-  await loadStudentAttendanceData(userId);
+  const historyIndex = await window.getStudentTransferHistoryIndex(client);
+  await loadStudentAttendanceData(userId, historyIndex);
 });
 
-async function loadStudentAttendanceData(userId) {
+async function loadStudentAttendanceData(userId, historyIndex) {
   const client = window.supabaseClient || supabaseClient;
 
 
@@ -22,7 +23,12 @@ async function loadStudentAttendanceData(userId) {
     .select("id, status, created_at, student_id, attendance_id")
     .eq("student_id", userId);
 
-  if (!attendanceRecords || attendanceRecords.length === 0) {
+  const historicalAttendanceIds = historyIndex?.recordIds?.attendance || new Set();
+  const currentAttendanceRecords = (attendanceRecords || []).filter(
+    (record) => !historicalAttendanceIds.has(String(record.id)),
+  );
+
+  if (currentAttendanceRecords.length === 0) {
     allAttendanceRecords = [];
     populateDropdownFilters([]);
     applyFiltersAndRender();
@@ -31,7 +37,7 @@ async function loadStudentAttendanceData(userId) {
 
 
   const attendanceIds = [
-    ...new Set(attendanceRecords.map((r) => r.attendance_id).filter(Boolean)),
+    ...new Set(currentAttendanceRecords.map((r) => r.attendance_id).filter(Boolean)),
   ];
 
 
@@ -67,7 +73,7 @@ async function loadStudentAttendanceData(userId) {
   }
 
 
-  allAttendanceRecords = attendanceRecords
+  allAttendanceRecords = currentAttendanceRecords
     .map((record) => ({
       ...record,
       attendance: attendanceMap[record.attendance_id] || null,

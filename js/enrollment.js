@@ -171,6 +171,38 @@ document.addEventListener("DOMContentLoaded", () => {
     modalCancel.textContent = "Cancel";
   }
 
+  async function copyTextToClipboard(text) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+    } catch {
+      // Clipboard permissions can reject writes even when the API exists.
+    }
+
+    const fallback = document.createElement("textarea");
+    fallback.value = text;
+    fallback.setAttribute("readonly", "");
+    fallback.setAttribute("aria-hidden", "true");
+    fallback.style.position = "fixed";
+    fallback.style.top = "-1000px";
+    fallback.style.opacity = "0";
+    document.body.appendChild(fallback);
+    fallback.focus();
+    fallback.select();
+    fallback.setSelectionRange(0, fallback.value.length);
+
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } finally {
+      fallback.remove();
+    }
+
+    if (!copied) throw new Error("Clipboard copy was rejected.");
+  }
+
   modalCancel.addEventListener("click", closeModal);
   modalOverlay.addEventListener("click", (e) => {
     if (e.target === modalOverlay) closeModal();
@@ -446,11 +478,16 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
         document.getElementById("generatedTransferCode").textContent = transferCode;
         document.getElementById("copyTransferCode").addEventListener("click", async (event) => {
+          const copyButton = event.currentTarget;
+          copyButton.disabled = true;
           try {
-            await navigator.clipboard.writeText(transferCode);
-            event.currentTarget.textContent = "Copied";
+            await copyTextToClipboard(transferCode);
+            copyButton.textContent = "Copied";
+            showToast("Transfer code copied to clipboard.", "success");
           } catch {
             showToast("Copy failed. Select and copy the code manually.", "error");
+          } finally {
+            copyButton.disabled = false;
           }
         });
         modalConfirm.style.display = "none";

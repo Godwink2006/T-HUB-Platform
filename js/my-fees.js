@@ -15,30 +15,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const userId = session.user.id;
+  const historyIndex = await window.getStudentTransferHistoryIndex(client);
 
 
-  await populateFilterDropdowns(userId, client);
-  await loadStudentFeesAndHistory(userId, {});
+  await populateFilterDropdowns(userId, client, historyIndex);
+  await loadStudentFeesAndHistory(userId, {}, historyIndex);
 
 
   document
     .getElementById("filterAcademicYear")
-    .addEventListener("change", () => triggerFilter(userId));
+    .addEventListener("change", () => triggerFilter(userId, historyIndex));
   document
     .getElementById("filterClass")
-    .addEventListener("change", () => triggerFilter(userId));
+    .addEventListener("change", () => triggerFilter(userId, historyIndex));
   document
     .getElementById("filterTerm")
-    .addEventListener("change", () => triggerFilter(userId));
+    .addEventListener("change", () => triggerFilter(userId, historyIndex));
 });
 
 
-async function populateFilterDropdowns(authUserId, client) {
+async function populateFilterDropdowns(authUserId, client, historyIndex) {
   try {
     const { data: fees } = await client
       .from("student_fees")
       .select(
         `
+        id,
         academic_years ( id, year_label ),
         classes ( id, name ),
         terms ( id, name )
@@ -47,12 +49,14 @@ async function populateFilterDropdowns(authUserId, client) {
       .eq("student_id", authUserId);
 
     if (!fees) return;
+    const historicalFeeIds = historyIndex?.recordIds?.fee || new Set();
+    const currentFees = fees.filter((fee) => !historicalFeeIds.has(String(fee.id)));
 
     const yearsMap = new Map();
     const classesMap = new Map();
     const termsMap = new Map();
 
-    fees.forEach((f) => {
+    currentFees.forEach((f) => {
       if (f.academic_years)
         yearsMap.set(f.academic_years.id, f.academic_years.year_label);
       if (f.classes) classesMap.set(f.classes.id, f.classes.name);
@@ -71,15 +75,6 @@ async function populateFilterDropdowns(authUserId, client) {
       (name, id) =>
         (classSelect.innerHTML += `<option value="${id}">${name}</option>`),
     );
-    termsMap.set(
-      (name, id) =>
-        (termSelect.innerHTML += `<option value="${id}">${name}</option>`),
-      termsMap.forEach(
-        (name, id) =>
-          (termSelect.innerHTML += `<option value="${id}">${name}</option>`),
-      ),
-    );
-
     termSelect.innerHTML = `<option value="">All Semesters</option>`;
     termsMap.forEach(
       (name, id) =>
@@ -90,13 +85,13 @@ async function populateFilterDropdowns(authUserId, client) {
   }
 }
 
-function triggerFilter(userId) {
+function triggerFilter(userId, historyIndex) {
   const filters = {
     academic_year_id: document.getElementById("filterAcademicYear").value,
     class_id: document.getElementById("filterClass").value,
     term_id: document.getElementById("filterTerm").value,
   };
-  loadStudentFeesAndHistory(userId, filters);
+  loadStudentFeesAndHistory(userId, filters, historyIndex);
 }
 
 function renderFeesTable(fees, container) {
@@ -164,7 +159,7 @@ function renderFeesTable(fees, container) {
   container.innerHTML = html;
 }
 
-async function loadStudentFeesAndHistory(authUserId, filters = {}) {
+async function loadStudentFeesAndHistory(authUserId, filters = {}, historyIndex) {
   const feesContainer = document.getElementById("studentFeesContainer");
   const txContainer = document.getElementById("paymentTransactionsContainer");
   if (!feesContainer || !txContainer) return;
@@ -200,11 +195,9 @@ async function loadStudentFeesAndHistory(authUserId, filters = {}) {
       feesQuery = feesQuery.eq("class_id", filters.class_id);
     if (filters.term_id) feesQuery = feesQuery.eq("term_id", filters.term_id);
 
-    if (!filters.academic_year_id && !filters.class_id && !filters.term_id) {
-      feesQuery = feesQuery.limit(1);
-    }
-
-    const { data: fees, error: feeError } = await feesQuery;
+    const { data: fetchedFees, error: feeError } = await feesQuery;
+    const historicalFeeIds = historyIndex?.recordIds?.fee || new Set();
+    const fees = (fetchedFees || []).filter((fee) => !historicalFeeIds.has(String(fee.id)));
 
     if (feeError || !fees || fees.length === 0) {
       feesContainer.innerHTML = `

@@ -20,6 +20,35 @@
         </div>
         <a href="dashboard.html" class="history-back-link"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Dashboard</a>
       </header>
+      <section class="history-filters" aria-label="Filter transfer history">
+        <label class="history-search-field">
+          <span>Search records</span>
+          <input id="historySearch" type="search" placeholder="Search school, class, subject, fee, or date" autocomplete="off" />
+        </label>
+        <label>
+          <span>School</span>
+          <select id="historySchoolFilter"><option value="">All schools</option></select>
+        </label>
+        <label>
+          <span>Academic year</span>
+          <select id="historyYearFilter"><option value="">All years</option></select>
+        </label>
+        <label>
+          <span>Class</span>
+          <select id="historyClassFilter"><option value="">All classes</option></select>
+        </label>
+        <label>
+          <span>Record type</span>
+          <select id="historyTypeFilter">
+            <option value="">All records</option>
+            <option value="fee">Fees</option>
+            <option value="payment">Payments</option>
+            <option value="attendance">Attendance</option>
+            <option value="grade">Grades</option>
+          </select>
+        </label>
+        <p id="historyResultCount" class="history-result-count" aria-live="polite"></p>
+      </section>
       <section id="transferHistoryList" class="transfer-history-list" aria-live="polite">
         <p class="history-state">Loading your transfer history...</p>
       </section>
@@ -27,6 +56,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
+    <script src="/js/transfer-history-index.js"></script>
     <script src="/js/my-history.js"></script>
   </body>
 </html>
