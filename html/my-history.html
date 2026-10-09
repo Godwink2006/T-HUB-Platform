@@ -1,15 +1,41 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>My Transfer History</title>
     <link rel="stylesheet" href="/css/my-history.css" />
     <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="T-HUB" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#2563eb" />
   </head>
   <body>
     <main class="history-page">
@@ -18,24 +44,38 @@
           <h1>My Transfer History</h1>
           <p>Read-only records from schools you transferred from.</p>
         </div>
-        <a href="dashboard.html" class="history-back-link"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Dashboard</a>
+        <a href="dashboard.html" class="history-back-link"
+          ><i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+          Dashboard</a
+        >
       </header>
       <section class="history-filters" aria-label="Filter transfer history">
         <label class="history-search-field">
           <span>Search records</span>
-          <input id="historySearch" type="search" placeholder="Search school, class, subject, fee, or date" autocomplete="off" />
+          <input
+            id="historySearch"
+            type="search"
+            placeholder="Search school, class, subject, fee, or date"
+            autocomplete="off"
+          />
         </label>
         <label>
           <span>School</span>
-          <select id="historySchoolFilter"><option value="">All schools</option></select>
+          <select id="historySchoolFilter">
+            <option value="">All schools</option>
+          </select>
         </label>
         <label>
           <span>Academic year</span>
-          <select id="historyYearFilter"><option value="">All years</option></select>
+          <select id="historyYearFilter">
+            <option value="">All years</option>
+          </select>
         </label>
         <label>
           <span>Class</span>
-          <select id="historyClassFilter"><option value="">All classes</option></select>
+          <select id="historyClassFilter">
+            <option value="">All classes</option>
+          </select>
         </label>
         <label>
           <span>Record type</span>
@@ -47,9 +87,17 @@
             <option value="grade">Grades</option>
           </select>
         </label>
-        <p id="historyResultCount" class="history-result-count" aria-live="polite"></p>
+        <p
+          id="historyResultCount"
+          class="history-result-count"
+          aria-live="polite"
+        ></p>
       </section>
-      <section id="transferHistoryList" class="transfer-history-list" aria-live="polite">
+      <section
+        id="transferHistoryList"
+        class="transfer-history-list"
+        aria-live="polite"
+      >
         <p class="history-state">Loading your transfer history...</p>
       </section>
     </main>
