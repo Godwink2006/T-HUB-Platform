@@ -25,8 +25,12 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-        <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -76,7 +80,11 @@
       >
         <div class="selected-student-heading">
           <div class="selected-student-identity">
-            <span id="selectedStudentPhoto" class="parent-student-avatar-shell parent-student-avatar-large" aria-hidden="true">
+            <span
+              id="selectedStudentPhoto"
+              class="parent-student-avatar-shell parent-student-avatar-large"
+              aria-hidden="true"
+            >
               <img class="parent-student-avatar" alt="" />
               <span class="parent-student-avatar-initials"></span>
             </span>
@@ -106,8 +114,18 @@
             ><i class="fa-solid fa-chart-column" aria-hidden="true"></i>
             Grades</a
           >
+
+          <a
+            class="parent-record-link"
+            href="parent-records.html?view=timetable"
+            ><i class="fa-solid fa-calendar-alt" aria-hidden="true"></i>
+            Timetable</a
+          >
         </nav>
-        <section class="parent-announcements" aria-labelledby="studentAnnouncementsTitle">
+        <section
+          class="parent-announcements"
+          aria-labelledby="studentAnnouncementsTitle"
+        >
           <h3 id="studentAnnouncementsTitle">School announcements</h3>
           <div id="parentAnnouncements" aria-live="polite" aria-busy="true">
             <p class="parent-state">Choose a student to load announcements.</p>
