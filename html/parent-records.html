@@ -102,22 +102,22 @@
           </div>
         </div>
         <div id="recordFilters" class="parent-record-filters" hidden>
-          <label
+          <label id="recordSchoolFilterField"
             >School<select id="recordSchoolFilter">
               <option value="">All schools</option>
             </select></label
           >
-          <label
+          <label id="recordYearFilterField"
             >Academic year<select id="recordYearFilter">
               <option value="">All academic years</option>
             </select></label
           >
-          <label
+          <label id="recordClassFilterField"
             >Class<select id="recordClassFilter">
               <option value="">All classes</option>
             </select></label
           >
-          <label
+          <label id="recordTermFilterField"
             >Semester<select id="recordTermFilter">
               <option value="">All semesters</option>
             </select></label
@@ -132,6 +132,11 @@
               <option value="">All subjects</option>
             </select></label
           >
+          <label id="recordDayFilterField" hidden
+            >Day<select id="recordDayFilter">
+              <option value="">All days</option>
+            </select></label
+          >
         </div>
         <div
           id="parentRecordsContent"
@@ -143,7 +148,11 @@
         </div>
       </section>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"
+      integrity="sha384-..."
+      crossorigin="anonymous"
+    ></script>
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/parent-records.js"></script>

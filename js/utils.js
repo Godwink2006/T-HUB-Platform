@@ -136,7 +136,52 @@ function showToast(message, type = "success", duration = 5000) {
   }, duration);
 }
 
+let _authContextPromise = null;
+
+window.getAuthContext = function (forceRefresh = false) {
+  if (!forceRefresh && _authContextPromise) {
+    return _authContextPromise;
+  }
+
+  _authContextPromise = (async () => {
+    if (!window.supabaseClient) return null;
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await window.supabaseClient.auth.getUser();
+
+      if (userError || !user) {
+        return null;
+      }
+
+      const { data: profile, error: profileError } = await window.supabaseClient
+        .from("profiles")
+        .select("id, full_name, role, status")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.warn("Could not load user profile:", profileError);
+      }
+
+      return { user, profile: profile || null };
+    } catch (err) {
+      console.error("Error retrieving auth context:", err);
+      return null;
+    }
+  })();
+
+  return _authContextPromise;
+};
+
+window.clearAuthContext = function () {
+  _authContextPromise = null;
+};
+
 window.forceLogout = async function () {
+  window.clearAuthContext?.();
   if (window.supabaseClient) {
     try {
       await window.supabaseClient.auth.signOut();
@@ -189,21 +234,14 @@ async function checkPageAccess() {
     return;
   }
 
-  const {
-    data: { user },
-    error,
-  } = await window.supabaseClient.auth.getUser();
+  const authCtx = await window.getAuthContext();
+  const user = authCtx?.user;
+  const profile = authCtx?.profile;
 
-  if (error || !user) {
+  if (!user) {
     await window.forceLogout();
     return;
   }
-
-  const { data: profile } = await window.supabaseClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
 
   const role = profile?.role;
 
@@ -319,26 +357,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadHeaderSchoolLogo();
 
-  const {
-    data: { user },
-    error: authError,
-  } = await window.supabaseClient.auth.getUser();
-
-  if (authError || !user) {
-    if (typeof renderNavigation === "function") {
-      renderNavigation(null);
-    }
-    return;
-  }
-
-  const { data: profile } = await window.supabaseClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
+  const authCtx = await window.getAuthContext();
   if (typeof renderNavigation === "function") {
-    renderNavigation(profile?.role || null);
+    renderNavigation(authCtx?.profile?.role || null);
   }
 });
 
@@ -350,10 +371,8 @@ async function loadHeaderSchoolLogo() {
     "https://api.dicebear.com/7.x/initials/svg?seed=School";
 
   try {
-    const {
-      data: { user },
-    } = await window.supabaseClient.auth.getUser();
-    if (!user) return;
+    const authCtx = await window.getAuthContext();
+    if (!authCtx?.user) return;
 
     const { data, error } = await window.supabaseClient
       .from("schools")
@@ -380,32 +399,24 @@ window.addEventListener("pageshow", async (event) => {
   ) {
     if (!window.supabaseClient) return;
 
-    const {
-      data: { user },
-      error,
-    } = await window.supabaseClient.auth.getUser();
+    window.clearAuthContext?.();
+    const authCtx = await window.getAuthContext(true);
+    const user = authCtx?.user;
+    const profile = authCtx?.profile;
 
-    if (!isLoginPage() && (error || !user)) {
+    if (isLoginPage() && user) {
+      window.location.replace("/html/dashboard.html");
+      return;
+    }
+
+    if (!isLoginPage() && !user) {
       await window.forceLogout();
       return;
     }
 
     const currentPage = window.location.pathname.split("/").pop();
-    if (ADMIN_ONLY_PAGES.includes(currentPage)) {
-      if (!user) {
-        await window.forceLogout();
-        return;
-      }
-
-      const { data: profile } = await window.supabaseClient
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.role !== "admin") {
-        await window.forceLogout();
-      }
+    if (ADMIN_ONLY_PAGES.includes(currentPage) && profile?.role !== "admin") {
+      await window.forceLogout();
     }
   }
 });
@@ -427,14 +438,13 @@ window.addEventListener("pageshow", async (event) => {
     return;
   }
 
-  const {
-    data: { user },
-    error,
-  } = await window.supabaseClient.auth.getUser();
+  const authCtx = await window.getAuthContext();
+  const user = authCtx?.user;
 
-  if (!isLogin && (error || !user)) {
+  if (!isLogin && !user) {
     console.warn("Session expired or invalid user. Redirecting to login...");
     await window.supabaseClient.auth.signOut();
+    window.clearAuthContext?.();
     localStorage.clear();
     sessionStorage.clear();
     window.location.replace("/index.html");
@@ -443,6 +453,7 @@ window.addEventListener("pageshow", async (event) => {
 
   window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if ((event === "SIGNED_OUT" || !session) && !isLogin) {
+      window.clearAuthContext?.();
       localStorage.clear();
       sessionStorage.clear();
       window.location.replace("/index.html");
@@ -457,13 +468,12 @@ window.initAuthListener = async function (supabase) {
   const isLogin =
     path.endsWith("index.html") || path === "/" || path.endsWith("/login.html");
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  const authCtx = await window.getAuthContext();
+  const user = authCtx?.user;
 
-  if (!isLogin && (error || !user)) {
+  if (!isLogin && !user) {
     await supabase.auth.signOut();
+    window.clearAuthContext?.();
     localStorage.clear();
     sessionStorage.clear();
     window.location.replace("/index.html");
@@ -472,59 +482,13 @@ window.initAuthListener = async function (supabase) {
 
   supabase.auth.onAuthStateChange(async (event, session) => {
     if ((event === "SIGNED_OUT" || !session) && !isLogin) {
+      window.clearAuthContext?.();
       localStorage.clear();
       sessionStorage.clear();
       window.location.replace("/index.html");
     }
   });
 };
-window.addEventListener("pageshow", async (event) => {
-  if (
-    event.persisted ||
-    (window.performance && window.performance.navigation.type === 2)
-  ) {
-    if (!window.supabaseClient) return;
-
-    const {
-      data: { user },
-      error,
-    } = await window.supabaseClient.auth.getUser();
-
-    if (isLoginPage() && user && !error) {
-      window.location.replace("/html/dashboard.html");
-      return;
-    }
-
-    if (!isLoginPage() && (error || !user)) {
-      await window.supabaseClient.auth.signOut();
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.replace("/index.html");
-      return;
-    }
-
-    const currentPage = window.location.pathname.split("/").pop();
-    if (ADMIN_ONLY_PAGES.includes(currentPage)) {
-      if (!user) {
-        window.location.replace("/index.html");
-        return;
-      }
-
-      const { data: profile } = await window.supabaseClient
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.role !== "admin") {
-        await window.supabaseClient.auth.signOut();
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.replace("/index.html");
-      }
-    }
-  }
-});
 
 window.escapeHTML = function (str) {
   if (str === null || str === undefined) return "";

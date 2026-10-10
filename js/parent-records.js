@@ -1,5 +1,10 @@
 const parentRecordStorageKey = "tHubParentSelectedStudentId";
-const parentRecordViews = new Set(["fees", "attendance", "grades", "timetable"]);
+const parentRecordViews = new Set([
+  "fees",
+  "attendance",
+  "grades",
+  "timetable",
+]);
 let parentRecordState = {
   view: "fees",
   fees: [],
@@ -43,26 +48,38 @@ async function initializeParentRecords() {
   document
     .getElementById("parentSignOut")
     ?.addEventListener("click", async () => {
+      window.clearAuthContext?.();
       await client.auth.signOut();
       sessionStorage.removeItem(parentRecordStorageKey);
       window.location.replace("/index.html");
     });
 
   try {
-    const {
-      data: { user },
-      error: authError,
-    } = await client.auth.getUser();
-    if (authError || !user) {
-      window.location.replace("/index.html");
-      return;
+    const authCtx = typeof window.getAuthContext === "function"
+      ? await window.getAuthContext()
+      : null;
+    let user = authCtx?.user;
+    let profile = authCtx?.profile;
+
+    if (!user) {
+      const { data, error: authError } = await client.auth.getUser();
+      if (authError || !data?.user) {
+        window.location.replace("/index.html");
+        return;
+      }
+      user = data.user;
     }
-    const { data: profile, error: profileError } = await client
-      .from("profiles")
-      .select("id, full_name, role, status")
-      .eq("id", user.id)
-      .single();
-    if (profileError) throw profileError;
+
+    if (!profile) {
+      const { data, error: profileError } = await client
+        .from("profiles")
+        .select("id, full_name, role, status")
+        .eq("id", user.id)
+        .single();
+      if (profileError) throw profileError;
+      profile = data;
+    }
+
     if (
       profile.role !== "parent" ||
       String(profile.status).toLowerCase() !== "active"
@@ -99,7 +116,9 @@ async function initializeParentRecords() {
 
     const { data: student, error: studentError } = await client
       .from("students")
-      .select("id, student_id, school_id, class_id, classes:class_id(name), profiles(full_name, photo_url)")
+      .select(
+        "id, student_id, school_id, class_id, classes:class_id(name), profiles(full_name, photo_url)",
+      )
       .eq("id", selectedStudentId)
       .single();
     if (studentError) throw studentError;
@@ -115,33 +134,35 @@ async function initializeParentRecords() {
       `Student ID: ${student.student_id || "Not assigned"}`;
 
     await loadParentRecordData(client, selectedStudentId, student);
-    document.getElementById("recordFilters").hidden = parentRecordState.view === "timetable";
-    if (parentRecordState.view !== "timetable") {
-      buildParentRecordFilters();
-      [
-        "recordSchoolFilter",
-        "recordYearFilter",
-        "recordClassFilter",
-        "recordTermFilter",
-        "recordPeriodFilter",
-        "recordSubjectFilter",
-      ].forEach((id) => {
-        document
-          .getElementById(id)
-          .addEventListener("change", renderParentRecords);
-      });
-    }
+    document.getElementById("recordFilters").hidden = false;
+    buildParentRecordFilters();
+    [
+      "recordSchoolFilter",
+      "recordYearFilter",
+      "recordClassFilter",
+      "recordTermFilter",
+      "recordPeriodFilter",
+      "recordSubjectFilter",
+      "recordDayFilter",
+    ].forEach((id) => {
+      document
+        .getElementById(id)
+        ?.addEventListener("change", renderParentRecords);
+    });
     renderParentRecords();
   } catch (error) {
-    console.error("Could not load parent student records:", error);
     showParentRecordsMessage(
-      `Records could not be loaded. ${error.message || "Check the parent data access setup and try again."}`,
+      "Unable to load student records at this time. Please try again later or contact school administration.",
       true,
     );
   }
 }
 
-async function loadParentRecordData(client, studentId, student = parentRecordState.student) {
+async function loadParentRecordData(
+  client,
+  studentId,
+  student = parentRecordState.student,
+) {
   if (parentRecordState.view === "timetable") {
     parentRecordState.timetable = null;
     parentRecordState.timetableLessons = [];
@@ -149,7 +170,9 @@ async function loadParentRecordData(client, studentId, student = parentRecordSta
 
     const { data: timetable, error: timetableError } = await client
       .from("timetables")
-      .select("id, status, academic_year_id, academic_years:academic_year_id(year_label)")
+      .select(
+        "id, status, academic_year_id, academic_years:academic_year_id(year_label)",
+      )
       .eq("class_id", student.class_id)
       .eq("school_id", student.school_id)
       .ilike("status", "active")
@@ -161,7 +184,9 @@ async function loadParentRecordData(client, studentId, student = parentRecordSta
 
     const { data: lessons, error: lessonsError } = await client
       .from("timetable_lessons")
-      .select("id, day_of_week, is_break, period_id, subject_id, periods:period_id(name,start_time,end_time), subjects:subject_id(name)")
+      .select(
+        "id, day_of_week, is_break, period_id, subject_id, periods:period_id(name,start_time,end_time), subjects:subject_id(name)",
+      )
       .eq("timetable_id", timetable.id);
     if (lessonsError) throw lessonsError;
     parentRecordState.timetable = timetable;
@@ -240,7 +265,13 @@ function setRecordStudentPhoto(shell, photoUrl, name) {
   if (!shell) return;
   const image = shell.querySelector("img");
   const initials = shell.querySelector(".parent-student-avatar-initials");
-  const firstLetters = String(name || "Student").trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const firstLetters = String(name || "Student")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
   if (initials) initials.textContent = firstLetters || "S";
   if (!image) return;
   image.alt = `${name || "Student"} photo`;
@@ -312,6 +343,75 @@ function getParentRecordContext(row, type) {
 
 function buildParentRecordFilters() {
   const type = parentRecordState.view;
+  const schoolField = document.getElementById("recordSchoolFilterField");
+  const yearField = document.getElementById("recordYearFilterField");
+  const classField = document.getElementById("recordClassFilterField");
+  const termField = document.getElementById("recordTermFilterField");
+  const periodFilterField = document.getElementById("recordPeriodFilterField");
+  const subjectFilterField = document.getElementById(
+    "recordSubjectFilterField",
+  );
+  const dayFilterField = document.getElementById("recordDayFilterField");
+
+  if (type === "timetable") {
+    if (schoolField) schoolField.hidden = true;
+    if (yearField) yearField.hidden = true;
+    if (classField) classField.hidden = true;
+    if (termField) termField.hidden = true;
+    if (periodFilterField) periodFilterField.hidden = true;
+    if (subjectFilterField) subjectFilterField.hidden = true;
+    if (dayFilterField) dayFilterField.hidden = false;
+
+    const daySelect = document.getElementById("recordDayFilter");
+    if (daySelect) {
+      const selected = daySelect.value;
+      const days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
+      const normalizedDay = (value) =>
+        String(value || "")
+          .trim()
+          .toLowerCase();
+      const dayRank = (value) => {
+        const index = days.findIndex(
+          (day) => day.toLowerCase() === normalizedDay(value),
+        );
+        return index < 0 ? days.length : index;
+      };
+
+      const uniqueDays = [
+        ...new Set(
+          (parentRecordState.timetableLessons || [])
+            .map((lesson) => lesson.day_of_week)
+            .filter(Boolean),
+        ),
+      ].sort((a, b) => dayRank(a) - dayRank(b));
+
+      daySelect.replaceChildren(new Option("All days", ""));
+      uniqueDays.forEach((day) => {
+        daySelect.add(new Option(day, day));
+      });
+      if (uniqueDays.includes(selected)) {
+        daySelect.value = selected;
+      }
+    }
+    return;
+  }
+
+  if (dayFilterField) dayFilterField.hidden = true;
+  if (schoolField) schoolField.hidden = false;
+  if (yearField) yearField.hidden = false;
+  if (classField) classField.hidden = false;
+  if (termField) termField.hidden = false;
+  if (periodFilterField) periodFilterField.hidden = type !== "grades";
+  if (subjectFilterField) subjectFilterField.hidden = type === "fees";
+
   const rows =
     type === "fees"
       ? parentRecordState.fees
@@ -325,17 +425,24 @@ function buildParentRecordFilters() {
     ["recordClassFilter", "classId", "className", "All classes"],
     ["recordTermFilter", "termId", "termName", "All semesters"],
   ];
-  const periodFilterField = document.getElementById("recordPeriodFilterField");
-  const subjectFilterField = document.getElementById("recordSubjectFilterField");
-  periodFilterField.hidden = type !== "grades";
-  subjectFilterField.hidden = type === "fees";
   if (type === "grades") {
-    filterSets.push(["recordPeriodFilter", "periodId", "periodName", "All periods"]);
+    filterSets.push([
+      "recordPeriodFilter",
+      "periodId",
+      "periodName",
+      "All periods",
+    ]);
   }
   if (type === "grades" || type === "attendance")
-    filterSets.push(["recordSubjectFilter", "subjectId", "subjectName", "All subjects"]);
+    filterSets.push([
+      "recordSubjectFilter",
+      "subjectId",
+      "subjectName",
+      "All subjects",
+    ]);
   filterSets.forEach(([selectId, idKey, labelKey, defaultLabel]) => {
     const select = document.getElementById(selectId);
+    if (!select) return;
     const selected = select.value;
     const options = new Map();
     context.forEach((row) => {
@@ -413,26 +520,68 @@ function renderParentTimetable() {
     return '<p class="parent-empty">The active class timetable has no lessons yet.</p>';
   }
 
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const normalizedDay = (value) => String(value || "").trim().toLowerCase();
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+  const normalizedDay = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase();
   const dayRank = (value) => {
-    const index = days.findIndex((day) => day.toLowerCase() === normalizedDay(value));
+    const index = days.findIndex(
+      (day) => day.toLowerCase() === normalizedDay(value),
+    );
     return index < 0 ? days.length : index;
   };
-  const lessons = [...timetableLessons].sort((a, b) =>
-    dayRank(a.day_of_week) - dayRank(b.day_of_week)
-      || String(a.periods?.start_time || "").localeCompare(String(b.periods?.start_time || "")),
+  const lessons = [...timetableLessons].sort(
+    (a, b) =>
+      dayRank(a.day_of_week) - dayRank(b.day_of_week) ||
+      String(a.periods?.start_time || "").localeCompare(
+        String(b.periods?.start_time || ""),
+      ),
   );
-  const rows = lessons.map((lesson) => {
-    const period = lesson.periods || {};
-    const isBreak = lesson.is_break === true || lesson.is_break === "true" || (!lesson.subject_id && !lesson.subjects?.name);
-    const subject = isBreak ? (period.name || "Break") : (lesson.subjects?.name || "Subject to be announced");
-    const time = [period.start_time, period.end_time].filter(Boolean).map((value) => parentEscape(value)).join(" – ") || "-";
-    return `<tr><td>${parentEscape(lesson.day_of_week || "-")}</td><td>${parentEscape(period.name || "-")}</td><td>${time}</td><td>${parentEscape(subject)}</td></tr>`;
-  }).join("");
+  const selectedDay = document.getElementById("recordDayFilter")?.value;
+  const filteredLessons = selectedDay
+    ? lessons.filter(
+        (lesson) =>
+          normalizedDay(lesson.day_of_week) === normalizedDay(selectedDay),
+      )
+    : lessons;
+
   const className = student.classes?.name || "Student’s class";
   const yearLabel = timetable.academic_years?.year_label;
-  return `<p class="parent-timetable-summary"><strong>${parentEscape(className)}</strong>${yearLabel ? ` · ${parentEscape(yearLabel)}` : ""}</p><table><thead><tr><th>Day</th><th>Period</th><th>Time</th><th>Subject</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const summary = `<p class="parent-timetable-summary"><strong>${parentEscape(className)}</strong>${yearLabel ? ` · ${parentEscape(yearLabel)}` : ""}</p>`;
+
+  if (!filteredLessons.length) {
+    return `${summary}<p class="parent-empty">No lessons scheduled for ${parentEscape(selectedDay)}.</p>`;
+  }
+
+  const rows = filteredLessons
+    .map((lesson) => {
+      const period = lesson.periods || {};
+      const isBreak =
+        lesson.is_break === true ||
+        lesson.is_break === "true" ||
+        (!lesson.subject_id && !lesson.subjects?.name);
+      const subject = isBreak
+        ? period.name || "Break"
+        : lesson.subjects?.name || "Subject to be announced";
+      const time =
+        [period.start_time, period.end_time]
+          .filter(Boolean)
+          .map((value) => parentEscape(value))
+          .join(" – ") || "-";
+      return `<tr><td>${parentEscape(lesson.day_of_week || "-")}</td><td>${parentEscape(period.name || "-")}</td><td>${time}</td><td>${parentEscape(subject)}</td></tr>`;
+    })
+    .join("");
+
+  return `${summary}<table><thead><tr><th>Day</th><th>Period</th><th>Time</th><th>Subject</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function matchesParentRecordFilters(context, filters) {
@@ -442,10 +591,15 @@ function matchesParentRecordFilters(context, filters) {
 }
 
 function parentStatusClass(status) {
-  const normalized = String(status || "").trim().toLowerCase();
-  if (["paid", "present", "completed"].includes(normalized)) return "status-success";
-  if (["unpaid", "absent", "overdue"].includes(normalized)) return "status-danger";
-  if (["partial", "late", "pending"].includes(normalized)) return "status-warning";
+  const normalized = String(status || "")
+    .trim()
+    .toLowerCase();
+  if (["paid", "present", "completed"].includes(normalized))
+    return "status-success";
+  if (["unpaid", "absent", "overdue"].includes(normalized))
+    return "status-danger";
+  if (["partial", "late", "pending"].includes(normalized))
+    return "status-warning";
   if (["excused", "transferred"].includes(normalized)) return "status-info";
   return "status-neutral";
 }
@@ -538,6 +692,8 @@ function showParentRecordsMessage(message, isError = false) {
   document.getElementById("recordStudentName").textContent = "Choose a student";
   document.getElementById("recordStudentDetails").textContent =
     "Your selection is checked against your active parent links.";
+  const filters = document.getElementById("recordFilters");
+  if (filters) filters.hidden = true;
   const content = document.getElementById("parentRecordsContent");
   content.setAttribute("aria-busy", "false");
   content.innerHTML = `<p class="parent-empty ${isError ? "parent-error" : ""}">${parentEscape(message)}<br><a href="parent-dashboard.html">Go to your dashboard</a></p>`;
