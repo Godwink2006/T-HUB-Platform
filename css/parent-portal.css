@@ -780,3 +780,58 @@ body.parent-portal {
   max-width: 380px;
   margin: 0 auto;
 }
+
+/* Calculation summary stat cards */
+.parent-stats-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 24px;
+}
+
+.parent-stat-card {
+  background: #ffffff;
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.parent-stat-label {
+  color: #60708a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.parent-stat-value {
+  color: #172033;
+  font-size: 1.85rem;
+  font-weight: 700;
+  margin: 6px 0 2px;
+  line-height: 1.2;
+}
+
+.parent-stat-sub {
+  color: #8b99ad;
+  font-size: 0.8rem;
+  margin-top: auto;
+}
+
+.parent-stat-value.text-success {
+  color: #166534;
+}
+
+.parent-stat-value.text-danger {
+  color: #b91c1c;
+}
+
+.parent-stat-value.text-warning {
+  color: #92400e;
+}
+
+.parent-stat-value.text-primary {
+  color: #2563eb;
+}

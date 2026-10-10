@@ -203,7 +203,13 @@ async function loadParentRecordData(
       client
         .from("payment_transactions")
         .select(
-          "id, student_id, school_id, amount, payment_method, reference_number, notes, created_at, student_fee_id",
+          `id, student_id, school_id, amount, payment_method, reference_number, notes, created_at, student_fee_id,
+           payment_allocations (
+             id,
+             item_name,
+             amount,
+             fee_item_id
+           )`,
         )
         .eq("student_id", studentId)
         .order("created_at", { ascending: false }),
@@ -617,33 +623,205 @@ function renderFeesAndPayments(fees) {
     })
     .join("");
   const paymentRows = payments
-    .map(
-      (payment) =>
-        `<tr><td>${parentDate(payment.created_at)}</td><td>${parentEscape(payment.payment_method || "Cash / Other")}</td><td>${parentEscape(payment.reference_number || "-")}</td><td>${parentEscape(payment.notes || "-")}</td><td class="money">${parentMoney(payment.amount)}</td></tr>`,
-    )
+    .map((payment) => {
+      const allocations = Array.isArray(payment.payment_allocations)
+        ? payment.payment_allocations
+        : [];
+      const allocationsHtml = allocations.length
+        ? `<ul>${allocations
+            .map(
+              (alloc) =>
+                `<li>${parentEscape(alloc.item_name || "Fee item")}: <strong>${parentMoney(alloc.amount)}</strong></li>`,
+            )
+            .join("")}</ul>`
+        : '<span style="color: #60708a; font-style: italic;">General payment</span>';
+
+      return `<tr><td>${parentDate(payment.created_at)}</td><td>${parentEscape(payment.payment_method || "Cash / Other")}</td><td>${payment.reference_number ? `<code>${parentEscape(payment.reference_number)}</code>` : "-"}</td><td>${allocationsHtml}</td><td>${parentEscape(payment.notes || "-")}</td><td class="money">${parentMoney(payment.amount)}</td></tr>`;
+    })
     .join("");
-  return `<h3>Fee balances</h3><table><thead><tr><th>School</th><th>Academic year</th><th>Class</th><th>Semester</th><th>Fee items</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>${feeRows}</tbody></table><h3>Payment history</h3>${payments.length ? `<table><thead><tr><th>Date</th><th>Method</th><th>Reference</th><th>Note</th><th>Amount</th></tr></thead><tbody>${paymentRows}</tbody></table>` : '<p class="parent-empty">No payments are recorded for the selected fees.</p>'}`;
+  return `<h3>Fee balances</h3><table><thead><tr><th>School</th><th>Academic year</th><th>Class</th><th>Semester</th><th>Fee items</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>${feeRows}</tbody></table><h3>Payment history</h3>${payments.length ? `<table><thead><tr><th>Date</th><th>Method</th><th>Reference</th><th>Allocated items</th><th>Note</th><th>Amount</th></tr></thead><tbody>${paymentRows}</tbody></table>` : '<p class="parent-empty">No payments are recorded for the selected fees.</p>'}`;
+}
+
+function renderAttendanceStats(records) {
+  const total = records.length;
+  let present = 0;
+  let absent = 0;
+  let late = 0;
+  let excused = 0;
+
+  records.forEach((row) => {
+    const status = String(row.status || "").trim().toLowerCase();
+    if (status === "present") present++;
+    else if (status === "absent") absent++;
+    else if (status === "late") late++;
+    else if (status === "excused") excused++;
+  });
+
+  const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+  const rateClass =
+    rate >= 85 ? "text-success" : rate >= 70 ? "text-warning" : "text-danger";
+
+  return `
+    <div class="parent-stats-grid">
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Attendance rate</span>
+        <span class="parent-stat-value ${rateClass}">${rate}%</span>
+        <span class="parent-stat-sub">${present} of ${total} recorded sessions</span>
+      </div>
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Present</span>
+        <span class="parent-stat-value text-success">${present}</span>
+        <span class="parent-stat-sub">Sessions attended</span>
+      </div>
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Absent</span>
+        <span class="parent-stat-value text-danger">${absent}</span>
+        <span class="parent-stat-sub">Missed sessions</span>
+      </div>
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Late / Excused</span>
+        <span class="parent-stat-value text-warning">${late + excused}</span>
+        <span class="parent-stat-sub">${late} late · ${excused} excused</span>
+      </div>
+    </div>
+  `;
 }
 
 function renderAttendance(records) {
-  return `<table><thead><tr><th>Date</th><th>School</th><th>Academic year</th><th>Semester</th><th>Class</th><th>Subject</th><th>Period</th><th>Status</th></tr></thead><tbody>${records
+  const statsHtml = renderAttendanceStats(records);
+  const rows = records
     .map((row) => {
       const session = row.attendance || {};
       const ctx = getParentRecordContext(row, "attendance");
       const status = row.status || "-";
       return `<tr><td>${parentDate(session.date)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(session.subjects?.name || "-")}</td><td>${parentEscape(session.periods?.name || "-")}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
     })
-    .join("")}</tbody></table>`;
+    .join("");
+
+  return `
+    ${statsHtml}
+    <h3>Attendance history</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>School</th>
+          <th>Academic year</th>
+          <th>Semester</th>
+          <th>Class</th>
+          <th>Subject</th>
+          <th>Period</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function renderGradesStats(records) {
+  let totalScore = 0;
+  let totalMax = 0;
+  let validCount = 0;
+  let sumPercentages = 0;
+  let highestPct = -1;
+  let passedCount = 0;
+
+  records.forEach((row) => {
+    const score = Number(row.score);
+    const maxMarks = Number(row.grades?.assessment_categories?.marks);
+
+    if (Number.isFinite(score) && Number.isFinite(maxMarks) && maxMarks > 0) {
+      const pct = (score / maxMarks) * 100;
+      totalScore += score;
+      totalMax += maxMarks;
+      sumPercentages += pct;
+      validCount++;
+      if (pct > highestPct) highestPct = pct;
+      if (pct >= 60) passedCount++;
+    } else if (Number.isFinite(score)) {
+      totalScore += score;
+    }
+  });
+
+  const avgPct =
+    totalMax > 0
+      ? (totalScore / totalMax) * 100
+      : validCount > 0
+        ? sumPercentages / validCount
+        : 0;
+
+  const letterGrade =
+    avgPct >= 90
+      ? "A"
+      : avgPct >= 80
+        ? "B"
+        : avgPct >= 70
+          ? "C"
+          : avgPct >= 60
+            ? "D"
+            : "F";
+
+  const gradeClass =
+    avgPct >= 80 ? "text-success" : avgPct >= 60 ? "text-warning" : "text-danger";
+
+  return `
+    <div class="parent-stats-grid">
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Average score</span>
+        <span class="parent-stat-value ${gradeClass}">${validCount > 0 ? avgPct.toFixed(1) + "%" : "-"}</span>
+        <span class="parent-stat-sub">${validCount > 0 ? `Grade ${letterGrade} performance` : "No scores yet"}</span>
+      </div>
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Total points</span>
+        <span class="parent-stat-value text-primary">${totalScore}${totalMax > 0 ? ` <small style="font-size:1rem;color:#8b99ad;">/ ${totalMax}</small>` : ""}</span>
+        <span class="parent-stat-sub">Cumulative marks scored</span>
+      </div>
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Assessments</span>
+        <span class="parent-stat-value">${records.length}</span>
+        <span class="parent-stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥60%)` : "Recorded grades"}</span>
+      </div>
+      <div class="parent-stat-card">
+        <span class="parent-stat-label">Highest mark</span>
+        <span class="parent-stat-value text-success">${highestPct >= 0 ? highestPct.toFixed(1) + "%" : "-"}</span>
+        <span class="parent-stat-sub">Top assessment result</span>
+      </div>
+    </div>
+  `;
 }
 
 function renderGrades(records) {
-  return `<table><thead><tr><th>Date</th><th>School</th><th>Academic year</th><th>Semester</th><th>Class</th><th>Subject</th><th>Assessment</th><th>Category</th><th>Score</th><th>Maximum</th></tr></thead><tbody>${records
+  const statsHtml = renderGradesStats(records);
+  const rows = records
     .map((row) => {
       const grade = row.grades || {};
       const ctx = getParentRecordContext(row, "grades");
       return `<tr><td>${parentDate(grade.date_recorded || row.created_at)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(grade.subjects?.name || "-")}</td><td>${parentEscape(grade.assessments?.name || "-")}</td><td>${parentEscape(grade.assessment_categories?.name || "-")}</td><td>${parentEscape(row.score ?? "-")}</td><td>${parentEscape(grade.assessment_categories?.marks ?? "-")}</td></tr>`;
     })
-    .join("")}</tbody></table>`;
+    .join("");
+
+  return `
+    ${statsHtml}
+    <h3>Grade records</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>School</th>
+          <th>Academic year</th>
+          <th>Semester</th>
+          <th>Class</th>
+          <th>Subject</th>
+          <th>Assessment</th>
+          <th>Category</th>
+          <th>Score</th>
+          <th>Maximum</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
 }
 
 function parseBreakdown(value) {
