@@ -434,7 +434,8 @@ window.addEventListener("pageshow", async (event) => {
 
   if (!window.supabaseClient) {
     console.error("Supabase client not initialized in window.supabaseClient");
-    if (!isLogin) window.location.replace("/index.html?error=service_unavailable");
+    if (!isLogin)
+      window.location.replace("/index.html?error=service_unavailable");
     return;
   }
 
@@ -614,9 +615,7 @@ async function subscribeToRecentActivities(schoolId, userRole) {
         const activity = payload.new;
         const targetAudience = activity.target_audience || "Everyone";
 
-
         const allowedAudiences = targetAudience.split(",").map((a) => a.trim());
-
 
         if (
           allowedAudiences.includes("Everyone") ||
@@ -667,7 +666,6 @@ window.sendNotification = async function (
       type: type,
       is_read: false,
     };
-
 
     if (schoolId) {
       payload.school_id = schoolId;
