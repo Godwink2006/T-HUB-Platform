@@ -47,9 +47,16 @@ form.addEventListener("submit", async (e) => {
       throw new Error(profileError.message || "Failed to fetch user profile.");
     }
 
-    if (!profile || profile.status !== "active") {
+    // If profile is null, RLS blocked it due to subscription/tier restrictions
+    if (!profile) {
       await window.supabaseClient.auth.signOut();
+      throw new Error(
+        "Access denied: Your school's subscription plan does not support this role.",
+      );
+    }
 
+    if (profile.status !== "active") {
+      await window.supabaseClient.auth.signOut();
       throw new Error(
         "Your account has been deactivated. Contact the system administrator.",
       );
@@ -57,9 +64,10 @@ form.addEventListener("submit", async (e) => {
 
     showToast("Login successful!", "success");
 
-    const destination = profile.role === "parent"
-      ? "/html/parent-dashboard.html"
-      : "/html/dashboard.html";
+    const destination =
+      profile.role === "parent"
+        ? "/html/parent-dashboard.html"
+        : "/html/dashboard.html";
 
     setTimeout(() => {
       window.location.replace(destination);
@@ -72,4 +80,3 @@ form.addEventListener("submit", async (e) => {
     loginButton.textContent = "Login";
   }
 });
-
