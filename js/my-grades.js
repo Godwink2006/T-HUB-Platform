@@ -387,33 +387,35 @@ async function loadStudentGrades(authUserId) {
       grouped.get(subName).push({ catName, score: rec.score, weight });
     });
 
-
-    let html = "";
+    const statsHtml = renderStudentGradesStats(records);
+    let html = statsHtml;
     grouped.forEach((items, subName) => {
       html += `
         <div class="card" style="margin-bottom: 20px; background: #fff; border: 2px solid rgb(219, 215, 215); padding: 16px;">
           <h3>${subName}</h3>
-          <table class="table" style="width: 100%; border-collapse: collapse;">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Score</th>
-                <th>Max Marks</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items
-                .map(
-                  (i) => `
+          <div class="table-responsive">
+            <table class="table" style="width: 100%; border-collapse: collapse; min-width: 320px;">
+              <thead>
                 <tr>
-                  <td>${i.catName}</td>
-                  <td><strong>${i.score ?? "N/A"}</strong></td>
-                  <td>${i.weight}</td>
-                </tr>`,
-                )
-                .join("")}
-            </tbody>
-          </table>
+                  <th>Category</th>
+                  <th>Score</th>
+                  <th>Max Marks</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items
+                  .map(
+                    (i) => `
+                  <tr>
+                    <td>${i.catName}</td>
+                    <td><strong>${i.score ?? "N/A"}</strong></td>
+                    <td>${i.weight}</td>
+                  </tr>`,
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
         </div>`;
     });
 
@@ -430,6 +432,79 @@ async function loadStudentGrades(authUserId) {
         Failed to load grades: ${escapeHTML(err.message || "Unknown error")}
       </p>`;
   }
+}
+
+function renderStudentGradesStats(records) {
+  let totalScore = 0;
+  let totalMax = 0;
+  let validCount = 0;
+  let sumPercentages = 0;
+  let highestPct = -1;
+  let passedCount = 0;
+
+  records.forEach((rec) => {
+    const score = Number(rec.score);
+    const catObj = rec.grades?.assessment_categories;
+    const maxMarks = Number(catObj?.marks);
+
+    if (Number.isFinite(score) && Number.isFinite(maxMarks) && maxMarks > 0) {
+      const pct = (score / maxMarks) * 100;
+      totalScore += score;
+      totalMax += maxMarks;
+      sumPercentages += pct;
+      validCount++;
+      if (pct > highestPct) highestPct = pct;
+      if (pct >= 60) passedCount++;
+    } else if (Number.isFinite(score)) {
+      totalScore += score;
+    }
+  });
+
+  const avgPct =
+    totalMax > 0
+      ? (totalScore / totalMax) * 100
+      : validCount > 0
+        ? sumPercentages / validCount
+        : 0;
+
+  const letterGrade =
+    avgPct >= 90
+      ? "A"
+      : avgPct >= 80
+        ? "B"
+        : avgPct >= 70
+          ? "C"
+          : avgPct >= 60
+            ? "D"
+            : "F";
+
+  const gradeClass =
+    avgPct >= 80 ? "text-green" : avgPct >= 60 ? "text-amber" : "text-red";
+
+  return `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Average Score</span>
+        <span class="stat-value ${gradeClass}">${validCount > 0 ? avgPct.toFixed(1) + "%" : "-"}</span>
+        <span class="stat-sub">${validCount > 0 ? `Grade ${letterGrade} performance` : "No scores yet"}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Total Points</span>
+        <span class="stat-value" style="color: #2563eb;">${totalScore}${totalMax > 0 ? ` <small style="font-size:1rem;color:#8b99ad;">/ ${totalMax}</small>` : ""}</span>
+        <span class="stat-sub">Cumulative marks scored</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Assessments</span>
+        <span class="stat-value">${records.length}</span>
+        <span class="stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥60%)` : "Recorded grades"}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Highest Mark</span>
+        <span class="stat-value text-green">${highestPct >= 0 ? highestPct.toFixed(1) + "%" : "-"}</span>
+        <span class="stat-sub">Top assessment result</span>
+      </div>
+    </div>
+  `;
 }
 
 

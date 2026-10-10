@@ -587,7 +587,7 @@ function renderParentTimetable() {
     })
     .join("");
 
-  return `${summary}<table><thead><tr><th>Day</th><th>Period</th><th>Time</th><th>Subject</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return `${summary}<div class="parent-table-container"><table><thead><tr><th>Day</th><th>Period</th><th>Time</th><th>Subject</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function matchesParentRecordFilters(context, filters) {
@@ -639,7 +639,7 @@ function renderFeesAndPayments(fees) {
       return `<tr><td>${parentDate(payment.created_at)}</td><td>${parentEscape(payment.payment_method || "Cash / Other")}</td><td>${payment.reference_number ? `<code>${parentEscape(payment.reference_number)}</code>` : "-"}</td><td>${allocationsHtml}</td><td>${parentEscape(payment.notes || "-")}</td><td class="money">${parentMoney(payment.amount)}</td></tr>`;
     })
     .join("");
-  return `<h3>Fee balances</h3><table><thead><tr><th>School</th><th>Academic year</th><th>Class</th><th>Semester</th><th>Fee items</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>${feeRows}</tbody></table><h3>Payment history</h3>${payments.length ? `<table><thead><tr><th>Date</th><th>Method</th><th>Reference</th><th>Allocated items</th><th>Note</th><th>Amount</th></tr></thead><tbody>${paymentRows}</tbody></table>` : '<p class="parent-empty">No payments are recorded for the selected fees.</p>'}`;
+  return `<h3>Fee balances</h3><div class="parent-table-container"><table><thead><tr><th>School</th><th>Academic year</th><th>Class</th><th>Semester</th><th>Fee items</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>${feeRows}</tbody></table></div><h3>Payment history</h3>${payments.length ? `<div class="parent-table-container"><table><thead><tr><th>Date</th><th>Method</th><th>Reference</th><th>Allocated items</th><th>Note</th><th>Amount</th></tr></thead><tbody>${paymentRows}</tbody></table></div>` : '<p class="parent-empty">No payments are recorded for the selected fees.</p>'}`;
 }
 
 function renderAttendanceStats(records) {
@@ -678,11 +678,6 @@ function renderAttendanceStats(records) {
         <span class="parent-stat-value text-danger">${absent}</span>
         <span class="parent-stat-sub">Missed sessions</span>
       </div>
-      <div class="parent-stat-card">
-        <span class="parent-stat-label">Late / Excused</span>
-        <span class="parent-stat-value text-warning">${late + excused}</span>
-        <span class="parent-stat-sub">${late} late · ${excused} excused</span>
-      </div>
     </div>
   `;
 }
@@ -701,21 +696,23 @@ function renderAttendance(records) {
   return `
     ${statsHtml}
     <h3>Attendance history</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>School</th>
-          <th>Academic year</th>
-          <th>Semester</th>
-          <th>Class</th>
-          <th>Subject</th>
-          <th>Period</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="parent-table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>School</th>
+            <th>Academic year</th>
+            <th>Semester</th>
+            <th>Class</th>
+            <th>Subject</th>
+            <th>Period</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   `;
 }
 
@@ -804,23 +801,25 @@ function renderGrades(records) {
   return `
     ${statsHtml}
     <h3>Grade records</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>School</th>
-          <th>Academic year</th>
-          <th>Semester</th>
-          <th>Class</th>
-          <th>Subject</th>
-          <th>Assessment</th>
-          <th>Category</th>
-          <th>Score</th>
-          <th>Maximum</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="parent-table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>School</th>
+            <th>Academic year</th>
+            <th>Semester</th>
+            <th>Class</th>
+            <th>Subject</th>
+            <th>Assessment</th>
+            <th>Category</th>
+            <th>Score</th>
+            <th>Maximum</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   `;
 }
 

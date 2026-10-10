@@ -189,3 +189,60 @@
   background-color: #f3e8ff;
   color: #6b21a8;
 }
+
+/* Calculation summary stat cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 6px 0 2px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: auto;
+}
+
+.text-green {
+  color: #166534;
+}
+
+.text-red {
+  color: #991b1b;
+}
+
+.text-amber {
+  color: #b45309;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
