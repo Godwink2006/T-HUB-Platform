@@ -99,8 +99,8 @@ async function loadParentLinks() {
     renderParentLinks(search?.value || "");
   } catch (error) {
     console.error("Could not load parent links:", error);
-    list.innerHTML =
-      '<p class="parent-state">Could not load parent links. Refresh the page or contact an administrator.</p>';
+    // This will now display the exact error message (like your tier 403 error) right on the screen
+    list.innerHTML = `<p class="parent-state" style="color: red;">Error: ${error.message}</p>`;
   } finally {
     list.setAttribute("aria-busy", "false");
   }
@@ -175,19 +175,27 @@ async function unlinkParentStudent(link, button) {
         body: { action: "unlink", link_id: link.id },
       },
     );
-    if (error || !data?.success)
-      throw new Error(
-        data?.message || error?.message || "Could not unlink the parent.",
-      );
+    if (error) {
+      let detailedMsg = error.message;
+      try {
+        const errContext = await error.context?.json();
+        if (errContext?.message) detailedMsg = errContext.message;
+      } catch (_) {}
+      throw new Error(detailedMsg);
+    }
+
+    if (!data?.success) {
+      throw new Error(data?.message || "Could not unlink the parent.");
+    }
+
     showParentInviteMessage(data.message || "Parent unlinked.", false, true);
     await loadParentLinks();
   } catch (error) {
-    showParentInviteMessage(
-      error?.message || "Could not unlink the parent.",
-      true,
-    );
-    button.disabled = false;
+    console.error("Unlink failed:", error);
+    showParentInviteMessage(error.message, true, true); // Displays the exact error message on your UI
   }
+
+  button.disabled = false;
 }
 
 function confirmParentUnlink(link) {
