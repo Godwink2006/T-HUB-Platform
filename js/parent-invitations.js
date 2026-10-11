@@ -234,10 +234,19 @@ async function sendParentInvitation(event) {
     const { data, error } = await client.functions.invoke("invite-parent", {
       body,
     });
-    if (error || !data?.success)
-      throw new Error(
-        data?.message || error?.message || "The invitation could not be sent.",
-      );
+    if (error) {
+      let detailedMsg = error.message;
+      try {
+        const errContext = await error.context?.json();
+        if (errContext?.message) detailedMsg = errContext.message;
+      } catch (_) {}
+      throw new Error(detailedMsg);
+    }
+
+    if (!data?.success) {
+      throw new Error(data?.message || "The invitation could not be sent.");
+    }
+
     showParentInviteMessage(data.message, false, true);
     form.reset();
     const select = document.getElementById("parentStudentSelect");
@@ -245,14 +254,6 @@ async function sendParentInvitation(event) {
     renderParentInviteStudentOptions(select, "");
   } catch (error) {
     let message = error?.message || "The invitation could not be sent.";
-    if (error?.context) {
-      try {
-        const details = await error.context.json();
-        message = details.message || message;
-      } catch {
-        /* Keep the Functions client error. */
-      }
-    }
     showParentInviteMessage(message, true);
   } finally {
     button.disabled = false;
