@@ -10,7 +10,10 @@ async function initializeParentInvitations() {
   if (!client || !form || !select || !search) return;
 
   try {
-    const { data: { user }, error: authError } = await client.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await client.auth.getUser();
     if (authError || !user) {
       window.location.replace("/index.html");
       return;
@@ -21,8 +24,14 @@ async function initializeParentInvitations() {
       .eq("id", user.id)
       .single();
     if (profileError) throw profileError;
-    if (!(["admin", "accountant"].includes(profile.role) && String(profile.status).toLowerCase() === "active")) {
-      document.getElementById("parentInviteMessage").textContent = "Only active administrators and accountants can invite parents.";
+    if (
+      !(
+        ["admin", "accountant"].includes(profile.role) &&
+        String(profile.status).toLowerCase() === "active"
+      )
+    ) {
+      document.getElementById("parentInviteMessage").textContent =
+        "Only active administrators and accountants can invite parents.";
       form.hidden = true;
       return;
     }
@@ -33,15 +42,28 @@ async function initializeParentInvitations() {
       .eq("school_id", profile.school_id);
     if (studentsError) throw studentsError;
     parentInviteStudents = [...(students || [])].sort((a, b) =>
-      String(a.profiles?.full_name || "").localeCompare(String(b.profiles?.full_name || ""), undefined, { sensitivity: "base" }),
+      String(a.profiles?.full_name || "").localeCompare(
+        String(b.profiles?.full_name || ""),
+        undefined,
+        { sensitivity: "base" },
+      ),
     );
     renderParentInviteStudentOptions(select, search.value);
-    search.addEventListener("input", () => renderParentInviteStudentOptions(select, search.value));
-    document.getElementById("parentLinkSearch")?.addEventListener("input", (event) => renderParentLinks(event.currentTarget.value));
+    search.addEventListener("input", () =>
+      renderParentInviteStudentOptions(select, search.value),
+    );
+    document
+      .getElementById("parentLinkSearch")
+      ?.addEventListener("input", (event) =>
+        renderParentLinks(event.currentTarget.value),
+      );
     await loadParentLinks();
   } catch (error) {
     console.error("Could not initialize parent invitations:", error);
-    showParentInviteMessage("Could not load students. Refresh the page or contact an administrator.", true);
+    showParentInviteMessage(
+      "Could not load students. Refresh the page or contact an administrator.",
+      true,
+    );
     return;
   }
 
@@ -53,17 +75,32 @@ async function loadParentLinks() {
   if (!list) return;
   list.setAttribute("aria-busy", "true");
   try {
-    const { data, error } = await window.supabaseClient.functions.invoke("manage-parent-links", {
-      body: { action: "list" },
-    });
-    if (error || !data?.success) throw new Error(data?.message || error?.message || "Could not load parent links.");
+    const { data, error } = await window.supabaseClient.functions.invoke(
+      "manage-parent-links",
+      {
+        body: { action: "list" },
+      },
+    );
+    if (error) {
+      let detailedMsg = error.message;
+      try {
+        // If the error response contains JSON data from the Edge Function
+        const errContext = await error.context?.json();
+        if (errContext?.message) detailedMsg = errContext.message;
+      } catch (_) {}
+      throw new Error(detailedMsg);
+    }
+    if (!data?.success)
+      throw new Error(data?.message || "Could not load parent links.");
+
     parentInviteLinks = data.links || [];
     const search = document.getElementById("parentLinkSearch");
     if (search) search.hidden = parentInviteLinks.length === 0;
     renderParentLinks(search?.value || "");
   } catch (error) {
     console.error("Could not load parent links:", error);
-    list.innerHTML = '<p class="parent-state">Could not load parent links. Refresh the page or contact an administrator.</p>';
+    list.innerHTML =
+      '<p class="parent-state">Could not load parent links. Refresh the page or contact an administrator.</p>';
   } finally {
     list.setAttribute("aria-busy", "false");
   }
@@ -73,15 +110,20 @@ function renderParentLinks(query = "") {
   const list = document.getElementById("parentLinksList");
   if (!list) return;
   if (!parentInviteLinks.length) {
-    list.innerHTML = '<p class="parent-state">No active parent links for this school.</p>';
+    list.innerHTML =
+      '<p class="parent-state">No active parent links for this school.</p>';
     return;
   }
-  const links = parentInviteLinks.filter((link) => matchesParentLinkSearch(link, query));
+  const links = parentInviteLinks.filter((link) =>
+    matchesParentLinkSearch(link, query),
+  );
   if (!links.length) {
-    list.innerHTML = '<p class="parent-state">No parent links match your search.</p>';
+    list.innerHTML =
+      '<p class="parent-state">No parent links match your search.</p>';
     return;
   }
-  list.replaceChildren(...links.map((link) => {
+  list.replaceChildren(
+    ...links.map((link) => {
       const row = document.createElement("div");
       row.className = "parent-link-row";
       const details = document.createElement("div");
@@ -93,34 +135,57 @@ function renderParentLinks(query = "") {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = "Unlink";
-      button.setAttribute("aria-label", `Unlink ${parent.textContent} from ${link.student_name || "student"}`);
+      button.setAttribute(
+        "aria-label",
+        `Unlink ${parent.textContent} from ${link.student_name || "student"}`,
+      );
       button.addEventListener("click", () => unlinkParentStudent(link, button));
       row.append(details, button);
       return row;
-    }));
+    }),
+  );
 }
 
 function matchesParentLinkSearch(link, query) {
-  const normalizedQuery = String(query || "").trim().toLocaleLowerCase();
+  const normalizedQuery = String(query || "")
+    .trim()
+    .toLocaleLowerCase();
   if (!normalizedQuery) return true;
-  const searchableText = [link.parent_name, link.parent_email, link.student_name, link.student_code, link.relationship]
-    .filter(Boolean).join(" ").toLocaleLowerCase();
+  const searchableText = [
+    link.parent_name,
+    link.parent_email,
+    link.student_name,
+    link.student_code,
+    link.relationship,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLocaleLowerCase();
   return searchableText.includes(normalizedQuery);
 }
 
 async function unlinkParentStudent(link, button) {
   const parentLabel = link.parent_name || link.parent_email || "this parent";
-  if (!await confirmParentUnlink(link)) return;
+  if (!(await confirmParentUnlink(link))) return;
   button.disabled = true;
   try {
-    const { data, error } = await window.supabaseClient.functions.invoke("manage-parent-links", {
-      body: { action: "unlink", link_id: link.id },
-    });
-    if (error || !data?.success) throw new Error(data?.message || error?.message || "Could not unlink the parent.");
+    const { data, error } = await window.supabaseClient.functions.invoke(
+      "manage-parent-links",
+      {
+        body: { action: "unlink", link_id: link.id },
+      },
+    );
+    if (error || !data?.success)
+      throw new Error(
+        data?.message || error?.message || "Could not unlink the parent.",
+      );
     showParentInviteMessage(data.message || "Parent unlinked.", false, true);
     await loadParentLinks();
   } catch (error) {
-    showParentInviteMessage(error?.message || "Could not unlink the parent.", true);
+    showParentInviteMessage(
+      error?.message || "Could not unlink the parent.",
+      true,
+    );
     button.disabled = false;
   }
 }
@@ -128,12 +193,17 @@ async function unlinkParentStudent(link, button) {
 function confirmParentUnlink(link) {
   const dialog = document.getElementById("parentUnlinkDialog");
   const message = document.getElementById("parentUnlinkMessage");
-  if (!dialog || !message || typeof dialog.showModal !== "function") return Promise.resolve(false);
+  if (!dialog || !message || typeof dialog.showModal !== "function")
+    return Promise.resolve(false);
   const parent = link.parent_name || link.parent_email || "this parent";
   const student = link.student_name || "this student";
   message.textContent = `Remove ${parent}'s access to ${student}? They will no longer be able to view this student's school records.`;
   return new Promise((resolve) => {
-    dialog.addEventListener("close", () => resolve(dialog.returnValue === "confirm"), { once: true });
+    dialog.addEventListener(
+      "close",
+      () => resolve(dialog.returnValue === "confirm"),
+      { once: true },
+    );
     dialog.showModal();
   });
 }
@@ -146,13 +216,20 @@ async function sendParentInvitation(event) {
   const client = window.supabaseClient;
   const button = document.getElementById("sendParentInvite");
   const body = Object.fromEntries(new FormData(form).entries());
-  body.email = String(body.email || "").trim().toLowerCase();
+  body.email = String(body.email || "")
+    .trim()
+    .toLowerCase();
   showParentInviteMessage("Sending the invitation…");
   button.disabled = true;
 
   try {
-    const { data, error } = await client.functions.invoke("invite-parent", { body });
-    if (error || !data?.success) throw new Error(data?.message || error?.message || "The invitation could not be sent.");
+    const { data, error } = await client.functions.invoke("invite-parent", {
+      body,
+    });
+    if (error || !data?.success)
+      throw new Error(
+        data?.message || error?.message || "The invitation could not be sent.",
+      );
     showParentInviteMessage(data.message, false, true);
     form.reset();
     const select = document.getElementById("parentStudentSelect");
@@ -164,7 +241,9 @@ async function sendParentInvitation(event) {
       try {
         const details = await error.context.json();
         message = details.message || message;
-      } catch { /* Keep the Functions client error. */ }
+      } catch {
+        /* Keep the Functions client error. */
+      }
     }
     showParentInviteMessage(message, true);
   } finally {
@@ -181,17 +260,23 @@ function showParentInviteMessage(message, isError = false, isSuccess = false) {
 }
 
 function filterParentInviteStudents(students, query) {
-  const normalizedQuery = String(query || "").trim().toLocaleLowerCase();
+  const normalizedQuery = String(query || "")
+    .trim()
+    .toLocaleLowerCase();
   if (!normalizedQuery) return [...students];
   return students.filter((student) => {
-    const searchableText = `${student.profiles?.full_name || ""} ${student.student_id || ""}`.toLocaleLowerCase();
+    const searchableText =
+      `${student.profiles?.full_name || ""} ${student.student_id || ""}`.toLocaleLowerCase();
     return searchableText.includes(normalizedQuery);
   });
 }
 
 function renderParentInviteStudentOptions(select, query) {
   const selectedId = select.value;
-  const filteredStudents = filterParentInviteStudents(parentInviteStudents, query);
+  const filteredStudents = filterParentInviteStudents(
+    parentInviteStudents,
+    query,
+  );
   select.replaceChildren(new Option("Choose a student", ""));
   filteredStudents.forEach((student) => {
     const name = student.profiles?.full_name || "Student";
@@ -203,11 +288,20 @@ function renderParentInviteStudentOptions(select, query) {
     emptyOption.disabled = true;
     select.add(emptyOption);
   }
-  if (filteredStudents.some((student) => student.id === selectedId)) select.value = selectedId;
+  if (filteredStudents.some((student) => student.id === selectedId))
+    select.value = selectedId;
 }
 
 function escapeParentInvite(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  })[character]);
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character],
+  );
 }
