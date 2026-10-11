@@ -100,7 +100,7 @@ async function loadParentLinks() {
   } catch (error) {
     console.error("Could not load parent links:", error);
     // This will now display the exact error message (like your tier 403 error) right on the screen
-    list.innerHTML = `<p class="parent-state" style="color: red;">Error: ${error.message}</p>`;
+    list.innerHTML = `<p class="parent-state" style="color: grey;">Error: ${error.message}</p>`;
   } finally {
     list.setAttribute("aria-busy", "false");
   }
