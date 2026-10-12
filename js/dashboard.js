@@ -552,7 +552,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
-      .select("school_id")
+      .select("school_id, role")
       .eq("id", user.id)
       .single();
 
@@ -568,8 +568,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     subscribeToRecentActivities(schoolId);
 
     loadDashboardStats(schoolId);
-    loadEnrollmentStats(schoolId);
-    loadEnrollmentStats("year");
+    const enrollmentCard = document.getElementById("enrollment-dashboard-card");
+    const canViewEnrollmentStats = ["admin", "teacher", "accountant", "librarian"]
+      .includes(profile.role);
+    if (enrollmentCard) enrollmentCard.hidden = !canViewEnrollmentStats;
+    if (canViewEnrollmentStats) loadEnrollmentStats("year");
     updateNotificationBadge(user.id);
   } catch (err) {
     console.error("Error loading dashboard data:", err);
@@ -621,13 +624,17 @@ async function loadEnrollmentStats(
     } = await window.supabaseClient.auth.getUser();
     if (!user) return;
 
-    const { data: profile } = await window.supabaseClient
+    const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
-    const userRole = profile ? profile.role : "teacher";
+    if (profileError || !profile) {
+      throw new Error("Could not verify the signed-in user's role.");
+    }
+
+    const userRole = profile.role;
 
 
     const formattedStart = customStart ? `${customStart}T00:00:00` : null;

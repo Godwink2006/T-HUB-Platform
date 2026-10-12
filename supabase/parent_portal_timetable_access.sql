@@ -71,4 +71,43 @@ create policy "parent_portal_timetable_lessons_select_scope"
     or (select private.parent_portal_can_read_timetable(timetable_id, school_id))
   );
 
+-- Timetable lesson labels need their own parent read path. The existing
+-- parent label policies only expose subjects/periods referenced by historical
+-- grades or attendance records, so they do not cover a newly scheduled class.
+-- These additive policies expose only labels attached to a timetable the
+-- parent's actively linked student can read.
+drop policy if exists "parent_portal_timetable_subject_labels_select"
+  on public.subjects;
+create policy "parent_portal_timetable_subject_labels_select"
+  on public.subjects for select to authenticated
+  using (
+    exists (
+      select 1
+      from public.timetable_lessons as lesson
+      join public.timetables as timetable
+        on timetable.id = lesson.timetable_id
+       and timetable.school_id = lesson.school_id
+      where lesson.subject_id = subjects.id
+        and lesson.school_id = subjects.school_id
+        and (select private.parent_portal_can_read_timetable(timetable.id, timetable.school_id))
+    )
+  );
+
+drop policy if exists "parent_portal_timetable_period_labels_select"
+  on public.periods;
+create policy "parent_portal_timetable_period_labels_select"
+  on public.periods for select to authenticated
+  using (
+    exists (
+      select 1
+      from public.timetable_lessons as lesson
+      join public.timetables as timetable
+        on timetable.id = lesson.timetable_id
+       and timetable.school_id = lesson.school_id
+      where lesson.period_id = periods.id
+        and lesson.school_id = periods.school_id
+        and (select private.parent_portal_can_read_timetable(timetable.id, timetable.school_id))
+    )
+  );
+
 commit;
