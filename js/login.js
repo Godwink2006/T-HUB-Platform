@@ -50,7 +50,7 @@ form.addEventListener("submit", async (e) => {
     if (!profile) {
       await window.supabaseClient.auth.signOut();
       throw new Error(
-        "We couldn't load your account profile. Check that your account is active, then contact your school administrator if the problem continues.",
+        "We couldn't load your profile. Your school's subscription may not include access for this role; Premium access is required for student and librarian accounts. Contact your school administrator to check the plan.",
       );
     }
 

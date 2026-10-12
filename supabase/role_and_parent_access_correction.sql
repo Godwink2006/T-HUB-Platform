@@ -1,8 +1,8 @@
 begin;
 
--- Profile lookup must work for a student signing in and for librarians in
--- their own school, regardless of plan. Feature-level policies continue to
--- enforce any plan requirements (for example, the library catalog).
+-- Keep profile row scopes, then require Premium for student and librarian
+-- access to their profile and the school records covered by the tier guards
+-- below. Parent own-profile and linked-student checks remain separate.
 drop policy if exists "Clean tier and role profile access" on public.profiles;
 create policy "Clean tier and role profile access"
 on public.profiles
@@ -127,6 +127,43 @@ begin
         );
       end if;
     end loop;
+  end loop;
+end
+$$;
+
+-- The original profile rule required Premium for student and librarian
+-- access. Carry that same requirement through every table where their
+-- current RLS policies permit access to own/student/school records. These
+-- RESTRICTIVE guards are ANDed with the role and tenant policies; they do not
+-- grant access by themselves, and other roles pass through unchanged.
+do $$
+declare
+  table_name text;
+  policy_name text;
+begin
+  foreach table_name in array array[
+    'profiles',
+    'students',
+    'attendance',
+    'attendance_records',
+    'grade_records',
+    'grades',
+    'student_enrollments',
+    'student_fees',
+    'payment_transactions',
+    'payment_allocations',
+    'timetables',
+    'timetable_lessons',
+    'books',
+    'book_borrowings'
+  ]
+  loop
+    policy_name := 'student_librarian_premium_' || table_name;
+    execute format('drop policy if exists %I on public.%I', policy_name, table_name);
+    execute format(
+      'create policy %I on public.%I as restrictive for all to authenticated using (coalesce(lower(private.current_profile_role()) not in (''student'', ''librarian''), true) or public.check_school_access(school_id, ''premium'')) with check (coalesce(lower(private.current_profile_role()) not in (''student'', ''librarian''), true) or public.check_school_access(school_id, ''premium''))',
+      policy_name, table_name
+    );
   end loop;
 end
 $$;

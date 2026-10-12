@@ -37,9 +37,9 @@ create trigger prevent_self_profile_privilege_edits
   before update of role, school_id on public.profiles
   for each row execute function private.prevent_self_profile_privilege_edits();
 
--- Students can read their own profile at every tier, librarians can read
--- profiles in their own school at every tier, and parent-linked student
--- profiles remain gated by the dedicated parent-portal policies.
+-- Profile row scope is limited to the caller's role and school. The
+-- role_and_parent_access_correction.sql migration applies the existing
+-- Premium requirement to student and librarian profile/data access.
 drop policy if exists "Clean tier and role profile access" on public.profiles;
 create policy "Clean tier and role profile access"
   on public.profiles for select to authenticated
