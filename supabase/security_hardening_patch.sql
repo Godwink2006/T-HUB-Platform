@@ -28,9 +28,9 @@ end;
 $$;
 
 revoke execute on function public.check_school_access(uuid, text)
-  from public, anon, authenticated;
+  from public, anon, authenticated, service_role;
 grant execute on function public.check_school_access(uuid, text)
-  to authenticated;
+  to authenticated, service_role;
 
 drop trigger if exists prevent_self_profile_privilege_edits on public.profiles;
 create trigger prevent_self_profile_privilege_edits
@@ -77,27 +77,33 @@ security definer
 set search_path = ''
 as $$
 declare
+  caller_role text := coalesce((select auth.role()), '');
   caller_school_id uuid;
   caller_status text;
   school_created timestamptz;
   active_plan text;
 begin
-  if (select auth.uid()) is null then
-    return false;
-  end if;
+  -- Edge Functions call this with their server-only service role after they
+  -- authenticate staff and bind target_school_id to that profile. Keep the
+  -- self-school checks for all client-authenticated calls.
+  if caller_role <> 'service_role' then
+    if (select auth.uid()) is null then
+      return false;
+    end if;
 
-  select p.school_id, lower(coalesce(p.status, ''))
-    into caller_school_id, caller_status
-  from public.profiles as p
-  where p.id = (select auth.uid());
+    select p.school_id, lower(coalesce(p.status, ''))
+      into caller_school_id, caller_status
+    from public.profiles as p
+    where p.id = (select auth.uid());
 
-  if caller_status <> 'active' then
-    return false;
-  end if;
+    if caller_status <> 'active' then
+      return false;
+    end if;
 
-  if not public.is_super_admin()
-     and target_school_id is distinct from caller_school_id then
-    return false;
+    if not public.is_super_admin()
+       and target_school_id is distinct from caller_school_id then
+      return false;
+    end if;
   end if;
 
   if required_tier is null or required_tier not in ('basic', 'standard', 'premium') then
