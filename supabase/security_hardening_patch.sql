@@ -37,9 +37,9 @@ create trigger prevent_self_profile_privilege_edits
   before update of role, school_id on public.profiles
   for each row execute function private.prevent_self_profile_privilege_edits();
 
--- Parent-profile visibility must be limited to the caller's own parent profile.
--- The separate parent-portal policies continue to expose actively linked
--- student profiles.
+-- Students can read their own profile at every tier, librarians can read
+-- profiles in their own school at every tier, and parent-linked student
+-- profiles remain gated by the dedicated parent-portal policies.
 drop policy if exists "Clean tier and role profile access" on public.profiles;
 create policy "Clean tier and role profile access"
   on public.profiles for select to authenticated
@@ -47,20 +47,12 @@ create policy "Clean tier and role profile access"
     (
       school_id = public.get_auth_user_school_id()
       and public.get_auth_user_role() = any (
-        array['admin'::text, 'teacher'::text, 'accountant'::text, 'receptionist'::text]
+        array['admin'::text, 'teacher'::text, 'accountant'::text, 'receptionist'::text, 'librarian'::text]
       )
-    )
-    or (
-      school_id = public.get_auth_user_school_id()
-      and public.get_auth_user_role() = 'librarian'::text
-      and public.check_school_access(school_id, 'premium'::text)
     )
     or (
       id = (select auth.uid())
-      and (
-        (role = 'student'::text and public.check_school_access(school_id, 'premium'::text))
-        or (role = 'parent'::text and public.check_school_access(school_id, 'standard'::text))
-      )
+      and role = any (array['student'::text, 'parent'::text])
     )
   );
 
@@ -477,10 +469,22 @@ revoke execute on function public.get_dashboard_stats(uuid, uuid, text)
 grant execute on function public.get_dashboard_stats(uuid, uuid, text)
   to authenticated;
 
--- Restrict global storage usage to backend callers; no browser code in this
--- repository uses this aggregate.
+-- The control-panel dashboard calls this aggregate from an authenticated
+-- browser session. Return the global total only to active super admins.
+create or replace function public.get_total_storage_used()
+returns bigint
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(sum((o.metadata->>'size')::bigint), 0)
+  from storage.objects as o
+  where o.bucket_id = 'avatars'
+    and (select public.is_super_admin());
+$$;
 revoke execute on function public.get_total_storage_used() from public, anon, authenticated;
-grant execute on function public.get_total_storage_used() to service_role;
+grant execute on function public.get_total_storage_used() to authenticated, service_role;
 
 -- Narrow ID-based boolean helpers to signed-in users and bind user parameters
 -- to auth.uid() where the helper answers a caller-specific question.

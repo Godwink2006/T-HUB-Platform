@@ -99,8 +99,10 @@ async function loadParentLinks() {
     renderParentLinks(search?.value || "");
   } catch (error) {
     console.error("Could not load parent links:", error);
-    // This will now display the exact error message (like your tier 403 error) right on the screen
-    list.innerHTML = `<p class="parent-state" style="color: grey;">Error: ${error.message}</p>`;
+    const message = document.createElement("p");
+    message.className = "parent-state is-error";
+    message.textContent = `Error: ${error.message}`;
+    list.replaceChildren(message);
   } finally {
     list.setAttribute("aria-busy", "false");
   }

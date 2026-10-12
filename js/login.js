@@ -47,11 +47,10 @@ form.addEventListener("submit", async (e) => {
       throw new Error(profileError.message || "Failed to fetch user profile.");
     }
 
-    // If profile is null, RLS blocked it due to subscription/tier restrictions
     if (!profile) {
       await window.supabaseClient.auth.signOut();
       throw new Error(
-        "Access denied: Your school's subscription plan does not support this role.",
+        "We couldn't load your account profile. Check that your account is active, then contact your school administrator if the problem continues.",
       );
     }
 

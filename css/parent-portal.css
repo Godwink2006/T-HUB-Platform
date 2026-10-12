@@ -206,6 +206,9 @@ body.parent-portal {
   padding: 18px 0;
   text-align: center;
 }
+.parent-state.is-error {
+  color: #b91c1c;
+}
 .parent-linked-parents {
   margin-top: 22px;
 }
