@@ -95,26 +95,25 @@ async function loadStudentClassSchedule(classId, schoolId) {
     if (classNameEl) classNameEl.textContent = classData.name;
   }
 
-  const { data: assignment } = await supabaseClient
-    .from("teacher_assignments")
-    .select("teacher_id")
-    .eq("class_id", classId)
-    .eq("is_class_teacher", true)
-    .eq("status", "active")
-    .maybeSingle();
+  const { data: timetableTeachers, error: teachersError } =
+    await supabaseClient.rpc("student_timetable_teacher_names", {
+      p_class_id: classId,
+    });
+
+  if (teachersError) {
+    console.warn("Timetable teacher names unavailable:", teachersError);
+  }
+
+  const teacherProfilesMap = new Map(
+    (timetableTeachers || []).map((teacher) => [teacher.teacher_id, teacher]),
+  );
 
   let teacherName = "Not Assigned";
-
-  if (assignment?.teacher_id) {
-    const { data: teacherProfile } = await supabaseClient
-      .from("profiles")
-      .select("full_name")
-      .eq("id", assignment.teacher_id)
-      .maybeSingle();
-
-    if (teacherProfile?.full_name) {
-      teacherName = teacherProfile.full_name;
-    }
+  const classTeacher = (timetableTeachers || []).find(
+    (teacher) => teacher.is_class_teacher,
+  );
+  if (classTeacher?.full_name) {
+    teacherName = classTeacher.full_name;
   }
 
   const classTeacherEl = document.getElementById("classTeacherDisplay");
@@ -164,20 +163,18 @@ async function loadStudentClassSchedule(classId, schoolId) {
     return;
   }
 
-  const [subjectsRes, profilesRes, periodsRes] = await Promise.all([
+  const [subjectsRes, periodsRes] = await Promise.all([
     supabaseClient.from("subjects").select("id, name"),
-    supabaseClient.from("profiles").select("id, full_name"),
     supabaseClient.from("periods").select("id, name, start_time, end_time"),
   ]);
 
   const subjectsMap = new Map((subjectsRes.data || []).map((s) => [s.id, s]));
-  const profilesMap = new Map((profilesRes.data || []).map((p) => [p.id, p]));
   const periodsMap = new Map((periodsRes.data || []).map((p) => [p.id, p]));
 
   const formattedLessons = rawLessons.map((lesson) => {
     const subjectObj = subjectsMap.get(lesson.subject_id);
     const periodObj = periodsMap.get(lesson.period_id);
-    const profileObj = profilesMap.get(lesson.teacher_id);
+    const teacherProfile = teacherProfilesMap.get(lesson.teacher_id);
 
     const isBreak = Boolean(
       lesson.is_break === true ||
@@ -193,7 +190,7 @@ async function loadStudentClassSchedule(classId, schoolId) {
       subject: subjectObj
         ? { name: subjectObj.name }
         : { name: breakDisplayName },
-      teacher: { full_name: profileObj?.full_name || "-" },
+      teacher: { full_name: teacherProfile?.full_name || "-" },
       period: periodObj || { start_time: null, end_time: null },
     };
   });
