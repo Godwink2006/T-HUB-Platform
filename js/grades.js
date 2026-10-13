@@ -764,7 +764,7 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
   if (!tbody) return;
 
 
-  tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #6b7280;">Loading student roster...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 16px; color: #6b7280;">Loading student roster...</td></tr>`;
 
   try {
     const client = window.supabaseClient || supabaseClient;
@@ -779,12 +779,12 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
 
     if (studentErr) {
       console.error("Error fetching active students:", studentErr);
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">Error loading students: ${escapeHTML(studentErr.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 16px; color: #dc2626;">Error loading students: ${escapeHTML(studentErr.message)}</td></tr>`;
       return;
     }
 
     if (!activeStudents || activeStudents.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">No active students found for this class in database.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 16px; color: #dc2626;">No active students found for this class in database.</td></tr>`;
       return;
     }
 
@@ -797,16 +797,37 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
     const placeholderText =
       numericMax !== null ? `0 - ${numericMax}` : "Enter grade";
 
+    const activeStudentIds = activeStudents.map((student) => student.id);
+    const { data: studentProfiles, error: profilesError } = await client
+      .from("profiles")
+      .select("id, photo_url")
+      .in("id", activeStudentIds);
+    if (profilesError) {
+      console.error("Could not load grade roster profile photos:", profilesError);
+    }
+    const photoByStudentId = new Map(
+      (studentProfiles || []).map((profile) => [profile.id, profile.photo_url]),
+    );
 
     tbody.innerHTML = "";
     activeStudents.forEach((student) => {
       const studentCode = student.student_id || "N/A";
       const displayName = student.full_name || "Unknown Student";
+      const photoUrl = escapeHTML(
+        photoByStudentId.get(student.id) || window.DEFAULT_PROFILE_AVATAR || "",
+      );
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td style="padding: 12px; font-weight: 600; color: #374151;">${escapeHTML(studentCode)}</td>
-        <td style="padding: 12px; font-weight: 500; color: #111827;">${displayName}</td>
+        <td style="padding: 12px; font-weight: 500; color: #111827;">
+          <span class="app-person-cell">
+            <img class="app-person-avatar" src="${photoUrl}" alt="" loading="lazy" />
+            <span class="app-person-meta">
+              <span>${escapeHTML(displayName)}</span>
+              <small class="app-person-id">Student ID: ${escapeHTML(studentCode)}</small>
+            </span>
+          </span>
+        </td>
         <td class="form-group" style="padding: 12px;">
           <input
             type="number"
@@ -824,7 +845,7 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
     });
   } catch (err) {
     console.error("Roster exception for grades:", err);
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 16px; color: #dc2626;">Failed to load roster.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 16px; color: #dc2626;">Failed to load roster.</td></tr>`;
   }
 }
 
@@ -1017,7 +1038,7 @@ async function handleViewGrades(gradeId) {
           score,
           students (
             id, student_id,
-            profiles ( full_name )
+            profiles ( full_name, photo_url )
           )
         )
       `,
@@ -1061,24 +1082,47 @@ async function handleViewGrades(gradeId) {
 
     const tbody = document.getElementById("viewGradeTableBody");
     const records = grade.grade_records || [];
+    const identitySnapshots =
+      await window.loadTransferredStudentIdentitySnapshots(
+        records.map((record) => record.student_id),
+      );
 
     if (records.length === 0) {
 
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888;">No student marks recorded.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student marks recorded.</td></tr>`;
     } else {
 
       tbody.innerHTML = records
         .map((rec) => {
-          const idDisplay = escapeHtml(rec.students?.student_id ?? "-");
+          const snapshot = identitySnapshots.get(rec.student_id);
+          const idDisplay = escapeHtml(
+            rec.students?.student_id ||
+              snapshot?.student_code_snapshot ||
+              "-",
+          );
           const studentName = escapeHtml(
-            rec.students?.profiles?.full_name || "-",
+            rec.students?.profiles?.full_name ||
+              snapshot?.student_name_snapshot ||
+              "-",
+          );
+          const studentPhoto = escapeHtml(
+            rec.students?.profiles?.photo_url ||
+              window.DEFAULT_PROFILE_AVATAR ||
+              "",
           );
           const scoreDisplay = escapeHtml(rec.score ?? "-");
 
           return `
             <tr>
-              <td>${idDisplay}</td>
-              <td>${escapeHTML(studentName)}</td>
+              <td>
+                <span class="app-person-cell">
+                  <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+                  <span class="app-person-meta">
+                    <span>${studentName}</span>
+                    <small class="app-person-id">Student ID: ${idDisplay}</small>
+                  </span>
+                </span>
+              </td>
               <td><p>${scoreDisplay}</p></td>
             </tr>`;
         })
@@ -1130,7 +1174,7 @@ async function handleEditGrades(gradeId) {
   if (elMaxMarks) elMaxMarks.innerHTML = skeletonText;
 
   const tbody = document.getElementById("editGradeTableBody");
-  tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888;">Loading records...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">Loading records...</td></tr>`;
 
   openModal(modal);
 
@@ -1156,7 +1200,7 @@ async function handleEditGrades(gradeId) {
           score,
           students (
             id, student_id,
-            profiles ( full_name )
+            profiles ( full_name, photo_url )
           )
         )
       `,
@@ -1244,24 +1288,47 @@ async function handleEditGrades(gradeId) {
 
     const tbody = document.getElementById("editGradeTableBody");
     const records = grade.grade_records || [];
+    const identitySnapshots =
+      await window.loadTransferredStudentIdentitySnapshots(
+        records.map((record) => record.student_id),
+      );
 
     if (records.length === 0) {
 
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888;">No student records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student records found.</td></tr>`;
     } else {
 
       tbody.innerHTML = records
         .map((rec) => {
+          const snapshot = identitySnapshots.get(rec.student_id);
           const studentName = escapeHtml(
-            rec.students?.profiles?.full_name || "-",
+            rec.students?.profiles?.full_name ||
+              snapshot?.student_name_snapshot ||
+              "-",
           );
-          const studentId = escapeHtml(rec.students?.student_id || "-");
+          const studentId = escapeHtml(
+            rec.students?.student_id ||
+              snapshot?.student_code_snapshot ||
+              "-",
+          );
+          const studentPhoto = escapeHtml(
+            rec.students?.profiles?.photo_url ||
+              window.DEFAULT_PROFILE_AVATAR ||
+              "",
+          );
           const scoreVal = rec.score ?? "";
 
           return `
  <tr data-record-id="${rec.id}">
-          <td>${escapeHTML(studentId)}</td>
-          <td>${escapeHTML(studentName)}</td>
+          <td>
+            <span class="app-person-cell">
+              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+              <span class="app-person-meta">
+                <span>${studentName}</span>
+                <small class="app-person-id">Student ID: ${studentId}</small>
+              </span>
+            </span>
+          </td>
           <td class="form-group">
             <input
               type="number"

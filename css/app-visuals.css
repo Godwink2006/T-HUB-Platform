@@ -1,0 +1,32 @@
+.app-person-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-person-meta {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-person-id {
+  font-size: 0.82em;
+  opacity: 0.8;
+}
+
+.app-person-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.app-action-icon {
+  margin-right: 0.45em;
+}
+
+.app-academic-icon {
+  margin-right: 0.5em;
+}

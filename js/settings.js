@@ -152,6 +152,32 @@ async function initSettingsPage() {
 
       containerEl.innerHTML = allCardsHTML;
 
+      const settingIcons = new Map([
+        ["Semester", "fa-calendar-days"],
+        ["Academic Year", "fa-calendar"],
+        ["System Users", "fa-users"],
+        ["My Profile", "fa-user"],
+        ["Subjects", "fa-book-open"],
+        ["Fee Structures", "fa-money-check-dollar"],
+        ["Classes", "fa-chalkboard"],
+        ["Department", "fa-building"],
+        ["Periods", "fa-clock"],
+        ["Assessment", "fa-file-pen"],
+        ["School Information", "fa-school"],
+        ["Audit Logs", "fa-clipboard-list"],
+        ["Log Out & Clear Browser Data", "fa-right-from-bracket"],
+      ]);
+
+      containerEl.querySelectorAll(".setting-card h4").forEach((heading) => {
+        const iconName = settingIcons.get(heading.textContent.trim());
+        if (!iconName) return;
+
+        const icon = document.createElement("i");
+        icon.className = `fa-solid ${iconName}`;
+        icon.setAttribute("aria-hidden", "true");
+        heading.prepend(icon, " ");
+      });
+
       document
         .getElementById("clearBrowserDataBtn")
         ?.addEventListener("click", openClearDataDialog);
@@ -316,4 +342,3 @@ async function clearCurrentBrowserData() {
 
   window.location.replace("/index.html");
 }
-

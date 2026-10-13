@@ -163,32 +163,28 @@ async function initAcademicsPage() {
       containerEl.innerHTML = allCardsHTML;
 
       const cardIcons = new Map([
-        ["Enrollment", ["fa-user-plus", ""]],
-        ["Teacher Assignment", ["fa-chalkboard-user", "academic-card__icon--teal"]],
-        ["Timetable", ["fa-calendar-days", "academic-card__icon--violet"]],
-        ["My Assignments", ["fa-clipboard-check", "academic-card__icon--amber"]],
-        ["My Attendance", ["fa-calendar-check", "academic-card__icon--teal"]],
-        ["My Grades", ["fa-chart-column", "academic-card__icon--violet"]],
-        ["My Fees", ["fa-wallet", "academic-card__icon--amber"]],
-        ["My Transfer History", ["fa-right-left", "academic-card__icon--rose"]],
-        ["Attendance", ["fa-user-check", "academic-card__icon--teal"]],
-        ["Grades", ["fa-chart-line", "academic-card__icon--violet"]],
-        ["My Timetable", ["fa-calendar-days", "academic-card__icon--amber"]],
+        ["Enrollment", "fa-user-plus"],
+        ["Teacher Assignment", "fa-chalkboard-user"],
+        ["Timetable", "fa-calendar-days"],
+        ["My Assignments", "fa-clipboard-check"],
+        ["My Attendance", "fa-calendar-check"],
+        ["My Grades", "fa-chart-column"],
+        ["My Fees", "fa-wallet"],
+        ["My Transfer History", "fa-right-left"],
+        ["Attendance", "fa-user-check"],
+        ["Grades", "fa-chart-line"],
+        ["My Timetable", "fa-calendar-days"],
       ]);
 
       containerEl.querySelectorAll(".academic-card").forEach((card) => {
         const title = card.querySelector("h4")?.textContent.trim();
-        const [iconName, colorClass] = cardIcons.get(title) || [];
+        const iconName = cardIcons.get(title);
         if (!iconName) return;
 
-        const icon = document.createElement("span");
-        icon.className = `academic-card__icon ${colorClass}`.trim();
+        const icon = document.createElement("i");
+        icon.className = `fa-solid ${iconName} app-academic-icon`;
         icon.setAttribute("aria-hidden", "true");
-
-        const iconGlyph = document.createElement("i");
-        iconGlyph.className = `fa-solid ${iconName}`;
-        icon.appendChild(iconGlyph);
-        card.insertBefore(icon, card.firstChild);
+        card.querySelector("h4")?.prepend(icon, " ");
       });
 
       if (typeof renderNavigation === "function") {

@@ -91,6 +91,9 @@ const TEACHER_LIBRARIAN_ONLY_PAGES = ["library.html"];
 
 const EXCLUDE_LIBRARIAN_PAGE = ["academics.html"];
 
+window.DEFAULT_PROFILE_AVATAR =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
+
 function isLoginPage() {
   const path = window.location.pathname.toLowerCase();
   return (
@@ -178,6 +181,34 @@ window.getAuthContext = function (forceRefresh = false) {
 
 window.clearAuthContext = function () {
   _authContextPromise = null;
+};
+
+window.loadTransferredStudentIdentitySnapshots = async function (studentIds) {
+  const ids = [...new Set((studentIds || []).filter(Boolean))];
+  if (ids.length === 0) return new Map();
+
+  const client = window.supabaseClient;
+  const authContext = await window.getAuthContext();
+  const schoolId = authContext?.profile?.school_id;
+  if (!client || !schoolId) return new Map();
+
+  const { data, error } = await client
+    .from("student_enrollments")
+    .select("student_id, student_name_snapshot, student_code_snapshot")
+    .eq("school_id", schoolId)
+    .in("student_id", ids)
+    .not("student_name_snapshot", "is", null);
+
+  if (error) {
+    console.error("Could not load transferred student identity snapshots:", error);
+    return new Map();
+  }
+
+  const snapshots = new Map();
+  (data || []).forEach((row) => {
+    if (!snapshots.has(row.student_id)) snapshots.set(row.student_id, row);
+  });
+  return snapshots;
 };
 
 window.forceLogout = async function () {
@@ -322,6 +353,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.querySelectorAll(".menu a").forEach((link) => {
     link.addEventListener("click", closeMenu);
   });
+
+  document.addEventListener(
+    "error",
+    (event) => {
+      const image = event.target;
+      if (
+        image instanceof HTMLImageElement &&
+        image.matches(
+          ".student-photo, .teacher-photo, .systemUser-photo, .app-person-avatar, #profileAvatar, .view-student-photo, .view-teacher-photo",
+        ) &&
+        image.src !== window.DEFAULT_PROFILE_AVATAR
+      ) {
+        image.src = window.DEFAULT_PROFILE_AVATAR;
+      }
+    },
+    true,
+  );
 
   const modalIds = [
     "periodModal",

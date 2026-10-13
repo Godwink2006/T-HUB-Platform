@@ -108,57 +108,15 @@ body {
 
 .academic-card {
   background-color: #ffffff;
-  padding: 22px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
   min-height: 160px;
-  border: 1px solid #e2e8f0;
-  border-top: 3px solid #3b82f6;
-  border-radius: 0;
-  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07);
+  border: 2px solid rgb(219, 215, 215);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
-  transition:
-    box-shadow 180ms ease,
-    transform 180ms ease,
-    border-color 180ms ease;
-}
-
-.academic-card:hover {
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
-  transform: translateY(-3px);
-}
-
-.academic-card__icon {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 16px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-size: 19px;
-}
-
-.academic-card__icon--teal {
-  background: #ccfbf1;
-  color: #0f766e;
-}
-
-.academic-card__icon--violet {
-  background: #ede9fe;
-  color: #6d28d9;
-}
-
-.academic-card__icon--amber {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.academic-card__icon--rose {
-  background: #ffe4e6;
-  color: #be123c;
 }
 
 .academic-card h2 {
@@ -170,13 +128,13 @@ body {
 .academic-card h4 {
   margin: 0 0 8px 0;
   font-size: 1.25rem;
-  color: #1e293b;
-  font-weight: 650;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .academic-card p {
   margin: 0 0 20px 0;
-  color: #64748b;
+  color: #666666;
   font-size: 0.9rem;
   line-height: 1.4;
 }
@@ -202,12 +160,6 @@ body {
   justify-content: space-between;
   font-weight: 500;
   font-size: 14px;
-  transition: background-color 180ms ease;
-}
-
-.manage-btn:hover,
-.manage-academic-btn:hover {
-  background-color: #1d4ed8;
 }
 
 .academic-card.skeleton {
@@ -281,10 +233,6 @@ body {
   .academic-card .manage-academic-btn,
   .academic-card {
     border-radius: 10px;
-  }
-
-  .academic-card__icon {
-    border-radius: 8px;
   }
 
   .academic-cards {

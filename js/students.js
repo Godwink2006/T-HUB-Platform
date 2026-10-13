@@ -8,7 +8,7 @@ function renderStudentsTable(studentsToRender) {
   if (!studentsToRender || studentsToRender.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">
+        <td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">
           No students found matching the criteria.
         </td>
       </tr>
@@ -30,15 +30,19 @@ function renderStudentsTable(studentsToRender) {
       return `
       <tr>
         <td>
+          <span class="app-person-cell">
           <img
             src="${photoSrc}"
             class="student-photo"
             alt="${escapeHTML(profile.full_name || "Student")}"
             onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';"
           />
+            <span class="app-person-meta">
+              <span>${escapeHTML(profile.full_name || "N/A")}</span>
+              <small class="app-person-id">Student ID: ${escapeHTML(student.student_id || "N/A")}</small>
+            </span>
+          </span>
         </td>
-        <td>${escapeHTML(student.student_id || "N/A")}</td>
-        <td>${escapeHTML(profile.full_name || "N/A")}</td>
         <td>${escapeHTML(student.gender || "N/A")}</td>
         <td>${escapeHTML(className)}</td>
         <td>
@@ -690,7 +694,7 @@ async function loadStudentsTable() {
 
   tableBody.innerHTML = `
     <tr>
-     <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+     <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading students...
       </td>
@@ -736,7 +740,7 @@ async function loadStudentsTable() {
     if (!students || students.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 20px;">
+          <td colspan="5" style="text-align: center; padding: 20px;">
             No students found.
           </td>
         </tr>
@@ -764,15 +768,19 @@ async function loadStudentsTable() {
         return `
         <tr>
           <td>
+            <span class="app-person-cell">
             <img
               src="${photoSrc}"
               class="student-photo"
               alt="${escapeHTML(profile.full_name || "Student")}"
               onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';"
             />
+              <span class="app-person-meta">
+                <span>${escapeHTML(profile.full_name || "N/A")}</span>
+                <small class="app-person-id">Student ID: ${escapeHTML(student.student_id || "N/A")}</small>
+              </span>
+            </span>
           </td>
-          <td>${escapeHTML(student.student_id || "N/A")}</td>
-          <td>${escapeHTML(profile.full_name || "N/A")}</td>
           <td>${escapeHTML(student.gender || "N/A")}</td>
           <td>${escapeHTML(className)}</td>
           <td>
@@ -794,7 +802,7 @@ async function loadStudentsTable() {
     console.error("Error fetching students:", err);
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; color: red; padding: 20px;">
+        <td colspan="5" style="text-align: center; color: red; padding: 20px;">
           Failed to load students: ${escapeHTML(err.message || "Unknown error")}
         </td>
       </tr>

@@ -1165,22 +1165,34 @@ async function openViewAttendanceModal(attendanceId) {
     }
 
     const studentIds = records.map((r) => r.student_id);
-    const { data: profiles, error: profileErr } = await supabaseClient
-      .from("profiles")
-      .select("id, full_name")
+    const identitySnapshots =
+      await window.loadTransferredStudentIdentitySnapshots(studentIds);
+    const { data: students, error: studentsError } = await supabaseClient
+      .from("students")
+      .select("id, student_id, profiles(full_name, photo_url)")
       .in("id", studentIds);
 
-    const profileMap = new Map();
-    if (!profileErr && profiles) {
-      profiles.forEach((p) => profileMap.set(p.id, p.full_name));
+    if (studentsError) {
+      console.error("Could not load student IDs for attendance details:", studentsError);
     }
+    const studentMap = new Map(
+      (students || []).map((student) => [student.id, student]),
+    );
 
     if (tbody) {
       tbody.innerHTML = "";
       records.forEach((record) => {
-        const studentName =
-          profileMap.get(record.student_id) ||
+        const student = studentMap.get(record.student_id);
+        const snapshot = identitySnapshots.get(record.student_id);
+        const studentName = student?.profiles?.full_name ||
+          snapshot?.student_name_snapshot ||
           `Student (${record.student_id.slice(0, 8)})`;
+        const studentPhoto = escapeHtml(
+          student?.profiles?.photo_url || window.DEFAULT_PROFILE_AVATAR || "",
+        );
+        const studentCode = escapeHtml(
+          student?.student_id || snapshot?.student_code_snapshot || "Not assigned",
+        );
         const statusText = record.status
           ? record.status.charAt(0).toUpperCase() + record.status.slice(1)
           : "N/A";
@@ -1189,7 +1201,15 @@ async function openViewAttendanceModal(attendanceId) {
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td style="padding: 10px 12px; font-weight: 500;">${escapeHtml(studentName)}</td>
+          <td style="padding: 10px 12px; font-weight: 500;">
+            <span class="app-person-cell">
+              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+              <span class="app-person-meta">
+                <span>${escapeHtml(studentName)}</span>
+                <small class="app-person-id">Student ID: ${studentCode}</small>
+              </span>
+            </span>
+          </td>
           <td style="padding: 10px 12px;">
             <span class="status-badge ${statusClass}" style="padding: 4px 10px; font-size: 0.85rem; font-weight: 600;">
               ${escapeHtml(statusText)}
@@ -1308,26 +1328,49 @@ async function openEditAttendanceModal(attendanceId) {
     }
 
     const studentIds = records.map((r) => r.student_id);
-    const { data: profiles } = await supabaseClient
-      .from("profiles")
-      .select("id, full_name")
+    const identitySnapshots =
+      await window.loadTransferredStudentIdentitySnapshots(studentIds);
+    const { data: students, error: studentsError } = await supabaseClient
+      .from("students")
+      .select("id, student_id, profiles(full_name, photo_url)")
       .in("id", studentIds);
 
-    const profileMap = new Map();
-    if (profiles) profiles.forEach((p) => profileMap.set(p.id, p.full_name));
+    if (studentsError) {
+      console.error("Could not load student IDs for attendance edit:", studentsError);
+    }
+    const studentMap = new Map(
+      (students || []).map((student) => [student.id, student]),
+    );
 
     const initialStudentStatuses = {};
     if (tbody) {
       tbody.innerHTML = "";
       records.forEach((record) => {
+        const student = studentMap.get(record.student_id);
+        const snapshot = identitySnapshots.get(record.student_id);
         const studentName =
-          profileMap.get(record.student_id) ||
+          student?.profiles?.full_name ||
+          snapshot?.student_name_snapshot ||
           `Student (${record.student_id.slice(0, 8)})`;
+        const studentCode = escapeHtml(
+          student?.student_id || snapshot?.student_code_snapshot || "Not assigned",
+        );
+        const studentPhoto = escapeHtml(
+          student?.profiles?.photo_url || window.DEFAULT_PROFILE_AVATAR || "",
+        );
         initialStudentStatuses[record.student_id] = record.status;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${escapeHtml(studentName)}</td>
+          <td>
+            <span class="app-person-cell">
+              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+              <span class="app-person-meta">
+                <span>${escapeHtml(studentName)}</span>
+                <small class="app-person-id">Student ID: ${studentCode}</small>
+              </span>
+            </span>
+          </td>
           <td>
             <select class="edit-status-dropdown" data-student-id="${escapeHtml(record.student_id)}">
               <option value="present" ${record.status === "present" ? "selected" : ""}>Present</option>

@@ -1899,7 +1899,7 @@ async function loadStudentEnrollments() {
         enrollment_status,
         student_name_snapshot,
         student_code_snapshot,
-        profiles (full_name, status),
+        profiles (full_name, status, photo_url),
         classes (name),
         academic_years (year_label),
         terms (name)
@@ -1967,6 +1967,9 @@ async function loadStudentEnrollments() {
           enr.student_name_snapshot ||
           enr.profiles?.full_name ||
           "Unknown Student";
+        const studentPhoto = escapeHtml(
+          enr.profiles?.photo_url || window.DEFAULT_PROFILE_AVATAR || "",
+        );
         const studentCode =
           enr.student_code_snapshot || studentCodesById.get(enr.student_id) || "";
         const enrollmentStatus = enr.enrollment_status || "Normal";
@@ -1995,8 +1998,13 @@ async function loadStudentEnrollments() {
             />
           </td>
           <td>
-            ${escapeHtml(studentName)}
-            ${studentCode ? `<small class="enrollment-student-code">${escapeHtml(studentCode)}</small>` : ""}
+            <span class="app-person-cell">
+              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+              <span class="app-person-meta">
+                <span>${escapeHtml(studentName)}</span>
+                <small class="app-person-id">Student ID: ${escapeHtml(studentCode || "Not assigned")}</small>
+              </span>
+            </span>
           </td>
           <td>${escapeHtml(className)}</td>
           <td>${escapeHtml(academicYearName)}</td>

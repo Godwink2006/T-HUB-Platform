@@ -40,7 +40,7 @@ function filterTeachersTable() {
   });
 
   if (filteredTeachers.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No matching teachers found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No matching teachers found.</td></tr>`;
     return;
   }
 
@@ -52,16 +52,20 @@ function filterTeachersTable() {
       return `
       <tr>
         <td>
+          <span class="app-person-cell">
           <img
             src="${escapeHTML(photoUrl)}"
             class="teacher-photo"
-            alt="Photo"
+            alt="${escapeHTML(profile.full_name || "Teacher")}"
             loading="lazy"
             onerror="this.onerror=null; this.src=DEFAULT_AVATAR;"
           />
+            <span class="app-person-meta">
+              <span>${escapeHTML(profile.full_name || "-")}</span>
+              <small class="app-person-id">Staff ID: ${escapeHTML(teacher.staff_id || "-")}</small>
+            </span>
+          </span>
         </td>
-        <td>${escapeHTML(teacher.staff_id || "-")}</td>
-        <td>${escapeHTML(profile.full_name || "-")}</td>
         <td>${escapeHTML(teacher.gender || "-")}</td>
         <td>${escapeHTML(profile.email || "-")}</td>
         <td>
@@ -800,7 +804,7 @@ async function loadTeachers() {
     setupTeacherToolbarFilters();
 
     if (currentTeachersList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No teachers found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No teachers found.</td></tr>`;
       return;
     }
 
@@ -813,16 +817,20 @@ async function loadTeachers() {
           return `
           <tr>
             <td>
+              <span class="app-person-cell">
               <img
                 src="${escapeHTML(photoUrl)}"
                 class="teacher-photo"
-                alt="Photo"
+                alt="${escapeHTML(profile.full_name || "Teacher")}"
                 loading="lazy"
                 onerror="this.onerror=null; this.src=DEFAULT_AVATAR;"
               />
+                <span class="app-person-meta">
+                  <span>${escapeHTML(profile.full_name || "-")}</span>
+                  <small class="app-person-id">Staff ID: ${escapeHTML(teacher.staff_id || "-")}</small>
+                </span>
+              </span>
             </td>
-            <td>${escapeHTML(teacher.staff_id || "-")}</td>
-            <td>${escapeHTML(profile.full_name || "-")}</td>
             <td>${escapeHTML(teacher.gender || "-")}</td>
             <td>${escapeHTML(profile.email || "-")}</td>
             <td>
@@ -842,7 +850,7 @@ async function loadTeachers() {
     }, 50);
   } catch (err) {
     console.error("Failed to fetch teachers:", err);
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #ef4444;">Failed to load teachers.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: #ef4444;">Failed to load teachers.</td></tr>`;
   }
 }
 
@@ -869,11 +877,10 @@ function renderTeachersTableLoading() {
 
   tbody.innerHTML = `
     <tr>
-      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+      <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading teachers...
       </td>
     </tr>
   `;
 }
-

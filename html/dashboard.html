@@ -37,6 +37,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
+      <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <div class="dashboard-container">
@@ -155,28 +156,34 @@
                 "
               ></span>
             </a>
-            <img
-              id="profileAvatar"
-              src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-              alt="Profile Picture"
-              style="
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                object-fit: cover;
-              "
-              onerror="
-                this.onerror = null;
-                this.src =
-                  'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-              "
-            />
+            <span class="app-person-meta" style="align-items: center">
+              <img
+                id="profileAvatar"
+                src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                alt="Profile Picture"
+                style="
+                  width: 50px;
+                  height: 50px;
+                  border-radius: 50%;
+                  object-fit: cover;
+                "
+                onerror="
+                  this.onerror = null;
+                  this.src =
+                    'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                "
+              />
+              <small id="profileAvatarIdentifier" class="app-person-id"></small>
+            </span>
           </div>
         </header>
 
         <section class="announcement-cards">
           <div class="card-header">
-            <h3>Announcements</h3>
+            <h3>
+              <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
+              Announcements
+            </h3>
 
             <button class="save-btn" id="openAnnouncementModal">
               <i class="fa-solid fa-plus"></i>
@@ -193,7 +200,10 @@
 
         <section class="dashboard-cards">
           <div id="student-dashboard-card" class="dashboard-card">
-            <h4>Total Students</h4>
+            <h4>
+              <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+              Total Students
+            </h4>
             <h2 id="totalStudentsCount">...</h2>
             <p
               id="studentSubtext"
@@ -205,7 +215,10 @@
           </div>
 
           <div id="teacher-dashboard-card" class="dashboard-card">
-            <h4>Total Teachers</h4>
+            <h4>
+              <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+              Total Teachers
+            </h4>
             <h2 id="totalTeachersCount">...</h2>
             <p
               id="teacherSubtext"
@@ -217,7 +230,10 @@
           </div>
 
           <div id="class-dashboard-card" class="dashboard-card">
-            <h4>Classes</h4>
+            <h4>
+              <i class="fa-solid fa-chalkboard" aria-hidden="true"></i>
+              Classes
+            </h4>
             <h2 id="totalClassesCount">...</h2>
             <p
               id="classSubtext"
@@ -229,7 +245,10 @@
           </div>
 
           <div id="attendance-dashboard-card" class="dashboard-card">
-            <h4>Attendance Today</h4>
+            <h4>
+              <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+              Attendance Today
+            </h4>
             <h2 id="attendanceCount">...</h2>
             <p
               id="attendanceSubtext"
@@ -244,7 +263,10 @@
         <section class="dashboard-grid">
           <div class="dashboard-activity-card">
             <div class="dashboard-card-header">
-              <h3>Recent Activities</h3>
+              <h3>
+                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                Recent Activities
+              </h3>
             </div>
 
             <ul id="recentActivitiesList" class="dashboard-activity-list">
@@ -258,7 +280,10 @@
 
           <div id="enrollment-dashboard-card" class="dashboard-chart-card" hidden>
             <div class="dashboard-card-header">
-              <h3>Student Enrollment</h3>
+              <h3>
+                <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                Student Enrollment
+              </h3>
 
               <div class="filter-dropdown">
                 <button class="filter-btn">
@@ -517,5 +542,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/dashboard.js"></script>
     <script src="/js/utils.js"></script>
+      <script src="/js/app-icons.js"></script>
   </body>
 </html>

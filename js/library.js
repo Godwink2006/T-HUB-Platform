@@ -812,12 +812,16 @@ async function openViewBookModal(bookId) {
 
     const { data: borrowings, error: borrowError } = await window.supabaseClient
       .from("book_borrowings")
-      .select(`*, profiles ( full_name )`)
+      .select(`*, profiles ( full_name, students ( student_id ) )`)
       .eq("book_id", bookId)
       .order("created_at", { ascending: false });
 
     if (borrowError) throw borrowError;
 
+    const identitySnapshots =
+      await window.loadTransferredStudentIdentitySnapshots(
+        (borrowings || []).map((record) => record.borrower_id),
+      );
 
     const currentlyBorrowed = borrowings
       ? borrowings.filter((r) => r.status === "borrowed").length
@@ -849,16 +853,26 @@ async function openViewBookModal(bookId) {
     borrowings.forEach((record) => {
       const tr = document.createElement("tr");
 
-      const borrowerName = record.profiles
-        ? record.profiles.full_name
-        : "Unknown User";
+      const borrowerName =
+        record.profiles?.full_name ||
+        identitySnapshots.get(record.borrower_id)?.student_name_snapshot ||
+        "Unknown User";
+      const borrowerId =
+        record.profiles?.students?.student_id ||
+        identitySnapshots.get(record.borrower_id)?.student_code_snapshot ||
+        "";
       const returnDateText = record.return_date ? record.return_date : "-";
 
       const statusClass =
         record.status === "borrowed" ? "status-borrowed" : "status-returned";
 
       tr.innerHTML = `
-        <td>${escapeHtml(borrowerName)}</td>
+        <td>
+          <span class="app-person-meta">
+            <span>${escapeHtml(borrowerName)}</span>
+            ${borrowerId ? `<small class="app-person-id">Student ID: ${escapeHtml(borrowerId)}</small>` : ""}
+          </span>
+        </td>
         <td>${escapeHTML(record.borrow_date || "-")}</td>
         <td>${escapeHTML(record.due_date || "-")}</td>
         <td>${returnDateText}</td>
@@ -1084,6 +1098,13 @@ async function openReturnModal(bookId) {
     if (error) throw error;
 
     currentActiveBorrowings = activeBorrowings || [];
+    const identitySnapshots =
+      await window.loadTransferredStudentIdentitySnapshots(
+        currentActiveBorrowings.map((record) => record.borrower_id),
+      );
+    currentActiveBorrowings.forEach((record) => {
+      record.transferIdentitySnapshot = identitySnapshots.get(record.borrower_id);
+    });
 
     if (currentActiveBorrowings.length === 0) {
       if (typeof showToast === "function") {
@@ -1114,9 +1135,15 @@ function renderStudentDropdown(borrowings) {
   borrowings.forEach((record) => {
     const studentProfile = record.profiles || {};
 
-    const studentName = studentProfile.full_name || "-";
+    const studentName =
+      studentProfile.full_name ||
+      record.transferIdentitySnapshot?.student_name_snapshot ||
+      "-";
     const studentIdNum =
-      record.profiles?.students?.student_id || record.profiles?.id || "-";
+      record.profiles?.students?.student_id ||
+      record.transferIdentitySnapshot?.student_code_snapshot ||
+      record.profiles?.id ||
+      "-";
 
     const opt = document.createElement("option");
     opt.value = record.id;
@@ -1155,9 +1182,14 @@ if (studentSearchInput) {
 
       const studentRecord = studentProfile.students || {};
 
-      const name = (studentProfile.full_name || "").toLowerCase();
+      const name = (
+        studentProfile.full_name ||
+        record.transferIdentitySnapshot?.student_name_snapshot ||
+        ""
+      ).toLowerCase();
       const studentId = (
         studentRecord.student_id ||
+        record.transferIdentitySnapshot?.student_code_snapshot ||
         studentRecord.id ||
         ""
       ).toLowerCase();
@@ -1248,9 +1280,14 @@ if (studentSearchInput) {
       const studentProfile = record.profiles || {};
       const studentIdNum =
         studentProfile.students?.student_id ||
+        record.transferIdentitySnapshot?.student_code_snapshot ||
         studentProfile.students?.id ||
         "";
-      const name = (studentProfile.full_name || "").toLowerCase();
+      const name = (
+        studentProfile.full_name ||
+        record.transferIdentitySnapshot?.student_name_snapshot ||
+        ""
+      ).toLowerCase();
       const studentId = String(studentIdNum).toLowerCase();
 
       return name.includes(query) || studentId.includes(query);

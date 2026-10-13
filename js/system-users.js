@@ -306,12 +306,12 @@ async function loadSystemUsers() {
   const { data: users, error } = await query;
 
   if (error) {
-    tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center;">Failed to load users.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Failed to load users.</td></tr>`;
     return;
   }
 
   if (!users || users.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center;">No users found.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No users found.</td></tr>`;
     return;
   }
 
@@ -319,11 +319,15 @@ async function loadSystemUsers() {
     .map(
       (user) => `
     <tr>
-           <td>
-          <img src="${escapeHTML(user.photo_url ? user.photo_url : DEFAULT_AVATAR)}" class="systemUser-photo" alt="Profile" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" />
+      <td>
+        <span class="app-person-cell">
+          <img src="${escapeHTML(user.photo_url ? user.photo_url : DEFAULT_AVATAR)}" class="systemUser-photo" alt="${escapeHTML(user.full_name || "User")}" onerror="this.onerror=null; this.src=DEFAULT_AVATAR;" />
+          <span class="app-person-meta">
+            <span>${escapeHTML(user.full_name || "-")}</span>
+            <small class="app-person-id">${escapeHTML(user.email || "Email not set")}</small>
+          </span>
+        </span>
         </td>
-      <td>${escapeHTML(user.full_name || "-")}</td>
-      <td>${escapeHTML(user.email || "-")}</td>
       <td>${escapeHTML(user.phone_number || "-")}</td>
       <td>${escapeHTML(user.role || "-")}</td>
        <td>${formatDateTime(user.created_at)}</td>
@@ -362,7 +366,7 @@ function renderTableLoading() {
 
   tableBody.innerHTML = `
     <tr>
-      <td colspan="9" style="text-align: center; padding: 2rem; color: #64748b;">
+      <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading system users...
       </td>
@@ -604,4 +608,3 @@ async function handleUpdateUser(event) {
     }
   }
 }
-
