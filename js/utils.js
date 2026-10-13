@@ -158,7 +158,7 @@ window.getAuthContext = function (forceRefresh = false) {
 
       const { data: profile, error: profileError } = await window.supabaseClient
         .from("profiles")
-        .select("id, full_name, role, status")
+        .select("id, full_name, role, status, school_id")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -374,18 +374,41 @@ async function loadHeaderSchoolLogo() {
     const authCtx = await window.getAuthContext();
     if (!authCtx?.user) return;
 
+    let schoolNameEl = document.querySelector(".sidebar-school-name");
+    const logo = logoImg.closest(".logo");
+    if (logo) {
+      if (!schoolNameEl) {
+        schoolNameEl = document.createElement("p");
+        schoolNameEl.className = "sidebar-school-name";
+        schoolNameEl.setAttribute("aria-live", "polite");
+        logo.insertAdjacentElement("afterend", schoolNameEl);
+      }
+      schoolNameEl.textContent = "";
+      schoolNameEl.hidden = true;
+    }
+
+    if (!authCtx.profile?.school_id) {
+      logoImg.src = DEFAULT_AVATAR;
+      return;
+    }
+
     const { data, error } = await window.supabaseClient
       .from("schools")
-      .select("logo_url")
-      .limit(1)
+      .select("school_name, logo_url")
+      .eq("id", authCtx.profile.school_id)
       .maybeSingle();
 
     if (error) {
+      console.error("Could not load the signed-in user's school:", error);
       logoImg.src = DEFAULT_AVATAR;
       return;
     }
 
     logoImg.src = data?.logo_url ? data.logo_url : DEFAULT_AVATAR;
+    if (schoolNameEl) {
+      schoolNameEl.textContent = data?.school_name || "";
+      schoolNameEl.hidden = !data?.school_name;
+    }
   } catch (err) {
     console.error("Unexpected error loading header logo:", err);
     logoImg.src = DEFAULT_AVATAR;

@@ -162,6 +162,35 @@ async function initAcademicsPage() {
 
       containerEl.innerHTML = allCardsHTML;
 
+      const cardIcons = new Map([
+        ["Enrollment", ["fa-user-plus", ""]],
+        ["Teacher Assignment", ["fa-chalkboard-user", "academic-card__icon--teal"]],
+        ["Timetable", ["fa-calendar-days", "academic-card__icon--violet"]],
+        ["My Assignments", ["fa-clipboard-check", "academic-card__icon--amber"]],
+        ["My Attendance", ["fa-calendar-check", "academic-card__icon--teal"]],
+        ["My Grades", ["fa-chart-column", "academic-card__icon--violet"]],
+        ["My Fees", ["fa-wallet", "academic-card__icon--amber"]],
+        ["My Transfer History", ["fa-right-left", "academic-card__icon--rose"]],
+        ["Attendance", ["fa-user-check", "academic-card__icon--teal"]],
+        ["Grades", ["fa-chart-line", "academic-card__icon--violet"]],
+        ["My Timetable", ["fa-calendar-days", "academic-card__icon--amber"]],
+      ]);
+
+      containerEl.querySelectorAll(".academic-card").forEach((card) => {
+        const title = card.querySelector("h4")?.textContent.trim();
+        const [iconName, colorClass] = cardIcons.get(title) || [];
+        if (!iconName) return;
+
+        const icon = document.createElement("span");
+        icon.className = `academic-card__icon ${colorClass}`.trim();
+        icon.setAttribute("aria-hidden", "true");
+
+        const iconGlyph = document.createElement("i");
+        iconGlyph.className = `fa-solid ${iconName}`;
+        icon.appendChild(iconGlyph);
+        card.insertBefore(icon, card.firstChild);
+      });
+
       if (typeof renderNavigation === "function") {
         renderNavigation(userRole);
       }

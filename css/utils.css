@@ -34,6 +34,20 @@ tbody tr:hover {
   margin-bottom: 10px;
 }
 
+.sidebar-school-name {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 8px 16px 18px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.sidebar-school-name[hidden] {
+  display: none !important;
+}
+
 @media screen and (max-width: 768px) {
   .menu-toggle {
     display: flex;
