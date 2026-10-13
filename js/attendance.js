@@ -2,6 +2,7 @@ let activeAcademicYearId = null;
 let activeTermId = null;
 let activeAssessmentId = null;
 let currentTodayLessons = [];
+let currentAttendanceProfile = null;
 
 let currentAttendanceSession = {
   classId: null,
@@ -224,30 +225,71 @@ async function populateClassOptions() {
   const user = (await supabaseClient.auth.getUser()).data?.user;
   if (!user) return;
 
-  const { data: assignments, error } = await supabaseClient
-    .from("teacher_assignments")
-    .select("class_id, classes(id, name)")
-    .eq("teacher_id", user.id);
+  try {
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("id, role, school_id")
+      .eq("id", user.id)
+      .single();
+    if (profileError) throw profileError;
+    currentAttendanceProfile = profile;
 
-  if (error || !assignments) {
-    console.error("Error fetching assigned classes:", error);
-    return;
+    const role = String(profile.role || "").toLowerCase();
+    let classes = [];
+
+    if (role === "admin") {
+      if (!profile.school_id) {
+        throw new Error("Your administrator profile is not linked to a school.");
+      }
+
+      const { data, error } = await supabaseClient
+        .from("classes")
+        .select("id, name")
+        .eq("school_id", profile.school_id)
+        .order("name");
+      if (error) throw error;
+      classes = data || [];
+    } else if (role === "teacher") {
+      const { data: assignments, error } = await supabaseClient
+        .from("teacher_assignments")
+        .select("class_id, classes(id, name)")
+        .eq("teacher_id", user.id);
+      if (error) throw error;
+
+      classes = [
+        ...new Map(
+          (assignments || [])
+            .filter((assignment) => assignment.classes)
+            .map((assignment) => [
+              assignment.classes.id,
+              assignment.classes,
+            ]),
+        ).values(),
+      ];
+    } else {
+      throw new Error("Only administrators and teachers can take attendance.");
+    }
+
+    classes.forEach((cls) => {
+      const opt = document.createElement("option");
+      opt.value = cls.id;
+      opt.textContent = cls.name;
+      classSelect.appendChild(opt);
+    });
+
+    if (classes.length === 0) {
+      showToast(
+        role === "admin"
+          ? "No classes are available for your school."
+          : "No classes are assigned to your account.",
+        "error",
+      );
+    }
+  } catch (error) {
+    currentAttendanceProfile = null;
+    console.error("Error fetching attendance classes:", error);
+    showToast(error.message || "Could not load classes for attendance.", "error");
   }
-
-  const uniqueClasses = [
-    ...new Map(
-      assignments
-        .filter((a) => a.classes)
-        .map((a) => [a.classes.id, a.classes]),
-    ).values(),
-  ];
-
-  uniqueClasses.forEach((cls) => {
-    const opt = document.createElement("option");
-    opt.value = cls.id;
-    opt.textContent = cls.name;
-    classSelect.appendChild(opt);
-  });
 }
 
 async function handleClassSelectChange(classId) {
@@ -285,6 +327,11 @@ async function handleClassSelectChange(classId) {
       await loadDefaultPeriods(periodSelect);
       return;
     }
+    const profile =
+      currentAttendanceProfile?.id === user.id
+        ? currentAttendanceProfile
+        : null;
+    const isAdmin = String(profile?.role || "").toLowerCase() === "admin";
 
     const { data: timetable, error: ttError } = await supabaseClient
       .from("timetables")
@@ -300,7 +347,7 @@ async function handleClassSelectChange(classId) {
       return;
     }
 
-    const { data: lessons, error: lError } = await supabaseClient
+    let lessonsQuery = supabaseClient
       .from("timetable_lessons")
       .select(
         `
@@ -313,8 +360,10 @@ async function handleClassSelectChange(classId) {
       `,
       )
       .eq("timetable_id", timetable.id)
-      .eq("teacher_id", user.id)
       .ilike("day_of_week", todayName);
+    if (!isAdmin) lessonsQuery = lessonsQuery.eq("teacher_id", user.id);
+
+    const { data: lessons, error: lError } = await lessonsQuery;
 
     if (lError) {
       console.error("Timetable query error:", lError);
@@ -524,7 +573,7 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
     }
 
     if (!schoolId) {
-      showToast("Error: Teacher profile is missing a school_id.", "error");
+      showToast("Error: Your profile is missing a school_id.", "error");
       return;
     }
 
@@ -1332,7 +1381,7 @@ async function handleSaveEditAttendance() {
     }
 
     if (!schoolId) {
-      showToast("Error: Teacher profile is missing a school_id.", "error");
+      showToast("Error: Your profile is missing a school_id.", "error");
       return;
     }
 
