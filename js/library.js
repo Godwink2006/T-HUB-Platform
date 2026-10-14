@@ -812,7 +812,7 @@ async function openViewBookModal(bookId) {
 
     const { data: borrowings, error: borrowError } = await window.supabaseClient
       .from("book_borrowings")
-      .select(`*, profiles ( full_name, students ( student_id ) )`)
+      .select(`*, profiles ( full_name, role, photo_url, students ( student_id ) )`)
       .eq("book_id", bookId)
       .order("created_at", { ascending: false });
 
@@ -853,14 +853,17 @@ async function openViewBookModal(bookId) {
     borrowings.forEach((record) => {
       const tr = document.createElement("tr");
 
+      const identitySnapshot = identitySnapshots.get(record.borrower_id);
       const borrowerName =
         record.profiles?.full_name ||
-        identitySnapshots.get(record.borrower_id)?.student_name_snapshot ||
+        identitySnapshot?.student_name_snapshot ||
         "Unknown User";
+      const borrowerRole = record.profiles?.role || "";
       const borrowerId =
         record.profiles?.students?.student_id ||
-        identitySnapshots.get(record.borrower_id)?.student_code_snapshot ||
+        identitySnapshot?.student_code_snapshot ||
         "";
+      const borrowerPhoto = getBorrowerPhotoUrl(record.profiles?.photo_url);
       const returnDateText = record.return_date ? record.return_date : "-";
 
       const statusClass =
@@ -868,9 +871,13 @@ async function openViewBookModal(bookId) {
 
       tr.innerHTML = `
         <td>
-          <span class="app-person-meta">
-            <span>${escapeHtml(borrowerName)}</span>
-            ${borrowerId ? `<small class="app-person-id">Student ID: ${escapeHtml(borrowerId)}</small>` : ""}
+          <span class="app-person-cell">
+            <img class="app-person-avatar" src="${escapeHtml(borrowerPhoto)}" alt="" aria-hidden="true" loading="lazy" onerror="this.onerror=null;this.src='${escapeHtml(window.DEFAULT_PROFILE_AVATAR || "")}'" />
+            <span class="app-person-meta">
+              <span>${escapeHtml(borrowerName)}</span>
+              ${borrowerRole ? `<small>${escapeHtml(borrowerRole)}</small>` : ""}
+              ${borrowerId ? `<small class="app-person-id">Student ID: ${escapeHtml(borrowerId)}</small>` : ""}
+            </span>
           </span>
         </td>
         <td>${escapeHTML(record.borrow_date || "-")}</td>
@@ -888,6 +895,19 @@ async function openViewBookModal(bookId) {
   }
 }
 
+function getBorrowerPhotoUrl(photoUrl) {
+  if (!photoUrl) return window.DEFAULT_PROFILE_AVATAR || "";
+  try {
+    const parsedPhotoUrl = new URL(photoUrl, window.location.href);
+    if (["https:", "http:"].includes(parsedPhotoUrl.protocol)) {
+      return parsedPhotoUrl.href;
+    }
+  } catch (error) {
+    console.warn("Ignoring invalid borrower photo URL:", error);
+  }
+  return window.DEFAULT_PROFILE_AVATAR || "";
+}
+
 document
   .getElementById("borrowFromViewBtn")
   .addEventListener("click", async () => {
@@ -903,67 +923,117 @@ document
       hiddenBookIdInput.value = currentViewBookId;
     }
 
-    await loadStudentsDropdown();
+    await loadBorrowersDropdown();
   });
 
-async function loadStudentsDropdown(searchTerm = "") {
+let allBorrowerProfiles = [];
+
+async function loadBorrowersDropdown() {
   const select = document.getElementById("borrowStudentSelect");
   if (!select) return;
 
   try {
-    let query = window.supabaseClient
-      .from("students")
-      .select(
-        `
-        id,
-        student_id,
-        profiles ( id, full_name )
-      `,
-      )
-      .order("student_id", { ascending: true });
+    const {
+      data: { user },
+      error: authError,
+    } = await window.supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    if (!user) throw new Error("User not authenticated.");
 
-    const { data: students, error } = await query;
-
-    select.innerHTML = '<option value="">Select Student</option>';
-
-    if (!students || students.length === 0) {
-      showToast("No Users found", "error");
-      return;
+    const { data: userProfile, error: profileError } =
+      await window.supabaseClient
+        .from("profiles")
+        .select("school_id")
+        .eq("id", user.id)
+        .single();
+    if (profileError) throw profileError;
+    if (!userProfile?.school_id) {
+      throw new Error("Your profile is not linked to a school.");
     }
 
-    students.forEach((student) => {
-      const profileData = Array.isArray(student.profiles)
-        ? student.profiles[0]
-        : student.profiles;
+    const { data: profiles, error } = await window.supabaseClient
+      .from("profiles")
+      .select("id, full_name, email, role, status, students(student_id)")
+      .eq("school_id", userProfile.school_id)
+      .order("full_name", { ascending: true });
+    if (error) throw error;
 
-      const studentName = profileData ? profileData.full_name : "-";
-      const studentCode = student.student_id || "-";
-      const userId = student.id;
-
-      if (searchTerm) {
-        const matchName = studentName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-        const matchCode = studentCode
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-        if (!matchName && !matchCode) return;
-      }
-
-      const opt = document.createElement("option");
-      opt.value = userId;
-      opt.textContent = `${studentName} (${studentCode})`;
-      select.appendChild(opt);
-    });
+    allBorrowerProfiles = profiles || [];
+    renderBorrowerOptions(
+      document.getElementById("studentSearchInput")?.value || "",
+    );
   } catch (err) {
-    console.error("Error loading students list:", err);
+    console.error("Error loading borrower profiles:", err);
+    if (typeof showToast === "function") {
+      showToast(err.message || "Could not load borrowers.", "error");
+    }
+  }
+}
+
+function filterBorrowerProfiles(profiles, searchTerm = "") {
+  const query = String(searchTerm).trim().toLocaleLowerCase();
+  return profiles.filter((profile) => {
+    if (
+      String(profile.role || "").toLowerCase() === "parent" ||
+      String(profile.status || "").toLowerCase() !== "active"
+    ) {
+      return false;
+    }
+
+    if (!query) return true;
+
+    const student = Array.isArray(profile.students)
+      ? profile.students[0]
+      : profile.students;
+    return [
+      profile.full_name,
+      profile.email,
+      profile.role,
+      profile.id,
+      student?.student_id,
+    ].some((value) =>
+      String(value || "")
+        .toLocaleLowerCase()
+        .includes(query),
+    );
+  });
+}
+
+function renderBorrowerOptions(searchTerm = "") {
+  const select = document.getElementById("borrowStudentSelect");
+  if (!select) return;
+
+  select.replaceChildren(new Option("Select borrower", ""));
+  const profiles = filterBorrowerProfiles(allBorrowerProfiles, searchTerm);
+  profiles.forEach((profile) => {
+    const student = Array.isArray(profile.students)
+      ? profile.students[0]
+      : profile.students;
+    const name = profile.full_name || profile.email || "User";
+    const role = String(profile.role || "user");
+    const studentCode = student?.student_id;
+    select.appendChild(
+      new Option(
+        `${name} (${role}${studentCode ? ` · ${studentCode}` : ""})`,
+        profile.id,
+      ),
+    );
+  });
+
+  if (!profiles.length) {
+    select.appendChild(
+      new Option(
+        searchTerm ? "No matching borrowers" : "No active borrowers available",
+        "",
+      ),
+    );
   }
 }
 
 document
   .getElementById("studentSearchInput")
   ?.addEventListener("input", (e) => {
-    loadStudentsDropdown(e.target.value.trim());
+    renderBorrowerOptions(e.target.value.trim());
   });
 
 const borrowForm = document.getElementById("borrowForm");
@@ -1088,6 +1158,8 @@ async function openReturnModal(bookId) {
         profiles (
           id,
           full_name,
+          email,
+          role,
           students ( student_id )
         )
       `,
@@ -1098,13 +1170,6 @@ async function openReturnModal(bookId) {
     if (error) throw error;
 
     currentActiveBorrowings = activeBorrowings || [];
-    const identitySnapshots =
-      await window.loadTransferredStudentIdentitySnapshots(
-        currentActiveBorrowings.map((record) => record.borrower_id),
-      );
-    currentActiveBorrowings.forEach((record) => {
-      record.transferIdentitySnapshot = identitySnapshots.get(record.borrower_id);
-    });
 
     if (currentActiveBorrowings.length === 0) {
       if (typeof showToast === "function") {
@@ -1114,7 +1179,7 @@ async function openReturnModal(bookId) {
       return;
     }
 
-    renderStudentDropdown(currentActiveBorrowings);
+    renderBorrowerDropdown(currentActiveBorrowings);
   } catch (err) {
     console.error("Error opening return modal:", err);
     if (typeof showToast === "function") {
@@ -1123,31 +1188,28 @@ async function openReturnModal(bookId) {
   }
 }
 
-function renderStudentDropdown(borrowings) {
+function renderBorrowerDropdown(borrowings) {
   const select = document.getElementById("returnBorrowStudentSelect");
   const borrowDateDisplay = document.getElementById("displayBorrowDate");
   const recordIdInput = document.getElementById("activeBorrowRecordId");
 
   if (!select) return;
 
-  select.innerHTML = '<option value="">Select student</option>';
+  select.innerHTML = '<option value="">Select borrower</option>';
 
   borrowings.forEach((record) => {
-    const studentProfile = record.profiles || {};
+    const borrowerProfile = record.profiles || {};
 
-    const studentName =
-      studentProfile.full_name ||
-      record.transferIdentitySnapshot?.student_name_snapshot ||
+    const borrowerName =
+      borrowerProfile.full_name ||
+      borrowerProfile.email ||
       "-";
-    const studentIdNum =
-      record.profiles?.students?.student_id ||
-      record.transferIdentitySnapshot?.student_code_snapshot ||
-      record.profiles?.id ||
-      "-";
+    const borrowerRole = borrowerProfile.role || "user";
+    const studentCode = record.profiles?.students?.student_id;
 
     const opt = document.createElement("option");
     opt.value = record.id;
-    opt.textContent = `${studentName} (${studentIdNum})`;
+    opt.textContent = `${borrowerName} (${borrowerRole}${studentCode ? ` · ${studentCode}` : ""})`;
     select.appendChild(opt);
   });
 
@@ -1172,32 +1234,32 @@ function renderStudentDropdown(borrowings) {
   }
 }
 
-const studentSearchInput = document.getElementById("returnStudentSearchInput");
-if (studentSearchInput) {
-  studentSearchInput.addEventListener("input", (e) => {
+const borrowerSearchInput = document.getElementById("returnStudentSearchInput");
+if (borrowerSearchInput) {
+  borrowerSearchInput.addEventListener("input", (e) => {
     const query = e.target.value.toLowerCase().trim();
 
     const filtered = currentActiveBorrowings.filter((record) => {
-      const studentProfile = record.profiles || {};
+      const borrowerProfile = record.profiles || {};
 
-      const studentRecord = studentProfile.students || {};
+      const studentRecord = borrowerProfile.students || {};
 
       const name = (
-        studentProfile.full_name ||
-        record.transferIdentitySnapshot?.student_name_snapshot ||
+        borrowerProfile.full_name ||
+        borrowerProfile.email ||
         ""
       ).toLowerCase();
       const studentId = (
         studentRecord.student_id ||
-        record.transferIdentitySnapshot?.student_code_snapshot ||
-        studentRecord.id ||
+        borrowerProfile.id ||
         ""
       ).toLowerCase();
+      const role = String(borrowerProfile.role || "").toLowerCase();
 
-      return name.includes(query) || studentId.includes(query);
+      return name.includes(query) || studentId.includes(query) || role.includes(query);
     });
 
-    renderStudentDropdown(filtered);
+    renderBorrowerDropdown(filtered);
   });
 }
 
@@ -1271,31 +1333,6 @@ document
 
     openReturnModal(currentViewBookId);
   });
-
-if (studentSearchInput) {
-  studentSearchInput.addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase().trim();
-
-    const filtered = currentActiveBorrowings.filter((record) => {
-      const studentProfile = record.profiles || {};
-      const studentIdNum =
-        studentProfile.students?.student_id ||
-        record.transferIdentitySnapshot?.student_code_snapshot ||
-        studentProfile.students?.id ||
-        "";
-      const name = (
-        studentProfile.full_name ||
-        record.transferIdentitySnapshot?.student_name_snapshot ||
-        ""
-      ).toLowerCase();
-      const studentId = String(studentIdNum).toLowerCase();
-
-      return name.includes(query) || studentId.includes(query);
-    });
-
-    renderStudentDropdown(filtered);
-  });
-}
 
 document.addEventListener("DOMContentLoaded", () => {
   loadBooksTable();
