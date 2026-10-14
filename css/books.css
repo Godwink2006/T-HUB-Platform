@@ -55,13 +55,11 @@
   transition: border-color 0.2s;
 }
 
-
 .book-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
 }
-
 
 .book-card {
   background: #ffffff;
@@ -251,7 +249,6 @@ body {
   min-height: 100vh;
 }
 
-
 .student-modal-overlay {
   position: fixed;
   top: 0;
@@ -324,7 +321,7 @@ body {
 }
 
 .book-history-book {
-  border-bottom: 1px solid #dce4ee;
+  border-bottom: 2px solid rgb(219, 215, 215);
   margin-bottom: 1rem;
   padding-bottom: 1rem;
 }
@@ -345,7 +342,7 @@ body {
 .book-history-borrower {
   align-items: center;
   background: #f8fafc;
-  border: 1px solid #dce4ee;
+  border: 2px solid rgb(219, 215, 215);
   display: flex;
   gap: 0.85rem;
   margin-bottom: 1rem;
@@ -387,7 +384,8 @@ body {
   .catalog-search-box input,
   .book-card,
   .book-card-badge,
-  .small-card {
+  .small-card,
+  .book-history-borrower {
     border-radius: 10px;
   }
 
