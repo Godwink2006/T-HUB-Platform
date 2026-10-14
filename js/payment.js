@@ -98,6 +98,9 @@ async function loadStudentFees() {
     '<tr><td colspan="7" style="text-align: center; color: grey;"><i class="fas fa-spinner fa-spin" style="color: grey"></i>  Loading fees...</td></tr>';
 
   try {
+    const authContext = await window.getAuthContext();
+    const schoolId = authContext?.profile?.school_id;
+    if (!schoolId) throw new Error("Your account is not linked to a school.");
 
     const { data: fees, error: feeError } = await supabaseClient
       .from("student_fees")
@@ -117,31 +120,12 @@ async function loadStudentFees() {
         terms:term_id (name)
       `,
       )
+      .eq("school_id", schoolId)
       .order("created_at", { ascending: false });
 
     if (feeError) throw feeError;
 
-    const { data: transferFeeHistory, error: transferHistoryError } =
-      await supabaseClient.rpc("get_school_transfer_fee_history");
-    if (transferHistoryError) {
-      console.error(
-        "Could not load transferred fee history:",
-        transferHistoryError,
-      );
-      showToast(
-        `Transferred fee history could not be loaded: ${transferHistoryError.message}`,
-        "error",
-      );
-    }
-
-    const studentIds = [
-      ...new Set([
-        ...(fees || []).map((fee) => fee.student_id),
-        ...(transferFeeHistory || []).map((record) => record.student_id),
-      ].filter(Boolean)),
-    ];
-    const authContext = await window.getAuthContext();
-    const schoolId = authContext?.profile?.school_id;
+    const studentIds = [...new Set((fees || []).map((fee) => fee.student_id).filter(Boolean))];
     const { data: studentRecords, error: studentError } = studentIds.length
       ? await supabaseClient
           .from("students")
@@ -170,24 +154,13 @@ async function loadStudentFees() {
         enrollment,
       ]),
     );
-    const transferIdentityMap = Object.fromEntries(
-      (transferFeeHistory || [])
-        .filter((record) => record.student_id)
-        .map((record) => [record.student_id, record]),
-    );
 
     const currentFeeRows = mapCurrentFinanceFeeRecords(
       fees,
       studentMap,
       enrollmentIdentityMap,
-      transferIdentityMap,
     );
-    const historicalFeeRows = (transferFeeHistory || [])
-      .map((record) =>
-        mapTransferredFeeHistoryRecord(record, studentMap, enrollmentIdentityMap),
-      )
-      .filter(Boolean);
-    financeFeeRows = [...currentFeeRows, ...historicalFeeRows];
+    financeFeeRows = currentFeeRows;
 
     populateFinanceFilterOptions("financeTermFilter", financeFeeRows, "termId", "termName", "All semesters");
     populateFinanceFilterOptions("financeClassFilter", financeFeeRows, "classId", "className", "All classes");
@@ -203,19 +176,16 @@ function mapCurrentFinanceFeeRecords(
   fees,
   studentMap,
   enrollmentIdentityMap,
-  transferIdentityMap,
 ) {
   return (fees || []).map((fee) => ({
     fee,
     studentName:
       studentMap[fee.student_id]?.profiles?.full_name ||
       enrollmentIdentityMap[fee.student_id]?.student_name_snapshot ||
-      transferIdentityMap[fee.student_id]?.student_name ||
       "Unknown Student",
     studentCode:
       studentMap[fee.student_id]?.student_id ||
       enrollmentIdentityMap[fee.student_id]?.student_code_snapshot ||
-      transferIdentityMap[fee.student_id]?.student_code ||
       "",
     studentPhoto:
       studentMap[fee.student_id]?.profiles?.photo_url ||
@@ -228,55 +198,6 @@ function mapCurrentFinanceFeeRecords(
     termName: fee.terms?.name || "Unassigned",
     termId: fee.term_id || "",
   }));
-}
-
-function mapTransferredFeeHistoryRecord(
-  record,
-  studentMap = {},
-  enrollmentIdentityMap = {},
-) {
-  const snapshot = record?.fee_snapshot;
-  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
-    return null;
-  }
-
-  const feeId = snapshot.id || record.source_record_id;
-  if (!feeId) return null;
-
-  return {
-    fee: {
-      id: feeId,
-      total_fees: snapshot.total_fees,
-      total_paid: snapshot.total_paid,
-      balance: snapshot.balance,
-      status: snapshot.status,
-      student_id: record.student_id,
-    },
-    studentName:
-      record.student_name ||
-      enrollmentIdentityMap[record.student_id]?.student_name_snapshot ||
-      snapshot.student_name_snapshot ||
-      snapshot.student_name ||
-      "Unknown Student",
-    studentCode:
-      record.student_code ||
-      enrollmentIdentityMap[record.student_id]?.student_code_snapshot ||
-      snapshot.student_code_snapshot ||
-      snapshot.student_code ||
-      "",
-    studentPhoto:
-      studentMap[record.student_id]?.profiles?.photo_url ||
-      enrollmentIdentityMap[record.student_id]?.student_photo_snapshot ||
-      "",
-    className: snapshot.history_class_name || "Unassigned",
-    classId: snapshot.history_class_id || "",
-    yearLabel: snapshot.history_academic_year || "Unassigned",
-    yearId: snapshot.history_academic_year_id || "",
-    termName: snapshot.history_term_name || "Unassigned",
-    termId: snapshot.history_term_id || "",
-    sourceSchoolName: record.source_school_name || "Previous school",
-    isTransferHistory: true,
-  };
 }
 
 function populateFinanceFilterOptions(selectId, rows, valueKey, labelKey, placeholder) {
@@ -321,7 +242,7 @@ function renderFinanceFeeRows() {
     return;
   }
 
-  tbody.replaceChildren(...matches.map(({ fee, studentName, studentCode, studentPhoto, className, sourceSchoolName, isTransferHistory }) => {
+  tbody.replaceChildren(...matches.map(({ fee, studentName, studentCode, studentPhoto, className }) => {
     const row = document.createElement("tr");
     const studentCell = document.createElement("td");
     const studentIdentity = document.createElement("div");
@@ -347,12 +268,6 @@ function renderFinanceFeeRows() {
       studentDetails.appendChild(studentId);
     }
     studentIdentity.appendChild(studentDetails);
-    if (isTransferHistory) {
-      const historyLabel = document.createElement("small");
-      historyLabel.className = "payments-history-label";
-      historyLabel.textContent = `Transferred fee history · ${sourceSchoolName}`;
-      studentDetails.appendChild(historyLabel);
-    }
     studentCell.appendChild(studentIdentity);
     row.appendChild(studentCell);
     const cells = [
@@ -374,22 +289,13 @@ function renderFinanceFeeRows() {
     statusCell.appendChild(status);
     row.appendChild(statusCell);
     const actionCell = document.createElement("td");
-    if (isTransferHistory) {
-      const historyNotice = document.createElement("span");
-      historyNotice.className = "payments-history-readonly";
-      historyNotice.textContent = "Read-only";
-      historyNotice.title =
-        "This fee record is from the student's previous school and cannot be edited here.";
-      actionCell.appendChild(historyNotice);
-    } else {
-      const viewButton = document.createElement("button");
-      viewButton.type = "button";
-      viewButton.className = "payments-actions-btn view";
-      viewButton.setAttribute("aria-label", `View payment details for ${studentName}`);
-      viewButton.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
-      viewButton.addEventListener("click", () => viewFeeDetails(fee.id));
-      actionCell.appendChild(viewButton);
-    }
+    const viewButton = document.createElement("button");
+    viewButton.type = "button";
+    viewButton.className = "payments-actions-btn view";
+    viewButton.setAttribute("aria-label", `View payment details for ${studentName}`);
+    viewButton.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
+    viewButton.addEventListener("click", () => viewFeeDetails(fee.id));
+    actionCell.appendChild(viewButton);
     row.appendChild(actionCell);
     return row;
   }));

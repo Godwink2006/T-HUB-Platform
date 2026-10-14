@@ -84,5 +84,3 @@ $$;
 
 revoke all on function public.get_school_transfer_fee_history()
   from public, anon, authenticated;
-grant execute on function public.get_school_transfer_fee_history()
-  to authenticated;

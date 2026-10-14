@@ -97,65 +97,12 @@ test("finance filters match student search, term, class, academic year, and stat
   assert.equal(context.matches(row, { ...base, year: "year-25" }), false);
   assert.equal(context.matches(row, { ...base, status: "Paid" }), false);
 });
-test("finance maps transferred fee snapshots into read-only finance rows", async () => {
+test("finance loads only current-school fee rows, not transferred fee history", async () => {
   const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
-  const functionSource = source.match(/function mapTransferredFeeHistoryRecord\([\s\S]*?\) \{[\s\S]*?\n\}/)?.[0];
-  assert.ok(functionSource, "transfer fee history mapper exists");
-  const context = vm.createContext({});
-  vm.runInContext(`${functionSource}\nglobalThis.map = mapTransferredFeeHistoryRecord;`, context);
-
-  const row = context.map({
-    source_record_id: "source-fee-1",
-    source_school_name: "Previous School",
-    student_id: "student-1",
-    student_name: "Transfer Student",
-    student_code: "ST-200",
-    fee_snapshot: {
-      id: "source-fee-1",
-      total_fees: 100,
-      total_paid: 60,
-      balance: 40,
-      status: "Partial",
-      history_class_id: "source-class-9",
-      history_class_name: "Grade 9",
-      history_academic_year_id: "source-year",
-      history_academic_year: "2025/2026",
-      history_term_id: "source-term",
-      history_term_name: "Term 2",
-    },
-  });
-
-  assert.equal(row.fee.total_fees, 100);
-  assert.equal(row.fee.total_paid, 60);
-  assert.equal(row.fee.balance, 40);
-  assert.equal(row.className, "Grade 9");
-  assert.equal(row.yearLabel, "2025/2026");
-  assert.equal(row.studentName, "Transfer Student");
-  assert.equal(row.studentCode, "ST-200");
-  assert.equal(row.sourceSchoolName, "Previous School");
-  assert.equal(row.isTransferHistory, true);
-  assert.equal(context.map({ fee_snapshot: [] }), null);
-});
-test("finance transferred fee mapper uses identity snapshots when RPC identity is blank", async () => {
-  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
-  const functionSource = source.match(/function mapTransferredFeeHistoryRecord\([\s\S]*?\) \{[\s\S]*?\n\}/)?.[0];
-  assert.ok(functionSource, "transfer fee history mapper exists");
-  const context = vm.createContext({});
-  vm.runInContext(`${functionSource}\nglobalThis.map = mapTransferredFeeHistoryRecord;`, context);
-
-  const row = context.map({
-    source_record_id: "source-fee-2",
-    student_name: "",
-    student_code: "",
-    fee_snapshot: {
-      id: "source-fee-2",
-      student_name_snapshot: "Snapshot Student",
-      student_code_snapshot: "OLD-200",
-    },
-  });
-
-  assert.equal(row.studentName, "Snapshot Student");
-  assert.equal(row.studentCode, "OLD-200");
+  const loadFunction = source.match(/async function loadStudentFees\(\) \{[\s\S]*?\n\}/)?.[0];
+  assert.ok(loadFunction, "finance fee loader exists");
+  assert.match(loadFunction, /\.eq\("school_id", schoolId\)/);
+  assert.doesNotMatch(source, /get_school_transfer_fee_history|mapTransferredFeeHistoryRecord/);
 });
 test("finance maps profile name, photo, and student ID through the student relation", async () => {
   const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
@@ -270,20 +217,16 @@ test("transfer acceptance and backfill preserve receiving-school student identit
   assert.match(backfillSql, /student_code_snapshot = coalesce/i);
   assert.match(backfillSql, /student_photo_snapshot = coalesce/i);
 });
-test("finance transfer fee RPC is restricted to active staff in the receiving school", async () => {
+test("finance transfer fee RPC is revoked from browser roles; student transfer history remains available", async () => {
   const source = await readFile(path.join(projectRoot, "supabase", "finance_transferred_fee_history.sql"), "utf8");
   assert.match(source, /security definer[\s\S]*?set search_path = ''/i);
-  assert.match(source, /v_role not in \('admin', 'accountant'\)/i);
-  assert.match(source, /v_status <> 'active'/i);
-  assert.match(source, /transfer\.target_school_id = v_school_id/i);
-  assert.match(source, /history\.target_school_id = v_school_id/i);
-  assert.match(source, /history\.record_type = 'fee'/i);
-  assert.match(source, /left join public\.profiles as student_profile/i);
-  assert.match(source, /left join public\.student_enrollments as source_enrollment/i);
-  assert.match(source, /source_enrollment\.student_name_snapshot/i);
-  assert.match(source, /source_enrollment\.student_code_snapshot/i);
-  assert.doesNotMatch(source, /\n\s+join public\.profiles as student_profile/i);
   assert.match(source, /revoke all on function public\.get_school_transfer_fee_history\(\)[\s\S]*?from public, anon, authenticated/i);
+  assert.doesNotMatch(source, /grant execute on function public\.get_school_transfer_fee_history/i);
+  const studentHistorySql = await readFile(
+    path.join(projectRoot, "supabase", "student_transfer_acceptance.sql"),
+    "utf8",
+  );
+  assert.match(studentHistorySql, /grant execute on function public\.get_my_transfer_history\(\) to authenticated/i);
 });
 test("parent record renderers escape database text before inserting HTML", async () => {
   const helpers = await loadParentRecordHelpers();
