@@ -26,7 +26,18 @@ async function loadBookCatalog() {
 
     if (error) throw error;
 
-    allCatalogBooks = books || [];
+    const { data: borrowings, error: borrowingsError } =
+      await window.supabaseClient
+        .from("book_borrowings")
+        .select("book_id")
+        .eq("status", "borrowed");
+
+    if (borrowingsError) throw borrowingsError;
+
+    allCatalogBooks = (books || []).map((book) => ({
+      ...book,
+      available_copies: getAvailableBookCopies(book, borrowings || []),
+    }));
     renderBookCards(allCatalogBooks);
   } catch (err) {
     console.error("Error loading catalog:", err);
@@ -34,6 +45,14 @@ async function loadBookCatalog() {
       showToast("Failed to load book catalog.", "error");
     }
   }
+}
+
+function getAvailableBookCopies(book, activeBorrowings) {
+  const totalCopies = Number(book.total_copies) || 0;
+  const borrowedCopies = activeBorrowings.filter(
+    (borrowing) => borrowing.book_id === book.id,
+  ).length;
+  return Math.max(0, totalCopies - borrowedCopies);
 }
 
 function renderBookCards(booksToRender) {
@@ -60,7 +79,7 @@ function renderBookCards(booksToRender) {
       book.cover_image_url ||
       "https://cdn-icons-png.flaticon.com/512/29/29302.png";
     const departmentName = book.departments ? book.departments.name : "-";
-    const availableCopies = book.available_copies || 0;
+    const availableCopies = Number(book.available_copies) || 0;
 
     const isAvailable = availableCopies > 0;
     const badgeClass = isAvailable ? "badge-available" : "badge-unavailable";
@@ -151,9 +170,16 @@ async function openStudentBookHistoryModal(bookId) {
     } = await window.supabaseClient.auth.getUser();
     if (authError || !user) throw new Error("Not authenticated");
 
+    const { data: profile, error: profileError } = await window.supabaseClient
+      .from("profiles")
+      .select("id, full_name, email, photo_url, role, students(student_id), teachers(staff_id)")
+      .eq("id", user.id)
+      .single();
+    if (profileError) throw profileError;
+
     const { data: history, error } = await window.supabaseClient
       .from("book_borrowings")
-      .select(`*, books ( title, book_code )`)
+      .select(`*, books ( title, book_code, description )`)
       .eq("book_id", bookId)
       .eq("borrower_id", user.id)
       .order("created_at", { ascending: false });
@@ -162,29 +188,51 @@ async function openStudentBookHistoryModal(bookId) {
 
     if (!historyContainer) return;
 
-    if (!history || history.length === 0) {
-      historyContainer.innerHTML = `
-      <div class="empty-state-card">
-  <i class="fa-solid fa-book-open-reader empty-icon"></i>
+    const book =
+      allCatalogBooks.find((item) => item.id === bookId) ||
+      history?.[0]?.books ||
+      {};
+    const student = Array.isArray(profile.students)
+      ? profile.students[0]
+      : profile.students;
+    const borrowerIdentity = getBorrowerIdentity(profile, student);
+    const borrowerName = profile.full_name || profile.email || "User";
+    const photoUrl = getSafeProfilePhotoUrl(profile.photo_url);
+    const bookDetails = `
+      <section class="book-history-book">
+        <h4>${escapeHtml(book.title || "Book details")}</h4>
+        ${book?.book_code ? `<p><strong>Book ID:</strong> ${escapeHtml(book.book_code)}</p>` : ""}
+        <p><strong>Description:</strong> ${escapeHtml(book.description || "No description available.")}</p>
+      </section>
+      <section class="book-history-borrower" aria-label="Borrower profile">
+        <img class="app-person-avatar" src="${escapeHtml(photoUrl)}" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='${escapeHtml(window.DEFAULT_PROFILE_AVATAR || "")}'" />
+        <span class="app-person-meta">
+          <strong>${escapeHtml(borrowerName)}</strong>
+          <small>${escapeHtml(profile.role || "User")}</small>
+          ${borrowerIdentity ? `<small>${escapeHtml(borrowerIdentity.label)}: ${escapeHtml(borrowerIdentity.value)}</small>` : ""}
+        </span>
+      </section>
+      <h4 class="book-history-section-title">Borrowing History</h4>
+    `;
 
-  <p>You have no borrowing history for this book yet.</p>
-</div>
-      `;
+    if (!history || history.length === 0) {
+      historyContainer.innerHTML = `${bookDetails}
+        <div class="empty-state-card">
+          <i class="fa-solid fa-book-open-reader empty-icon"></i>
+          <p>You have no borrowing history for this book yet.</p>
+        </div>`;
       return;
     }
 
-    historyContainer.innerHTML = history
-      .map(
-        (record) => `
+    historyContainer.innerHTML = `${bookDetails}${history
+      .map((record) => `
      <div class="small-card" style="background: #f8fafc; padding: 1rem; margin-bottom: 0.75rem; border: 2px solid rgb(219, 215, 215);">
         <p style="margin: 0 0 0.5rem 0;"><strong>Borrowed Date:</strong> ${formatDate(record.borrow_date)}</p>
         <p style="margin: 0 0 0.5rem 0;"><strong>Due Date:</strong> ${formatDate(record.due_date)}</p>
         <p style="margin: 0 0 0.5rem 0;"><strong>Return Date:</strong> ${record.return_date ? formatDate(record.return_date) : "Not returned yet"}</p>
         <p style="margin: 0;"><strong>Status:</strong> <span class="status-${escapeHtml(record.status)}">${escapeHtml(record.status)}</span></p>
       </div>
-    `,
-      )
-      .join("");
+    `).join("")}`;
   } catch (err) {
     console.error("Error loading student history:", err);
     if (historyContainer) {
@@ -194,6 +242,37 @@ async function openStudentBookHistoryModal(bookId) {
       showToast("Failed to load history.", "error");
     }
   }
+}
+
+function getBorrowerIdentity(profile, student = null) {
+  const role = String(profile?.role || "").toLowerCase();
+  const teacher = Array.isArray(profile?.teachers)
+    ? profile.teachers[0]
+    : profile?.teachers;
+
+  if (role === "student" && student?.student_id) {
+    return { label: "Student ID", value: student.student_id };
+  }
+  if (role === "teacher" && teacher?.staff_id) {
+    return { label: "Staff ID", value: teacher.staff_id };
+  }
+  return null;
+}
+
+function getSafeProfilePhotoUrl(photoUrl) {
+  if (!photoUrl) return window.DEFAULT_PROFILE_AVATAR || "";
+  try {
+    const parsedPhotoUrl = new URL(photoUrl, window.location.href);
+    if (
+      ["https:", "http:"].includes(parsedPhotoUrl.protocol) ||
+      photoUrl === window.DEFAULT_PROFILE_AVATAR
+    ) {
+      return parsedPhotoUrl.href;
+    }
+  } catch (error) {
+    console.warn("Ignoring invalid profile photo URL:", error);
+  }
+  return window.DEFAULT_PROFILE_AVATAR || "";
 }
 
 

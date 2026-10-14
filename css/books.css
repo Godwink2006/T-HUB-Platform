@@ -323,6 +323,45 @@ body {
   overflow-y: auto;
 }
 
+.book-history-book {
+  border-bottom: 1px solid #dce4ee;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+.book-history-book h4,
+.book-history-section-title {
+  color: #1e293b;
+  margin: 0 0 0.65rem;
+}
+
+.book-history-book p {
+  color: #475569;
+  line-height: 1.5;
+  margin: 0.4rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.book-history-borrower {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #dce4ee;
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem;
+}
+
+.book-history-borrower .app-person-avatar {
+  height: 48px;
+  width: 48px;
+  flex-basis: 48px;
+}
+
+.book-history-section-title {
+  margin-top: 1rem;
+}
+
 .status-borrowed {
   color: #d97706;
   background: #fef3c7;

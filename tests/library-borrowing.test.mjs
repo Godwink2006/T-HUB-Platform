@@ -70,3 +70,90 @@ test("borrower photo URLs only allow HTTP(S) sources and otherwise use the defau
   assert.equal(context.getPhoto("javascript:alert(1)"), "default-avatar.svg");
   assert.equal(context.getPhoto(null), "default-avatar.svg");
 });
+
+test("book catalog availability is derived from total copies minus active borrowings", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "books.js"), "utf8");
+  const functionSource = source.match(
+    /function getAvailableBookCopies\(book, activeBorrowings\) \{[\s\S]*?\n\}/,
+  )?.[0];
+  assert.ok(functionSource, "book availability calculator exists");
+
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.getAvailable = getAvailableBookCopies;`, context);
+
+  const book = { id: "book-1", total_copies: 3, available_copies: 2 };
+  const borrowings = [
+    { book_id: "book-1" },
+    { book_id: "book-1" },
+    { book_id: "book-1" },
+    { book_id: "book-2" },
+  ];
+  assert.equal(context.getAvailable(book, borrowings), 0);
+  assert.equal(context.getAvailable({ ...book, total_copies: 5 }, borrowings), 2);
+  assert.equal(context.getAvailable({ ...book, total_copies: 1 }, borrowings), 0);
+});
+
+test("user book history loads book description and borrower profile details", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "books.js"), "utf8");
+  assert.match(source, /\.from\("profiles"\)[\s\S]{0,200}photo_url, role, students\(student_id\), teachers\(staff_id\)/);
+  assert.match(source, /\.select\(`\*, books \( title, book_code, description \)`\)/);
+  assert.match(source, /book\.description/);
+  assert.match(source, /profile\.role/);
+  assert.match(source, /function getBorrowerIdentity\(profile, student = null\)/);
+  assert.match(source, /role === "student" && student\?\.student_id/);
+  assert.match(source, /role === "teacher" && teacher\?\.staff_id/);
+  assert.doesNotMatch(source, /Profile ID/);
+  assert.match(source, /class="app-person-avatar"/);
+  assert.match(source, /\.eq\("borrower_id", user\.id\)/);
+});
+
+test("borrower history identifies students and teachers with their school IDs only", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "books.js"), "utf8");
+  const functionSource = source.match(
+    /function getBorrowerIdentity\(profile, student = null\) \{[\s\S]*?\n\}/,
+  )?.[0];
+  assert.ok(functionSource, "role-specific borrower identity helper exists");
+
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.getIdentity = getBorrowerIdentity;`, context);
+
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(context.getIdentity(
+      { role: "student" },
+      { student_id: "ST-102" },
+    ))),
+    { label: "Student ID", value: "ST-102" },
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(context.getIdentity(
+      { role: "teacher", teachers: { staff_id: "T-014" } },
+    ))),
+    { label: "Staff ID", value: "T-014" },
+  );
+  assert.equal(context.getIdentity({ role: "admin", id: "raw-profile-uuid" }), null);
+});
+
+test("user profile photos only accept HTTP(S) URLs or the trusted default avatar", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "books.js"), "utf8");
+  const functionSource = source.match(
+    /function getSafeProfilePhotoUrl\(photoUrl\) \{[\s\S]*?\n\}/,
+  )?.[0];
+  assert.ok(functionSource, "safe profile photo helper exists");
+
+  const context = vm.createContext({
+    URL,
+    window: {
+      location: { href: "https://school.example.test/html/books.html" },
+      DEFAULT_PROFILE_AVATAR: "data:image/svg+xml,default",
+    },
+    console: { warn() {} },
+  });
+  vm.runInContext(
+    `${functionSource}\nglobalThis.getPhoto = getSafeProfilePhotoUrl;`,
+    context,
+  );
+
+  assert.equal(context.getPhoto("https://cdn.example.test/avatar.jpg"), "https://cdn.example.test/avatar.jpg");
+  assert.equal(context.getPhoto("javascript:alert(1)"), "data:image/svg+xml,default");
+  assert.equal(context.getPhoto(context.window.DEFAULT_PROFILE_AVATAR), "data:image/svg+xml,default");
+});

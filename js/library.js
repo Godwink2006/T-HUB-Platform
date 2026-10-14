@@ -554,7 +554,18 @@ async function openEditBookModal(bookId) {
     if (error) throw error;
     if (!book) throw new Error("Book not found.");
 
-    currentOriginalBookData = book;
+    const { data: activeBorrowings, error: borrowingsError } =
+      await window.supabaseClient
+        .from("book_borrowings")
+        .select("id")
+        .eq("book_id", bookId)
+        .eq("status", "borrowed");
+    if (borrowingsError) throw borrowingsError;
+
+    currentOriginalBookData = {
+      ...book,
+      active_borrowed_count: (activeBorrowings || []).length,
+    };
 
     document.getElementById("editBookId").value = book.id;
     document.getElementById("editBookCode").textContent = book.book_code || "-";
@@ -706,9 +717,7 @@ async function handleUpdateBook() {
 
 
     const currentBorrowed =
-      currentOriginalBookData && currentOriginalBookData.active_borrowed_count
-        ? currentOriginalBookData.active_borrowed_count
-        : 0;
+      Number(currentOriginalBookData?.active_borrowed_count) || 0;
 
     const newTotal = parseInt(copies_total, 10);
 
