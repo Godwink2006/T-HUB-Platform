@@ -237,14 +237,16 @@ body.parent-portal {
   display: grid;
   gap: 10px;
 }
-.parent-link-row {
+.parent-portal .parent-link-row {
   align-items: center;
   border: 2px solid #cbd5e1;
+  border-radius: 9px;
   display: flex;
   gap: 16px;
   justify-content: space-between;
   padding: 14px;
 }
+.parent-portal .parent-link-row button,
 .parent-link-row strong,
 .parent-link-row span {
   display: block;
@@ -313,11 +315,7 @@ body.parent-portal {
   font-weight: 600;
   padding: 10px 14px;
 }
-.parent-unlink-cancel {
-  background: #1f2937;
-  border: 2px solid #1f2937;
-  color: #fff;
-}
+.parent-unlink-cancel { background: #1f2937; border: 2px solid #1f2937; color: #fff; }
 .parent-unlink-cancel:hover {
   background: #111827;
   border-color: #111827;
