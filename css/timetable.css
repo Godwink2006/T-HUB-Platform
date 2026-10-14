@@ -604,11 +604,13 @@ tr {
   }
 
   .topbar {
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    gap: 10px 12px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
     align-items: center !important;
     margin-bottom: 20px;
+    width: 100%;
   }
 
   .topbar h1 {
@@ -628,27 +630,25 @@ tr {
     flex-direction: row !important;
     align-items: center !important;
     gap: 10px !important;
-    width: 100% !important;
-    margin-left: 0 !important;
+    width: auto !important;
+    margin-left: auto !important;
   }
 
   .back-academics-btn {
-    grid-column: 1;
     width: auto !important;
     height: 40px !important;
     padding: 0 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     font-size: 13px;
     white-space: nowrap;
     border-radius: 10px;
   }
 
-  .add-timetables-btn,
-  .add-lessons-btn {
-    grid-column: 2;
-    flex: 1 !important;
+  .add-timetables-btn {
+    width: auto !important;
     height: 40px !important;
     padding: 0 16px;
     display: inline-flex;
@@ -658,6 +658,13 @@ tr {
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  .add-lessons-btn {
+    height: 40px !important;
+    padding: 0 12px;
+    font-size: 13px;
     border-radius: 10px;
   }
 

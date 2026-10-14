@@ -6,6 +6,13 @@ function hideModal(modal) {
   modal.classList.remove("active");
 }
 
+function getTeacherStaffId(profile) {
+  const teacherDetails = Array.isArray(profile?.teachers)
+    ? profile.teachers[0]
+    : profile?.teachers;
+  return teacherDetails?.staff_id || "No ID found";
+}
+
 const DRAFT_KEY = "draft_timetable_lessons";
 
 function saveDraftToStorage(lessons) {
@@ -293,13 +300,6 @@ function clearDraftStorage() {
       html += `<option value="${escapeHTML(item[valueKey])}">${escapeHTML(labelFormatter(item))}</option>`;
     });
     select.innerHTML = html;
-  }
-
-  function getTeacherStaffId(profile) {
-    const teacherDetails = Array.isArray(profile?.teachers)
-      ? profile.teachers[0]
-      : profile?.teachers;
-    return teacherDetails?.staff_id || "No ID found";
   }
 
   function populatePeriodOptions(elementId, periods) {

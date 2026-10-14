@@ -27,11 +27,21 @@ test("view timetable loads and displays teacher staff IDs", () => {
     /teacher:profiles!teacher_id \( full_name, teachers\(staff_id\) \)/,
   );
   assert.match(timetableScript, /Staff ID: \$\{escapeHTML\(teacherStaffId\)\}/);
-  assert.match(timetableScript, /return teacherDetails\?\.staff_id \|\| "No ID found"/);
+  assert.match(
+    timetableScript,
+    /\r?\nfunction getTeacherStaffId\(profile\) \{[\s\S]*?return teacherDetails\?\.staff_id \|\| "No ID found";\r?\n\}/,
+  );
 });
 
 test("mobile timetable modals fit the viewport and scroll lesson tables horizontally", () => {
   assert.match(timetableStyles, /max-height: calc\(100dvh - 24px\)/);
   assert.match(timetableStyles, /\.timetable-table-card,[\s\S]*?overflow-x: auto/);
   assert.match(timetableStyles, /\.view-timetable-body[\s\S]*?overflow-x: hidden/);
+});
+
+test("mobile timetable header keeps Back left and Create Timetable right", () => {
+  assert.match(timetableStyles, /\.topbar \{[\s\S]*?justify-content: space-between !important/);
+  assert.match(timetableStyles, /\.top-right \{[\s\S]*?margin-left: auto !important/);
+  assert.match(timetableStyles, /\.back-academics-btn \{[\s\S]*?width: auto !important/);
+  assert.match(timetableStyles, /\.add-timetables-btn \{[\s\S]*?width: auto !important/);
 });
