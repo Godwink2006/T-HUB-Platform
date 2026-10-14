@@ -381,7 +381,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const { data: profile, error } = await supabaseClient
     .from("profiles")
-    .select("photo_url, role")
+    .select("photo_url")
     .eq("id", user.id)
     .single();
 
@@ -393,41 +393,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (profile && profile.photo_url) {
     avatarImg.src = profile.photo_url;
   }
-
-  const identifier = document.getElementById("profileAvatarIdentifier");
-  if (!identifier) return;
-
-  let identifierLabel = "Account";
-  let identifierValue = user.email || "";
-  if (profile.role === "student") {
-    const { data: student, error: studentError } = await supabaseClient
-      .from("students")
-      .select("student_id")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (studentError) {
-      console.error("Error fetching dashboard student ID:", studentError);
-    } else if (student?.student_id) {
-      identifierLabel = "Student ID";
-      identifierValue = student.student_id;
-    }
-  } else if (profile.role === "teacher") {
-    const { data: teacher, error: teacherError } = await supabaseClient
-      .from("teachers")
-      .select("staff_id")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (teacherError) {
-      console.error("Error fetching dashboard staff ID:", teacherError);
-    } else if (teacher?.staff_id) {
-      identifierLabel = "Staff ID";
-      identifierValue = teacher.staff_id;
-    }
-  }
-
-  identifier.textContent = identifierValue
-    ? `${identifierLabel}: ${identifierValue}`
-    : "";
 });
 
 async function loadDashboardStats(schoolId) {
