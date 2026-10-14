@@ -26,14 +26,18 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body class="finance-page">
     <div class="finances-container">
@@ -133,7 +137,13 @@
           </header>
 
           <section class="toolbar" aria-label="Filter payment records">
-            <input id="financeStudentSearch" type="search" placeholder="Search student name or ID…" aria-label="Search students by name or ID" autocomplete="off" />
+            <input
+              id="financeStudentSearch"
+              type="search"
+              placeholder="Search student name or ID…"
+              aria-label="Search students by name or ID"
+              autocomplete="off"
+            />
 
             <select id="financeTermFilter" aria-label="Filter by semester">
               <option value="all">All semesters</option>
@@ -147,7 +157,10 @@
               <option value="all">All academic years</option>
             </select>
 
-            <select id="financeStatusFilter" aria-label="Filter by payment status">
+            <select
+              id="financeStatusFilter"
+              aria-label="Filter by payment status"
+            >
               <option value="all">All statuses</option>
               <option value="Paid">Paid</option>
               <option value="Unpaid">Unpaid</option>
@@ -155,7 +168,11 @@
             </select>
           </section>
 
-          <section class="payments-table-card" tabindex="0" aria-label="Payment records table; scroll horizontally to see all columns">
+          <section
+            class="payments-table-card"
+            tabindex="0"
+            aria-label="Payment records table; scroll horizontally to see all columns"
+          >
             <table>
               <thead>
                 <tr>
@@ -170,7 +187,11 @@
               </thead>
 
               <tbody id="student-fees-tbody">
-                <tr><td colspan="7" class="payments-empty-state">Loading payment records…</td></tr>
+                <tr>
+                  <td colspan="7" class="payments-empty-state">
+                    Loading payment records…
+                  </td>
+                </tr>
               </tbody>
             </table>
           </section>
@@ -209,12 +230,9 @@
                 </div>
               </div>
 
-
               <div class="fee-allocation-section">
                 <h4>Allocate Payment to Fee Items</h4>
-                <div id="item-allocations-container">
-
-                </div>
+                <div id="item-allocations-container"></div>
                 <div class="allocation-total-display">
                   <strong>Total Payment: </strong
                   ><span id="calculated-total-payment">0.00</span>
@@ -253,7 +271,16 @@
             <div class="details-grid">
               <div class="details-item">
                 <label>Student</label>
-                <p id="modal-student-name">Loading...</p>
+                <div class="finance-modal-student">
+                  <img id="modal-student-photo" alt="" />
+                  <div>
+                    <p id="modal-student-name">Loading...</p>
+                    <span
+                      id="modal-student-id"
+                      class="finance-student-id"
+                    ></span>
+                  </div>
+                </div>
               </div>
 
               <div class="details-item">
@@ -262,7 +289,7 @@
               </div>
 
               <div class="details-item">
-                <label>Term</label>
+                <label>Semester</label>
                 <p id="modal-term">Loading...</p>
               </div>
 
@@ -282,9 +309,7 @@
                       <th>Amount</th>
                     </tr>
                   </thead>
-                  <tbody id="modal-fee-summary-tbody">
-
-                  </tbody>
+                  <tbody id="modal-fee-summary-tbody"></tbody>
                 </table>
               </div>
             </section>
@@ -300,9 +325,7 @@
                       <th>Payment Method</th>
                     </tr>
                   </thead>
-                  <tbody id="modal-payment-history-tbody">
-
-                  </tbody>
+                  <tbody id="modal-payment-history-tbody"></tbody>
                 </table>
               </div>
             </section>
@@ -325,6 +348,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/payment.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>

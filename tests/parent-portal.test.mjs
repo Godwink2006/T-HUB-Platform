@@ -97,6 +97,194 @@ test("finance filters match student search, term, class, academic year, and stat
   assert.equal(context.matches(row, { ...base, year: "year-25" }), false);
   assert.equal(context.matches(row, { ...base, status: "Paid" }), false);
 });
+test("finance maps transferred fee snapshots into read-only finance rows", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
+  const functionSource = source.match(/function mapTransferredFeeHistoryRecord\([\s\S]*?\) \{[\s\S]*?\n\}/)?.[0];
+  assert.ok(functionSource, "transfer fee history mapper exists");
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.map = mapTransferredFeeHistoryRecord;`, context);
+
+  const row = context.map({
+    source_record_id: "source-fee-1",
+    source_school_name: "Previous School",
+    student_id: "student-1",
+    student_name: "Transfer Student",
+    student_code: "ST-200",
+    fee_snapshot: {
+      id: "source-fee-1",
+      total_fees: 100,
+      total_paid: 60,
+      balance: 40,
+      status: "Partial",
+      history_class_id: "source-class-9",
+      history_class_name: "Grade 9",
+      history_academic_year_id: "source-year",
+      history_academic_year: "2025/2026",
+      history_term_id: "source-term",
+      history_term_name: "Term 2",
+    },
+  });
+
+  assert.equal(row.fee.total_fees, 100);
+  assert.equal(row.fee.total_paid, 60);
+  assert.equal(row.fee.balance, 40);
+  assert.equal(row.className, "Grade 9");
+  assert.equal(row.yearLabel, "2025/2026");
+  assert.equal(row.studentName, "Transfer Student");
+  assert.equal(row.studentCode, "ST-200");
+  assert.equal(row.sourceSchoolName, "Previous School");
+  assert.equal(row.isTransferHistory, true);
+  assert.equal(context.map({ fee_snapshot: [] }), null);
+});
+test("finance transferred fee mapper uses identity snapshots when RPC identity is blank", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
+  const functionSource = source.match(/function mapTransferredFeeHistoryRecord\([\s\S]*?\) \{[\s\S]*?\n\}/)?.[0];
+  assert.ok(functionSource, "transfer fee history mapper exists");
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.map = mapTransferredFeeHistoryRecord;`, context);
+
+  const row = context.map({
+    source_record_id: "source-fee-2",
+    student_name: "",
+    student_code: "",
+    fee_snapshot: {
+      id: "source-fee-2",
+      student_name_snapshot: "Snapshot Student",
+      student_code_snapshot: "OLD-200",
+    },
+  });
+
+  assert.equal(row.studentName, "Snapshot Student");
+  assert.equal(row.studentCode, "OLD-200");
+});
+test("finance maps profile name, photo, and student ID through the student relation", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
+  const functionSource = source.match(/function mapCurrentFinanceFeeRecords\([\s\S]*?\) \{[\s\S]*?\n\}/)?.[0];
+  assert.ok(functionSource, "current fee row mapper exists");
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.map = mapCurrentFinanceFeeRecords;`, context);
+
+  const rows = context.map(
+    [{ id: "fee-1", student_id: "student-a", status: "Paid" }],
+    {
+      "student-a": {
+        student_id: "ST-102",
+        profiles: { full_name: "John Kenneh", photo_url: "/student.jpg" },
+      },
+    },
+    {},
+  );
+
+  assert.equal(rows[0].studentName, "John Kenneh");
+  assert.equal(rows[0].studentCode, "ST-102");
+  assert.equal(rows[0].studentPhoto, "/student.jpg");
+});
+test("finance uses enrollment snapshots as a fallback for current fee rows", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
+  const functionSource = source.match(/function mapCurrentFinanceFeeRecords\([\s\S]*?\) \{[\s\S]*?\n\}/)?.[0];
+  assert.ok(functionSource, "current fee row mapper exists");
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.map = mapCurrentFinanceFeeRecords;`, context);
+
+  const rows = context.map(
+    [{ id: "fee-1", student_id: "transferred-student" }],
+    {},
+    { "transferred-student": { student_name_snapshot: "Snapshot Student", student_code_snapshot: "ST-200", student_photo_snapshot: "/snapshot.jpg" } },
+    {},
+  );
+
+  assert.equal(rows[0].studentName, "Snapshot Student");
+  assert.equal(rows[0].studentCode, "ST-200");
+  assert.equal(rows[0].studentPhoto, "/snapshot.jpg");
+});
+test("finance details modal resolves transfer identity and photo fallbacks", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
+  const functionSource = source.match(/function resolveFinanceStudentIdentity\([\s\S]*?\n\}/)?.[0];
+  assert.ok(functionSource, "modal identity resolver exists");
+  const context = vm.createContext({});
+  vm.runInContext(`${functionSource}\nglobalThis.resolve = resolveFinanceStudentIdentity;`, context);
+
+  assert.deepEqual(
+    { ...context.resolve(null, {
+      student_name_snapshot: "Snapshot Student",
+      student_code_snapshot: "ST-200",
+      student_photo_snapshot: "/snapshot.jpg",
+    }, null) },
+    { name: "Snapshot Student", code: "ST-200", photo: "/snapshot.jpg" },
+  );
+  assert.deepEqual(
+    { ...context.resolve({
+      student_id: "ST-300",
+      profiles: { full_name: "Current Name", photo_url: "/current.jpg" },
+    }, null, { studentName: "Old Name", studentCode: "OLD-1", studentPhoto: "/old.jpg" }) },
+    { name: "Current Name", code: "ST-300", photo: "/current.jpg" },
+  );
+});
+
+test("finance modal scroll lock remains until every Finance modal closes", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "payment.js"), "utf8");
+  const functionSource = source.match(
+    /function setFinanceModalVisibility\(modal, isVisible\) \{[\s\S]*?\n\}/,
+  )?.[0];
+  assert.ok(functionSource, "Finance modal visibility helper exists");
+
+  const modals = {
+    addRecordPaymentModal: { style: { display: "none" } },
+    viewPaymentModal: { style: { display: "none" } },
+  };
+  let bodyLocked = false;
+  const context = vm.createContext({
+    document: { getElementById: (id) => modals[id] },
+    lockBodyScroll: () => { bodyLocked = true; },
+    unLockBodyScroll: () => { bodyLocked = false; },
+  });
+  vm.runInContext(
+    `${functionSource}\nglobalThis.setVisibility = setFinanceModalVisibility;`,
+    context,
+  );
+
+  context.setVisibility(modals.addRecordPaymentModal, true);
+  assert.equal(bodyLocked, true);
+  context.setVisibility(modals.viewPaymentModal, true);
+  context.setVisibility(modals.addRecordPaymentModal, false);
+  assert.equal(bodyLocked, true);
+  context.setVisibility(modals.viewPaymentModal, false);
+  assert.equal(bodyLocked, false);
+});
+
+test("transfer acceptance and backfill preserve receiving-school student identity", async () => {
+  const acceptanceSql = await readFile(
+    path.join(projectRoot, "supabase", "student_transfer_acceptance.sql"),
+    "utf8",
+  );
+  const backfillSql = await readFile(
+    path.join(projectRoot, "supabase", "finance_transfer_student_identity_backfill.sql"),
+    "utf8",
+  );
+
+  assert.match(acceptanceSql, /student_name_snapshot, student_code_snapshot, student_photo_snapshot/i);
+  assert.match(acceptanceSql, /v_student_name, pg_catalog\.btrim\(p_target_student_code\)/i);
+  assert.match(backfillSql, /add column if not exists student_photo_snapshot/i);
+  assert.match(backfillSql, /target_enrollment\.school_id = transfer_identity\.target_school_id/i);
+  assert.match(backfillSql, /student_name_snapshot = coalesce/i);
+  assert.match(backfillSql, /student_code_snapshot = coalesce/i);
+  assert.match(backfillSql, /student_photo_snapshot = coalesce/i);
+});
+test("finance transfer fee RPC is restricted to active staff in the receiving school", async () => {
+  const source = await readFile(path.join(projectRoot, "supabase", "finance_transferred_fee_history.sql"), "utf8");
+  assert.match(source, /security definer[\s\S]*?set search_path = ''/i);
+  assert.match(source, /v_role not in \('admin', 'accountant'\)/i);
+  assert.match(source, /v_status <> 'active'/i);
+  assert.match(source, /transfer\.target_school_id = v_school_id/i);
+  assert.match(source, /history\.target_school_id = v_school_id/i);
+  assert.match(source, /history\.record_type = 'fee'/i);
+  assert.match(source, /left join public\.profiles as student_profile/i);
+  assert.match(source, /left join public\.student_enrollments as source_enrollment/i);
+  assert.match(source, /source_enrollment\.student_name_snapshot/i);
+  assert.match(source, /source_enrollment\.student_code_snapshot/i);
+  assert.doesNotMatch(source, /\n\s+join public\.profiles as student_profile/i);
+  assert.match(source, /revoke all on function public\.get_school_transfer_fee_history\(\)[\s\S]*?from public, anon, authenticated/i);
+});
 test("parent record renderers escape database text before inserting HTML", async () => {
   const helpers = await loadParentRecordHelpers();
   assert.equal(helpers.parentEscape(`<img src=x onerror="alert(1)">`), "&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
@@ -224,4 +412,29 @@ test("parent dashboard and record header request and display linked student phot
   assert.match(recordsHtml, /id="recordStudentPhoto"/);
   assert.match(dashboard, /parsedPhotoUrl\.protocol/);
   assert.match(records, /parsedPhotoUrl\.protocol/);
+});
+
+test("finance table uses thin cell grid borders and all finance buttons round on mobile", async () => {
+  const css = await readFile(path.join(projectRoot, "css", "payment.css"), "utf8");
+  assert.match(
+    css,
+    /\.finance-page \.payments-table-card tbody tr > td\s*\{\s*border:\s*1px solid rgb\(219,\s*215,\s*215\);/,
+  );
+  assert.match(
+    css,
+    /\.finance-page \.payments-table-card th\s*\{\s*border:\s*1px solid rgb\(219,\s*215,\s*215\);/,
+  );
+  assert.match(
+    css,
+    /\.finance-page \.payments-table-card table\s*\{\s*border-collapse:\s*collapse;/,
+  );
+  const mobileStyles = css.slice(css.lastIndexOf("@media screen and (max-width: 768px)"));
+  assert.match(
+    mobileStyles,
+    /\.finance-page \.finances-container button\s*\{\s*border-radius:\s*10px;/,
+  );
+  assert.match(
+    mobileStyles,
+    /\.finance-page \.recordPayment-modal \.form-group input,[\s\S]*?\.finance-page \.recordPayment-modal \.item-payment-input\s*\{\s*border-radius:\s*10px;/,
+  );
 });

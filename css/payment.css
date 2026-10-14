@@ -40,7 +40,6 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
 }
 
 th {
@@ -53,10 +52,6 @@ th {
 
 td {
   padding: 18px;
-}
-
-tr {
-  border: 2px solid rgb(219, 215, 215);
 }
 
 .status {
@@ -323,7 +318,7 @@ tr {
     max-height: 85vh;
     overflow-y: auto;
     overflow-x: hidden;
-    border-radius: 12px;
+    border-radius: 10px;
     background: #ffff;
   }
 
@@ -361,7 +356,6 @@ tr {
   .toolbar input,
   .toolbar select {
     height: 40px;
-    border: 1.5px solid rgb(219, 215, 215);
     padding: 0 8px;
     font-size: 12px;
     flex: 1;
@@ -375,26 +369,6 @@ tr {
     width: 100%;
   }
 
-  table {
-    min-width: 500px;
-  }
-
-  thead {
-    border: 1.5px solid rgb(219, 215, 215);
-  }
-
-  th,
-  td {
-    padding: 12px 14px !important;
-    font-size: 14px !important;
-    border: 1.5px solid rgb(219, 215, 215);
-    white-space: nowrap;
-  }
-
-  tr {
-    border: 1.5px solid rgb(219, 215, 215);
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -403,15 +377,6 @@ tr {
   .form-group label {
     margin-bottom: 4px;
     font-size: 12px;
-  }
-
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    padding: 10px;
-    border: 1.5px solid rgb(219, 215, 215);
-    font-size: 13px;
-    border-radius: 10px;
   }
 
   .payments-main-content {
@@ -516,7 +481,6 @@ tr {
   margin-top: 5px;
 }
 
-
 body {
   color: #172033;
   background: #f4f7fb;
@@ -568,7 +532,7 @@ body {
   margin: 0 0 20px;
   padding: 16px;
   border: 1px solid #e5eaf2;
-  border-radius: 16px;
+  border-radius: 10px;
   background: #ffffff;
   box-shadow: 0 5px 18px rgba(15, 23, 42, 0.035);
 }
@@ -576,10 +540,11 @@ body {
 .toolbar input,
 .toolbar select {
   height: 44px;
-  border: 1px solid #dbe3ee;
   border-radius: 10px;
   color: #334155;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .toolbar input {
@@ -598,14 +563,11 @@ body {
 .payments-table-card,
 .payment-table-card {
   overflow: hidden;
-  border: 1px solid #e5eaf2;
-  border-radius: 16px;
   background: #ffffff;
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
 }
 
-.payments-table-card table,
-.payment-table-card table {
+.payments-table-card table {
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -619,28 +581,12 @@ body {
 .payments-table-card th,
 .payment-table-card th {
   padding: 15px 18px;
-  border: 0;
-  border-bottom: 1px solid #e8edf4;
   color: #64748b;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.065em;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-.payments-table-card td,
-.payment-table-card td {
-  padding: 16px 18px;
-  border: 0;
-  border-bottom: 1px solid #eef2f7;
-  color: #334155;
-  font-size: 14px;
-}
-
-.payments-table-card tbody tr:last-child td,
-.payment-table-card tbody tr:last-child td {
-  border-bottom: 0;
 }
 
 .payments-table-card tbody tr:hover,
@@ -683,7 +629,9 @@ body {
   border-radius: 10px;
   background: #eff6ff;
   color: #2563eb;
-  transition: transform 150ms ease, background 150ms ease;
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
 }
 
 .payments-actions-btn:hover {
@@ -757,8 +705,7 @@ body {
 .form-group select,
 .form-group textarea {
   min-height: 44px;
-  border: 1px solid #dbe3ee;
-  border-radius: 10px;
+  border: 2px solid rgb(219, 215, 215);
   color: #1e293b;
 }
 
@@ -802,7 +749,9 @@ body {
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  transition: transform 150ms ease, background 150ms ease;
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
 }
 
 .cancel-btn {
@@ -834,7 +783,7 @@ body {
 
   .toolbar {
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 10px;
   }
 
   .toolbar input {
@@ -843,17 +792,7 @@ body {
 
   .payments-table-card,
   .payment-table-card {
-    border-radius: 14px;
-  }
-
-  .payments-table-card th,
-  .payments-table-card td,
-  .payment-table-card th,
-  .payment-table-card td {
-    padding: 12px 14px !important;
-    border: 0;
-    border-bottom: 1px solid #eef2f7;
-    font-size: 13px !important;
+    border-radius: 10px;
   }
 
   .recordPayment-modal,
@@ -864,7 +803,7 @@ body {
   .recordPayment-modal-content,
   .view-payment-modal-content {
     max-height: 88vh;
-    border-radius: 16px;
+    border-radius: 10px;
   }
 
   .recordPayment-modal-body,
@@ -877,6 +816,22 @@ body {
     gap: 12px;
     padding: 12px;
   }
+}
+
+tr {
+  border: 2px solid rgb(219, 215, 215);
+}
+
+.finance-page .payments-table-card tbody tr > td {
+  border: 1px solid rgb(219, 215, 215);
+}
+
+.finance-page .payments-table-card th {
+  border: 1px solid rgb(219, 215, 215);
+}
+
+.finance-page .payments-table-card table {
+  border-collapse: collapse;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -917,7 +872,6 @@ body {
 }
 
 .finance-page .payments-table-card {
-  border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
   box-shadow: none;
 }
@@ -940,7 +894,7 @@ body {
   .finance-page .toolbar {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .finance-page .toolbar input {
@@ -951,16 +905,12 @@ body {
   .finance-page .toolbar select {
     width: 100%;
     min-width: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 13px;
   }
 
-  .finance-page .payments-table-card {
-    border-radius: 12px;
-  }
-
   .finance-page .payments-actions-btn {
-    border-radius: 6px;
+    border-radius: 10px;
   }
 }
 
@@ -997,9 +947,63 @@ body {
   font-size: 0.92em;
 }
 
+.finance-page .finance-student-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.finance-page .finance-student-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 2.25rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.finance-page .finance-student-details {
+  min-width: 0;
+}
+
+.finance-page .finance-modal-student {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.finance-page .finance-modal-student img {
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.finance-page .finance-modal-student p {
+  margin: 0;
+}
+
+.finance-page #modal-student-id {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.finance-page .payments-history-label,
+.finance-page .payments-history-readonly {
+  display: block;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.finance-page .payments-history-readonly {
+  white-space: nowrap;
+}
+
 .finance-page .recordPayment-modal-content,
 .finance-page .view-payment-modal-content,
-.finance-page .payment-table-card,
+.payment-table-card,
 .finance-page .details-grid {
   border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
@@ -1031,6 +1035,17 @@ body {
 }
 
 @media screen and (max-width: 768px) {
+  .finance-page .finances-container button {
+    border-radius: 10px;
+  }
+
+  .finance-page .recordPayment-modal .form-group input,
+  .finance-page .recordPayment-modal .form-group select,
+  .finance-page .recordPayment-modal .form-group textarea,
+  .finance-page .recordPayment-modal .item-payment-input {
+    border-radius: 10px;
+  }
+
   .finance-page .payments-status-active,
   .finance-page .payments-status-inactive,
   .finance-page .payments-status-partial,
@@ -1041,13 +1056,13 @@ body {
   .finance-page .recordPayment-modal-header button,
   .finance-page #closeViewPaymentModal,
   .finance-page .cancel-btn {
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .finance-page .menu li a,
   .finance-page .menu li a:hover,
   .finance-page .menu li.active a {
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .finance-page .payments-table-card {

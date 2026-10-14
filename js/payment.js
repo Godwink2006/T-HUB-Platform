@@ -10,6 +10,26 @@ const cancelAddRecordPaymentModal = document.getElementById(
 
 let financeFeeRows = [];
 
+function setFinanceModalVisibility(modal, isVisible) {
+  if (!modal) return;
+
+  modal.style.display = isVisible ? "flex" : "none";
+
+  const hasOpenFinanceModal = [
+    "addRecordPaymentModal",
+    "viewPaymentModal",
+  ].some((modalId) => {
+    const financeModal = document.getElementById(modalId);
+    return financeModal?.style.display === "flex";
+  });
+
+  if (hasOpenFinanceModal) {
+    lockBodyScroll();
+  } else {
+    unLockBodyScroll();
+  }
+}
+
 
 const recordPaymentBtn = document.getElementById("addRecordPayment");
 const recordModal = document.getElementById("addRecordPaymentModal");
@@ -23,7 +43,7 @@ if (recordPaymentBtn) {
     }
 
 
-    if (recordModal) recordModal.style.display = "flex";
+    setFinanceModalVisibility(recordModal, true);
 
 
     loadFeeItemAllocations(activeFeeId);
@@ -31,16 +51,16 @@ if (recordPaymentBtn) {
 }
 
 cancelAddRecordPaymentModal.addEventListener("click", () => {
-  addRecordPaymentModal.style.display = "none";
+  setFinanceModalVisibility(addRecordPaymentModal, false);
 });
 
 closeAddRecordPaymentModal.addEventListener("click", () => {
-  addRecordPaymentModal.style.display = "none";
+  setFinanceModalVisibility(addRecordPaymentModal, false);
 });
 
 window.addEventListener("click", (e) => {
   if (e.target === addRecordPaymentModal) {
-    addRecordPaymentModal.style.display = "none";
+    setFinanceModalVisibility(addRecordPaymentModal, false);
   }
 });
 
@@ -51,29 +71,21 @@ const closeViewBtn = document.getElementById("closeViewBtn");
 
 viewButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    viewPaymentModal.style.display = "flex";
-
-    lockBodyScroll();
+    setFinanceModalVisibility(viewPaymentModal, true);
   });
 });
 
 closeViewPaymentModal.addEventListener("click", () => {
-  viewPaymentModal.style.display = "none";
-
-  unLockBodyScroll();
+  setFinanceModalVisibility(viewPaymentModal, false);
 });
 
 closeViewBtn.addEventListener("click", () => {
-  viewPaymentModal.style.display = "none";
-
-  unLockBodyScroll();
+  setFinanceModalVisibility(viewPaymentModal, false);
 });
 
 window.addEventListener("click", (e) => {
   if (e.target === viewPaymentModal) {
-    viewPaymentModal.style.display = "none";
-
-    unLockBodyScroll();
+    setFinanceModalVisibility(viewPaymentModal, false);
   }
 });
 
@@ -109,60 +121,73 @@ async function loadStudentFees() {
 
     if (feeError) throw feeError;
 
-    if (!fees || fees.length === 0) {
-      tbody.innerHTML =
-        '<tr><td colspan="7" style="text-align: center;">No fee records found.</td></tr>';
-      return;
+    const { data: transferFeeHistory, error: transferHistoryError } =
+      await supabaseClient.rpc("get_school_transfer_fee_history");
+    if (transferHistoryError) {
+      console.error(
+        "Could not load transferred fee history:",
+        transferHistoryError,
+      );
+      showToast(
+        `Transferred fee history could not be loaded: ${transferHistoryError.message}`,
+        "error",
+      );
     }
 
-
-    const studentIds = [...new Set(fees.map((fee) => fee.student_id).filter(Boolean))];
-    const [{ data: profiles, error: profileError }, { data: studentRecords, error: studentError }] = await Promise.all([
-      studentIds.length
-        ? supabaseClient.from("profiles").select("id, full_name").in("id", studentIds)
-        : Promise.resolve({ data: [], error: null }),
-      studentIds.length
-        ? supabaseClient.from("students").select("id, student_id").in("id", studentIds)
-        : Promise.resolve({ data: [], error: null }),
-    ]);
-    if (profileError) throw profileError;
+    const studentIds = [
+      ...new Set([
+        ...(fees || []).map((fee) => fee.student_id),
+        ...(transferFeeHistory || []).map((record) => record.student_id),
+      ].filter(Boolean)),
+    ];
+    const authContext = await window.getAuthContext();
+    const schoolId = authContext?.profile?.school_id;
+    const { data: studentRecords, error: studentError } = studentIds.length
+      ? await supabaseClient
+          .from("students")
+          .select("id, student_id, profiles(full_name, photo_url)")
+          .in("id", studentIds)
+      : { data: [], error: null };
     if (studentError) throw studentError;
 
-    const profileMap = {};
-    (profiles || []).forEach((profile) => { profileMap[profile.id] = profile.full_name || "Unknown Student"; });
-    const studentCodeMap = {};
-    (studentRecords || []).forEach((student) => { studentCodeMap[student.id] = student.student_id || ""; });
+    const { data: enrollmentSnapshots, error: enrollmentSnapshotError } =
+      studentIds.length && schoolId
+        ? await supabaseClient
+            .from("student_enrollments")
+            .select("student_id, student_name_snapshot, student_code_snapshot, student_photo_snapshot")
+            .eq("school_id", schoolId)
+            .in("student_id", studentIds)
+            .not("student_name_snapshot", "is", null)
+        : { data: [], error: null };
+    if (enrollmentSnapshotError) throw enrollmentSnapshotError;
 
-    const { data: enrollments, error: enrollmentError } = await supabaseClient
-      .from("student_enrollments")
-      .select("student_id, enrollment_status");
+    const studentMap = Object.fromEntries(
+      (studentRecords || []).map((student) => [student.id, student]),
+    );
+    const enrollmentIdentityMap = Object.fromEntries(
+      (enrollmentSnapshots || []).map((enrollment) => [
+        enrollment.student_id,
+        enrollment,
+      ]),
+    );
+    const transferIdentityMap = Object.fromEntries(
+      (transferFeeHistory || [])
+        .filter((record) => record.student_id)
+        .map((record) => [record.student_id, record]),
+    );
 
-    if (enrollmentError) throw enrollmentError;
-
-    const enrollmentStatusMap = {};
-    if (enrollments) {
-      enrollments.forEach((enrollment) => {
-        enrollmentStatusMap[enrollment.student_id] = enrollment.enrollment_status;
-      });
-    }
-
-    const activeFees = fees.filter((fee) => {
-      const status = enrollmentStatusMap[fee.student_id] || "";
-      const lowerStatus = status.toLowerCase();
-      return !lowerStatus.includes("graduated") && !lowerStatus.includes("transferred");
-    });
-
-    financeFeeRows = activeFees.map((fee) => ({
-      fee,
-      studentName: profileMap[fee.student_id] || "Unknown Student",
-      studentCode: studentCodeMap[fee.student_id] || "",
-      className: fee.classes?.name || "Unassigned",
-      classId: fee.class_id || fee.classes?.id || "",
-      yearLabel: fee.academic_years?.year_label || "Unassigned",
-      yearId: fee.academic_year_id || "",
-      termName: fee.terms?.name || "Unassigned",
-      termId: fee.term_id || "",
-    }));
+    const currentFeeRows = mapCurrentFinanceFeeRecords(
+      fees,
+      studentMap,
+      enrollmentIdentityMap,
+      transferIdentityMap,
+    );
+    const historicalFeeRows = (transferFeeHistory || [])
+      .map((record) =>
+        mapTransferredFeeHistoryRecord(record, studentMap, enrollmentIdentityMap),
+      )
+      .filter(Boolean);
+    financeFeeRows = [...currentFeeRows, ...historicalFeeRows];
 
     populateFinanceFilterOptions("financeTermFilter", financeFeeRows, "termId", "termName", "All semesters");
     populateFinanceFilterOptions("financeClassFilter", financeFeeRows, "classId", "className", "All classes");
@@ -172,6 +197,86 @@ async function loadStudentFees() {
     console.error("Error loading student fees:", err.message);
     tbody.innerHTML = '<tr><td colspan="7" class="payments-empty-state is-error">Payment records could not be loaded. Refresh the page or contact an administrator.</td></tr>';
   }
+}
+
+function mapCurrentFinanceFeeRecords(
+  fees,
+  studentMap,
+  enrollmentIdentityMap,
+  transferIdentityMap,
+) {
+  return (fees || []).map((fee) => ({
+    fee,
+    studentName:
+      studentMap[fee.student_id]?.profiles?.full_name ||
+      enrollmentIdentityMap[fee.student_id]?.student_name_snapshot ||
+      transferIdentityMap[fee.student_id]?.student_name ||
+      "Unknown Student",
+    studentCode:
+      studentMap[fee.student_id]?.student_id ||
+      enrollmentIdentityMap[fee.student_id]?.student_code_snapshot ||
+      transferIdentityMap[fee.student_id]?.student_code ||
+      "",
+    studentPhoto:
+      studentMap[fee.student_id]?.profiles?.photo_url ||
+      enrollmentIdentityMap[fee.student_id]?.student_photo_snapshot ||
+      "",
+    className: fee.classes?.name || "Unassigned",
+    classId: fee.class_id || fee.classes?.id || "",
+    yearLabel: fee.academic_years?.year_label || "Unassigned",
+    yearId: fee.academic_year_id || "",
+    termName: fee.terms?.name || "Unassigned",
+    termId: fee.term_id || "",
+  }));
+}
+
+function mapTransferredFeeHistoryRecord(
+  record,
+  studentMap = {},
+  enrollmentIdentityMap = {},
+) {
+  const snapshot = record?.fee_snapshot;
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return null;
+  }
+
+  const feeId = snapshot.id || record.source_record_id;
+  if (!feeId) return null;
+
+  return {
+    fee: {
+      id: feeId,
+      total_fees: snapshot.total_fees,
+      total_paid: snapshot.total_paid,
+      balance: snapshot.balance,
+      status: snapshot.status,
+      student_id: record.student_id,
+    },
+    studentName:
+      record.student_name ||
+      enrollmentIdentityMap[record.student_id]?.student_name_snapshot ||
+      snapshot.student_name_snapshot ||
+      snapshot.student_name ||
+      "Unknown Student",
+    studentCode:
+      record.student_code ||
+      enrollmentIdentityMap[record.student_id]?.student_code_snapshot ||
+      snapshot.student_code_snapshot ||
+      snapshot.student_code ||
+      "",
+    studentPhoto:
+      studentMap[record.student_id]?.profiles?.photo_url ||
+      enrollmentIdentityMap[record.student_id]?.student_photo_snapshot ||
+      "",
+    className: snapshot.history_class_name || "Unassigned",
+    classId: snapshot.history_class_id || "",
+    yearLabel: snapshot.history_academic_year || "Unassigned",
+    yearId: snapshot.history_academic_year_id || "",
+    termName: snapshot.history_term_name || "Unassigned",
+    termId: snapshot.history_term_id || "",
+    sourceSchoolName: record.source_school_name || "Previous school",
+    isTransferHistory: true,
+  };
 }
 
 function populateFinanceFilterOptions(selectId, rows, valueKey, labelKey, placeholder) {
@@ -212,20 +317,43 @@ function renderFinanceFeeRows() {
   const matches = financeFeeRows.filter((row) => matchesFinanceFeeFilters(row, filters));
   if (!matches.length) {
     const hasRecords = financeFeeRows.length > 0;
-    tbody.innerHTML = `<tr><td colspan="7" class="payments-empty-state">${hasRecords ? "No payment records match these filters." : "No active student fee records found."}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="payments-empty-state">${hasRecords ? "No payment records match these filters." : "No fee records found."}</td></tr>`;
     return;
   }
 
-  tbody.replaceChildren(...matches.map(({ fee, studentName, studentCode, className }) => {
+  tbody.replaceChildren(...matches.map(({ fee, studentName, studentCode, studentPhoto, className, sourceSchoolName, isTransferHistory }) => {
     const row = document.createElement("tr");
     const studentCell = document.createElement("td");
-    studentCell.appendChild(document.createTextNode(studentName));
+    const studentIdentity = document.createElement("div");
+    studentIdentity.className = "finance-student-identity";
+    const photo = document.createElement("img");
+    photo.className = "finance-student-avatar";
+    photo.alt = "";
+    photo.loading = "lazy";
+    photo.src = studentPhoto || window.DEFAULT_PROFILE_AVATAR || "";
+    photo.addEventListener("error", () => {
+      if (window.DEFAULT_PROFILE_AVATAR && photo.src !== window.DEFAULT_PROFILE_AVATAR) {
+        photo.src = window.DEFAULT_PROFILE_AVATAR;
+      }
+    }, { once: true });
+    studentIdentity.appendChild(photo);
+    const studentDetails = document.createElement("span");
+    studentDetails.className = "finance-student-details";
+    studentDetails.appendChild(document.createTextNode(studentName));
     if (studentCode) {
       const studentId = document.createElement("span");
       studentId.className = "finance-student-id";
       studentId.textContent = ` · ${studentCode}`;
-      studentCell.appendChild(studentId);
+      studentDetails.appendChild(studentId);
     }
+    studentIdentity.appendChild(studentDetails);
+    if (isTransferHistory) {
+      const historyLabel = document.createElement("small");
+      historyLabel.className = "payments-history-label";
+      historyLabel.textContent = `Transferred fee history · ${sourceSchoolName}`;
+      studentDetails.appendChild(historyLabel);
+    }
+    studentCell.appendChild(studentIdentity);
     row.appendChild(studentCell);
     const cells = [
       className,
@@ -246,13 +374,22 @@ function renderFinanceFeeRows() {
     statusCell.appendChild(status);
     row.appendChild(statusCell);
     const actionCell = document.createElement("td");
-    const viewButton = document.createElement("button");
-    viewButton.type = "button";
-    viewButton.className = "payments-actions-btn view";
-    viewButton.setAttribute("aria-label", `View payment details for ${studentName}`);
-    viewButton.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
-    viewButton.addEventListener("click", () => viewFeeDetails(fee.id));
-    actionCell.appendChild(viewButton);
+    if (isTransferHistory) {
+      const historyNotice = document.createElement("span");
+      historyNotice.className = "payments-history-readonly";
+      historyNotice.textContent = "Read-only";
+      historyNotice.title =
+        "This fee record is from the student's previous school and cannot be edited here.";
+      actionCell.appendChild(historyNotice);
+    } else {
+      const viewButton = document.createElement("button");
+      viewButton.type = "button";
+      viewButton.className = "payments-actions-btn view";
+      viewButton.setAttribute("aria-label", `View payment details for ${studentName}`);
+      viewButton.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
+      viewButton.addEventListener("click", () => viewFeeDetails(fee.id));
+      actionCell.appendChild(viewButton);
+    }
     row.appendChild(actionCell);
     return row;
   }));
@@ -278,7 +415,7 @@ async function viewFeeDetails(feeId) {
   if (!modal) return;
 
 
-  modal.style.display = "flex";
+  setFinanceModalVisibility(modal, true);
 
   try {
 
@@ -309,16 +446,38 @@ async function viewFeeDetails(feeId) {
     }
 
 
-    let studentName = "Unknown Student";
+    let studentRecord = null;
+    let enrollmentIdentity = null;
+    const cachedFeeRow = financeFeeRows.find((row) => row.fee?.id === feeId);
     if (fee.student_id) {
-      const { data: profile } = await supabaseClient
-        .from("profiles")
-        .select("full_name")
+      const { data, error: studentError } = await supabaseClient
+        .from("students")
+        .select("student_id, profiles(full_name, photo_url)")
         .eq("id", fee.student_id)
-        .single();
+        .maybeSingle();
+      if (studentError) throw studentError;
+      studentRecord = data;
 
-      if (profile) studentName = profile.full_name;
+      const authContext = await window.getAuthContext();
+      const schoolId = authContext?.profile?.school_id;
+      if (schoolId) {
+        const { data: snapshot, error: snapshotError } = await supabaseClient
+          .from("student_enrollments")
+          .select("student_name_snapshot, student_code_snapshot, student_photo_snapshot")
+          .eq("school_id", schoolId)
+          .eq("student_id", fee.student_id)
+          .not("student_name_snapshot", "is", null)
+          .limit(1)
+          .maybeSingle();
+        if (snapshotError) throw snapshotError;
+        enrollmentIdentity = snapshot;
+      }
     }
+    const studentIdentity = resolveFinanceStudentIdentity(
+      studentRecord,
+      enrollmentIdentity,
+      cachedFeeRow,
+    );
 
     const { data: transactions, error: txError } = await supabaseClient
       .from("payment_transactions")
@@ -339,7 +498,27 @@ async function viewFeeDetails(feeId) {
     if (txError) throw txError;
 
 
-    document.getElementById("modal-student-name").textContent = studentName;
+    document.getElementById("modal-student-name").textContent =
+      studentIdentity.name;
+    document.getElementById("modal-student-id").textContent =
+      studentIdentity.code ? `Student ID: ${studentIdentity.code}` : "";
+    const studentPhoto = document.getElementById("modal-student-photo");
+    if (studentPhoto) {
+      studentPhoto.src =
+        studentIdentity.photo || window.DEFAULT_PROFILE_AVATAR || "";
+      studentPhoto.addEventListener(
+        "error",
+        () => {
+          if (
+            window.DEFAULT_PROFILE_AVATAR &&
+            studentPhoto.src !== window.DEFAULT_PROFILE_AVATAR
+          ) {
+            studentPhoto.src = window.DEFAULT_PROFILE_AVATAR;
+          }
+        },
+        { once: true },
+      );
+    }
     document.getElementById("modal-academic-year").textContent =
       fee.academic_years?.year_label || "N/A";
     document.getElementById("modal-term").textContent =
@@ -424,13 +603,33 @@ async function viewFeeDetails(feeId) {
   }
 }
 
+function resolveFinanceStudentIdentity(studentRecord, enrollmentIdentity, cachedFeeRow) {
+  return {
+    name:
+      studentRecord?.profiles?.full_name ||
+      enrollmentIdentity?.student_name_snapshot ||
+      cachedFeeRow?.studentName ||
+      "Unknown Student",
+    code:
+      studentRecord?.student_id ||
+      enrollmentIdentity?.student_code_snapshot ||
+      cachedFeeRow?.studentCode ||
+      "",
+    photo:
+      studentRecord?.profiles?.photo_url ||
+      enrollmentIdentity?.student_photo_snapshot ||
+      cachedFeeRow?.studentPhoto ||
+      "",
+  };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("viewPaymentModal");
   const closeBtn = document.getElementById("closeViewPaymentModal");
   const closeViewBtn = document.getElementById("closeViewBtn");
 
   const closeModal = () => {
-    if (modal) modal.style.display = "none";
+    setFinanceModalVisibility(modal, false);
   };
 
   if (closeBtn) closeBtn.addEventListener("click", closeModal);
@@ -527,7 +726,7 @@ if (savePaymentBtn) {
       showToast("Itemized payment saved successfully!", "success");
 
       const recordModal = document.getElementById("addRecordPaymentModal");
-      if (recordModal) recordModal.style.display = "none";
+      setFinanceModalVisibility(recordModal, false);
       document.getElementById("recordPaymentForm")?.reset();
 
 

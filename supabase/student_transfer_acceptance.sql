@@ -12,7 +12,8 @@ ALTER TABLE public.student_transfers
 -- The student's live profile moves to the receiving school during acceptance.
 ALTER TABLE public.student_enrollments
   ADD COLUMN IF NOT EXISTS student_name_snapshot text,
-  ADD COLUMN IF NOT EXISTS student_code_snapshot text;
+  ADD COLUMN IF NOT EXISTS student_code_snapshot text,
+  ADD COLUMN IF NOT EXISTS student_photo_snapshot text;
 
 -- Backfill older completed transfers where the source enrollment still exists.
 UPDATE public.student_enrollments AS enrollment
@@ -33,6 +34,12 @@ SET student_name_snapshot = coalesce(
       (SELECT student.student_id
        FROM public.students AS student
        WHERE student.id = enrollment.student_id)
+    ),
+    student_photo_snapshot = coalesce(
+      enrollment.student_photo_snapshot,
+      (SELECT profile.photo_url
+       FROM public.profiles AS profile
+       WHERE profile.id = enrollment.student_id)
     )
 WHERE EXISTS (
     SELECT 1
@@ -43,7 +50,8 @@ WHERE EXISTS (
                AND transfer.source_school_id = enrollment.school_id))
   )
   AND (enrollment.student_name_snapshot IS NULL
-       OR enrollment.student_code_snapshot IS NULL);
+       OR enrollment.student_code_snapshot IS NULL
+       OR enrollment.student_photo_snapshot IS NULL);
 
 create or replace function public.preview_student_transfer(p_code_hash text)
 returns jsonb
@@ -443,10 +451,15 @@ begin
   end if;
 
   insert into public.student_enrollments (
-    school_id, student_id, class_id, academic_year_id, term_id, enrollment_status
+    school_id, student_id, class_id, academic_year_id, term_id, enrollment_status,
+    student_name_snapshot, student_code_snapshot, student_photo_snapshot
   ) values (
     v_school_id, v_transfer.source_student_id, p_target_class_id,
-    p_target_academic_year_id, p_target_term_id, 'Normal'
+    p_target_academic_year_id, p_target_term_id, 'Normal',
+    v_student_name, pg_catalog.btrim(p_target_student_code),
+    (select profile.photo_url
+     from public.profiles as profile
+     where profile.id = v_transfer.source_student_id)
   );
 
   insert into public.student_fees (
