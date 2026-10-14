@@ -25,7 +25,7 @@ test("grade creator identity renders name, profile photo, and staff or user ID s
   const source = await readFile(path.join(projectRoot, "js", "grades.js"), "utf8");
   const helperSource = [
     source.match(/function escapeGradeHtml\(value\) \{[\s\S]*?\n\}/)?.[0],
-    source.match(/function renderGradeCreator\(profile, userId\) \{[\s\S]*?\n\}/)?.[0],
+    source.match(/function renderGradeCreator\(profile\) \{[\s\S]*?\n\}/)?.[0],
   ];
   assert.ok(helperSource.every(Boolean), "creator identity helpers exist");
 
@@ -42,16 +42,20 @@ test("grade creator identity renders name, profile photo, and staff or user ID s
       photo_url: "/photo.png",
       teachers: { staff_id: "ST-001" },
     },
-    "profile-1",
   );
   assert.match(html, /&lt;Teacher&gt;/);
   assert.match(html, /src="\/photo\.png"/);
   assert.match(html, /Staff ID: ST-001/);
   assert.doesNotMatch(html, /<Teacher>/);
 
-  const fallback = context.render(null, "profile-2");
+  const fallback = context.render(null);
   assert.match(fallback, /Unknown/);
-  assert.match(fallback, /User ID: profile-2/);
+  assert.match(fallback, /No ID found/);
+
+  const admin = context.render(
+    { role: "admin", full_name: "School Admin", photo_url: "" },
+  );
+  assert.match(admin, /No ID found/);
 });
 
 test("enter and edit grade modals show the grade creator identity", async () => {

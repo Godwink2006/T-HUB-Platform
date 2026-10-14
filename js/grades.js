@@ -903,12 +903,12 @@ async function getCurrentGradeActorMarkup(client) {
   if (!user) throw new Error("No authenticated user found.");
 
   const profiles = await getGradeCreatorProfiles(client, [user.id]);
-  return renderGradeCreator(profiles.get(user.id), user.id);
+  return renderGradeCreator(profiles.get(user.id));
 }
 
-function renderGradeCreator(profile, userId) {
+function renderGradeCreator(profile) {
   if (!profile) {
-    return `<span class="grade-creator-cell"><span class="grade-creator-meta"><span class="grade-creator-name">Unknown</span><small>User ID: ${escapeGradeHtml(userId || "-")}</small></span></span>`;
+    return `<span class="grade-creator-cell"><span class="grade-creator-meta"><span class="grade-creator-name">Unknown</span><small>No ID found</small></span></span>`;
   }
 
   const teacherId = profile.teachers?.staff_id;
@@ -917,7 +917,7 @@ function renderGradeCreator(profile, userId) {
     ? `Staff ID: ${teacherId}`
     : studentId
       ? `Student ID: ${studentId}`
-      : `User ID: ${profile.id}`;
+      : "No ID found";
   const photo = profile.photo_url || window.DEFAULT_PROFILE_AVATAR || "";
 
   return `<span class="grade-creator-cell"><img class="app-person-avatar" src="${escapeGradeHtml(photo)}" alt="" loading="lazy" /><span class="grade-creator-meta"><span class="grade-creator-name">${escapeGradeHtml(profile.full_name || "Unknown")}</span><small>${escapeGradeHtml(label)}</small></span></span>`;
@@ -1171,7 +1171,6 @@ async function handleViewGrades(gradeId) {
       : "-";
     document.getElementById("viewModalCreator").innerHTML = renderGradeCreator(
       creatorProfiles.get(grade.created_by),
-      grade.created_by,
     );
 
 
@@ -1371,7 +1370,6 @@ async function handleEditGrades(gradeId) {
       : "-";
     document.getElementById("editModalCreator").innerHTML = renderGradeCreator(
       creatorProfiles.get(grade.created_by),
-      grade.created_by,
     );
 
     if (elMaxMarks) {

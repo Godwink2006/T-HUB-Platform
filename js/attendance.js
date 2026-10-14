@@ -970,21 +970,11 @@ function setupAttendanceFilterListeners() {
     "attendanceStatusFilter",
     "attendanceDateFilter",
   ];
-  const clearDateBtn = document.getElementById("clearDateFilterBtn");
-
   if (searchInput) searchInput.oninput = applyAttendanceFilters;
   filterIds.forEach((id) => {
     const select = document.getElementById(id);
     if (select) select.onchange = applyAttendanceFilters;
   });
-
-  const dateFilter = document.getElementById("attendanceDateFilter");
-  if (clearDateBtn && dateFilter) {
-    clearDateBtn.onclick = () => {
-      dateFilter.value = "";
-      applyAttendanceFilters();
-    };
-  }
 }
 
 function matchesAttendanceFilters(item, filters) {
@@ -1417,10 +1407,12 @@ async function openEditAttendanceModal(attendanceId) {
   const modal = document.getElementById("editAttendanceModal");
   const tbody = document.getElementById("editAttendanceRosterBody");
   const workflowSelect = document.getElementById("editWorkflowStatus");
+  const creatorElement = document.getElementById("editAttendanceCreator");
 
   if (!modal || !attendanceId) return;
   currentEditingAttendanceId = attendanceId;
 
+  if (creatorElement) creatorElement.textContent = "Loading...";
   if (tbody) {
     tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px;">Loading...</td></tr>`;
   }
@@ -1430,7 +1422,9 @@ async function openEditAttendanceModal(attendanceId) {
   try {
     const { data: attendance, error: parentErr } = await supabaseClient
       .from("attendance")
-      .select("status")
+      .select(
+        "status, profiles:teacher_id(full_name, photo_url, teachers(staff_id))",
+      )
       .eq("id", attendanceId)
       .single();
 
@@ -1438,6 +1432,25 @@ async function openEditAttendanceModal(attendanceId) {
       showToast("Error loading attendance record.", "error");
       closeModal(modal);
       return;
+    }
+
+    if (creatorElement) {
+      const creator = attendance.profiles;
+      const creatorId = creator?.teachers?.staff_id
+        ? `Staff ID: ${creator.teachers.staff_id}`
+        : "No ID found";
+      const creatorPhoto = escapeHtml(
+        getAttendancePhotoUrl(creator?.photo_url),
+      );
+      creatorElement.innerHTML = `
+        <span class="app-person-cell attendance-teacher-identity">
+          <img class="app-person-avatar" src="${creatorPhoto}" alt="" loading="lazy" />
+          <span class="app-person-meta">
+            <span>${escapeHtml(creator?.full_name || "Unknown")}</span>
+            <small class="app-person-id">${escapeHtml(creatorId)}</small>
+          </span>
+        </span>
+      `;
     }
 
     const initialWorkflowStatus = attendance.status || "drafted";

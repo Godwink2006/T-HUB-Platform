@@ -98,6 +98,20 @@ test("attendance history uses transfer photo snapshots and teacher staff identit
   assert.match(html, /id="viewModalTeacherName"/);
 });
 
+test("attendance edit modal shows record creator identity and has no date-clear button", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "attendance.js"), "utf8");
+  const html = await readFile(path.join(projectRoot, "html", "attendance.html"), "utf8");
+  const css = await readFile(path.join(projectRoot, "css", "attendance.css"), "utf8");
+
+  assert.match(html, /id="editAttendanceCreator"/);
+  assert.doesNotMatch(html, /clearDateFilterBtn/);
+  assert.doesNotMatch(source, /clearDateFilterBtn/);
+  assert.doesNotMatch(css, /clearDateFilterBtn/);
+  assert.match(source, /\.select\([\s\S]*?profiles:teacher_id\(full_name, photo_url, teachers\(staff_id\)\)/);
+  assert.match(source, /creatorElement\.innerHTML =/);
+  assert.match(source, /No ID found/);
+});
+
 test("take-attendance roster displays each student's school ID and profile photo", async () => {
   const source = await readFile(path.join(projectRoot, "js", "attendance.js"), "utf8");
   const rosterFunction = source.match(

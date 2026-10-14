@@ -589,8 +589,7 @@ tr {
   border-top: 2px solid rgb(219, 215, 215);
 }
 
-#editAttendanceModal .cancel-btn,
-#clearDateFilterBtn {
+#editAttendanceModal .cancel-btn {
   color: #ffffff;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
@@ -709,10 +708,6 @@ tr {
 
   #attendanceSearchInput {
     grid-column: 1 / -1;
-  }
-
-  #clearDateFilterBtn {
-    min-width: 0;
   }
 
   .toolbar input,
@@ -887,7 +882,6 @@ tr {
     border-radius: 10px;
   }
 
-  #clearDateFilterBtn,
   .attendance-status-dropdown,
   .edit-draft-modal-content {
     border-radius: 10px;

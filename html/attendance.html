@@ -91,10 +91,6 @@
           </select>
 
           <input type="date" id="attendanceDateFilter" />
-
-          <button type="button" id="clearDateFilterBtn" title="Clear Date">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
         </section>
 
         <section class="studentAttendance-table-card">
@@ -319,6 +315,11 @@
 
         <div class="modal-body">
           <form id="editAttendanceForm">
+            <div class="form-group">
+              <label>Entered By</label>
+              <p id="editAttendanceCreator">Loading...</p>
+            </div>
+
             <div class="form-group">
               <label for="editWorkflowStatus"> Workflow Status </label>
               <select id="editWorkflowStatus" class="form-control">
