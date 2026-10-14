@@ -127,16 +127,21 @@ function hasVisibleModal() {
     if (modal === document.body || modal.hidden) return false;
     if (modal.getAttribute("aria-hidden") === "true") return false;
 
+    const isDialogElement =
+      modal.tagName?.toLowerCase() === "dialog" ||
+      modal.getAttribute("role") === "dialog";
     let element = modal;
+    let position = "";
     while (element && element !== document.body) {
       const style = window.getComputedStyle(element);
       if (style.display === "none" || style.visibility === "hidden") {
         return false;
       }
+      if (element === modal) position = style.position;
       element = element.parentElement;
     }
 
-    return true;
+    return isDialogElement || position === "fixed";
   });
 }
 

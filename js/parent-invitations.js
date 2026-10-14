@@ -3,6 +3,8 @@ let parentInviteLinks = [];
 document.addEventListener("DOMContentLoaded", initializeParentInvitations);
 
 async function initializeParentInvitations() {
+  setupParentUnlinkDialog();
+
   const client = window.supabaseClient;
   const form = document.getElementById("parentInviteForm");
   const select = document.getElementById("parentStudentSelect");
@@ -68,6 +70,15 @@ async function initializeParentInvitations() {
   }
 
   form.addEventListener("submit", sendParentInvitation);
+}
+
+function setupParentUnlinkDialog() {
+  const dialog = document.getElementById("parentUnlinkDialog");
+  if (!dialog) return;
+
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close("cancel");
+  });
 }
 
 async function loadParentLinks() {

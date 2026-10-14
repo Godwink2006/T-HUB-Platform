@@ -49,6 +49,8 @@ test("parent unlink confirmation uses a styled accessible dialog instead of a br
   assert.match(html, /<dialog id="parentUnlinkDialog"/);
   assert.match(html, /aria-labelledby="parentUnlinkTitle" aria-describedby="parentUnlinkMessage"/);
   assert.match(source, /dialog\.showModal\(\)/);
+  assert.match(source, /function setupParentUnlinkDialog\(\)[\s\S]*?event\.target === dialog\) dialog\.close\("cancel"\)/);
+  assert.match(source, /setupParentUnlinkDialog\(\);\s*\n\s*const client/);
   assert.doesNotMatch(source, /window\.confirm/);
   assert.match(css, /\.parent-portal \.parent-link-row \{\s*border-radius: 9px;/s);
   assert.match(css, /\.parent-portal \.parent-link-row button,/);

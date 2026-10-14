@@ -43,9 +43,10 @@ function createModalScrollContext() {
 
   const createModal = () => {
     const modal = {
+      tagName: "DIV",
       hidden: false,
       parentElement: body,
-      style: { display: "none", visibility: "visible" },
+      style: { display: "none", position: "fixed", visibility: "visible" },
       getAttribute: () => null,
     };
     modals.push(modal);
@@ -55,6 +56,10 @@ function createModalScrollContext() {
   return {
     body,
     createModal,
+    createElement: (element) => {
+      modals.push(element);
+      return element;
+    },
     lock: () => context.lockBodyScroll(),
     unlock: () => context.unLockBodyScroll(),
     notifyMutation: () => observerCallback(),
@@ -90,6 +95,20 @@ test("closing one modal keeps body scroll locked while another modal remains ope
   assert.equal(body.style.overflow, "hidden");
 
   secondModal.style.display = "none";
+  notifyMutation();
+  assert.equal(body.style.overflow, "auto");
+});
+
+test("visible modal trigger buttons do not lock page scrolling", () => {
+  const { body, createElement, notifyMutation } = createModalScrollContext();
+  createElement({
+    tagName: "BUTTON",
+    hidden: false,
+    parentElement: body,
+    style: { display: "flex", position: "static", visibility: "visible" },
+    getAttribute: () => null,
+  });
+
   notifyMutation();
   assert.equal(body.style.overflow, "auto");
 });
