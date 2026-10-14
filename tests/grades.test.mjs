@@ -7,20 +7,18 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("grades filters include date range and status controls", async () => {
+test("grades filters include one from-date input and status control", async () => {
   const html = await readFile(path.join(projectRoot, "html", "grades.html"), "utf8");
   const source = await readFile(path.join(projectRoot, "js", "grades.js"), "utf8");
 
-  for (const id of [
-    "gradeToolbarStartDate",
-    "gradeToolbarEndDate",
-    "gradeToolbarStatusSelect",
-  ]) {
+  for (const id of ["gradeToolbarStartDate", "gradeToolbarStatusSelect"]) {
     assert.match(html, new RegExp(`id="${id}"`));
   }
+  assert.doesNotMatch(html, /gradeToolbarEndDate/);
+  assert.equal((html.match(/type="date"/g) || []).length, 1);
   assert.match(source, /if \(selectedStatus && itemStatus !== selectedStatus\) return false;/);
   assert.match(source, /if \(startDate && \(!itemDate \|\| itemDate < startDate\)\) return false;/);
-  assert.match(source, /if \(endDate && \(!itemDate \|\| itemDate > endDate\)\) return false;/);
+  assert.doesNotMatch(source, /gradeToolbarEndDate|endDateFilter/);
 });
 
 test("grade creator identity renders name, profile photo, and staff or user ID safely", async () => {

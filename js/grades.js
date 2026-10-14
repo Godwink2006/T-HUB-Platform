@@ -943,7 +943,6 @@ async function loadGradesList() {
     "gradeToolbarStatusSelect",
   )?.value;
   const startDate = document.getElementById("gradeToolbarStartDate")?.value;
-  const endDate = document.getElementById("gradeToolbarEndDate")?.value;
 
   try {
     const client = window.supabaseClient || supabaseClient;
@@ -1000,7 +999,6 @@ async function loadGradesList() {
       const itemDate = getGradeLocalDate(item.created_at);
       if (selectedStatus && itemStatus !== selectedStatus) return false;
       if (startDate && (!itemDate || itemDate < startDate)) return false;
-      if (endDate && (!itemDate || itemDate > endDate)) return false;
       if (!searchQuery) return true;
 
       const categoryName = (
@@ -1751,7 +1749,6 @@ function initToolbarListeners() {
   const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
   const statusFilter = document.getElementById("gradeToolbarStatusSelect");
   const startDateFilter = document.getElementById("gradeToolbarStartDate");
-  const endDateFilter = document.getElementById("gradeToolbarEndDate");
 
   if (searchInput) searchInput.addEventListener("input", loadGradesList);
   if (classFilter) classFilter.addEventListener("change", loadGradesList);
@@ -1759,5 +1756,4 @@ function initToolbarListeners() {
   if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
   if (statusFilter) statusFilter.addEventListener("change", loadGradesList);
   if (startDateFilter) startDateFilter.addEventListener("change", loadGradesList);
-  if (endDateFilter) endDateFilter.addEventListener("change", loadGradesList);
 }
