@@ -127,7 +127,7 @@ function clearDraftStorage() {
 
         supabaseClient
           .from("profiles")
-          .select("id, full_name")
+          .select("id, full_name, teachers(staff_id)")
           .eq("school_id", state.schoolId)
           .eq("role", "teacher")
           .eq("status", "active"),
@@ -242,6 +242,8 @@ function clearDraftStorage() {
       availableTeachers,
       "id",
       "full_name",
+      (teacher) =>
+        `${teacher.full_name || "Teacher"} (Staff ID: ${getTeacherStaffId(teacher)})`,
     );
     teacherSelect.value = validTeacherIds.has(currentTeacherId)
       ? currentTeacherId
@@ -276,15 +278,28 @@ function clearDraftStorage() {
     );
   }
 
-  function populateSelectOptions(elementId, items, valueKey, labelKey) {
+  function populateSelectOptions(
+    elementId,
+    items,
+    valueKey,
+    labelKey,
+    labelFormatter = (item) => item[labelKey],
+  ) {
     const select = getEl(elementId);
     if (!select) return;
 
     let html = `<option value="">Select option...</option>`;
     items.forEach((item) => {
-      html += `<option value="${escapeHTML(item[valueKey])}">${escapeHTML(item[labelKey])}</option>`;
+      html += `<option value="${escapeHTML(item[valueKey])}">${escapeHTML(labelFormatter(item))}</option>`;
     });
     select.innerHTML = html;
+  }
+
+  function getTeacherStaffId(profile) {
+    const teacherDetails = Array.isArray(profile?.teachers)
+      ? profile.teachers[0]
+      : profile?.teachers;
+    return teacherDetails?.staff_id || "No ID found";
   }
 
   function populatePeriodOptions(elementId, periods) {
@@ -340,12 +355,18 @@ function clearDraftStorage() {
     const teacherName = teacher
       ? teacher.full_name || teacher.name
       : lesson.teacher_name || lesson.teacher || "N/A";
+    const teacherStaffId = teacher ? getTeacherStaffId(teacher) : "No ID found";
 
     return {
       day: lesson.day || "N/A",
       time: timeStr,
       subject: escapeHTML(subjectName),
-      teacher: escapeHTML(teacherName),
+      teacher: `
+        <span class="timetable-teacher">
+          <span>${escapeHTML(teacherName)}</span>
+          <small>Staff ID: ${escapeHTML(teacherStaffId)}</small>
+        </span>
+      `,
       isBreak: false,
     };
   }
@@ -845,7 +866,7 @@ function clearDraftStorage() {
           state.lookups.teachers
             .map(
               (t) =>
-                `<option value="${escapeHTML(t.id)}">${escapeHTML(t.full_name || t.name)}</option>`,
+                `<option value="${escapeHTML(t.id)}">${escapeHTML(t.full_name || t.name)} (Staff ID: ${escapeHTML(getTeacherStaffId(t))})</option>`,
             )
             .join("");
       }
@@ -1292,7 +1313,7 @@ async function handleViewTimetable(timetableId) {
       period_id,
       periods ( id, name, start_time, end_time),
       subjects ( name ),
-      teacher:profiles!teacher_id ( full_name )
+      teacher:profiles!teacher_id ( full_name, teachers(staff_id) )
     `,
         )
         .eq("timetable_id", timetableId),
@@ -1374,10 +1395,16 @@ async function handleViewTimetable(timetableId) {
               if (lesson) {
                 const subjectName = lesson.subjects?.name || "Subject";
                 const teacherName = lesson.teacher?.full_name || "";
+                const teacherStaffId = getTeacherStaffId(lesson.teacher);
                 return `
                   <td>
                     <div style="font-weight:600;">${escapeHTML(subjectName)}</div>
-                    ${teacherName ? `<small style="color:#64748b;">${escapeHTML(teacherName)}</small>` : ""}
+                    ${teacherName ? `
+                      <span class="timetable-teacher">
+                        <span>${escapeHTML(teacherName)}</span>
+                        <small>Staff ID: ${escapeHTML(teacherStaffId)}</small>
+                      </span>
+                    ` : ""}
                   </td>
                 `;
               }
@@ -1454,4 +1481,3 @@ document
         handleEditTimetable(timetableId);
     }
   });
-

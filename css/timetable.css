@@ -113,6 +113,18 @@ body {
   overflow: hidden;
 }
 
+.timetable-teacher {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.35;
+}
+
+.timetable-teacher small {
+  color: #64748b;
+  font-size: 0.82em;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -707,9 +719,10 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 350px;
-    height: 650px;
-    max-height: 85vh;
+    max-width: 720px;
+    height: auto;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
@@ -720,22 +733,32 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 350px;
-    height: 550px;
-    max-height: 85vh;
+    max-width: 900px;
+    height: auto;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
     overflow: hidden;
   }
 
+  .modal-timetable,
+  .edit-modal-timetable,
+  .lesson-modal,
+  .edit-lesson-modal,
+  .view-timetable-modal {
+    padding: 12px;
+  }
+
   .confirm-modal {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 350px;
-    height: 350px;
-    max-height: 85vh;
+    max-width: 420px;
+    height: auto;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
@@ -785,8 +808,27 @@ tr {
   .edit-lesson-modal-body {
     padding: 20px;
     overflow-y: auto;
-    overflow-x: auto;
+    overflow-x: hidden;
     flex: 1;
+    min-height: 0;
+  }
+
+  .timetable-modal-footer,
+  .edit-timetable-modal-footer,
+  .view-timetable-modal-footer,
+  .lesson-modal-footer,
+  .edit-lesson-modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+  }
+
+  .timetable-table-card,
+  .timetables-table-card,
+  .edit-timetable-table-card {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .form-grid,
