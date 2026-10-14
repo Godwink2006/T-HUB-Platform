@@ -26,14 +26,18 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <section class="my-profiles-page" id="myProfile">
@@ -42,10 +46,7 @@
         <p>Manage profile information.</p>
       </div>
 
-      <button
-        onclick="window.location.href = 'settings.html'"
-        class="back-my-profiles-btn"
-      >
+      <button id="backBtn" type="button" class="back-my-profiles-btn">
         <i class="fa-solid fa-chevron-left"></i>
         Back
       </button>
@@ -128,7 +129,6 @@
 
           <div class="form-actions">
             <button type="reset" class="cancel-btn">Reset</button>
-
 
             <form
               id="profileForm"
@@ -265,6 +265,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/my-profile.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>

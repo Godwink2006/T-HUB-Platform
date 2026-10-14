@@ -731,28 +731,31 @@ body.parent-portal {
     width: 100%;
   }
   .parent-portal .parent-brand > i {
-    border-radius: 6px;
+    border-radius: 10px;
   }
   .parent-portal .parent-signout {
-    border-radius: 9px;
+    border-radius: 10px;
   }
   .parent-portal .children-section,
   .parent-portal .selected-student-panel,
   .parent-portal .parent-form,
   .parent-portal .parent-record-panel {
-    border-radius: 12px;
+    border-radius: 10px;
   }
   .parent-portal .parent-form input,
   .parent-portal .parent-form select,
-  .parent-portal .parent-record-filters select {
-    border-radius: 8px;
+  .parent-portal .parent-record-filters select,
+  .parent-profile-header-card,
+.parent-badge, .contact-pill,
+.contact-pill i, .btn-change-profile {
+    border-radius: 10px;
   }
   .parent-portal .parent-child-card,
   .parent-portal .parent-record-link,
   .parent-portal .parent-record-tabs a,
   .parent-portal .portal-coming-soon,
   .parent-portal .parent-link-row {
-    border-radius: 9px;
+    border-radius: 10px;
   }
   .parent-portal .parent-primary-button,
   .parent-portal .parent-child-card button,
@@ -760,10 +763,10 @@ body.parent-portal {
   .parent-portal .parent-unlink-dialog,
   .parent-portal .parent-unlink-icon,
   .parent-portal .parent-unlink-dialog-actions button {
-    border-radius: 6px;
+    border-radius: 10px;
   }
   .parent-portal .parent-back-link {
-    border-radius: 6px;
+    border-radius: 10px;
   }
 }
 
@@ -852,7 +855,6 @@ body.parent-portal {
 .parent-profile-header-card {
   background: #ffffff;
   border: 2px solid rgb(219, 215, 215);
-  border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
 }
@@ -898,7 +900,6 @@ body.parent-portal {
   color: #2563eb;
   background-color: #eff6ff;
   padding: 2px 8px;
-  border-radius: 6px;
   margin-bottom: 4px;
 }
 
@@ -932,7 +933,6 @@ body.parent-portal {
   background: #f8fafc;
   border: 2px solid rgb(219, 215, 215);
   padding: 10px 14px;
-  border-radius: 10px;
 }
 
 .contact-pill i {
@@ -940,7 +940,6 @@ body.parent-portal {
   color: #2563eb;
   background: #ffffff;
   padding: 8px;
-  border-radius: 8px;
   border: 2px solid rgb(219, 215, 215);
 }
 
@@ -976,7 +975,6 @@ body.parent-portal {
   background-color: #2563eb;
   color: #ffffff;
   padding: 8px;
-  border-radius: 8px;
   font-size: 0.975rem;
   font-weight: 600;
   text-decoration: none;

@@ -416,3 +416,51 @@ document.addEventListener("DOMContentLoaded", async function () {
     saveBtn.style.display = "flex";
   }
 });
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const backBtn = document.getElementById("backBtn");
+  if (!backBtn) return;
+
+  // 1. Check if came from parent portal via URL param (e.g. my-profile.html?from=parent)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("from") === "parent") {
+    backBtn.onclick = () => {
+      window.location.href = "parent-dashboard.html";
+    };
+    return;
+  }
+
+  // 2. Otherwise check signed-in user's role from Supabase
+  try {
+    const {
+      data: { user },
+    } = await client.auth.getUser();
+
+    if (user) {
+      const { data: profile } = await client
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const role = profile?.role?.toLowerCase();
+
+      backBtn.onclick = () => {
+        if (role === "parent") {
+          window.location.href = "parent-dashboard.html";
+        } else {
+          window.location.href = "settings.html";
+        }
+      };
+    } else {
+      backBtn.onclick = () => {
+        window.location.href = "settings.html";
+      };
+    }
+  } catch (err) {
+    console.error("Error setting back button destination:", err);
+    backBtn.onclick = () => {
+      window.location.href = "settings.html";
+    };
+  }
+});
