@@ -847,7 +847,7 @@ async function loadAttendanceTable() {
 
     allAttendanceList = attendanceList || [];
 
-    populateClassFilter(allAttendanceList);
+    populateAttendanceFilters(allAttendanceList);
 
     renderFilteredAttendanceTable(allAttendanceList);
 
@@ -864,72 +864,127 @@ function populateClassFilter(records) {
   const classFilter = document.getElementById("attendanceClassFilter");
   if (!classFilter) return;
 
-  classFilter.innerHTML = `<option value="all">All Classes</option>`;
+  populateAttendanceFilterOptions(
+    classFilter,
+    records,
+    "classes",
+    "class_id",
+    "All Classes",
+  );
+}
 
-  const uniqueClasses = new Map();
+function populateAttendanceFilterOptions(
+  select,
+  records,
+  relationName,
+  idField,
+  allLabel,
+) {
+  select.replaceChildren(new Option(allLabel, "all"));
+
+  const options = new Map();
   records.forEach((item) => {
-    if (item.classes?.id && item.classes?.name) {
-      uniqueClasses.set(item.classes.id, item.classes.name);
-    }
+    const relation = item[relationName];
+    const id = relation?.id || item[idField];
+    const label = relation?.name || relation?.year_label;
+    if (id && label) options.set(id, label);
   });
 
-  uniqueClasses.forEach((className, classId) => {
-    const option = document.createElement("option");
-    option.value = classId;
-    option.textContent = className;
-    classFilter.appendChild(option);
+  [...options.entries()]
+    .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
+    .forEach(([id, label]) => {
+      select.add(new Option(label, id));
+    });
+}
+
+function populateAttendanceFilters(records) {
+  populateClassFilter(records);
+
+  [
+    ["attendanceSubjectFilter", "subjects", "subject_id", "All Subjects"],
+    [
+      "attendanceAcademicYearFilter",
+      "academic_years",
+      "academic_year_id",
+      "All Academic Years",
+    ],
+    ["attendanceSemesterFilter", "terms", "term_id", "All Semesters"],
+  ].forEach(([selectId, relation, idField, label]) => {
+    const select = document.getElementById(selectId);
+    if (select) {
+      populateAttendanceFilterOptions(select, records, relation, idField, label);
+    }
   });
 }
 
 function setupAttendanceFilterListeners() {
   const searchInput = document.getElementById("attendanceSearchInput");
-  const classFilter = document.getElementById("attendanceClassFilter");
-  const dateFilter = document.getElementById("attendanceDateFilter");
+  const filterIds = [
+    "attendanceClassFilter",
+    "attendanceSubjectFilter",
+    "attendanceAcademicYearFilter",
+    "attendanceSemesterFilter",
+    "attendanceStatusFilter",
+    "attendanceDateFilter",
+  ];
   const clearDateBtn = document.getElementById("clearDateFilterBtn");
 
-  if (searchInput)
-    searchInput.addEventListener("input", applyAttendanceFilters);
-  if (classFilter)
-    classFilter.addEventListener("change", applyAttendanceFilters);
-  if (dateFilter) dateFilter.addEventListener("change", applyAttendanceFilters);
+  if (searchInput) searchInput.oninput = applyAttendanceFilters;
+  filterIds.forEach((id) => {
+    const select = document.getElementById(id);
+    if (select) select.onchange = applyAttendanceFilters;
+  });
 
+  const dateFilter = document.getElementById("attendanceDateFilter");
   if (clearDateBtn && dateFilter) {
-    clearDateBtn.addEventListener("click", () => {
+    clearDateBtn.onclick = () => {
       dateFilter.value = "";
       applyAttendanceFilters();
-    });
+    };
   }
 }
 
-function applyAttendanceFilters() {
-  const searchTerm = (
-    document.getElementById("attendanceSearchInput")?.value || ""
-  )
-    .toLowerCase()
-    .trim();
-  const selectedClassId =
-    document.getElementById("attendanceClassFilter")?.value || "all";
-  const selectedDate =
-    document.getElementById("attendanceDateFilter")?.value || "";
+function matchesAttendanceFilters(item, filters) {
+  const searchTerm = filters.search.toLowerCase().trim();
+  const className = (item.classes?.name || "").toLowerCase();
+  const subjectName = (item.subjects?.name || "").toLowerCase();
+  const itemDate = item.date ? item.date.split("T")[0] : "";
 
-  const filtered = allAttendanceList.filter((item) => {
-    const className = (item.classes?.name || "").toLowerCase();
-    const subjectName = (item.subjects?.name || "").toLowerCase();
-    const itemDate = item.date ? item.date.split("T")[0] : "";
-
-    const matchesSearch =
-      !searchTerm ||
+  return (
+    (!searchTerm ||
       className.includes(searchTerm) ||
-      subjectName.includes(searchTerm);
+      subjectName.includes(searchTerm)) &&
+    (filters.classId === "all" ||
+      (item.classes?.id || item.class_id) === filters.classId) &&
+    (filters.subjectId === "all" ||
+      (item.subjects?.id || item.subject_id) === filters.subjectId) &&
+    (filters.academicYearId === "all" ||
+      (item.academic_years?.id || item.academic_year_id) ===
+        filters.academicYearId) &&
+    (filters.semesterId === "all" ||
+      (item.terms?.id || item.term_id) === filters.semesterId) &&
+    (filters.status === "all" ||
+      String(item.status || "").toLowerCase() === filters.status) &&
+    (!filters.date || itemDate === filters.date)
+  );
+}
 
-    const matchesClass =
-      selectedClassId === "all" || item.class_id === selectedClassId;
-
-    const matchesDate = !selectedDate || itemDate === selectedDate;
-
-    return matchesSearch && matchesClass && matchesDate;
-  });
-
+function applyAttendanceFilters() {
+  const filtered = allAttendanceList.filter((item) =>
+    matchesAttendanceFilters(item, {
+      search: document.getElementById("attendanceSearchInput")?.value || "",
+      classId: document.getElementById("attendanceClassFilter")?.value || "all",
+      subjectId:
+        document.getElementById("attendanceSubjectFilter")?.value || "all",
+      academicYearId:
+        document.getElementById("attendanceAcademicYearFilter")?.value ||
+        "all",
+      semesterId:
+        document.getElementById("attendanceSemesterFilter")?.value || "all",
+      status: document.getElementById("attendanceStatusFilter")?.value || "all",
+      date: document.getElementById("attendanceDateFilter")?.value || "",
+    }),
+  );
   renderFilteredAttendanceTable(filtered);
 }
 
@@ -1061,6 +1116,20 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+function getAttendancePhotoUrl(photoUrl) {
+  const fallback = window.DEFAULT_PROFILE_AVATAR || "";
+  if (!photoUrl) return fallback;
+
+  try {
+    const parsedUrl = new URL(photoUrl, window.location.href);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:"
+      ? parsedUrl.href
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 async function openViewAttendanceModal(attendanceId) {
   const modal = document.getElementById("viewAttendanceModal");
   if (!modal || !attendanceId) return;
@@ -1102,7 +1171,7 @@ async function openViewAttendanceModal(attendanceId) {
         academic_years(year_label),
         terms(name),
         assessments(name),
-        profiles:teacher_id(full_name)
+        profiles:teacher_id(full_name, photo_url, teachers(staff_id))
       `,
       )
       .eq("id", attendanceId)
@@ -1124,8 +1193,23 @@ async function openViewAttendanceModal(attendanceId) {
     if (elTerm) elTerm.textContent = attendance.terms?.name || "N/A";
     if (elAssessment)
       elAssessment.textContent = attendance.assessments?.name || "General";
-    if (elTeacher)
-      elTeacher.textContent = attendance.profiles?.full_name || "Teacher";
+    if (elTeacher) {
+      const teacherName = attendance.profiles?.full_name || "Teacher";
+      const teacherStaffId =
+        attendance.profiles?.teachers?.staff_id || "Not assigned";
+      const teacherPhoto = escapeHtml(
+        getAttendancePhotoUrl(attendance.profiles?.photo_url),
+      );
+      elTeacher.innerHTML = `
+        <span class="app-person-cell attendance-teacher-identity">
+          <img class="app-person-avatar" src="${teacherPhoto}" alt="" loading="lazy" />
+          <span class="app-person-meta">
+            <span>${escapeHtml(teacherName)}</span>
+            <small class="app-person-id">Staff ID: ${escapeHtml(teacherStaffId)}</small>
+          </span>
+        </span>
+      `;
+    }
     if (elDate) elDate.textContent = formatDate(attendance.date);
 
     if (elWorkflowStatus) {
@@ -1188,7 +1272,9 @@ async function openViewAttendanceModal(attendanceId) {
           snapshot?.student_name_snapshot ||
           `Student (${record.student_id.slice(0, 8)})`;
         const studentPhoto = escapeHtml(
-          student?.profiles?.photo_url || window.DEFAULT_PROFILE_AVATAR || "",
+          getAttendancePhotoUrl(
+            student?.profiles?.photo_url || snapshot?.student_photo_snapshot,
+          ),
         );
         const studentCode = escapeHtml(
           student?.student_id || snapshot?.student_code_snapshot || "Not assigned",
@@ -1356,7 +1442,9 @@ async function openEditAttendanceModal(attendanceId) {
           student?.student_id || snapshot?.student_code_snapshot || "Not assigned",
         );
         const studentPhoto = escapeHtml(
-          student?.profiles?.photo_url || window.DEFAULT_PROFILE_AVATAR || "",
+          getAttendancePhotoUrl(
+            student?.profiles?.photo_url || snapshot?.student_photo_snapshot,
+          ),
         );
         initialStudentStatuses[record.student_id] = record.status;
 

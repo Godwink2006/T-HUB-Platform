@@ -194,7 +194,9 @@ window.loadTransferredStudentIdentitySnapshots = async function (studentIds) {
 
   const { data, error } = await client
     .from("student_enrollments")
-    .select("student_id, student_name_snapshot, student_code_snapshot")
+    .select(
+      "student_id, student_name_snapshot, student_code_snapshot, student_photo_snapshot",
+    )
     .eq("school_id", schoolId)
     .in("student_id", ids)
     .not("student_name_snapshot", "is", null);

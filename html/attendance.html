@@ -69,6 +69,27 @@
             <option value="all">All Classes</option>
           </select>
 
+          <select id="attendanceSubjectFilter" aria-label="Filter by subject">
+            <option value="all">All Subjects</option>
+          </select>
+
+          <select
+            id="attendanceAcademicYearFilter"
+            aria-label="Filter by academic year"
+          >
+            <option value="all">All Academic Years</option>
+          </select>
+
+          <select id="attendanceSemesterFilter" aria-label="Filter by semester">
+            <option value="all">All Semesters</option>
+          </select>
+
+          <select id="attendanceStatusFilter" aria-label="Filter by status">
+            <option value="all">All Statuses</option>
+            <option value="submitted">Submitted</option>
+            <option value="drafted">Drafted</option>
+          </select>
+
           <input type="date" id="attendanceDateFilter" />
 
           <button type="button" id="clearDateFilterBtn" title="Clear Date">
@@ -170,7 +191,9 @@
 
             <div class="details-item">
               <label>Teacher</label>
-              <p id="viewModalTeacherName">-</p>
+              <p id="viewModalTeacherName" class="attendance-teacher-identity">
+                -
+              </p>
             </div>
 
             <div class="details-item">
