@@ -667,14 +667,6 @@ tr {
     font-size: 24px;
   }
 
-  .attendance-modal-content {
-    height: 350px !important;
-  }
-
-  .studentAttendance-modal-content {
-    height: 450px;
-  }
-
   .topbar p {
     margin-top: 2px;
     font-size: 13px;
@@ -775,15 +767,37 @@ tr {
   .attendance-modal-content,
   .studentAttendance-modal-content,
   .view-attendance-modal-content,
-  #editAttendanceModal .modal-content {
+  #editAttendanceModal .edit-draft-modal-content {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 520px;
-    max-height: 85vh;
+    width: calc(100vw - 24px);
+    max-width: 480px;
+    height: auto;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
     border-radius: 10px;
-    overflow: auto;
+    overflow: hidden;
+  }
+
+  .attendance-modal-content {
+    min-height: 0;
+  }
+
+  .studentAttendance-modal-content,
+  .view-attendance-modal-content,
+  #editAttendanceModal .edit-draft-modal-content {
+    height: min(760px, calc(100vh - 24px));
+    height: min(760px, calc(100dvh - 24px));
+  }
+
+  .modal-attendance,
+  .modal-studentAttendance,
+  .view-attendance-modal,
+  #editAttendanceModal.modal {
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    overflow-y: auto;
   }
 
   .attendance-modal-header,
@@ -792,6 +806,7 @@ tr {
   #editAttendanceModal .modal-header {
     padding: 14px 20px;
     border-bottom: 1.5px solid rgb(219, 215, 215);
+    flex: 0 0 auto;
   }
 
   .attendance-modal-header h2,
@@ -817,7 +832,24 @@ tr {
   #editAttendanceModal .modal-body {
     padding: 10px;
     overflow-y: auto;
-    flex: 1;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .studentAttendance-modal-body .studentAttendance-table-card,
+  .view-attendance-body .studentAttendance-table-card,
+  #editAttendanceModal .studentAttendance-table-card {
+    max-height: min(36vh, 300px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .attendance-modal-footer,
+  .studentAttendance-modal-footer,
+  .view-modal-footer,
+  #editAttendanceModal .modal-footer {
+    flex: 0 0 auto;
   }
 
   .attendance-modal-footer,

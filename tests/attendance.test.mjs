@@ -123,6 +123,17 @@ test("take-attendance modal displays the current teacher photo and staff ID", as
   assert.ok(html.includes('id="stModalTeacherName"'));
 });
 
+test("attendance modals fit within small screens and keep their content scrollable", async () => {
+  const css = await readFile(path.join(projectRoot, "css", "attendance.css"), "utf8");
+  const mobileStyles = css.slice(css.lastIndexOf("@media screen and (max-width: 768px)"));
+
+  assert.match(mobileStyles, /width:\s*calc\(100vw - 24px\)/);
+  assert.match(mobileStyles, /max-height:\s*calc\(100dvh - 24px\)/);
+  assert.match(mobileStyles, /#editAttendanceModal \.edit-draft-modal-content/);
+  assert.match(mobileStyles, /\.studentAttendance-modal-body,[\s\S]*?min-height:\s*0;/);
+  assert.match(mobileStyles, /\.studentAttendance-modal-body \.studentAttendance-table-card,[\s\S]*?overflow:\s*auto;/);
+});
+
 test("attendance transfer snapshots are readable only for a teacher's own school sessions", async () => {
   const policy = await readFile(
     path.join(
