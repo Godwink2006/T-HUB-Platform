@@ -390,14 +390,6 @@ async function handleEditTerm(event) {
   }
 }
 
-function lockBodyScroll() {
-  document.body.style.overflow = "hidden";
-}
-
-function unLockBodyScroll() {
-  document.body.style.overflow = "";
-}
-
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = "flex";
@@ -486,4 +478,3 @@ async function populateAcademicYearDropdowns() {
       .join("");
   }
 }
-

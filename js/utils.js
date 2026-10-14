@@ -105,12 +105,91 @@ function isLoginPage() {
   );
 }
 
+let bodyScrollLockedByModal = false;
+let bodyOverflowBeforeModalLock = "";
+
+const MODAL_CONTAINER_SELECTOR =
+  '[class*="modal"], [class*="Modal"], [id*="modal"], [id*="Modal"], [role="dialog"], dialog[open]';
+
+function hasVisibleModal() {
+  if (!document.body) return false;
+
+  if (
+    document.body.classList.contains("modal-open") ||
+    document.body.classList.contains("settings-modal-open")
+  ) {
+    return true;
+  }
+
+  return Array.from(
+    document.body.querySelectorAll(MODAL_CONTAINER_SELECTOR),
+  ).some((modal) => {
+    if (modal === document.body || modal.hidden) return false;
+    if (modal.getAttribute("aria-hidden") === "true") return false;
+
+    let element = modal;
+    while (element && element !== document.body) {
+      const style = window.getComputedStyle(element);
+      if (style.display === "none" || style.visibility === "hidden") {
+        return false;
+      }
+      element = element.parentElement;
+    }
+
+    return true;
+  });
+}
+
+function syncBodyScrollLock(forceLock = false) {
+  if (!document.body) return;
+
+  const shouldLock = forceLock || hasVisibleModal();
+  if (shouldLock) {
+    if (!bodyScrollLockedByModal) {
+      bodyOverflowBeforeModalLock =
+        document.body.style.overflow === "hidden"
+          ? ""
+          : document.body.style.overflow;
+      bodyScrollLockedByModal = true;
+    }
+    document.body.style.overflow = "hidden";
+    return;
+  }
+
+  if (bodyScrollLockedByModal) {
+    document.body.style.overflow = bodyOverflowBeforeModalLock;
+    bodyOverflowBeforeModalLock = "";
+    bodyScrollLockedByModal = false;
+  }
+}
+
 function lockBodyScroll() {
-  document.body.style.overflow = "hidden";
+  syncBodyScrollLock(true);
 }
 
 function unLockBodyScroll() {
-  document.body.style.overflow = "";
+  syncBodyScrollLock();
+}
+
+function observeModalScrollState() {
+  if (!document.body || typeof MutationObserver === "undefined") return;
+
+  const observer = new MutationObserver(() => syncBodyScrollLock());
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ["aria-hidden", "class", "hidden", "open", "style"],
+    childList: true,
+    subtree: true,
+  });
+  syncBodyScrollLock();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", observeModalScrollState, {
+    once: true,
+  });
+} else {
+  observeModalScrollState();
 }
 
 function showToast(message, type = "success", duration = 5000) {
