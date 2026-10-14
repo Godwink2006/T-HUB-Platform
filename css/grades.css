@@ -190,6 +190,7 @@ body {
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 15px;
   margin: 25px 0;
 }
@@ -236,6 +237,55 @@ td {
 
 tr {
   border: 2px solid rgb(219, 215, 215);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-drafted {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.badge-submitted {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.grade-creator-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 145px;
+}
+
+.grade-creator-cell .app-person-avatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.grade-creator-meta {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.grade-creator-name {
+  font-weight: 500;
+}
+
+.grade-creator-cell small {
+  color: #6b7280;
+  font-size: 11px;
 }
 
 .grades-actions-btn {
@@ -462,8 +512,12 @@ tr {
   .editGrade-modal-content {
     display: flex;
     flex-direction: column;
-    height: 500px;
+    width: 95% !important;
+    max-width: 850px;
+    height: min(92vh, 760px);
+    max-height: 92vh;
     overflow: hidden;
+    border-radius: 12px;
   }
 
 
@@ -480,13 +534,24 @@ tr {
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
     padding: 10px;
+    overflow-y: auto;
+  }
+
+  .enterGrade-modal-body form,
+  .editGrade-modal-body form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
   }
 
 
   .enterGrade-table-card,
   .editGrade-table-card {
     flex: 1;
+    min-height: 120px;
     overflow-y: auto;
     border: 2px solid rgb(219, 215, 215);
     margin-top: 10px;
@@ -566,6 +631,7 @@ tr {
 
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     flex-direction: row;
     gap: 8px;
     margin: 15px 0;
@@ -578,7 +644,7 @@ tr {
     border: 2px solid rgb(219, 215, 215);
     padding: 0 10px;
     font-size: 12px;
-    flex: 1;
+    flex: 1 1 calc(50% - 8px);
     min-width: 0;
     border-radius: 10px;
   }
@@ -725,5 +791,12 @@ tr {
   .toolbar select,
   .grades-actions-btn {
     border-radius: 8px;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  .toolbar input,
+  .toolbar select {
+    flex-basis: 100%;
   }
 }

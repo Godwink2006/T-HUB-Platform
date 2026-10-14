@@ -527,6 +527,16 @@ async function handleLoadStudents(e) {
   const selectedCategoryOption =
     categorySelect.options[categorySelect.selectedIndex];
 
+  let gradeCreatorMarkup;
+  try {
+    const client = window.supabaseClient || supabaseClient;
+    gradeCreatorMarkup = await getCurrentGradeActorMarkup(client);
+  } catch (err) {
+    console.error("Error loading grade creator identity:", err);
+    showToast("Unable to load your profile details. Please try again.", "error");
+    return;
+  }
+
   const periodMax =
     selectedAssessment && selectedAssessment.maximum_marks != null
       ? Number(selectedAssessment.maximum_marks)
@@ -565,6 +575,7 @@ async function handleLoadStudents(e) {
   const elCategory = document.getElementById("enterGradeModalCategory");
   const elPeriod = document.getElementById("enterGradeModalAssessmentPeriod");
   const elDate = document.getElementById("enterGradeModalDate");
+  const elCreator = document.getElementById("enterGradeModalCreator");
 
   if (elClass) elClass.textContent = className;
   if (elSubject) elSubject.textContent = subjectName;
@@ -588,6 +599,7 @@ async function handleLoadStudents(e) {
       year: "numeric",
     });
   }
+  if (elCreator) elCreator.innerHTML = gradeCreatorMarkup;
 
   if (elYear)
     elYear.textContent = window.activeAcademicYearLabel || "Active Year";
@@ -849,6 +861,68 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
   }
 }
 
+function getGradeLocalDate(timestamp) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function escapeGradeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+async function getGradeCreatorProfiles(client, userIds) {
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if (!ids.length) return new Map();
+
+  const { data, error } = await client
+    .from("profiles")
+    .select(
+      "id, full_name, photo_url, role, teachers(staff_id), students(student_id)",
+    )
+    .in("id", ids);
+
+  if (error) throw error;
+  return new Map((data || []).map((profile) => [profile.id, profile]));
+}
+
+async function getCurrentGradeActorMarkup(client) {
+  const {
+    data: { user },
+    error,
+  } = await client.auth.getUser();
+  if (error) throw error;
+  if (!user) throw new Error("No authenticated user found.");
+
+  const profiles = await getGradeCreatorProfiles(client, [user.id]);
+  return renderGradeCreator(profiles.get(user.id), user.id);
+}
+
+function renderGradeCreator(profile, userId) {
+  if (!profile) {
+    return `<span class="grade-creator-cell"><span class="grade-creator-meta"><span class="grade-creator-name">Unknown</span><small>User ID: ${escapeGradeHtml(userId || "-")}</small></span></span>`;
+  }
+
+  const teacherId = profile.teachers?.staff_id;
+  const studentId = profile.students?.student_id;
+  const label = teacherId
+    ? `Staff ID: ${teacherId}`
+    : studentId
+      ? `Student ID: ${studentId}`
+      : `User ID: ${profile.id}`;
+  const photo = profile.photo_url || window.DEFAULT_PROFILE_AVATAR || "";
+
+  return `<span class="grade-creator-cell"><img class="app-person-avatar" src="${escapeGradeHtml(photo)}" alt="" loading="lazy" /><span class="grade-creator-meta"><span class="grade-creator-name">${escapeGradeHtml(profile.full_name || "Unknown")}</span><small>${escapeGradeHtml(label)}</small></span></span>`;
+}
+
 async function loadGradesList() {
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
@@ -865,6 +939,11 @@ async function loadGradesList() {
   const selectedCategory = document.getElementById(
     "gradeToolbarCategorySelect",
   )?.value;
+  const selectedStatus = document.getElementById(
+    "gradeToolbarStatusSelect",
+  )?.value;
+  const startDate = document.getElementById("gradeToolbarStartDate")?.value;
+  const endDate = document.getElementById("gradeToolbarEndDate")?.value;
 
   try {
     const client = window.supabaseClient || supabaseClient;
@@ -877,6 +956,7 @@ async function loadGradesList() {
         id,
         status,
         created_at,
+        created_by,
         class_id,
         subject_id,
         category_id,
@@ -905,7 +985,7 @@ async function loadGradesList() {
     if (!grades || grades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records found.
           </td>
         </tr>`;
@@ -913,7 +993,20 @@ async function loadGradesList() {
     }
 
 
+    const creatorProfiles = await getGradeCreatorProfiles(
+      client,
+      grades.map((grade) => grade.created_by),
+    );
+
     const filteredGrades = grades.filter((item) => {
+      const normalizedStatus = (item.status || "drafted").toLowerCase();
+      const itemStatus = normalizedStatus.includes("draft")
+        ? "drafted"
+        : "submitted";
+      const itemDate = getGradeLocalDate(item.created_at);
+      if (selectedStatus && itemStatus !== selectedStatus) return false;
+      if (startDate && (!itemDate || itemDate < startDate)) return false;
+      if (endDate && (!itemDate || itemDate > endDate)) return false;
       if (!searchQuery) return true;
 
       const categoryName = (
@@ -922,19 +1015,23 @@ async function loadGradesList() {
       const className = (item.classes?.name || "").toLowerCase();
       const subjectName = (item.subjects?.name || "").toLowerCase();
       const statusText = (item.status || "").toLowerCase();
+      const creatorName = (
+        creatorProfiles.get(item.created_by)?.full_name || ""
+      ).toLowerCase();
 
       return (
         categoryName.includes(searchQuery) ||
         className.includes(searchQuery) ||
         subjectName.includes(searchQuery) ||
-        statusText.includes(searchQuery)
+        statusText.includes(searchQuery) ||
+        creatorName.includes(searchQuery)
       );
     });
 
     if (filteredGrades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records found matching filters.
           </td>
         </tr>`;
@@ -964,6 +1061,7 @@ async function loadGradesList() {
         const className = item.classes?.name || "N/A";
         const subjectName = item.subjects?.name || "N/A";
         const displayStatus = isDraft ? "Drafted" : "Submitted";
+        const creator = creatorProfiles.get(item.created_by);
 
         const actionButtonHTML = isDraft
           ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${gradeId}">
@@ -974,11 +1072,12 @@ async function loadGradesList() {
              </button>`;
 
         return `
-          <tr data-grade-id="${gradeId}">
+          <tr data-grade-id="${gradeId}" data-class-id="${item.class_id || ""}" data-subject-id="${item.subject_id || ""}" data-category-id="${item.category_id || ""}">
             <td>${categoryName}</td>
             <td>${className}</td>
             <td>${subjectName}</td>
             <td>${formattedDate}</td>
+            <td>${renderGradeCreator(creator, item.created_by)}</td>
             <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
             <td>${actionButtonHTML}</td>
           </tr>
@@ -990,6 +1089,7 @@ async function loadGradesList() {
     if (typeof showToast === "function") {
       showToast(`Failed to load grades: ${err.message}`, "error");
     }
+
   }
 }
 
@@ -1012,6 +1112,7 @@ async function handleViewGrades(gradeId) {
   document.getElementById("viewModalAcademicYear").innerHTML = skeletonText;
   document.getElementById("viewModalSemester").innerHTML = skeletonText;
   document.getElementById("viewModalDate").innerHTML = skeletonText;
+  document.getElementById("viewModalCreator").innerHTML = skeletonText;
 
   const modal = document.getElementById("viewGradeModal");
   if (!modal) return;
@@ -1026,6 +1127,7 @@ async function handleViewGrades(gradeId) {
         id,
         status,
         created_at,
+        created_by,
         assessment_categories ( name ),
         assessments ( name ),
         academic_years ( year_label ),
@@ -1047,6 +1149,9 @@ async function handleViewGrades(gradeId) {
       .single();
 
     if (error) throw error;
+    const creatorProfiles = await getGradeCreatorProfiles(client, [
+      grade.created_by,
+    ]);
 
 
     const escapeHtml = (str) =>
@@ -1078,6 +1183,10 @@ async function handleViewGrades(gradeId) {
           year: "numeric",
         })
       : "-";
+    document.getElementById("viewModalCreator").innerHTML = renderGradeCreator(
+      creatorProfiles.get(grade.created_by),
+      grade.created_by,
+    );
 
 
     const tbody = document.getElementById("viewGradeTableBody");
@@ -1107,6 +1216,7 @@ async function handleViewGrades(gradeId) {
           );
           const studentPhoto = escapeHtml(
             rec.students?.profiles?.photo_url ||
+              snapshot?.student_photo_snapshot ||
               window.DEFAULT_PROFILE_AVATAR ||
               "",
           );
@@ -1169,6 +1279,7 @@ async function handleEditGrades(gradeId) {
   document.getElementById("editModalAcademicYear").innerHTML = skeletonText;
   document.getElementById("editModalSemester").innerHTML = skeletonText;
   document.getElementById("editModalDate").innerHTML = skeletonText;
+  document.getElementById("editModalCreator").innerHTML = skeletonText;
 
   const elMaxMarks = document.getElementById("editModalMaxMarks");
   if (elMaxMarks) elMaxMarks.innerHTML = skeletonText;
@@ -1188,6 +1299,7 @@ async function handleEditGrades(gradeId) {
         id,
         status,
         created_at,
+        created_by,
         assessment_categories ( name, marks ),
         assessments ( name, maximum_marks ),
         academic_years ( year_label ),
@@ -1209,6 +1321,10 @@ async function handleEditGrades(gradeId) {
       .single();
 
     if (error) throw error;
+    const creatorProfiles = await getGradeCreatorProfiles(client, [
+      grade.created_by,
+    ]);
+    const editorMarkup = await getCurrentGradeActorMarkup(client);
 
 
     const categoryMax =
@@ -1268,6 +1384,11 @@ async function handleEditGrades(gradeId) {
           year: "numeric",
         })
       : "-";
+    document.getElementById("editModalCreator").innerHTML = renderGradeCreator(
+      creatorProfiles.get(grade.created_by),
+      grade.created_by,
+    );
+    document.getElementById("editModalEditor").innerHTML = editorMarkup;
 
     if (elMaxMarks) {
       elMaxMarks.textContent =
@@ -1313,6 +1434,7 @@ async function handleEditGrades(gradeId) {
           );
           const studentPhoto = escapeHtml(
             rec.students?.profiles?.photo_url ||
+              snapshot?.student_photo_snapshot ||
               window.DEFAULT_PROFILE_AVATAR ||
               "",
           );
@@ -1639,9 +1761,15 @@ function initToolbarListeners() {
   const classFilter = document.getElementById("gradeToolbarClassSelect");
   const subjectFilter = document.getElementById("gradeToolbarSubjectSelect");
   const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
+  const statusFilter = document.getElementById("gradeToolbarStatusSelect");
+  const startDateFilter = document.getElementById("gradeToolbarStartDate");
+  const endDateFilter = document.getElementById("gradeToolbarEndDate");
 
   if (searchInput) searchInput.addEventListener("input", loadGradesList);
   if (classFilter) classFilter.addEventListener("change", loadGradesList);
   if (subjectFilter) subjectFilter.addEventListener("change", loadGradesList);
   if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
+  if (statusFilter) statusFilter.addEventListener("change", loadGradesList);
+  if (startDateFilter) startDateFilter.addEventListener("change", loadGradesList);
+  if (endDateFilter) endDateFilter.addEventListener("change", loadGradesList);
 }

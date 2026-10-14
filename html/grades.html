@@ -75,6 +75,15 @@
         <select id="gradeToolbarCategorySelect">
           <option value="">All Assessment Categories</option>
         </select>
+
+        <input type="date" id="gradeToolbarStartDate" aria-label="From date" />
+        <input type="date" id="gradeToolbarEndDate" aria-label="To date" />
+
+        <select id="gradeToolbarStatusSelect" aria-label="Filter by status">
+          <option value="">All Statuses</option>
+          <option value="drafted">Drafted</option>
+          <option value="submitted">Submitted</option>
+        </select>
       </section>
 
       <section class="grade-table-card">
@@ -85,6 +94,7 @@
               <th>Class</th>
               <th>Subject</th>
               <th>Date</th>
+              <th>Entered By</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -182,6 +192,10 @@
               <label>Date</label>
               <p id="viewModalDate"></p>
             </div>
+            <div class="details-item">
+              <label>Entered By</label>
+              <p id="viewModalCreator"></p>
+            </div>
           </div>
 
           <section class="grade-table-card">
@@ -264,6 +278,14 @@
             <div class="details-item">
               <label>Date</label>
               <p id="editModalDate"></p>
+            </div>
+            <div class="details-item">
+              <label>Entered By</label>
+              <p id="editModalCreator"></p>
+            </div>
+            <div class="details-item">
+              <label>Editing By</label>
+              <p id="editModalEditor"></p>
             </div>
           </div>
 
@@ -350,6 +372,11 @@
             <div class="details-item">
               <label>Date</label>
               <p id="enterGradeModalDate">-</p>
+            </div>
+
+            <div class="details-item">
+              <label>Entered By</label>
+              <p id="enterGradeModalCreator"></p>
             </div>
           </div>
 
