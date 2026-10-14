@@ -985,18 +985,12 @@ async function loadGradesList() {
     if (!grades || grades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
             No grade records found.
           </td>
         </tr>`;
       return;
     }
-
-
-    const creatorProfiles = await getGradeCreatorProfiles(
-      client,
-      grades.map((grade) => grade.created_by),
-    );
 
     const filteredGrades = grades.filter((item) => {
       const normalizedStatus = (item.status || "drafted").toLowerCase();
@@ -1015,23 +1009,19 @@ async function loadGradesList() {
       const className = (item.classes?.name || "").toLowerCase();
       const subjectName = (item.subjects?.name || "").toLowerCase();
       const statusText = (item.status || "").toLowerCase();
-      const creatorName = (
-        creatorProfiles.get(item.created_by)?.full_name || ""
-      ).toLowerCase();
 
       return (
         categoryName.includes(searchQuery) ||
         className.includes(searchQuery) ||
         subjectName.includes(searchQuery) ||
-        statusText.includes(searchQuery) ||
-        creatorName.includes(searchQuery)
+        statusText.includes(searchQuery)
       );
     });
 
     if (filteredGrades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
             No grade records found matching filters.
           </td>
         </tr>`;
@@ -1061,7 +1051,6 @@ async function loadGradesList() {
         const className = item.classes?.name || "N/A";
         const subjectName = item.subjects?.name || "N/A";
         const displayStatus = isDraft ? "Drafted" : "Submitted";
-        const creator = creatorProfiles.get(item.created_by);
 
         const actionButtonHTML = isDraft
           ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${gradeId}">
@@ -1077,7 +1066,6 @@ async function loadGradesList() {
             <td>${className}</td>
             <td>${subjectName}</td>
             <td>${formattedDate}</td>
-            <td>${renderGradeCreator(creator, item.created_by)}</td>
             <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
             <td>${actionButtonHTML}</td>
           </tr>

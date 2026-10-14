@@ -68,6 +68,21 @@ test("enter and edit grade modals show the grade creator identity", async () => 
   assert.match(source, /editModalEditor"\)\.innerHTML = editorMarkup/);
 });
 
+test("grades table omits creator identity while grade detail modals retain it", async () => {
+  const html = await readFile(path.join(projectRoot, "html", "grades.html"), "utf8");
+  const listSource = await readFile(path.join(projectRoot, "js", "grades.js"), "utf8");
+  const tableHeader = html.match(/<thead>[\s\S]*?<\/thead>/)?.[0];
+  const listRenderer = listSource.match(/async function loadGradesList\(\) \{[\s\S]*?\n\}/)?.[0];
+
+  assert.ok(tableHeader);
+  assert.ok(listRenderer);
+  assert.doesNotMatch(tableHeader, /Entered By/);
+  assert.doesNotMatch(listRenderer, /renderGradeCreator|creatorProfiles/);
+  assert.match(html, /id="viewModalCreator"/);
+  assert.match(html, /id="editModalCreator"/);
+  assert.match(html, /id="editModalEditor"/);
+});
+
 test("grade statuses have distinct badge colors and every grade modal is viewport constrained on mobile", async () => {
   const css = await readFile(path.join(projectRoot, "css", "grades.css"), "utf8");
   const html = await readFile(path.join(projectRoot, "html", "grades.html"), "utf8");
@@ -75,7 +90,6 @@ test("grade statuses have distinct badge colors and every grade modal is viewpor
   assert.match(css, /\.badge-drafted\s*\{[\s\S]*?background:\s*#fef3c7/);
   assert.match(css, /\.badge-submitted\s*\{[\s\S]*?background:\s*#dcfce7/);
   assert.match(css, /@media screen and \(max-width: 768px\)[\s\S]*?\.enterGrade-modal-content,[\s\S]*?\.editGrade-modal-content[\s\S]*?max-height: 92vh/);
-  assert.match(html, /<th>Entered By<\/th>/);
   assert.match(html, /id="viewModalCreator"/);
   assert.match(html, /id="editModalCreator"/);
   assert.match(css, /@media screen and \(max-width: 420px\)[\s\S]*?\.toolbar input/);
