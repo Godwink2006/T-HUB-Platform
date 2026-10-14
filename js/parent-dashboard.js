@@ -28,9 +28,12 @@ async function loadParentDashboard() {
 
     const { data: profile, error: profileError } = await client
       .from("profiles")
-      .select("id, full_name, role, status")
+      .select("id, full_name, role, status, email, photo_url, phone_number")
       .eq("id", user.id)
       .single();
+
+    window.renderParentPortalProfile(profile, user);
+
     if (profileError) throw profileError;
     if (
       profile.role !== "parent" ||
@@ -41,8 +44,6 @@ async function loadParentDashboard() {
       return;
     }
 
-    document.getElementById("parentName").textContent =
-      profile.full_name || "Parent";
     const { data: links, error: linksError } = await client
       .from("parent_student_links")
       .select("student_id, relationship")
@@ -109,6 +110,82 @@ async function loadParentDashboard() {
     container.setAttribute("aria-busy", "false");
   }
 }
+
+const DEFAULT_PARENT_PORTAL_AVATAR =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
+
+window.renderParentPortalProfile = function (profile, authUser) {
+  // Extract values dynamically with fallback states only for missing data
+  const name = String(
+    profile?.full_name || authUser?.user_metadata?.full_name || "Parent",
+  );
+  const email = String(authUser?.email || profile?.email || "Email not added");
+  const phone = String(
+    profile?.phone_number || profile?.phone || "Phone not added",
+  );
+
+  // DOM Elements mapping
+  const welcomeNameElement = document.getElementById("parentName");
+  const nameElement = document.getElementById("parentAccountName");
+  const emailElement = document.getElementById("parentAccountEmail");
+  const phoneElement = document.getElementById("parentAccountPhone");
+
+  // Populate dynamic text fields
+  if (welcomeNameElement) welcomeNameElement.textContent = name;
+  if (nameElement) nameElement.textContent = name;
+  if (emailElement) emailElement.textContent = email;
+  if (phoneElement) phoneElement.textContent = phone;
+
+  // Avatar & Dynamic Initials Generation
+  const avatarShell = document.getElementById("parentPhoto");
+  const avatar = avatarShell?.querySelector(".parent-avatar");
+  const initials = avatarShell?.querySelector(".parent-avatar-initials");
+
+  // Generate initials dynamically from the actual fetched name
+  const computedInitials =
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "P";
+
+  if (initials) {
+    initials.textContent = computedInitials;
+    initials.style.display = "flex";
+  }
+
+  if (!avatar) return;
+
+  avatar.alt = `${name} profile photo`;
+
+  // Load custom user photo URL dynamically if present
+  const photoUrl = profile?.photo_url;
+  if (photoUrl) {
+    try {
+      const parsedPhotoUrl = new URL(photoUrl, window.location.href);
+      if (["https:", "http:"].includes(parsedPhotoUrl.protocol)) {
+        avatar.src = parsedPhotoUrl.href;
+        avatar.hidden = false;
+        if (initials) initials.style.display = "none";
+      }
+    } catch {
+      avatar.hidden = true;
+      avatar.src = DEFAULT_PARENT_PORTAL_AVATAR;
+    }
+  } else {
+    avatar.hidden = true;
+    avatar.src = DEFAULT_PARENT_PORTAL_AVATAR;
+  }
+
+  // Fallback for broken/failed image loads
+  avatar.onerror = () => {
+    avatar.onerror = null;
+    avatar.hidden = true;
+    if (initials) initials.style.display = "flex";
+  };
+};
 
 function renderParentChildren(children) {
   const container = document.getElementById("parentChildren");

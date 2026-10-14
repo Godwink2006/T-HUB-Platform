@@ -36,7 +36,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body class="parent-portal">
     <header class="parent-topbar">
@@ -51,11 +51,60 @@
     </header>
     <main class="parent-main">
       <section class="parent-welcome" aria-labelledby="parentWelcomeTitle">
-        <p class="parent-eyebrow">Family portal</p>
-        <h1 id="parentWelcomeTitle">
-          Welcome, <span id="parentName">Parent</span>
-        </h1>
-        <p>Choose a student to see their school information.</p>
+        <div class="parent-profile-header-card">
+          <!-- Avatar & Welcome Greeting -->
+          <div class="parent-profile-main">
+            <span
+              id="parentPhoto"
+              class="parent-avatar-shell parent-avatar-large"
+              aria-hidden="true"
+            >
+              <img class="parent-avatar" alt="" />
+              <span class="parent-avatar-initials"></span>
+            </span>
+
+            <div class="parent-welcome-details">
+              <span class="parent-badge">FAMILY PORTAL</span>
+              <h1 id="parentWelcomeTitle">
+                Welcome, <span id="parentName">Loading...</span>
+              </h1>
+              <p class="parent-subtitle">
+                Choose a student to see their school information.
+              </p>
+            </div>
+          </div>
+
+          <!-- Contact Info Grid -->
+          <div class="parent-contact-grid">
+            <div class="contact-pill">
+              <i class="fa-solid fa-envelope"></i>
+              <div>
+                <span class="pill-label">Email</span>
+                <span id="parentAccountEmail" class="pill-value"
+                  >Loading...</span
+                >
+              </div>
+            </div>
+
+            <div class="contact-pill">
+              <i class="fa-solid fa-phone"></i>
+              <div>
+                <span class="pill-label">Phone</span>
+                <span id="parentAccountPhone" class="pill-value"
+                  >Loading...</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Change Profile Info Redirect Button -->
+          <div class="parent-profile-actions">
+            <a href="my-profile.html" class="btn-change-profile">
+              <i class="fa-solid fa-user-pen"></i>
+              Change Profile Information
+            </a>
+          </div>
+        </div>
       </section>
       <section class="children-section" aria-labelledby="childrenTitle">
         <div class="section-heading">
@@ -138,6 +187,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/parent-dashboard.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>
