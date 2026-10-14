@@ -80,6 +80,30 @@ test("library inventory filters by search text, department, and active status", 
   assert.doesNotMatch(html, /<option>Borrow<\/option>|<option>Return<\/option>/);
 });
 
+test("librarian transfer-snapshot policy is restricted to their school's borrowers", async () => {
+  const policy = await readFile(
+    path.join(
+      projectRoot,
+      "supabase",
+      "library_librarian_transfer_snapshot_access.sql",
+    ),
+    "utf8",
+  );
+
+  assert.match(policy, /on public\.student_enrollments[\s\S]*?for select[\s\S]*?to authenticated/i);
+  assert.match(policy, /student_name_snapshot is not null/i);
+  assert.match(
+    policy,
+    /school_id = public\.get_auth_user_school_id\(\)/i,
+  );
+  assert.match(
+    policy,
+    /lower\(coalesce\(public\.get_auth_user_role\(\), ''\)\) = 'librarian'/i,
+  );
+  assert.match(policy, /borrowing\.borrower_id = student_enrollments\.student_id/i);
+  assert.match(policy, /borrowing\.school_id = student_enrollments\.school_id/i);
+});
+
 test("borrower photo URLs only allow HTTP(S) sources and otherwise use the default avatar", async () => {
   const source = await readFile(path.join(projectRoot, "js", "library.js"), "utf8");
   const functionSource = source.match(

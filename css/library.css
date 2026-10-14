@@ -726,46 +726,47 @@ tr {
 @media (max-width: 768px) {
   .books-main-content {
     min-width: 0;
-    padding: 70px 12px 16px;
+    padding: 64px 10px 12px;
   }
 
   .topbar {
     align-items: center;
-    gap: 12px;
-    margin-bottom: 18px;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .topbar h1 {
-    font-size: clamp(1.4rem, 6vw, 2rem);
+    font-size: clamp(1.25rem, 5vw, 1.65rem);
   }
 
   .topbar p {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
   }
 
   .add-books-btn {
     flex: 0 0 auto;
-    min-height: 44px;
-    padding: 0 12px;
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 0.85rem;
   }
 
   .toolbar {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 16px 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    margin: 12px 0;
   }
 
   .toolbar input,
   .toolbar select {
     width: 100%;
-    min-height: 44px;
+    min-height: 38px;
     flex: auto;
-    padding: 0 10px;
-    font-size: 0.9rem;
+    padding: 0 8px;
+    font-size: 0.82rem;
   }
 
-  .toolbar input {
+  .toolbar select:last-child {
     grid-column: 1 / -1;
   }
 
@@ -782,7 +783,7 @@ tr {
     width: calc(100vw - 20px);
     height: auto;
     max-height: calc(100dvh - 24px);
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .modal-book,
@@ -798,7 +799,35 @@ tr {
   .edit-book-modal-body,
   .addBook-modal-body,
   .editBook-modal-body {
-    padding: 16px;
+    padding: 12px;
+  }
+
+  .book-modal-content h2,
+  .view-book-modal-content h2,
+  .edit-book-modal-content h2,
+  .addBook-modal-content h2,
+  .editBook-modal-content h2 {
+    font-size: 1rem;
+  }
+
+  .form-group label {
+    margin-bottom: 5px;
+    font-size: 0.78rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 9px 10px;
+    font-size: 0.85rem;
+  }
+
+  .cancel-btn,
+  .save-btn,
+  .edit-btn,
+  .upload-btn {
+    padding: 9px 12px;
+    font-size: 0.82rem;
   }
 
   .book-modal-header,
@@ -806,7 +835,7 @@ tr {
   .edit-book-modal-header,
   .addBook-modal-header,
   .editBook-modal-header {
-    padding: 14px 16px;
+    padding: 10px 12px;
   }
 
   .book-modal-footer,
@@ -820,6 +849,7 @@ tr {
 
   .books-table-card {
     width: 100%;
+    border-radius: 10px;
   }
 
   table {
@@ -833,28 +863,95 @@ tr {
   .book-modal-content table {
     min-width: 0;
   }
+
+  .books-main-content button,
+  .books-main-content input,
+  .books-main-content select,
+  .books-main-content textarea,
+  .books-main-content .books-table-card,
+  .books-main-content .book-table-card,
+  .books-main-content .book-modal-content,
+  .books-main-content .view-book-modal-content,
+  .books-main-content .edit-book-modal-content,
+  .books-main-content .addBook-modal-content,
+  .books-main-content .editBook-modal-content,
+  .books-main-content .books-status-active,
+  .books-main-content .books-status-inactive,
+  .books-status-inactive,
+  .books-status-active {
+    border-radius: 10px;
+  }
+
+  .book-modal-content button,
+  .view-book-modal-content button,
+  .edit-book-modal-content button,
+  .addBook-modal-content button,
+  .editBook-modal-content button,
+  .book-modal-content input,
+  .book-modal-content select,
+  .book-modal-content textarea,
+  .edit-book-modal-content input,
+  .edit-book-modal-content select,
+  .edit-book-modal-content textarea,
+  .addBook-modal-content input,
+  .addBook-modal-content select,
+  .addBook-modal-content textarea,
+  .editBook-modal-content input,
+  .editBook-modal-content select,
+  .editBook-modal-content textarea,
+  .cancel-btn,
+  .save-btn,
+  .edit-btn,
+  .upload-btn,
+  .avatar-edit-container,
+  .book-modal-content,
+  .view-book-modal-content,
+  .edit-book-modal-content,
+  .addBook-modal-content,
+  .editBook-modal-content,
+  .status-borrowed,
+  .status-returned {
+    border-radius: 10px;
+  }
+
+  .books-main-content th,
+  .books-main-content td,
+  .view-book-modal-content th,
+  .view-book-modal-content td {
+    padding: 10px;
+    font-size: 0.82rem;
+  }
+
+  .books-actions-btn {
+    width: 34px;
+    height: 34px;
+    margin-right: 3px;
+    border-radius: 8px;
+  }
 }
 
 @media (max-width: 420px) {
   .books-main-content {
-    padding-right: 8px;
-    padding-left: 8px;
+    padding-right: 7px;
+    padding-left: 7px;
   }
 
   .topbar {
     align-items: flex-start;
   }
 
-  .add-books-btn {
-    font-size: 0.85rem;
+  .topbar p {
+    font-size: 0.72rem;
   }
 
-  .toolbar {
-    grid-template-columns: 1fr;
+  .toolbar input,
+  .toolbar select {
+    min-height: 36px;
+    font-size: 0.76rem;
   }
 
-  .toolbar input {
-    grid-column: auto;
+  .toolbar input::placeholder {
+    font-size: 0.74rem;
   }
 
   .book-modal-body,
@@ -862,12 +959,12 @@ tr {
   .edit-book-modal-body,
   .addBook-modal-body,
   .editBook-modal-body {
-    padding: 12px;
+    padding: 10px;
   }
 
   .avatar-edit-container {
-    align-items: flex-start;
-    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.6rem;
   }
 
   .book-modal-footer > button,
@@ -876,5 +973,17 @@ tr {
   .addBook-modal-footer > button,
   .editBook-modal-footer > button {
     flex: 1 1 120px;
+  }
+
+  .books-main-content th,
+  .books-main-content td {
+    padding: 8px;
+    font-size: 0.76rem;
+  }
+
+  .books-status-active,
+  .books-status-inactive {
+    padding: 4px 8px;
+    font-size: 0.72rem;
   }
 }
