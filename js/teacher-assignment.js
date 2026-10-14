@@ -21,8 +21,17 @@ function openModal(modal) {
 
 function closeModal(modal) {
   if (!modal) return;
+
   modal.style.display = "none";
   document.body.style.overflow = "";
+
+  const form = modal.querySelector("form");
+  if (form) form.reset();
+
+  const hiddenIdInput = modal.querySelector("#editAssignmentId");
+  if (hiddenIdInput) hiddenIdInput.value = "";
+
+  originalEditData = null;
 }
 
 function populateSelect(
@@ -260,25 +269,6 @@ async function validateTeacherAssignment({
 
 let originalEditData = null;
 
-function closeModal(modal) {
-  if (!modal) return;
-
-  modal.style.display = "none";
-  document.body.style.overflow = "";
-
-  const form = modal.querySelector("form");
-  if (form) {
-    form.reset();
-  }
-
-  const hiddenIdInput = modal.querySelector("#editAssignmentId");
-  if (hiddenIdInput) {
-    hiddenIdInput.value = "";
-  }
-
-  originalEditData = null;
-}
-
 async function openEditModal(assignmentId) {
   const editModal = document.getElementById("editAssignModal");
   if (!editModal) return;
@@ -509,7 +499,12 @@ async function loadAssignmentsTable() {
         created_at,
         updated_at,
         description,
-        profiles!teacher_id ( id, full_name ),
+        profiles!teacher_id (
+          id,
+          full_name,
+          photo_url,
+          teachers ( staff_id )
+        ),
         subjects ( id, name ),
         classes ( id, name ),
         academic_years ( id, year_label )
@@ -534,17 +529,17 @@ async function loadAssignmentsTable() {
 }
 
 function populateFilterDropdowns(assignments) {
-  const teacherSelect = document.getElementById("filterTeacher");
+  const subjectSelect = document.getElementById("filterSubject");
   const classSelect = document.getElementById("filterClass");
   const yearSelect = document.getElementById("filterAcademicYear");
 
-  const teachersMap = new Map();
+  const subjectsMap = new Map();
   const classesMap = new Map();
   const yearsMap = new Map();
 
   assignments.forEach((item) => {
-    if (item.profiles?.id && item.profiles?.full_name) {
-      teachersMap.set(item.profiles.id, item.profiles.full_name);
+    if (item.subjects?.id && item.subjects?.name) {
+      subjectsMap.set(item.subjects.id, item.subjects.name);
     }
     if (item.classes?.id && item.classes?.name) {
       classesMap.set(item.classes.id, item.classes.name);
@@ -565,7 +560,7 @@ function populateFilterDropdowns(assignments) {
     });
   };
 
-  buildOptions(teacherSelect, teachersMap, "All Teachers");
+  buildOptions(subjectSelect, subjectsMap, "All Subjects");
   buildOptions(classSelect, classesMap, "All Classes");
   buildOptions(yearSelect, yearsMap, "All Academic Years");
 }
@@ -588,6 +583,10 @@ function renderAssignmentsTable(assignments) {
     const tr = document.createElement("tr");
 
     const teacherName = assign.profiles?.full_name || "N/A";
+    const teacherStaffId = assign.profiles?.teachers?.staff_id || "No ID found";
+    const teacherPhoto = escapeHTML(
+      assign.profiles?.photo_url || window.DEFAULT_PROFILE_AVATAR || "",
+    );
     const subjectName = assign.subjects?.name || "N/A";
     const className = assign.classes?.name || "N/A";
     const academicYear = assign.academic_years?.year_label || "N/A";
@@ -602,7 +601,15 @@ function renderAssignmentsTable(assignments) {
       : "Inactive";
 
     tr.innerHTML = `
-      <td>${escapeHTML(teacherName || "-")}</td>
+      <td>
+        <span class="app-person-cell teacher-assignment-identity">
+          <img class="app-person-avatar teacher-assignment-avatar" src="${teacherPhoto}" alt="" loading="lazy" />
+          <span class="app-person-meta">
+            <span>${escapeHTML(teacherName)}</span>
+            <small class="app-person-id">Staff ID: ${escapeHTML(teacherStaffId)}</small>
+          </span>
+        </span>
+      </td>
       <td>${escapeHTML(subjectName || "-")}</td>
       <td>${escapeHTML(className || "-")}</td>
       <td>${escapeHTML(academicYear || "-")}</td>
@@ -621,6 +628,17 @@ function renderAssignmentsTable(assignments) {
     `;
 
     tableBody.appendChild(tr);
+    const teacherAvatar = tr.querySelector(".teacher-assignment-avatar");
+    teacherAvatar?.addEventListener(
+      "error",
+      () => {
+        const fallback = window.DEFAULT_PROFILE_AVATAR || "";
+        if (fallback && teacherAvatar.src !== fallback) {
+          teacherAvatar.src = fallback;
+        }
+      },
+      { once: true },
+    );
   });
 }
 
@@ -628,7 +646,7 @@ function filterAssignments() {
   const searchTerm =
     document.getElementById("assignSearchInput")?.value.toLowerCase().trim() ||
     "";
-  const teacherId = document.getElementById("filterTeacher")?.value || "";
+  const subjectId = document.getElementById("filterSubject")?.value || "";
   const classId = document.getElementById("filterClass")?.value || "";
   const yearId = document.getElementById("filterAcademicYear")?.value || "";
   const status = document.getElementById("filterStatus")?.value || "";
@@ -641,7 +659,7 @@ function filterAssignments() {
       (item.classes?.name || "").toLowerCase().includes(searchTerm) ||
       (item.description || "").toLowerCase().includes(searchTerm);
 
-    const matchesTeacher = !teacherId || item.profiles?.id === teacherId;
+    const matchesSubject = !subjectId || item.subjects?.id === subjectId;
     const matchesClass = !classId || item.classes?.id === classId;
     const matchesYear = !yearId || item.academic_years?.id === yearId;
     const matchesStatus =
@@ -649,7 +667,7 @@ function filterAssignments() {
 
     return (
       matchesSearch &&
-      matchesTeacher &&
+      matchesSubject &&
       matchesClass &&
       matchesYear &&
       matchesStatus
@@ -661,16 +679,15 @@ function filterAssignments() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("assignSearchInput");
-  const filterTeacher = document.getElementById("filterTeacher");
+  const filterSubject = document.getElementById("filterSubject");
   const filterClass = document.getElementById("filterClass");
   const filterYear = document.getElementById("filterAcademicYear");
   const filterStatus = document.getElementById("filterStatus");
 
   if (searchInput) searchInput.addEventListener("input", filterAssignments);
-  if (filterTeacher)
-    filterTeacher.addEventListener("change", filterAssignments);
+  if (filterSubject)
+    filterSubject.addEventListener("change", filterAssignments);
   if (filterClass) filterClass.addEventListener("change", filterAssignments);
   if (filterYear) filterYear.addEventListener("change", filterAssignments);
   if (filterStatus) filterStatus.addEventListener("change", filterAssignments);
 });
-
