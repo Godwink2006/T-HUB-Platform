@@ -13,6 +13,8 @@ let currentAttendanceSession = {
   subjectName: "",
   teacherId: null,
   teacherName: "",
+  teacherStaffId: "",
+  teacherPhotoUrl: "",
   schoolId: null,
   academicYearId: null,
   termId: null,
@@ -169,7 +171,7 @@ function initAttendanceModalLogic() {
       const [profileRes, assignmentRes] = await Promise.all([
         supabaseClient
           .from("profiles")
-          .select("full_name, school_id")
+          .select("full_name, school_id, photo_url, teachers(staff_id)")
           .eq("id", user.id)
           .maybeSingle(),
         supabaseClient
@@ -199,6 +201,8 @@ function initAttendanceModalLogic() {
       subjectName: subjectName || "-",
       teacherId: user?.id || null,
       teacherName: profile?.full_name || "-",
+      teacherStaffId: profile?.teachers?.staff_id || "Not assigned",
+      teacherPhotoUrl: profile?.photo_url || "",
       schoolId: profile?.school_id || null,
       academicYearId: activeAcademicYearId || window.activeAcademicYearId,
       termId: activeTermId || window.activeTermId,
@@ -467,8 +471,20 @@ async function openStudentAttendanceModal(sessionData) {
     elSubject.textContent = currentAttendanceSession.subjectName || "-";
   if (elPeriod)
     elPeriod.textContent = currentAttendanceSession.periodName || "-";
-  if (elTeacher)
-    elTeacher.textContent = currentAttendanceSession.teacherName || "-";
+  if (elTeacher) {
+    const teacherPhoto = escapeHtml(
+      getAttendancePhotoUrl(currentAttendanceSession.teacherPhotoUrl),
+    );
+    elTeacher.innerHTML = `
+      <span class="app-person-cell attendance-teacher-identity">
+        <img class="app-person-avatar" src="${teacherPhoto}" alt="" loading="lazy" />
+        <span class="app-person-meta">
+          <span>${escapeHtml(currentAttendanceSession.teacherName || "-")}</span>
+          <small class="app-person-id">Staff ID: ${escapeHtml(currentAttendanceSession.teacherStaffId || "Not assigned")}</small>
+        </span>
+      </span>
+    `;
+  }
   if (elDate) elDate.textContent = currentAttendanceSession.dateStr;
 
   openModal(modal);

@@ -111,6 +111,18 @@ test("take-attendance roster displays each student's school ID and profile photo
   assert.match(rosterFunction, /class="app-person-avatar"/);
 });
 
+test("take-attendance modal displays the current teacher photo and staff ID", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "attendance.js"), "utf8");
+  const html = await readFile(path.join(projectRoot, "html", "attendance.html"), "utf8");
+
+  assert.match(source, /\.select\("full_name, school_id, photo_url, teachers\(staff_id\)"\)/);
+  assert.match(source, /teacherStaffId: profile\?\.teachers\?\.staff_id/);
+  assert.match(source, /teacherPhotoUrl: profile\?\.photo_url/);
+  assert.match(source, /Staff ID: \$\{escapeHtml\(currentAttendanceSession\.teacherStaffId/);
+  assert.match(source, /getAttendancePhotoUrl\(currentAttendanceSession\.teacherPhotoUrl\)/);
+  assert.ok(html.includes('id="stModalTeacherName"'));
+});
+
 test("attendance transfer snapshots are readable only for a teacher's own school sessions", async () => {
   const policy = await readFile(
     path.join(
