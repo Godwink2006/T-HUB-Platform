@@ -793,10 +793,3 @@ tr {
     border-radius: 8px;
   }
 }
-
-@media screen and (max-width: 420px) {
-  .toolbar input,
-  .toolbar select {
-    flex-basis: 100%;
-  }
-}

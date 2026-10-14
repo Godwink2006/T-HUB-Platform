@@ -998,7 +998,7 @@ async function loadGradesList() {
         : "submitted";
       const itemDate = getGradeLocalDate(item.created_at);
       if (selectedStatus && itemStatus !== selectedStatus) return false;
-      if (startDate && (!itemDate || itemDate < startDate)) return false;
+      if (startDate && itemDate !== startDate) return false;
       if (!searchQuery) return true;
 
       const categoryName = (
@@ -1310,7 +1310,6 @@ async function handleEditGrades(gradeId) {
     const creatorProfiles = await getGradeCreatorProfiles(client, [
       grade.created_by,
     ]);
-    const editorMarkup = await getCurrentGradeActorMarkup(client);
 
 
     const categoryMax =
@@ -1374,7 +1373,6 @@ async function handleEditGrades(gradeId) {
       creatorProfiles.get(grade.created_by),
       grade.created_by,
     );
-    document.getElementById("editModalEditor").innerHTML = editorMarkup;
 
     if (elMaxMarks) {
       elMaxMarks.textContent =

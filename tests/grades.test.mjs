@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("grades filters include one from-date input and status control", async () => {
+test("grades filters include one exact-date input and status control", async () => {
   const html = await readFile(path.join(projectRoot, "html", "grades.html"), "utf8");
   const source = await readFile(path.join(projectRoot, "js", "grades.js"), "utf8");
 
@@ -17,7 +17,7 @@ test("grades filters include one from-date input and status control", async () =
   assert.doesNotMatch(html, /gradeToolbarEndDate/);
   assert.equal((html.match(/type="date"/g) || []).length, 1);
   assert.match(source, /if \(selectedStatus && itemStatus !== selectedStatus\) return false;/);
-  assert.match(source, /if \(startDate && \(!itemDate \|\| itemDate < startDate\)\) return false;/);
+  assert.match(source, /if \(startDate && itemDate !== startDate\) return false;/);
   assert.doesNotMatch(source, /gradeToolbarEndDate|endDateFilter/);
 });
 
@@ -60,10 +60,9 @@ test("enter and edit grade modals show the grade creator identity", async () => 
 
   assert.match(html, /id="enterGradeModalCreator"/);
   assert.match(html, /id="editModalCreator"/);
-  assert.match(html, /id="editModalEditor"/);
   assert.match(source, /getCurrentGradeActorMarkup\(client\)/);
   assert.match(source, /elCreator\.innerHTML = gradeCreatorMarkup/);
-  assert.match(source, /editModalEditor"\)\.innerHTML = editorMarkup/);
+  assert.doesNotMatch(html, /Editing By|editModalEditor/);
 });
 
 test("grades table omits creator identity while grade detail modals retain it", async () => {
@@ -78,7 +77,7 @@ test("grades table omits creator identity while grade detail modals retain it", 
   assert.doesNotMatch(listRenderer, /renderGradeCreator|creatorProfiles/);
   assert.match(html, /id="viewModalCreator"/);
   assert.match(html, /id="editModalCreator"/);
-  assert.match(html, /id="editModalEditor"/);
+  assert.doesNotMatch(html, /Editing By|editModalEditor/);
 });
 
 test("grade statuses have distinct badge colors and every grade modal is viewport constrained on mobile", async () => {
@@ -88,7 +87,7 @@ test("grade statuses have distinct badge colors and every grade modal is viewpor
   assert.match(css, /\.badge-drafted\s*\{[\s\S]*?background:\s*#fef3c7/);
   assert.match(css, /\.badge-submitted\s*\{[\s\S]*?background:\s*#dcfce7/);
   assert.match(css, /@media screen and \(max-width: 768px\)[\s\S]*?\.enterGrade-modal-content,[\s\S]*?\.editGrade-modal-content[\s\S]*?max-height: 92vh/);
+  assert.match(css, /\.toolbar input,[\s\S]*?flex:\s*1 1 calc\(50% - 8px\)/);
   assert.match(html, /id="viewModalCreator"/);
   assert.match(html, /id="editModalCreator"/);
-  assert.match(css, /@media screen and \(max-width: 420px\)[\s\S]*?\.toolbar input/);
 });
