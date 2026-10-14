@@ -66,6 +66,26 @@ test("attendance filters cover class, subject, academic year, semester, status, 
   }
 });
 
+test("admins can load drafted attendance while other staff remain submitted-only", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "attendance.js"), "utf8");
+  const functionSource = source.match(
+    /function shouldFilterAttendanceToSubmitted\(role\) \{[\s\S]*?\n\}/,
+  )?.[0];
+  assert.ok(functionSource, "attendance workflow visibility helper exists");
+
+  const context = vm.createContext({});
+  vm.runInContext(
+    `${functionSource}\nglobalThis.shouldFilter = shouldFilterAttendanceToSubmitted;`,
+    context,
+  );
+
+  assert.equal(context.shouldFilter("admin"), false);
+  assert.equal(context.shouldFilter("ADMIN"), false);
+  assert.equal(context.shouldFilter("teacher"), false);
+  assert.equal(context.shouldFilter("accountant"), true);
+  assert.equal(context.shouldFilter("receptionist"), true);
+});
+
 test("attendance history uses transfer photo snapshots and teacher staff identity", async () => {
   const source = await readFile(path.join(projectRoot, "js", "attendance.js"), "utf8");
   const utils = await readFile(path.join(projectRoot, "js", "utils.js"), "utf8");
@@ -76,6 +96,19 @@ test("attendance history uses transfer photo snapshots and teacher staff identit
   assert.match(source, /profiles:teacher_id\(full_name, photo_url, teachers\(staff_id\)\)/);
   assert.match(source, /Staff ID: \$\{escapeHtml\(teacherStaffId\)\}/);
   assert.match(html, /id="viewModalTeacherName"/);
+});
+
+test("take-attendance roster displays each student's school ID and profile photo", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "attendance.js"), "utf8");
+  const rosterFunction = source.match(
+    /async function loadRosterIntoModal\(classId\) \{[\s\S]*?\n\}/,
+  )?.[0];
+  assert.ok(rosterFunction, "attendance roster loader exists");
+  assert.match(rosterFunction, /\.from\("profiles"\)[\s\S]*?\.select\("id, photo_url"\)/);
+  assert.match(rosterFunction, /student\.student_id \|\| "Not assigned"/);
+  assert.match(rosterFunction, /Student ID: \$\{studentCode\}/);
+  assert.match(rosterFunction, /getAttendancePhotoUrl\(studentPhotoById\.get\(student\.id\)\)/);
+  assert.match(rosterFunction, /class="app-person-avatar"/);
 });
 
 test("attendance transfer snapshots are readable only for a teacher's own school sessions", async () => {

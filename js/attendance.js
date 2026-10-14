@@ -505,6 +505,18 @@ async function loadRosterIntoModal(classId) {
       return;
     }
 
+    const studentIds = activeStudents.map((student) => student.id).filter(Boolean);
+    const { data: studentProfiles, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("id, photo_url")
+      .in("id", studentIds);
+
+    if (profileError) {
+      console.error("Could not load student photos for attendance roster:", profileError);
+    }
+    const studentPhotoById = new Map(
+      (studentProfiles || []).map((profile) => [profile.id, profile.photo_url]),
+    );
 
     tbody.innerHTML = "";
     activeStudents.forEach((student) => {
@@ -513,10 +525,22 @@ async function loadRosterIntoModal(classId) {
         (student.student_id
           ? `Student (${student.student_id})`
           : `Student (${student.id.slice(0, 8)})`);
+      const studentPhoto = escapeHtml(
+        getAttendancePhotoUrl(studentPhotoById.get(student.id)),
+      );
+      const studentCode = escapeHtml(student.student_id || "Not assigned");
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td style="padding: 10px 12px; font-weight: 500;">${escapeHtml(displayName)}</td>
+        <td style="padding: 10px 12px; font-weight: 500;">
+          <span class="app-person-cell">
+            <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+            <span class="app-person-meta">
+              <span>${escapeHtml(displayName)}</span>
+              <small class="app-person-id">Student ID: ${studentCode}</small>
+            </span>
+          </span>
+        </td>
         <td style="padding: 10px 12px;">
           <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;">
             <option value="present">Present</option>
@@ -753,11 +777,10 @@ async function loadAttendanceTable() {
   `,
     );
 
-    if (profile?.role === "teacher") {
-
+    const role = String(profile?.role || "").toLowerCase();
+    if (role === "teacher") {
       query = query.eq("teacher_id", user.id);
-    } else {
-
+    } else if (shouldFilterAttendanceToSubmitted(role)) {
       query = query.eq("status", "submitted");
     }
 
@@ -858,6 +881,10 @@ async function loadAttendanceTable() {
     console.error("Attendance table exception:", err);
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
   }
+}
+
+function shouldFilterAttendanceToSubmitted(role) {
+  return !["admin", "teacher"].includes(String(role || "").toLowerCase());
 }
 
 function populateClassFilter(records) {
