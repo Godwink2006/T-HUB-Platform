@@ -445,16 +445,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const role = profile?.role?.toLowerCase();
 
+      // Example in my-profile.js back button:
       backBtn.onclick = () => {
-        if (role === "parent") {
-          window.location.href = "parent-dashboard.html";
+        if (isParent) {
+          window.location.replace("parent-dashboard.html"); // Prevents back-swipe
         } else {
-          window.location.href = "settings.html";
+          window.location.replace("settings.html");
         }
       };
     } else {
       backBtn.onclick = () => {
-        window.location.href = "settings.html";
+        window.location.replace = "settings.html";
       };
     }
   } catch (err) {
