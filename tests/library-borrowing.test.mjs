@@ -49,6 +49,37 @@ test("checkout borrower list is school-scoped and borrowing history stays user-s
   assert.match(books, /\.eq\("borrower_id", user\.id\)/);
 });
 
+test("library inventory filters by search text, department, and active status", async () => {
+  const source = await readFile(path.join(projectRoot, "js", "library.js"), "utf8");
+  const html = await readFile(path.join(projectRoot, "html", "library.html"), "utf8");
+  const functionSource = source.match(
+    /function matchesLibraryBookFilters\(book, query = "", department = "", status = ""\) \{[\s\S]*?\n\}/,
+  )?.[0];
+  assert.ok(functionSource, "library book filter helper exists");
+
+  const context = vm.createContext({});
+  vm.runInContext(
+    `${functionSource}\nglobalThis.matches = matchesLibraryBookFilters;`,
+    context,
+  );
+
+  const activeBook = {
+    search: "BK-001 The Example Book Writer Arts",
+    department: "Arts",
+    status: "active",
+  };
+  assert.equal(context.matches(activeBook, "example", "arts", "active"), true);
+  assert.equal(context.matches(activeBook, "missing", "", ""), false);
+  assert.equal(context.matches(activeBook, "", "", "inactive"), false);
+  assert.equal(context.matches(activeBook, "", "science", ""), false);
+  assert.match(html, /id="libraryBookSearch"/);
+  assert.match(html, /id="libraryDepartmentFilter"/);
+  assert.match(html, /id="libraryStatusFilter"/);
+  assert.match(html, /<option value="active">Active<\/option>/);
+  assert.match(html, /<option value="inactive">Inactive<\/option>/);
+  assert.doesNotMatch(html, /<option>Borrow<\/option>|<option>Return<\/option>/);
+});
+
 test("borrower photo URLs only allow HTTP(S) sources and otherwise use the default avatar", async () => {
   const source = await readFile(path.join(projectRoot, "js", "library.js"), "utf8");
   const functionSource = source.match(

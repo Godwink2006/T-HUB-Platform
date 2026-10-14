@@ -156,11 +156,13 @@ body {
   display: flex;
   gap: 15px;
   margin: 25px 0;
+  min-width: 0;
 }
 
 .toolbar input,
 .toolbar select {
   height: 48px;
+  min-width: 0;
   border: 1px solid #d1d5db;
   padding: 0 15px;
   outline: none;
@@ -169,11 +171,30 @@ body {
 
 .toolbar input {
   width: 320px;
+  flex: 1 1 320px;
+}
+
+.toolbar select {
+  flex: 0 1 220px;
 }
 
 .books-table-card {
   background: #ffff;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.book-table-card {
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.library-empty-result {
+  padding: 20px;
+  color: #64748b;
+  text-align: center;
 }
 
 table {
@@ -703,40 +724,49 @@ tr {
 }
 
 @media (max-width: 768px) {
-  .books-container {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    position: relative;
-    width: 100%;
-    height: auto;
-    padding: 15px;
-  }
-
   .books-main-content {
-    margin-left: 0;
-    width: 100%;
-    padding: 15px;
+    min-width: 0;
+    padding: 70px 12px 16px;
   }
 
   .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
   }
 
-  .top-right {
-    width: 100%;
-    justify-content: space-between;
+  .topbar h1 {
+    font-size: clamp(1.4rem, 6vw, 2rem);
+  }
+
+  .topbar p {
+    font-size: 0.85rem;
+  }
+
+  .add-books-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 12px;
   }
 
   .toolbar {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    width: 100%;
+    min-height: 44px;
+    flex: auto;
+    padding: 0 10px;
+    font-size: 0.9rem;
   }
 
   .toolbar input {
-    width: 100%;
+    grid-column: 1 / -1;
   }
 
   .form-grid,
@@ -749,17 +779,102 @@ tr {
   .edit-book-modal-content,
   .addBook-modal-content,
   .editBook-modal-content {
-    width: 95%;
+    width: calc(100vw - 20px);
     height: auto;
-    max-height: 85vh;
+    max-height: calc(100dvh - 24px);
+    border-radius: 12px;
+  }
+
+  .modal-book,
+  .view-book-modal,
+  .edit-modal-book,
+  .addBook-modal,
+  .editBook-modal {
+    padding: 12px;
+  }
+
+  .book-modal-body,
+  .view-book-body,
+  .edit-book-modal-body,
+  .addBook-modal-body,
+  .editBook-modal-body {
+    padding: 16px;
+  }
+
+  .book-modal-header,
+  .view-book-modal-header,
+  .edit-book-modal-header,
+  .addBook-modal-header,
+  .editBook-modal-header {
+    padding: 14px 16px;
+  }
+
+  .book-modal-footer,
+  .view-modal-footer,
+  .edit-book-modal-footer,
+  .addBook-modal-footer,
+  .editBook-modal-footer {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .books-table-card {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    width: 100%;
   }
 
   table {
-    min-width: 600px;
+    min-width: 760px;
+  }
+
+  .view-book-modal-content table {
+    min-width: 560px;
+  }
+
+  .book-modal-content table {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .books-main-content {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .add-books-btn {
+    font-size: 0.85rem;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar input {
+    grid-column: auto;
+  }
+
+  .book-modal-body,
+  .view-book-body,
+  .edit-book-modal-body,
+  .addBook-modal-body,
+  .editBook-modal-body {
+    padding: 12px;
+  }
+
+  .avatar-edit-container {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .book-modal-footer > button,
+  .view-modal-footer > button,
+  .edit-book-modal-footer > button,
+  .addBook-modal-footer > button,
+  .editBook-modal-footer > button {
+    flex: 1 1 120px;
   }
 }

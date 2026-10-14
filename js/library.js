@@ -379,6 +379,81 @@ function renderTableLoading() {
   `;
 }
 
+function matchesLibraryBookFilters(book, query = "", department = "", status = "") {
+  const normalizedQuery = String(query).trim().toLocaleLowerCase();
+  const normalizedDepartment = String(department).toLocaleLowerCase();
+  const normalizedStatus = String(status).toLocaleLowerCase();
+
+  return (
+    (!normalizedQuery ||
+      String(book.search || "").toLocaleLowerCase().includes(normalizedQuery)) &&
+    (!normalizedDepartment ||
+      String(book.department || "").toLocaleLowerCase() === normalizedDepartment) &&
+    (!normalizedStatus ||
+      String(book.status || "").toLocaleLowerCase() === normalizedStatus)
+  );
+}
+
+function applyLibraryBookFilters() {
+  const tableBody = document.getElementById("booksTableBody");
+  if (!tableBody) return;
+
+  const query = String(
+    document.getElementById("libraryBookSearch")?.value || "",
+  )
+    .trim()
+    .toLocaleLowerCase();
+  const department = String(
+    document.getElementById("libraryDepartmentFilter")?.value || "",
+  ).toLocaleLowerCase();
+  const status = String(
+    document.getElementById("libraryStatusFilter")?.value || "",
+  ).toLocaleLowerCase();
+  const rows = Array.from(
+    tableBody.querySelectorAll("tr[data-library-book-row]"),
+  );
+
+  let visibleCount = 0;
+  rows.forEach((row) => {
+    const isVisible = matchesLibraryBookFilters(
+      {
+        search: row.dataset.search,
+        department: row.dataset.department,
+        status: row.dataset.status,
+      },
+      query,
+      department,
+      status,
+    );
+    row.hidden = !isVisible;
+    if (isVisible) visibleCount += 1;
+  });
+
+  let noMatchesRow = document.getElementById("libraryNoMatchesRow");
+  if (rows.length > 0 && visibleCount === 0) {
+    if (!noMatchesRow) {
+      noMatchesRow = document.createElement("tr");
+      noMatchesRow.id = "libraryNoMatchesRow";
+      noMatchesRow.innerHTML =
+        '<td colspan="9" class="library-empty-result">No books match these filters.</td>';
+      tableBody.appendChild(noMatchesRow);
+    }
+    noMatchesRow.hidden = false;
+  } else if (noMatchesRow) {
+    noMatchesRow.hidden = true;
+  }
+}
+
+document
+  .getElementById("libraryBookSearch")
+  ?.addEventListener("input", applyLibraryBookFilters);
+document
+  .getElementById("libraryDepartmentFilter")
+  ?.addEventListener("change", applyLibraryBookFilters);
+document
+  .getElementById("libraryStatusFilter")
+  ?.addEventListener("change", applyLibraryBookFilters);
+
 async function loadBooksTable() {
   renderTableLoading();
   const tableBody = document.getElementById("booksTableBody");
@@ -422,6 +497,26 @@ async function loadBooksTable() {
       return;
     }
 
+    const departmentFilter = document.getElementById("libraryDepartmentFilter");
+    const selectedDepartment = departmentFilter?.value || "";
+    if (departmentFilter) {
+      const departmentNames = [
+        ...new Set(
+          books
+            .map((book) => book.departments?.name)
+            .filter((name) => typeof name === "string" && name.trim()),
+        ),
+      ].sort((a, b) => a.localeCompare(b));
+
+      departmentFilter.replaceChildren(new Option("All Departments", ""));
+      departmentNames.forEach((name) => {
+        departmentFilter.appendChild(new Option(name, name));
+      });
+      if (departmentNames.includes(selectedDepartment)) {
+        departmentFilter.value = selectedDepartment;
+      }
+    }
+
     books.forEach((book) => {
       const tr = document.createElement("tr");
 
@@ -438,6 +533,25 @@ async function loadBooksTable() {
       const totalCopies = book.total_copies || 0;
 
       const availableCopies = Math.max(0, totalCopies - activeBorrowedCount);
+      const bookStatus =
+        String(book.status || "inactive").toLocaleLowerCase() === "active"
+          ? "active"
+          : "inactive";
+
+      tr.dataset.libraryBookRow = "true";
+      tr.dataset.search = [
+        book.book_code,
+        book.title,
+        book.author,
+        departmentName,
+        book.shelf_location,
+        book.description,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase();
+      tr.dataset.department = departmentName;
+      tr.dataset.status = bookStatus;
 
       tr.innerHTML = `
         <td>
@@ -457,7 +571,7 @@ async function loadBooksTable() {
         <td>${escapeHtml(departmentName)}</td>
         <td>${totalCopies}</td>
         <td>${availableCopies}</td>
-        <td><span class="books-status-${String(book.status || "inactive").toLowerCase() === "active" ? "active" : "inactive"}">
+        <td><span class="books-status-${bookStatus}">
           ${escapeHTML(book.status || "Inactive")}
         </span></td>
         <td>
@@ -474,6 +588,7 @@ async function loadBooksTable() {
       tableBody.appendChild(tr);
     });
 
+    applyLibraryBookFilters();
     attachBookActionListeners();
   } catch (err) {
     console.error("Error loading books table:", err);

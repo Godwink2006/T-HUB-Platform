@@ -137,17 +137,21 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search books..." />
+          <input
+            type="search"
+            id="libraryBookSearch"
+            placeholder="Search by title, author, or book code..."
+            aria-label="Search library books"
+          />
 
-          <select>
-            <option>Department</option>
+          <select id="libraryDepartmentFilter" aria-label="Filter by department">
+            <option value="">All Departments</option>
           </select>
 
-          <select>
-            <option>All Status</option>
-            <option>Borrow</option>
-            <option>Return</option>
-            <option>Available</option>
+          <select id="libraryStatusFilter" aria-label="Filter by book status">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
         </section>
 
