@@ -53,7 +53,7 @@ async function enrichStudentHistory(transfers, client) {
   }
 
   const lookups = await Promise.all([
-    loadHistoryLookup(client, "grade", idsByType.get("grade"), `id, student_id, score, remarks, created_at, grades!inner(id, status, school_id, academic_year_id, term_id, class_id, subject_id, assessment_id, date_recorded, created_by, classes(id, name), subjects(id, name), terms(id, name), schools:school_id(id, school_name), academic_years(id, year_label), assessments(id, name, maximum_marks), assessment_categories(id, name, marks))`),
+    loadHistoryLookup(client, "grade", idsByType.get("grade"), `id, student_id, score, created_at, grades!inner(id, status, school_id, academic_year_id, term_id, class_id, subject_id, assessment_id, date_recorded, created_by, classes(id, name), subjects(id, name), terms(id, name), schools:school_id(id, school_name), academic_years(id, year_label), assessments(id, name, maximum_marks), assessment_categories(id, name, marks))`),
     loadHistoryLookup(client, "attendance", idsByType.get("attendance"), `id, status, created_at, student_id, attendance_id, attendance!inner(id, date, school_id, academic_year_id, term_id, class_id, subject_id, period_id, teacher_id, classes(name), academic_years(id, year_label), terms(id, name), subjects(name), periods(name), schools:school_id(id, school_name), profiles:teacher_id(full_name, role, teachers(staff_id)))`),
     loadHistoryLookup(client, "fee", idsByType.get("fee"), `id, student_id, school_id, total_fees, total_paid, balance, status, fee_breakdown, created_at, class_id, academic_year_id, term_id, classes(id, name), academic_years(id, year_label), terms(id, name)`),
   ]);
@@ -90,7 +90,7 @@ async function loadHistoryLookup(client, type, ids, selection) {
 
 function historyLabels(type, row) {
   if (type === "grade") return {
-    score: row.score, remarks: row.remarks, created_at: row.created_at,
+    score: row.score, created_at: row.created_at,
     school_name: row.grades?.schools?.school_name, class_name: row.grades?.classes?.name,
     subject_name: row.grades?.subjects?.name, assessment_name: row.grades?.assessments?.name,
     max_marks: row.grades?.assessments?.maximum_marks ?? row.grades?.assessments?.max_marks,
@@ -428,16 +428,15 @@ function renderAttendanceTable(rows) {
         <td>${escapeHistoryHtml(row.className || "—")}</td>
         <td>${escapeHistoryHtml(pick(s, ["subject_name", "subject"]) || "—")}</td>
         <td>${escapeHistoryHtml(pick(s, ["period_name", "period"]) || "—")}</td>
-        <td><span class="status-pill ${statusClass(status)}">${escapeHistoryHtml(status)}</span></td>
-        <td>${escapeHistoryHtml(pick(s, ["remarks", "notes"]) || "—")}</td>
-      </tr>`;
+  <td><span class="status-pill ${statusClass(status)}">${escapeHistoryHtml(status)}</span></td>
+  </tr>`;
     })
     .join("");
 
   return `<table class="history-table">
     <thead><tr>
       <th>Date</th><th>School</th><th>Academic year</th><th>Semester</th>
-      <th>Class</th><th>Subject</th><th>Period</th><th>Status</th><th>Notes</th>
+      <th>Class</th><th>Subject</th><th>Period</th><th>Status</th>
     </tr></thead>
     <tbody>${body}</tbody>
   </table>`;
@@ -460,9 +459,8 @@ function renderGradeTable(rows) {
         <td>${escapeHistoryHtml(pick(s, ["assessment_name", "assessment", "assessment_period"]) || "—")}</td>
         <td>${escapeHistoryHtml(pick(s, ["assessment_category", "category_name", "category"]) || "—")}</td>
         <td>${escapeHistoryHtml(formatHistoryValue("score", score))}</td>
-        <td>${escapeHistoryHtml(formatHistoryValue("max_marks", max))}</td>
-        <td>${escapeHistoryHtml(s.remarks || "—")}</td>
-      </tr>`;
+  <td>${escapeHistoryHtml(formatHistoryValue("max_marks", max))}</td>
+  </tr>`;
     })
     .join("");
 
@@ -470,7 +468,7 @@ function renderGradeTable(rows) {
     <thead><tr>
       <th>Date</th><th>School</th><th>Academic year</th><th>Semester</th>
       <th>Class</th><th>Subject</th><th>Assessment</th><th>Category</th>
-      <th>Score</th><th>Maximum</th><th>Remarks</th>
+      <th>Score</th><th>Maximum</th>
     </tr></thead>
     <tbody>${body}</tbody>
   </table>`;
