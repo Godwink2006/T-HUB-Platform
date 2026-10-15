@@ -27,14 +27,18 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <div class="timetable-container">
@@ -78,6 +82,13 @@
             <strong id="classTeacherDisplay">--</strong>
           </div>
         </div>
+        <div class="meta-item">
+          <i class="fa-solid fa-mug-hot"></i>
+          <div>
+            <span class="meta-label">Breaks</span>
+            <strong id="classBreaksDisplay">--</strong>
+          </div>
+        </div>
       </div>
 
       <main class="timetable-cards-grid" id="timetableCardsGrid">
@@ -94,6 +105,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/my-timetable.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>

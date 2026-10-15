@@ -195,9 +195,32 @@ async function loadStudentClassSchedule(classId, schoolId) {
     };
   });
 
+  // Breaks only in header — not on day cards
+  const breakSlots = formattedLessons
+    .filter((l) => l.is_break)
+    .map((l) => {
+      const start = l.period?.start_time?.slice(0, 5);
+      const end = l.period?.end_time?.slice(0, 5);
+      const name = l.period?.name || l.subject?.name || "Break";
+      if (start && end) return `${name} (${start}–${end})`;
+      return name;
+    });
+  // unique list
+  const uniqueBreaks = [...new Set(breakSlots)];
+  const breaksEl = document.getElementById("classBreaksDisplay");
+  if (breaksEl) {
+    breaksEl.textContent = uniqueBreaks.length
+      ? uniqueBreaks.join(" · ")
+      : "None";
+  }
+
   allCurrentLessons = formattedLessons;
 
-  renderScheduleCards(formattedLessons, "student");
+  // Cards: lessons only (no break cards)
+  renderScheduleCards(
+    formattedLessons.filter((l) => !l.is_break),
+    "student",
+  );
 }
 
 async function loadTeacherPersonalSchedule(teacherId) {
@@ -306,33 +329,29 @@ function renderLessonCardItem(item, roleContext) {
       ? `${item.period.start_time.slice(0, 5)} - ${item.period.end_time.slice(0, 5)}`
       : "--:--";
 
-  const subjectName = item.subject?.name || "";
-  const teacherName = item.teacher?.full_name || "";
-
-  const isBreakCard = Boolean(
-    item.is_break || (!item.subject_id && !item.subject?.name),
+  const isBreak = Boolean(
+    item.is_break === true ||
+    item.is_break === "true" ||
+    (!item.subject_id && !item.subject?.name),
   );
 
-  if (isBreakCard) {
-    const breakName = item.period?.name || "Break / Interval";
-    return `
-      <div class="lesson-card-item is-break" style="background-color: #f8fafc; border: 2px solid green; padding: 12px; text-align: center;">
-        <div class="lesson-time" style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px; align-items: center; justify-content: center;">
-          <i class="fa-regular fa-clock"></i> ${timeStr}
-        </div>
-        <div class="lesson-break-title" style="font-weight: 700; font-size: 1.1rem; color: green; text-transform: uppercase; letter-spacing: 0.5px;">
-          <i class="fa-solid fa-mug-hot"></i> ${escapeHTML(breakName)}
-        </div>
-      </div>
-    `;
-  }
+  // Breaks: show period name only — same card layout as lessons, no special break UI
+  const subjectName = isBreak
+    ? item.period?.name || item.subject?.name || "Break"
+    : item.subject?.name || "";
 
+  // Class is ONLY in the header (classMetaBanner) for students — never on cards
   let secondaryLabel = "";
-  if (roleContext === "student") {
-    secondaryLabel = `<div class="lesson-teacher"><i class="fa-solid fa-user-tie"></i> ${escapeHTML(teacherName)}</div>`;
-  } else if (roleContext === "teacher") {
-    const className = item.timetable?.class?.name || "Class -";
-    secondaryLabel = `<div class="lesson-teacher"><i class="fa-solid fa-graduation-cap"></i> ${escapeHTML(className)}</div>`;
+  if (!isBreak) {
+    if (roleContext === "student") {
+      const teacherName = item.teacher?.full_name || "—";
+      secondaryLabel = `<div class="lesson-teacher"><i class="fa-solid fa-user-tie"></i> ${escapeHTML(teacherName)}</div>`;
+    } else if (roleContext === "teacher") {
+      // Teacher schedule: class per lesson still useful (they teach many classes)
+      const className =
+        item.timetable?.class?.name || item.class?.name || "Class —";
+      secondaryLabel = `<div class="lesson-teacher"><i class="fa-solid fa-graduation-cap"></i> ${escapeHTML(className)}</div>`;
+    }
   }
 
   return `
