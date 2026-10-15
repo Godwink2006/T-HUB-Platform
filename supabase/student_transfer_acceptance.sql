@@ -443,10 +443,10 @@ begin
        left join public.assessment_categories as category_row
          on category_row.id = coalesce(
            nullif(pg_catalog.to_jsonb(source_row)->>''assessment_category_id'', '''')::uuid,
-           grade_row.assessment_category_id
+           grade_row.category_id
          )
        left join public.assessment_categories as grade_category_row
-         on grade_category_row.id = grade_row.assessment_category_id
+         on grade_category_row.id = grade_row.category_id
        left join public.periods as period_row
          on period_row.id = coalesce(
            nullif(pg_catalog.to_jsonb(source_row)->>''period_id'', '''')::uuid,
