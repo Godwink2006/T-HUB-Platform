@@ -53,9 +53,9 @@ async function enrichStudentHistory(transfers, client) {
   }
 
   const lookups = await Promise.all([
-    loadHistoryLookup(client, "grade", idsByType.get("grade"), `id, score, remarks, created_at, grades!inner(id, date_recorded, subjects(name), terms(name), academic_years(year_label), assessments(name, maximum_marks), assessment_categories(name))`),
-    loadHistoryLookup(client, "attendance", idsByType.get("attendance"), `id, status, created_at, attendance!inner(id, date, subjects(name), periods(name), terms(name), academic_years(year_label), classes(name), profiles:teacher_id(full_name))`),
-    loadHistoryLookup(client, "fee", idsByType.get("fee"), `id, total_fees, total_paid, balance, status, fee_breakdown, classes(name), academic_years(year_label), terms(name)`),
+    loadHistoryLookup(client, "grade", idsByType.get("grade"), `id, student_id, score, remarks, created_at, grades!inner(id, status, school_id, academic_year_id, term_id, class_id, subject_id, assessment_id, date_recorded, created_by, classes(id, name), subjects(id, name), terms(id, name), schools:school_id(id, school_name), academic_years(id, year_label), assessments(id, name, maximum_marks), assessment_categories(id, name, marks))`),
+    loadHistoryLookup(client, "attendance", idsByType.get("attendance"), `id, status, created_at, student_id, attendance_id, attendance!inner(id, date, school_id, academic_year_id, term_id, class_id, subject_id, period_id, teacher_id, classes(name), academic_years(id, year_label), terms(id, name), subjects(name), periods(name), schools:school_id(id, school_name), profiles:teacher_id(full_name, role, teachers(staff_id)))`),
+    loadHistoryLookup(client, "fee", idsByType.get("fee"), `id, student_id, school_id, total_fees, total_paid, balance, status, fee_breakdown, created_at, class_id, academic_year_id, term_id, classes(id, name), academic_years(id, year_label), terms(id, name)`),
   ]);
 
   const byType = new Map(lookups.map(({ type, rows }) => [type, new Map(rows.map((row) => [String(row.id), row]))]));
@@ -84,15 +84,17 @@ async function loadHistoryLookup(client, type, ids, selection) {
 function historyLabels(type, row) {
   if (type === "grade") return {
     score: row.score, remarks: row.remarks, created_at: row.created_at,
+    school_name: row.grades?.schools?.school_name, class_name: row.grades?.classes?.name,
     subject_name: row.grades?.subjects?.name, assessment_name: row.grades?.assessments?.name,
     max_marks: row.grades?.assessments?.maximum_marks, assessment_category: row.grades?.assessment_categories?.name,
     term_name: row.grades?.terms?.name, academic_year: row.grades?.academic_years?.year_label,
   };
   if (type === "attendance") return {
     status: row.status, created_at: row.created_at, date: row.attendance?.date,
-    subject_name: row.attendance?.subjects?.name, period_name: row.attendance?.periods?.name,
-    term_name: row.attendance?.terms?.name, academic_year: row.attendance?.academic_years?.year_label,
-    class_name: row.attendance?.classes?.name, teacher_name: row.attendance?.profiles?.full_name,
+    school_name: row.attendance?.schools?.school_name, subject_name: row.attendance?.subjects?.name,
+    period_name: row.attendance?.periods?.name, term_name: row.attendance?.terms?.name,
+    academic_year: row.attendance?.academic_years?.year_label, class_name: row.attendance?.classes?.name,
+    teacher_name: row.attendance?.profiles?.full_name,
   };
   return {
     total_fees: row.total_fees, total_paid: row.total_paid, balance: row.balance, status: row.status,
