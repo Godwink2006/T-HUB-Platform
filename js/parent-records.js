@@ -232,7 +232,31 @@ async function loadParentRecordData(
     const result = await client
       .from("grade_records")
       .select(
-        "id, student_id, score, remarks, created_at, grades!inner(id,status,school_id,academic_year_id,term_id,class_id,subject_id,assessment_id,date_recorded,created_by,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),assessments(name),assessment_categories(name,marks))",
+        `
+          id,
+          student_id,
+          score,
+          remarks,
+          created_at,
+          grades!inner (
+            id,
+            status,
+            school_id,
+            academic_year_id,
+            term_id,
+            class_id,
+            subject_id,
+            assessment_id,
+            date_recorded,
+            created_by,
+            classes ( id, name ),
+            subjects ( id, name ),
+            terms ( id, name ),
+            academic_years ( id, year_label ),
+            assessments ( id, name, maximum_marks ),
+            assessment_categories ( id, name, marks )
+          )
+        `,
       )
       .eq("student_id", studentId)
       .eq("grades.status", "submitted")
