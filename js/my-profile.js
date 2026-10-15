@@ -425,7 +425,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("from") === "parent") {
     backBtn.onclick = () => {
-      window.location.replace = "parent-dashboard.html";
+      window.location.href = "parent-dashboard.html";
     };
     return;
   }
@@ -461,7 +461,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (err) {
     console.error("Error setting back button destination:", err);
     backBtn.onclick = () => {
-      window.location.replace = "settings.html";
+      window.location.href = "settings.html";
     };
   }
 });
