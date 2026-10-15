@@ -401,3 +401,86 @@ p.subtitle {
     flex: 1 1 100%;
   }
 }
+
+/* Parent-records style tables */
+.card-section {
+  background: #ffffff;
+  border: 2px solid rgb(219, 215, 215);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-count-pill {
+  display: inline-grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  padding: 0 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+.history-table-wrap {
+  overflow-x: auto;
+}
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.history-table th {
+  background-color: #f1f5f9;
+  color: #1e293b;
+  font-weight: 600;
+  padding: 10px 12px;
+  border: 2px solid rgb(219, 215, 215);
+  white-space: nowrap;
+}
+.history-table td {
+  padding: 12px;
+  border: 2px solid rgb(219, 215, 215);
+  color: #1e293b;
+  vertical-align: top;
+}
+.history-table .money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fee-item-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+}
+.status-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.status-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+.status-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+.status-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}
+.status-neutral {
+  background: #f1f5f9;
+  color: #475569;
+}
