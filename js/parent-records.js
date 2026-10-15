@@ -222,7 +222,7 @@ async function loadParentRecordData(
     const result = await client
       .from("attendance_records")
       .select(
-        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name))",
+        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,teacher_id,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name),profiles:teacher_id(full_name,teachers(staff_id)))",
       )
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
@@ -232,7 +232,7 @@ async function loadParentRecordData(
     const result = await client
       .from("grade_records")
       .select(
-        "id, student_id, score, remarks, created_at, grades!inner(id,status,school_id,academic_year_id,term_id,class_id,subject_id,assessment_id,date_recorded,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),assessments(name),assessment_categories(name,marks))",
+        "id, student_id, score, remarks, created_at, grades!inner(id,status,school_id,academic_year_id,term_id,class_id,subject_id,assessment_id,date_recorded,created_by,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),assessments(name),assessment_categories(name,marks),profiles:created_by(full_name,teachers(staff_id)))",
       )
       .eq("student_id", studentId)
       .eq("grades.status", "submitted")
@@ -689,7 +689,7 @@ function renderAttendance(records) {
       const session = row.attendance || {};
       const ctx = getParentRecordContext(row, "attendance");
       const status = row.status || "-";
-      return `<tr><td>${parentDate(session.date)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(session.subjects?.name || "-")}</td><td>${parentEscape(session.periods?.name || "-")}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
+      return `<tr><td>${parentDate(session.date)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(session.subjects?.name || "-")}</td><td>${parentEscape(session.periods?.name || "-")}</td><td>${renderParentRecordAuthor(session.profiles)}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
     })
     .join("");
 
@@ -707,6 +707,7 @@ function renderAttendance(records) {
             <th>Class</th>
             <th>Subject</th>
             <th>Period</th>
+            <th>Entered by</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -794,7 +795,7 @@ function renderGrades(records) {
     .map((row) => {
       const grade = row.grades || {};
       const ctx = getParentRecordContext(row, "grades");
-      return `<tr><td>${parentDate(grade.date_recorded || row.created_at)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(grade.subjects?.name || "-")}</td><td>${parentEscape(grade.assessments?.name || "-")}</td><td>${parentEscape(grade.assessment_categories?.name || "-")}</td><td>${parentEscape(row.score ?? "-")}</td><td>${parentEscape(grade.assessment_categories?.marks ?? "-")}</td></tr>`;
+      return `<tr><td>${parentDate(grade.date_recorded || row.created_at)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(grade.subjects?.name || "-")}</td><td>${parentEscape(grade.assessments?.name || "-")}</td><td>${parentEscape(grade.assessment_categories?.name || "-")}</td><td>${renderParentRecordAuthor(grade.profiles)}</td><td>${parentEscape(row.score ?? "-")}</td><td>${parentEscape(grade.assessment_categories?.marks ?? "-")}</td></tr>`;
     })
     .join("");
 
@@ -813,6 +814,7 @@ function renderGrades(records) {
             <th>Subject</th>
             <th>Assessment</th>
             <th>Category</th>
+            <th>Entered by</th>
             <th>Score</th>
             <th>Maximum</th>
           </tr>
@@ -821,6 +823,13 @@ function renderGrades(records) {
       </table>
     </div>
   `;
+}
+
+function renderParentRecordAuthor(profile) {
+  if (!profile) return '<span class="table-muted">Unknown</span>';
+  const name = parentEscape(profile.full_name || "Unknown");
+  const staffId = parentEscape(profile.teachers?.staff_id || "No staff ID");
+  return `<span class="parent-record-author"><strong>${name}</strong><small>${staffId}</small></span>`;
 }
 
 function parseBreakdown(value) {
