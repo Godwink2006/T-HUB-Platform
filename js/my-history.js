@@ -19,15 +19,12 @@ async function loadMyTransferHistory() {
 
   try {
     const historyIndex = await window.getStudentTransferHistoryIndex(client);
-    myTransferHistory = historyIndex.transfers.filter(
-      (transfer) =>
-        String(transfer.source_school_id || "").toLowerCase() !==
-        historyIndex.currentSchoolId,
-    );
-
-    if (myTransferHistory.length === 0) {
-      container.innerHTML =
-        '<div class="history-empty"><i class="fa-regular fa-folder-open" aria-hidden="true"></i><h2>No transfer history yet</h2><p>Records from a previous school will appear here after a transfer is completed.</p></div>';
+    myTransferHistory = await enrichStudentHistory(historyIndex.transfers.filter(
+      (transfer) => String(transfer.source_school_id || "").toLowerCase() !== historyIndex.currentSchoolId,
+    ), client);
+    const transfers = myTransferHistory;
+    if (transfers.length === 0) {
+      container.innerHTML = '<div class="history-empty"><i class="fa-regular fa-folder-open" aria-hidden="true"></i><h2>No transfer history yet</h2><p>Records from a previous school will appear here after a transfer is completed.</p></div>';
       clearHistoryFilters();
       return;
     }
@@ -41,6 +38,104 @@ async function loadMyTransferHistory() {
     container.innerHTML =
       '<div class="history-empty history-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><h2>History could not be loaded</h2><p>Refresh the page or contact your school administrator.</p></div>';
   }
+}
+
+async function enrichStudentHistory(transfers, client) {
+  const records = transfers.flatMap((transfer) => Array.isArray(transfer.records) ? transfer.records : []);
+  const idsByType = new Map();
+  for (const record of records) {
+    const type = normalizeRecordType(record.record_type);
+    const id = record.record_snapshot?.id || record.source_record_id;
+    if (id) {
+      if (!idsByType.has(type)) idsByType.set(type, []);
+      idsByType.get(type).push(String(id));
+    }
+  }
+
+  const lookups = await Promise.all([
+    loadHistoryLookup(client, "grade", idsByType.get("grade"), `id, score, remarks, created_at, grades!inner(id, date_recorded, subjects(name), terms(name), academic_years(year_label), assessments(name, maximum_marks), assessment_categories(name))`),
+    loadHistoryLookup(client, "attendance", idsByType.get("attendance"), `id, status, created_at, attendance!inner(id, date, subjects(name), periods(name), terms(name), academic_years(year_label), classes(name), profiles:teacher_id(full_name))`),
+    loadHistoryLookup(client, "fee", idsByType.get("fee"), `id, total_fees, total_paid, balance, status, fee_breakdown, classes(name), academic_years(year_label), terms(name)`),
+  ]);
+
+  const byType = new Map(lookups.map(({ type, rows }) => [type, new Map(rows.map((row) => [String(row.id), row]))]));
+  return transfers.map((transfer) => ({
+    ...transfer,
+    records: (transfer.records || []).map((record) => {
+      const type = normalizeRecordType(record.record_type);
+      const id = record.record_snapshot?.id || record.source_record_id;
+      const live = byType.get(type)?.get(String(id));
+      return live ? { ...record, record_snapshot: { ...record.record_snapshot, ...historyLabels(type, live) } } : record;
+    }),
+  }));
+}
+
+async function loadHistoryLookup(client, type, ids, selection) {
+  if (!ids?.length) return { type, rows: [] };
+  const table = type === "grade" ? "grade_records" : type === "attendance" ? "attendance_records" : "student_fees";
+  const { data, error } = await client.from(table).select(selection).in("id", [...new Set(ids)]);
+  if (error) {
+    console.warn(`[v0] Could not enrich ${type} history records:`, error.message);
+    return { type, rows: [] };
+  }
+  return { type, rows: data || [] };
+}
+
+function historyLabels(type, row) {
+  if (type === "grade") return {
+    score: row.score, remarks: row.remarks, created_at: row.created_at,
+    subject_name: row.grades?.subjects?.name, assessment_name: row.grades?.assessments?.name,
+    max_marks: row.grades?.assessments?.maximum_marks, assessment_category: row.grades?.assessment_categories?.name,
+    term_name: row.grades?.terms?.name, academic_year: row.grades?.academic_years?.year_label,
+  };
+  if (type === "attendance") return {
+    status: row.status, created_at: row.created_at, date: row.attendance?.date,
+    subject_name: row.attendance?.subjects?.name, period_name: row.attendance?.periods?.name,
+    term_name: row.attendance?.terms?.name, academic_year: row.attendance?.academic_years?.year_label,
+    class_name: row.attendance?.classes?.name, teacher_name: row.attendance?.profiles?.full_name,
+  };
+  return {
+    total_fees: row.total_fees, total_paid: row.total_paid, balance: row.balance, status: row.status,
+    fee_breakdown: row.fee_breakdown, class_name: row.classes?.name,
+    term_name: row.terms?.name, academic_year: row.academic_years?.year_label,
+  };
+}
+
+function renderTransfer(transfer) {
+  const records = Array.isArray(transfer.records) ? transfer.records : [];
+  const recordGroups = new Map();
+  for (const record of records) {
+    const type = normalizeRecordType(record.record_type);
+    if (!recordGroups.has(type)) recordGroups.set(type, []);
+    recordGroups.get(type).push(record);
+  }
+
+  const recordSections = [...recordGroups.entries()].map(([type, items]) => {
+    const definition = HISTORY_RECORDS[type] || {
+      title: humanize(type),
+      icon: "fa-file-lines",
+    };
+    return `
+      <section class="history-group" aria-label="${escapeHistoryHtml(definition.title)} records">
+        <h3><i class="fa-solid ${definition.icon}" aria-hidden="true"></i>${escapeHistoryHtml(definition.title)} <span>${items.length}</span></h3>
+        <div class="history-record-list">${items.map((item) => renderRecord(item, type)).join("")}</div>
+      </section>
+    `;
+  }).join("");
+
+  return `
+    <article class="transfer-history-card">
+      <div class="transfer-card-heading">
+        <div>
+          <span class="history-eyebrow">Previous school</span>
+          <h2>${escapeHistoryHtml(transfer.source_school_name || "School name unavailable")}</h2>
+        </div>
+        <span class="history-date"><i class="fa-regular fa-calendar" aria-hidden="true"></i>${escapeHistoryHtml(formatHistoryDate(transfer.completed_at, { dateOnly: true }))}</span>
+      </div>
+      <p class="transfer-source">Transfer completed ${escapeHistoryHtml(formatHistoryDate(transfer.completed_at))}${transfer.source_student_code ? ` · Student ID ${escapeHistoryHtml(transfer.source_student_code)}` : ""}</p>
+      ${recordSections || '<p class="history-state">No source records were captured for this transfer.</p>'}
+    </article>
+  `;
 }
 
 function flattenHistoryRows(transfers) {
