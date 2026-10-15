@@ -267,12 +267,37 @@ async function loadParentRecordData(
 
     if (result.error) throw result.error;
     parentRecordState.grades = result.data || [];
-  }
 
+    const creatorIds = [
+      ...new Set(
+        (parentRecordState.grades || [])
+          .map((row) => row.grades?.created_by)
+          .filter(Boolean)
+          .map((id) => String(id)),
+      ),
+    ];
+
+    parentRecordState.gradeCreators = new Map();
+    if (creatorIds.length) {
+      const { data: creators, error: creatorsError } = await client
+        .from("profiles")
+        .select("id, full_name, role, teachers(staff_id)")
+        .in("id", creatorIds);
+
+      if (creatorsError) {
+        console.error("Could not load grade creators:", creatorsError);
+      } else {
+        for (const p of creators || []) {
+          if (p?.id) parentRecordState.gradeCreators.set(String(p.id), p);
+        }
+      }
+    }
+  } // <--- THIS CLOSES THE `else` BLOCK FOR GRADES PROPERLY
+
+  // --- COMMON SCHOOL MAP RESOLUTION (Runs for all views safely) ---
   const schoolIds = [
     ...new Set(
       [
-        student?.school_id, // current school — important after transfers
         ...(parentRecordState.fees || []).map((row) => row.school_id),
         ...(parentRecordState.payments || []).map((row) => row.school_id),
         ...(parentRecordState.attendance || []).map(
@@ -289,15 +314,8 @@ async function loadParentRecordData(
       .select("id,school_name")
       .in("id", schoolIds);
 
-    if (error) {
-      console.error("Could not load parent school labels:", error);
-    } else {
-      for (const s of schools || []) {
-        if (s?.id && s.school_name) {
-          parentRecordState.schools.set(String(s.id), s.school_name);
-        }
-      }
-    }
+    if (error) console.error("Could not load parent school labels:", error);
+    else parentRecordState.schools = buildParentSchoolMap(schools);
   }
 
   if (student?.school_id && student.schools?.school_name) {
@@ -401,9 +419,7 @@ function getParentRecordContext(row, type) {
       yearId: item.academic_year_id,
       classId: item.class_id,
       termId: item.term_id,
-      schoolName:
-        parentRecordState.schools.get(item.school_id) ||
-        (!item.school_id ? currentSchoolName : undefined),
+      schoolName: resolveSchool(item.school_id, item.schools),
       yearName: item.academic_years?.year_label,
       className: item.classes?.name,
       termName: item.terms?.name,
@@ -419,9 +435,7 @@ function getParentRecordContext(row, type) {
     yearId: item.academic_year_id,
     classId: item.class_id,
     termId: item.term_id,
-    schoolName:
-      parentRecordState.schools.get(item.school_id) ||
-      (!item.school_id ? currentSchoolName : undefined),
+    schoolName: resolveSchool(item.school_id, item.schools),
     yearName: item.academic_years?.year_label,
     className: item.classes?.name,
     termName: item.terms?.name,
