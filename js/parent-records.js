@@ -272,6 +272,7 @@ async function loadParentRecordData(
   const schoolIds = [
     ...new Set(
       [
+        student?.school_id, // current school — important after transfers
         ...(parentRecordState.fees || []).map((row) => row.school_id),
         ...(parentRecordState.payments || []).map((row) => row.school_id),
         ...(parentRecordState.attendance || []).map(
@@ -419,8 +420,8 @@ function getParentRecordContext(row, type) {
     classId: item.class_id,
     termId: item.term_id,
     schoolName:
-        parentRecordState.schools.get(item.school_id) ||
-        (!item.school_id ? currentSchoolName : undefined),
+      parentRecordState.schools.get(item.school_id) ||
+      (!item.school_id ? currentSchoolName : undefined),
     yearName: item.academic_years?.year_label,
     className: item.classes?.name,
     termName: item.terms?.name,
