@@ -249,7 +249,6 @@ async function loadParentRecordData(
             assessment_id,
             date_recorded,
             created_by,
-            profiles:created_by ( full_name, teachers ( staff_id ) ),
             classes ( id, name ),
             subjects ( id, name ),
             terms ( id, name ),
@@ -264,6 +263,25 @@ async function loadParentRecordData(
       .order("created_at", { ascending: false });
     if (result.error) throw result.error;
     parentRecordState.grades = result.data || [];
+
+    const createdByIds = [
+      ...new Set(parentRecordState.grades.map((row) => row.grades?.created_by).filter(Boolean)),
+    ];
+    if (createdByIds.length) {
+      const { data: profiles, error: profilesError } = await client
+        .from("profiles")
+        .select("id, full_name, teachers(staff_id)")
+        .in("id", createdByIds);
+      if (profilesError) {
+        console.error("Could not load grade record authors:", profilesError);
+      } else {
+        const profilesById = new Map((profiles || []).map((profile) => [profile.id, profile]));
+        parentRecordState.grades.forEach((row) => {
+          const createdBy = row.grades?.created_by;
+          if (row.grades && createdBy) row.grades.profiles = profilesById.get(createdBy) || null;
+        });
+      }
+    }
   }
 
   const schoolIds = [
