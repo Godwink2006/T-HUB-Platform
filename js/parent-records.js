@@ -11,6 +11,7 @@ let parentRecordState = {
   payments: [],
   attendance: [],
   grades: [],
+  gradeCreators: new Map(),
   timetable: null,
   timetableLessons: [],
   student: null,
@@ -55,9 +56,10 @@ async function initializeParentRecords() {
     });
 
   try {
-    const authCtx = typeof window.getAuthContext === "function"
-      ? await window.getAuthContext()
-      : null;
+    const authCtx =
+      typeof window.getAuthContext === "function"
+        ? await window.getAuthContext()
+        : null;
     let user = authCtx?.user;
     let profile = authCtx?.profile;
 
@@ -204,12 +206,12 @@ async function loadParentRecordData(
         .from("payment_transactions")
         .select(
           `id, student_id, school_id, amount, payment_method, reference_number, notes, created_at, student_fee_id,
-           payment_allocations (
-             id,
-             item_name,
-             amount,
-             fee_item_id
-           )`,
+            payment_allocations (
+              id,
+              item_name,
+              amount,
+              fee_item_id
+            )`,
         )
         .eq("student_id", studentId)
         .order("created_at", { ascending: false }),
@@ -222,13 +224,14 @@ async function loadParentRecordData(
     const result = await client
       .from("attendance_records")
       .select(
-        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,teacher_id,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name))",
+        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,teacher_id,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name),schools:school_id(id,school_name),profiles:teacher_id(full_name,role,teachers(staff_id)))",
       )
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
     if (result.error) throw result.error;
     parentRecordState.attendance = result.data || [];
   } else {
+    // --- GRADES VIEW BLOCK ---
     const result = await client
       .from("grade_records")
       .select(
@@ -249,10 +252,9 @@ async function loadParentRecordData(
             assessment_id,
             date_recorded,
             created_by,
-            profiles:created_by ( full_name, teachers ( staff_id ) ),
             classes ( id, name ),
             subjects ( id, name ),
-            terms ( id, name ),
+            terms ( id, name ), schools:school_id ( id, school_name ),
             academic_years ( id, year_label ),
             assessments ( id, name, maximum_marks ),
             assessment_categories ( id, name, marks )
@@ -262,39 +264,94 @@ async function loadParentRecordData(
       .eq("student_id", studentId)
       .eq("grades.status", "submitted")
       .order("created_at", { ascending: false });
+
     if (result.error) throw result.error;
     parentRecordState.grades = result.data || [];
-  }
 
+    const creatorIds = [
+      ...new Set(
+        (parentRecordState.grades || [])
+          .map((row) => row.grades?.created_by)
+          .filter(Boolean)
+          .map((id) => String(id)),
+      ),
+    ];
+
+    parentRecordState.gradeCreators = new Map();
+    if (creatorIds.length) {
+      const { data: creators, error: creatorsError } = await client
+        .from("profiles")
+        .select("id, full_name, role, teachers(staff_id)")
+        .in("id", creatorIds);
+
+      if (creatorsError) {
+        console.error("Could not load grade creators:", creatorsError);
+      } else {
+        for (const p of creators || []) {
+          if (p?.id) parentRecordState.gradeCreators.set(String(p.id), p);
+        }
+      }
+    }
+  } // <--- THIS CLOSES THE `else` BLOCK FOR GRADES PROPERLY
+
+  // --- COMMON SCHOOL MAP RESOLUTION (Runs for all views safely) ---
   const schoolIds = [
     ...new Set(
       [
-        ...parentRecordState.fees.map((row) => row.school_id),
-        ...parentRecordState.payments.map((row) => row.school_id),
-        ...parentRecordState.attendance.map((row) => row.attendance?.school_id),
-        ...parentRecordState.grades.map((row) => row.grades?.school_id),
+        ...(parentRecordState.fees || []).map((row) => row.school_id),
+        ...(parentRecordState.payments || []).map((row) => row.school_id),
+        ...(parentRecordState.attendance || []).map(
+          (row) => row.attendance?.school_id,
+        ),
+        ...(parentRecordState.grades || []).map((row) => row.grades?.school_id),
       ].filter(Boolean),
     ),
   ];
+
   if (schoolIds.length) {
     const { data: schools, error } = await client
       .from("schools")
       .select("id,school_name")
       .in("id", schoolIds);
-    if (error) console.error("Could not load parent school labels:", error);
-    else         parentRecordState.schools = buildParentSchoolMap(schools);
+
+    if (error) {
+      console.error("Could not load parent school labels:", error);
+    } else {
+      for (const s of schools || []) {
+        if (s?.id && s.school_name) {
+          parentRecordState.schools.set(String(s.id), s.school_name);
+        }
+      }
+    }
   }
 
-  // Always include the selected student's current school, even when no
-  // record-level school IDs were returned by the scoped query.
   if (student?.school_id && student.schools?.school_name) {
-    parentRecordState.schools.set(student.school_id, student.schools.school_name);
+    if (!parentRecordState.schools) parentRecordState.schools = new Map();
+    parentRecordState.schools.set(
+      String(student.school_id),
+      student.schools.school_name,
+    );
+  }
+
+  for (const row of parentRecordState.attendance || []) {
+    const s = row.attendance?.schools;
+    if (s?.id && s.school_name) {
+      parentRecordState.schools.set(String(s.id), s.school_name);
+    }
+  }
+  for (const row of parentRecordState.grades || []) {
+    const s = row.grades?.schools;
+    if (s?.id && s.school_name) {
+      parentRecordState.schools.set(String(s.id), s.school_name);
+    }
   }
 }
 
 function buildParentSchoolMap(schools) {
   return new Map(
-    (schools || []).map((school) => [school.id, school.school_name]),
+    (schools || [])
+      .filter((s) => s?.id && s.school_name)
+      .map((s) => [String(s.id), s.school_name]),
   );
 }
 
@@ -334,16 +391,30 @@ function setRecordStudentPhoto(shell, photoUrl, name) {
 
 function getParentRecordContext(row, type) {
   const currentSchoolName = parentRecordState.student?.schools?.school_name;
-  const currentSchoolId = parentRecordState.student?.school_id;
+  const currentSchoolId = parentRecordState.student?.school_id
+    ? String(parentRecordState.student.school_id)
+    : null;
+
+  const resolveSchool = (schoolId, nestedSchool) => {
+    if (nestedSchool?.school_name) return nestedSchool.school_name;
+    const key = schoolId ? String(schoolId) : null;
+    if (key && parentRecordState.schools.has(key)) {
+      return parentRecordState.schools.get(key);
+    }
+    // Only use current school when id matches or is missing — not for other schools
+    if (!key || key === currentSchoolId) {
+      return currentSchoolName || undefined;
+    }
+    return undefined;
+  };
+
   if (type === "fees")
     return {
       schoolId: row.school_id,
       yearId: row.academic_year_id,
       classId: row.class_id,
       termId: row.term_id,
-      schoolName:
-        parentRecordState.schools.get(row.school_id) ||
-        (!row.school_id ? currentSchoolName : undefined),
+      schoolName: resolveSchool(row.school_id),
       yearName: row.academic_years?.year_label,
       className: row.classes?.name,
       termName: row.terms?.name,
@@ -355,9 +426,7 @@ function getParentRecordContext(row, type) {
       yearId: item.academic_year_id,
       classId: item.class_id,
       termId: item.term_id,
-      schoolName:
-        parentRecordState.schools.get(item.school_id) ||
-        (!item.school_id ? currentSchoolName : undefined),
+      schoolName: resolveSchool(item.school_id, item.schools),
       yearName: item.academic_years?.year_label,
       className: item.classes?.name,
       termName: item.terms?.name,
@@ -373,9 +442,7 @@ function getParentRecordContext(row, type) {
     yearId: item.academic_year_id,
     classId: item.class_id,
     termId: item.term_id,
-    schoolName:
-        parentRecordState.schools.get(item.school_id) ||
-        (!item.school_id ? currentSchoolName : undefined),
+    schoolName: resolveSchool(item.school_id, item.schools),
     yearName: item.academic_years?.year_label,
     className: item.classes?.name,
     termName: item.terms?.name,
@@ -689,7 +756,9 @@ function renderAttendanceStats(records) {
   let excused = 0;
 
   records.forEach((row) => {
-    const status = String(row.status || "").trim().toLowerCase();
+    const status = String(row.status || "")
+      .trim()
+      .toLowerCase();
     if (status === "present") present++;
     else if (status === "absent") absent++;
     else if (status === "late") late++;
@@ -800,7 +869,11 @@ function renderGradesStats(records) {
             : "F";
 
   const gradeClass =
-    avgPct >= 80 ? "text-success" : avgPct >= 60 ? "text-warning" : "text-danger";
+    avgPct >= 80
+      ? "text-success"
+      : avgPct >= 60
+        ? "text-warning"
+        : "text-danger";
 
   return `
     <div class="parent-stats-grid">
@@ -834,7 +907,10 @@ function renderGrades(records) {
     .map((row) => {
       const grade = row.grades || {};
       const ctx = getParentRecordContext(row, "grades");
-      return `<tr><td>${parentDate(grade.date_recorded || row.created_at)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(grade.subjects?.name || "-")}</td><td>${parentEscape(grade.assessments?.name || "-")}</td><td>${parentEscape(grade.assessment_categories?.name || "-")}</td><td>${renderParentRecordAuthor(grade.profiles, grade.created_by)}</td><td>${parentEscape(row.score ?? "-")}</td><td>${parentEscape(grade.assessment_categories?.marks ?? "-")}</td></tr>`;
+      const creatorId = grade.created_by ? String(grade.created_by) : null;
+      const creator =
+        (creatorId && parentRecordState.gradeCreators?.get(creatorId)) || null;
+      return `<tr><td>${parentDate(grade.date_recorded || row.created_at)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(grade.subjects?.name || "-")}</td><td>${parentEscape(grade.assessments?.name || "-")}</td><td>${parentEscape(grade.assessment_categories?.name || "-")}</td><td>${renderParentRecordAuthor(creator, creatorId)}</td><td>${parentEscape(row.score ?? "-")}</td><td>${parentEscape(grade.assessment_categories?.marks ?? "-")}</td></tr>`;
     })
     .join("");
 
@@ -865,13 +941,28 @@ function renderGrades(records) {
 }
 
 function renderParentRecordAuthor(profile, profileId) {
+  if (!profile && profileId && parentRecordState.gradeCreators?.size) {
+    profile = parentRecordState.gradeCreators.get(String(profileId)) || null;
+  }
   if (!profile) {
-    const identifier = profileId ? parentEscape(profileId) : "Unknown";
-    return `<span class="table-muted">Unknown<small>${identifier}</small></span>`;
+    return `<span class="table-muted">Unknown</span>`;
   }
   const name = parentEscape(profile.full_name || "Unknown");
-  const staffId = parentEscape(profile.teachers?.staff_id || "No staff ID");
-  return `<span class="parent-record-author"><strong>${name}</strong><small>${staffId}</small></span>`;
+  const role = profile.role
+    ? parentEscape(
+        String(profile.role).charAt(0).toUpperCase() +
+          String(profile.role).slice(1).toLowerCase(),
+      )
+    : null;
+  const staffId = profile.teachers?.staff_id
+    ? parentEscape(profile.teachers.staff_id)
+    : null;
+
+  const meta = [role, staffId].filter(Boolean).join(" · ");
+  if (meta) {
+    return `<span class="parent-record-author"><strong>${name}</strong><small>${meta}</small></span>`;
+  }
+  return `<span class="parent-record-author"><strong>${name}</strong></span>`;
 }
 
 function parseBreakdown(value) {
