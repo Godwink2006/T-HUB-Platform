@@ -981,10 +981,15 @@ async function loadGradesList() {
 
     if (error) throw error;
 
+    const creatorProfiles = await getGradeCreatorProfiles(
+      client,
+      (grades || []).map((grade) => grade.created_by),
+    );
+
     if (!grades || grades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records found.
           </td>
         </tr>`;
@@ -1019,7 +1024,7 @@ async function loadGradesList() {
     if (filteredGrades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records found matching filters.
           </td>
         </tr>`;
@@ -1064,6 +1069,7 @@ async function loadGradesList() {
             <td>${className}</td>
             <td>${subjectName}</td>
             <td>${formattedDate}</td>
+            <td>${renderGradeCreator(creatorProfiles.get(item.created_by))}</td>
             <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
             <td>${actionButtonHTML}</td>
           </tr>

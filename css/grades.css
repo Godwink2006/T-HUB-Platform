@@ -235,6 +235,23 @@ td {
   padding: 18px;
 }
 
+.grade-creator-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 130px;
+}
+
+.grade-creator-name {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.grade-creator-cell small {
+  color: #6b7280;
+  font-size: 11px;
+}
+
 tr {
   border: 2px solid rgb(219, 215, 215);
 }

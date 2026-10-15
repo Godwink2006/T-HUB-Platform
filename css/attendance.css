@@ -218,6 +218,14 @@ td {
   padding: 18px;
 }
 
+.attendance-table-actor {
+  min-width: 150px;
+}
+
+.table-muted {
+  color: #9ca3af;
+}
+
 tr {
   border: 2px solid rgb(219, 215, 215);
 }
