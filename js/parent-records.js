@@ -16,6 +16,7 @@ let parentRecordState = {
   timetableLessons: [],
   student: null,
   schools: new Map(),
+  timetableTeachers: new Map(),
 };
 
 document.addEventListener("DOMContentLoaded", initializeParentRecords);
@@ -168,6 +169,7 @@ async function loadParentRecordData(
   if (parentRecordState.view === "timetable") {
     parentRecordState.timetable = null;
     parentRecordState.timetableLessons = [];
+    parentRecordState.timetableTeachers = new Map();
     if (!student?.class_id || !student?.school_id) return;
 
     const { data: timetable, error: timetableError } = await client
@@ -187,12 +189,29 @@ async function loadParentRecordData(
     const { data: lessons, error: lessonsError } = await client
       .from("timetable_lessons")
       .select(
-        "id, day_of_week, is_break, period_id, subject_id, periods:period_id(name,start_time,end_time), subjects:subject_id(name)",
+        "id, day_of_week, is_break, period_id, subject_id, teacher_id, periods:period_id(name,start_time,end_time), subjects:subject_id(name)",
       )
       .eq("timetable_id", timetable.id);
     if (lessonsError) throw lessonsError;
+
     parentRecordState.timetable = timetable;
     parentRecordState.timetableLessons = lessons || [];
+
+    // Accurate teacher names for this student's class timetable
+    const { data: teachers, error: teachersError } = await client.rpc(
+      "parent_portal_timetable_teacher_names",
+      { p_student_id: studentId },
+    );
+    if (teachersError) {
+      console.warn("Parent timetable teachers unavailable:", teachersError);
+    } else {
+      parentRecordState.timetableTeachers = new Map(
+        (teachers || []).map((t) => [
+          String(t.teacher_id),
+          { full_name: t.full_name, staff_id: t.staff_id },
+        ]),
+      );
+    }
   } else if (parentRecordState.view === "fees") {
     const [feeResult, paymentResult] = await Promise.all([
       client
@@ -625,15 +644,7 @@ function renderParentTimetable() {
     return '<p class="parent-empty">The active class timetable has no lessons yet.</p>';
   }
 
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   const normalizedDay = (value) =>
     String(value || "")
       .trim()
@@ -682,11 +693,44 @@ function renderParentTimetable() {
           .filter(Boolean)
           .map((value) => parentEscape(value))
           .join(" – ") || "-";
-      return `<tr><td>${parentEscape(lesson.day_of_week || "-")}</td><td>${parentEscape(period.name || "-")}</td><td>${time}</td><td>${parentEscape(subject)}</td></tr>`;
+
+      let teacherCell = '<span class="table-muted">—</span>';
+      if (!isBreak && lesson.teacher_id) {
+        const t = parentRecordState.timetableTeachers.get(
+          String(lesson.teacher_id),
+        );
+        if (t?.full_name) {
+          const meta = t.staff_id ? parentEscape(t.staff_id) : null;
+          teacherCell = meta
+            ? `<span class="parent-record-author"><strong>${parentEscape(t.full_name)}</strong><small>${meta}</small></span>`
+            : `<span class="parent-record-author"><strong>${parentEscape(t.full_name)}</strong></span>`;
+        } else {
+          teacherCell = '<span class="table-muted">Assigned</span>';
+        }
+      }
+
+      return `<tr>
+        <td>${parentEscape(lesson.day_of_week || "-")}</td>
+        <td>${parentEscape(period.name || "-")}</td>
+        <td>${time}</td>
+        <td>${parentEscape(subject)}</td>
+        <td>${teacherCell}</td>
+      </tr>`;
     })
     .join("");
 
-  return `${summary}<div class="parent-table-container"><table><thead><tr><th>Day</th><th>Period</th><th>Time</th><th>Subject</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `${summary}<div class="parent-table-container"><table>
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Period</th>
+        <th>Time</th>
+        <th>Subject</th>
+        <th>Teacher</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
 }
 
 function matchesParentRecordFilters(context, filters) {
