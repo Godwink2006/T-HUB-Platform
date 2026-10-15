@@ -759,7 +759,7 @@ async function loadAttendanceTable() {
   const tbody = document.getElementById("attendanceTableBody");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 16px;">Loading attendance records...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">Loading attendance records...</td></tr>`;
 
   try {
     const user = (await supabaseClient.auth.getUser()).data?.user;
@@ -782,7 +782,6 @@ async function loadAttendanceTable() {
     id,
     date,
     status,
-    teacher_id,
     class_id,
     subject_id,
     academic_year_id,
@@ -790,8 +789,7 @@ async function loadAttendanceTable() {
     classes(id, name),
     subjects(id, name),
     academic_years(id, year_label),
-    terms(id, name),
-    profiles(id, full_name, photo_url, teachers(staff_id))
+    terms(id, name)
   `,
     );
 
@@ -809,12 +807,12 @@ async function loadAttendanceTable() {
 
     if (error) {
       console.error("Error loading attendance table:", error);
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#dc2626; padding: 16px;">Error: ${escapeHtml(error.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Error: ${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
     if (!attendanceList || attendanceList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
       return;
     }
 
@@ -878,7 +876,6 @@ async function loadAttendanceTable() {
         <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
         <td data-term-id="${termId}">${escapeHtml(termName)}</td>
         <td>${formattedDate}</td>
-        <td>${renderAttendanceActor(item.profiles)}</td>
         <td>${studentCount}</td>
         <td>${statusBadge}</td>
         <td>${actionButton}</td>
@@ -898,7 +895,7 @@ async function loadAttendanceTable() {
     attachTableActionListeners();
   } catch (err) {
     console.error("Attendance table exception:", err);
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
   }
 }
 
@@ -1029,7 +1026,7 @@ async function renderFilteredAttendanceTable(attendanceList) {
   if (!tbody) return;
 
   if (!attendanceList || attendanceList.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
     return;
   }
 
@@ -1089,7 +1086,6 @@ async function renderFilteredAttendanceTable(attendanceList) {
       <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
       <td data-term-id="${termId}">${escapeHtml(termName)}</td>
       <td>${formattedDate}</td>
-      <td>${renderAttendanceActor(item.profiles)}</td>
       <td>${studentCount}</td>
       <td>${statusBadge}</td>
       <td>${actionButton}</td>
@@ -1101,14 +1097,6 @@ async function renderFilteredAttendanceTable(attendanceList) {
   if (typeof attachTableActionListeners === "function") {
     attachTableActionListeners();
   }
-}
-
-function renderAttendanceActor(profile) {
-  if (!profile) return '<span class="table-muted">Unknown</span>';
-  const name = escapeHtml(profile.full_name || "Unknown");
-  const staffId = escapeHtml(profile.teachers?.staff_id || "No staff ID");
-  const photo = escapeHtml(getAttendancePhotoUrl(profile.photo_url));
-  return `<span class="app-person-cell attendance-table-actor"><img class="app-person-avatar" src="${photo}" alt="" loading="lazy" /><span class="app-person-meta"><span>${name}</span><small>${staffId}</small></span></span>`;
 }
 
 function attachTableActionListeners() {
