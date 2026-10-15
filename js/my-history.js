@@ -65,7 +65,14 @@ async function enrichStudentHistory(transfers, client) {
       const type = normalizeRecordType(record.record_type);
       const id = record.record_snapshot?.id || record.source_record_id;
       const live = byType.get(type)?.get(String(id));
-      return live ? { ...record, record_snapshot: { ...record.record_snapshot, ...historyLabels(type, live) } } : record;
+      if (!live) return record;
+      const liveLabels = Object.fromEntries(
+        Object.entries(historyLabels(type, live)).filter(([, value]) => value !== undefined && value !== null && value !== ""),
+      );
+      return {
+        ...record,
+        record_snapshot: { ...record.record_snapshot, ...liveLabels },
+      };
     }),
   }));
 }
@@ -86,13 +93,17 @@ function historyLabels(type, row) {
     score: row.score, remarks: row.remarks, created_at: row.created_at,
     school_name: row.grades?.schools?.school_name, class_name: row.grades?.classes?.name,
     subject_name: row.grades?.subjects?.name, assessment_name: row.grades?.assessments?.name,
-    max_marks: row.grades?.assessments?.maximum_marks, assessment_category: row.grades?.assessment_categories?.name,
+    max_marks: row.grades?.assessments?.maximum_marks ?? row.grades?.assessments?.max_marks,
+    maximum_marks: row.grades?.assessments?.maximum_marks ?? row.grades?.assessments?.max_marks,
+    assessment_category: row.grades?.assessment_categories?.name ?? row.grades?.assessment_categories?.category_name,
+    category_name: row.grades?.assessment_categories?.name ?? row.grades?.assessment_categories?.category_name,
     term_name: row.grades?.terms?.name, academic_year: row.grades?.academic_years?.year_label,
   };
   if (type === "attendance") return {
     status: row.status, created_at: row.created_at, date: row.attendance?.date,
     school_name: row.attendance?.schools?.school_name, subject_name: row.attendance?.subjects?.name,
-    period_name: row.attendance?.periods?.name, term_name: row.attendance?.terms?.name,
+    period_name: row.attendance?.periods?.name ?? row.attendance?.period?.name,
+    term_name: row.attendance?.terms?.name,
     academic_year: row.attendance?.academic_years?.year_label, class_name: row.attendance?.classes?.name,
     teacher_name: row.attendance?.profiles?.full_name,
   };
