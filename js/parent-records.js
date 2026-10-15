@@ -253,7 +253,8 @@ async function loadParentRecordData(
             subjects ( id, name ),
             terms ( id, name ),
             academic_years ( id, year_label ),
-            assessments ( id, name, maximum_marks )
+            assessments ( id, name, maximum_marks ),
+            assessment_categories ( id, name, marks )
           )
         `,
       )
