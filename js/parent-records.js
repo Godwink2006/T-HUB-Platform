@@ -333,13 +333,17 @@ function setRecordStudentPhoto(shell, photoUrl, name) {
 }
 
 function getParentRecordContext(row, type) {
+  const currentSchoolName = parentRecordState.student?.schools?.school_name;
+  const currentSchoolId = parentRecordState.student?.school_id;
   if (type === "fees")
     return {
       schoolId: row.school_id,
       yearId: row.academic_year_id,
       classId: row.class_id,
       termId: row.term_id,
-      schoolName: parentRecordState.schools.get(row.school_id),
+      schoolName:
+        parentRecordState.schools.get(row.school_id) ||
+        (!row.school_id ? currentSchoolName : undefined),
       yearName: row.academic_years?.year_label,
       className: row.classes?.name,
       termName: row.terms?.name,
@@ -351,7 +355,9 @@ function getParentRecordContext(row, type) {
       yearId: item.academic_year_id,
       classId: item.class_id,
       termId: item.term_id,
-      schoolName: parentRecordState.schools.get(item.school_id),
+      schoolName:
+        parentRecordState.schools.get(item.school_id) ||
+        (!item.school_id ? currentSchoolName : undefined),
       yearName: item.academic_years?.year_label,
       className: item.classes?.name,
       termName: item.terms?.name,
@@ -367,7 +373,9 @@ function getParentRecordContext(row, type) {
     yearId: item.academic_year_id,
     classId: item.class_id,
     termId: item.term_id,
-    schoolName: parentRecordState.schools.get(item.school_id),
+    schoolName:
+        parentRecordState.schools.get(item.school_id) ||
+        (!item.school_id ? currentSchoolName : undefined),
     yearName: item.academic_years?.year_label,
     className: item.classes?.name,
     termName: item.terms?.name,
@@ -826,7 +834,7 @@ function renderGrades(records) {
     .map((row) => {
       const grade = row.grades || {};
       const ctx = getParentRecordContext(row, "grades");
-      return `<tr><td>${parentDate(grade.date_recorded || row.created_at)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(grade.subjects?.name || "-")}</td><td>${parentEscape(grade.assessments?.name || "-")}</td><td>${parentEscape(grade.assessment_categories?.name || "-")}</td><td>${renderParentRecordAuthor(grade.profiles)}</td><td>${parentEscape(row.score ?? "-")}</td><td>${parentEscape(grade.assessment_categories?.marks ?? "-")}</td></tr>`;
+      return `<tr><td>${parentDate(grade.date_recorded || row.created_at)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(grade.subjects?.name || "-")}</td><td>${parentEscape(grade.assessments?.name || "-")}</td><td>${parentEscape(grade.assessment_categories?.name || "-")}</td><td>${renderParentRecordAuthor(grade.profiles, grade.created_by)}</td><td>${parentEscape(row.score ?? "-")}</td><td>${parentEscape(grade.assessment_categories?.marks ?? "-")}</td></tr>`;
     })
     .join("");
 
@@ -856,8 +864,11 @@ function renderGrades(records) {
   `;
 }
 
-function renderParentRecordAuthor(profile) {
-  if (!profile) return '<span class="table-muted">Unknown</span>';
+function renderParentRecordAuthor(profile, profileId) {
+  if (!profile) {
+    const identifier = profileId ? parentEscape(profileId) : "Unknown";
+    return `<span class="table-muted">Unknown<small>${identifier}</small></span>`;
+  }
   const name = parentEscape(profile.full_name || "Unknown");
   const staffId = parentEscape(profile.teachers?.staff_id || "No staff ID");
   return `<span class="parent-record-author"><strong>${name}</strong><small>${staffId}</small></span>`;
