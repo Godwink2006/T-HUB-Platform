@@ -209,6 +209,21 @@ body.parent-portal {
 .parent-state.is-error {
   color: #b91c1c;
 }
+.parent-record-author {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 110px;
+}
+.parent-record-author strong {
+  color: #172033;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.parent-record-author small {
+  color: #60708a;
+  font-size: 0.72rem;
+}
 .parent-linked-parents {
   margin-top: 22px;
 }
