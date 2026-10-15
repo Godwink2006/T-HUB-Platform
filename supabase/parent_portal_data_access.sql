@@ -47,20 +47,9 @@ $$;
 revoke all on function private.parent_portal_can_read_attendance(uuid) from public, anon;
 grant execute on function private.parent_portal_can_read_attendance(uuid) to authenticated;
 
--- A parent can read only their own profile and the profiles of linked students.
-drop policy if exists "parent_portal_profile_select_scope" on public.profiles;
-create policy "parent_portal_profile_select_scope"
-  on public.profiles as restrictive for select to authenticated
-  using (
-    coalesce(private.current_profile_role() <> 'parent', true)
-    or id = (select auth.uid())
-    or exists (
-      select 1 from public.parent_student_links as link
-      where link.parent_user_id = (select auth.uid())
-        and link.student_id = profiles.id
-        and link.status = 'active'
-    )
-  );
+-- Profile access is intentionally handled by the existing non-recursive
+-- profile policies. Do not add a policy here that queries profiles through
+-- current_profile_role(), because that causes infinite RLS recursion.
 
 -- Additive access for parents to the profile of each actively linked student.
 -- Keep this separate from existing school/admin policies so those remain intact.
