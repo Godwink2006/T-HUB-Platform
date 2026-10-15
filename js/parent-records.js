@@ -222,7 +222,7 @@ async function loadParentRecordData(
     const result = await client
       .from("attendance_records")
       .select(
-        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,teacher_id,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name),profiles:teacher_id(full_name,teachers(staff_id)))",
+        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,teacher_id,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name))",
       )
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
