@@ -372,12 +372,12 @@ begin
            ''history_term_name'', term_row.name,
            ''term_name'', term_row.name,
            ''semester_name'', term_row.name,
-           ''subject_name'', subject_row.name,
-           ''teacher_name'', teacher_row.full_name,
-           ''assessment_name'', assessment_row.name,
-           ''assessment_category'', category_row.name,
-           ''maximum_marks'', assessment_row.maximum_marks,
-           ''period_name'', period_row.name
+           ''subject_name'', coalesce(subject_row.name, grade_subject_row.name, attendance_subject_row.name),
+           ''teacher_name'', coalesce(teacher_row.full_name, attendance_teacher_row.full_name),
+           ''assessment_name'', coalesce(assessment_row.name, grade_assessment_row.name),
+           ''assessment_category'', coalesce(category_row.name, grade_category_row.name),
+           ''maximum_marks'', coalesce(assessment_row.maximum_marks, grade_assessment_row.maximum_marks),
+           ''period_name'', coalesce(period_row.name, attendance_period_row.name)
          )
        from public.%I as source_row
        left join lateral (
@@ -414,23 +414,46 @@ begin
          on school_row.id = $2
        left join public.classes as class_row
          on class_row.id = context.class_id and class_row.school_id = $2
+       left join public.grades as grade_row
+         on grade_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''grade_id'', '''')::uuid
+       left join public.attendance as attendance_row
+         on attendance_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''attendance_id'', '''')::uuid
        left join public.subjects as subject_row
          on subject_row.id = coalesce(
            nullif(pg_catalog.to_jsonb(source_row)->>''subject_id'', '''')::uuid,
-           (select g.subject_id from public.grades as g where g.id = nullif(pg_catalog.to_jsonb(source_row)->>''grade_id'', '''')::uuid),
-           (select a.subject_id from public.attendance as a where a.id = nullif(pg_catalog.to_jsonb(source_row)->>''attendance_id'', '''')::uuid)
+           grade_row.subject_id,
+           attendance_row.subject_id
          )
+       left join public.subjects as grade_subject_row
+         on grade_subject_row.id = grade_row.subject_id
+       left join public.subjects as attendance_subject_row
+         on attendance_subject_row.id = attendance_row.subject_id
        left join public.profiles as teacher_row
          on teacher_row.id = coalesce(
            nullif(pg_catalog.to_jsonb(source_row)->>''teacher_id'', '''')::uuid,
            nullif(pg_catalog.to_jsonb(source_row)->>''created_by'', '''')::uuid
          )
        left join public.assessments as assessment_row
-         on assessment_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''assessment_id'', '''')::uuid
+         on assessment_row.id = coalesce(
+           nullif(pg_catalog.to_jsonb(source_row)->>''assessment_id'', '''')::uuid,
+           grade_row.assessment_id
+         )
+       left join public.assessments as grade_assessment_row
+         on grade_assessment_row.id = grade_row.assessment_id
        left join public.assessment_categories as category_row
-         on category_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''assessment_category_id'', '''')::uuid
+         on category_row.id = coalesce(
+           nullif(pg_catalog.to_jsonb(source_row)->>''assessment_category_id'', '''')::uuid,
+           grade_row.assessment_category_id
+         )
+       left join public.assessment_categories as grade_category_row
+         on grade_category_row.id = grade_row.assessment_category_id
        left join public.periods as period_row
-         on period_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''period_id'', '''')::uuid
+         on period_row.id = coalesce(
+           nullif(pg_catalog.to_jsonb(source_row)->>''period_id'', '''')::uuid,
+           attendance_row.period_id
+         )
+       left join public.periods as attendance_period_row
+         on attendance_period_row.id = attendance_row.period_id
        left join public.academic_years as year_row
          on year_row.id = context.academic_year_id and year_row.school_id = $2
        left join public.terms as term_row
