@@ -283,9 +283,12 @@ async function loadParentRecordData(
       .in("id", schoolIds);
     if (error) console.error("Could not load parent school labels:", error);
     else         parentRecordState.schools = buildParentSchoolMap(schools);
-    if (student?.school_id && student.schools?.school_name) {
-      parentRecordState.schools.set(student.school_id, student.schools.school_name);
-    }
+  }
+
+  // Always include the selected student's current school, even when no
+  // record-level school IDs were returned by the scoped query.
+  if (student?.school_id && student.schools?.school_name) {
+    parentRecordState.schools.set(student.school_id, student.schools.school_name);
   }
 }
 
