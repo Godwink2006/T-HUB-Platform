@@ -373,7 +373,7 @@ begin
            ''term_name'', term_row.name,
            ''semester_name'', term_row.name,
            ''subject_name'', coalesce(subject_row.name, grade_subject_row.name, attendance_subject_row.name),
-           ''teacher_name'', coalesce(teacher_row.full_name, attendance_teacher_row.full_name),
+           ''teacher_name'', teacher_row.full_name,
            ''assessment_name'', coalesce(assessment_row.name, grade_assessment_row.name),
            ''assessment_category'', coalesce(category_row.name, grade_category_row.name),
            ''maximum_marks'', coalesce(assessment_row.maximum_marks, grade_assessment_row.maximum_marks),
