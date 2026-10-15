@@ -374,8 +374,7 @@ function getParentRecordContext(row, type) {
       classId: item.class_id,
       termId: item.term_id,
       schoolName:
-        parentRecordState.schools.get(item.school_id) ||
-        (!item.school_id ? currentSchoolName : undefined),
+        parentRecordState.schools.get(item.school_id) || currentSchoolName,
       yearName: item.academic_years?.year_label,
       className: item.classes?.name,
       termName: item.terms?.name,
@@ -391,13 +390,12 @@ function getParentRecordContext(row, type) {
     yearId: item.academic_year_id,
     classId: item.class_id,
     termId: item.term_id,
-    schoolName:
-        parentRecordState.schools.get(item.school_id) ||
-        (!item.school_id ? currentSchoolName : undefined),
-    yearName: item.academic_years?.year_label,
-    className: item.classes?.name,
-    termName: item.terms?.name,
-    periodId: item.assessment_id,
+      schoolName:
+        parentRecordState.schools.get(item.school_id) || currentSchoolName,
+      yearName: item.academic_years?.year_label,
+      className: item.classes?.name,
+      termName: item.terms?.name,
+      periodId: item.assessment_id,
     periodName: item.assessments?.name,
     subjectId: item.subject_id,
     subjectName: item.subjects?.name,
