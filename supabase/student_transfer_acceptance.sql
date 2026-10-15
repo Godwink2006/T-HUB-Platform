@@ -359,12 +359,25 @@ begin
           target_student_id, record_type, source_record_id, record_snapshot)
        select $1, $2, $3, $4, $4, $5, source_row.id::text,
          pg_catalog.to_jsonb(source_row) || pg_catalog.jsonb_build_object(
+           ''history_school_id'', $2,
+           ''history_school_name'', school_row.school_name,
+           ''school_name'', school_row.school_name,
            ''history_class_id'', context.class_id,
            ''history_class_name'', class_row.name,
+           ''class_name'', class_row.name,
            ''history_academic_year_id'', context.academic_year_id,
            ''history_academic_year'', year_row.year_label,
+           ''academic_year'', year_row.year_label,
            ''history_term_id'', context.term_id,
-           ''history_term_name'', term_row.name
+           ''history_term_name'', term_row.name,
+           ''term_name'', term_row.name,
+           ''semester_name'', term_row.name,
+           ''subject_name'', subject_row.name,
+           ''teacher_name'', teacher_row.full_name,
+           ''assessment_name'', assessment_row.name,
+           ''assessment_category'', category_row.name,
+           ''maximum_marks'', assessment_row.maximum_marks,
+           ''period_name'', period_row.name
          )
        from public.%I as source_row
        left join lateral (
@@ -397,8 +410,27 @@ begin
               where f.id = nullif(pg_catalog.to_jsonb(source_row)->>''student_fee_id'', '''')::uuid)
            ) as term_id
        ) as context on true
+       left join public.schools as school_row
+         on school_row.id = $2
        left join public.classes as class_row
          on class_row.id = context.class_id and class_row.school_id = $2
+       left join public.subjects as subject_row
+         on subject_row.id = coalesce(
+           nullif(pg_catalog.to_jsonb(source_row)->>''subject_id'', '''')::uuid,
+           (select g.subject_id from public.grades as g where g.id = nullif(pg_catalog.to_jsonb(source_row)->>''grade_id'', '''')::uuid),
+           (select a.subject_id from public.attendance as a where a.id = nullif(pg_catalog.to_jsonb(source_row)->>''attendance_id'', '''')::uuid)
+         )
+       left join public.profiles as teacher_row
+         on teacher_row.id = coalesce(
+           nullif(pg_catalog.to_jsonb(source_row)->>''teacher_id'', '''')::uuid,
+           nullif(pg_catalog.to_jsonb(source_row)->>''created_by'', '''')::uuid
+         )
+       left join public.assessments as assessment_row
+         on assessment_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''assessment_id'', '''')::uuid
+       left join public.assessment_categories as category_row
+         on category_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''assessment_category_id'', '''')::uuid
+       left join public.periods as period_row
+         on period_row.id = nullif(pg_catalog.to_jsonb(source_row)->>''period_id'', '''')::uuid
        left join public.academic_years as year_row
          on year_row.id = context.academic_year_id and year_row.school_id = $2
        left join public.terms as term_row
