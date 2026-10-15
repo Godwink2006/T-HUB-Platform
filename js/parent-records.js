@@ -117,7 +117,7 @@ async function initializeParentRecords() {
     const { data: student, error: studentError } = await client
       .from("students")
       .select(
-        "id, student_id, school_id, class_id, classes:class_id(name), profiles(full_name, photo_url)",
+        "id, student_id, school_id, class_id, classes:class_id(name), schools:school_id(id, school_name), profiles(full_name, photo_url)",
       )
       .eq("id", selectedStudentId)
       .single();
@@ -249,11 +249,13 @@ async function loadParentRecordData(
             assessment_id,
             date_recorded,
             created_by,
+            profiles:created_by ( full_name, teachers ( staff_id ) ),
             classes ( id, name ),
             subjects ( id, name ),
             terms ( id, name ),
             academic_years ( id, year_label ),
-            assessments ( id, name, maximum_marks )
+            assessments ( id, name, maximum_marks ),
+            assessment_categories ( id, name, marks )
           )
         `,
       )
@@ -280,7 +282,13 @@ async function loadParentRecordData(
       .select("id,school_name")
       .in("id", schoolIds);
     if (error) console.error("Could not load parent school labels:", error);
-    else parentRecordState.schools = buildParentSchoolMap(schools);
+    else         parentRecordState.schools = buildParentSchoolMap(schools);
+  }
+
+  // Always include the selected student's current school, even when no
+  // record-level school IDs were returned by the scoped query.
+  if (student?.school_id && student.schools?.school_name) {
+    parentRecordState.schools.set(student.school_id, student.schools.school_name);
   }
 }
 
