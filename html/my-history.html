@@ -36,21 +36,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
-    <main class="history-page">
-      <header class="history-header">
-        <div>
-          <h1>My Transfer History</h1>
-          <p>Read-only records from schools you transferred from.</p>
-        </div>
-        <a href="dashboard.html" class="history-back-link"
-          ><i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
-          Dashboard</a
-        >
-      </header>
-      <section class="history-filters" aria-label="Filter transfer history">
+    <div class="container">
+      <div class="header-section">
+        <a href="academics.html" class="back-btn">Back</a>
+        <h1>My Transfer History</h1>
+        <p class="subtitle">
+          Read-only records from schools you transferred from.
+        </p>
+      </div>
+
+      <div class="toolbar" aria-label="Filter transfer history">
         <label class="history-search-field">
           <span>Search records</span>
           <input
@@ -93,7 +91,8 @@
           class="history-result-count"
           aria-live="polite"
         ></p>
-      </section>
+      </div>
+
       <section
         id="transferHistoryList"
         class="transfer-history-list"
@@ -101,12 +100,13 @@
       >
         <p class="history-state">Loading your transfer history...</p>
       </section>
-    </main>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/transfer-history-index.js"></script>
     <script src="/js/my-history.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>
