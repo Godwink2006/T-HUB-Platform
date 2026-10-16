@@ -440,7 +440,7 @@ function clearDraftStorage() {
 
       const { data: timetable, error: ttErr } = await supabaseClient
         .from("timetables")
-        .select("id, status, class_id, academic_year_id")
+        .select("id, status, class_id, academic_year_id, academic_years(id, year_label)")
         .eq("id", timetableId)
         .single();
 
@@ -451,11 +451,11 @@ function clearDraftStorage() {
       const classObj = state.lookups.classes.find(
         (c) => c.id === timetable.class_id,
       );
-      const yearObj = state.lookups.years.find(
-        (y) => y.id === timetable.academic_year_id,
-      );
+  const yearObj =
+  timetable.academic_years ||
+  state.lookups.years.find((y) => y.id === timetable.academic_year_id);
 
-      const classEl = getEl("editModalClassName");
+  const classEl = getEl("editModalClassName");
       const yearEl = getEl("editModalYearLabel");
       const statusSelect = getEl("editTimetableStatusSelect");
 
