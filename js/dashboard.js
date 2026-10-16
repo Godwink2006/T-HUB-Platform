@@ -235,7 +235,7 @@ async function loadDashboardAnnouncements() {
 
   previewContainer.innerHTML = `
 
-     <div style="padding: 24px; text-align: center; color: #64748b; background: #fff;  border: 2px solid rgb(219, 215, 215);">
+     <div style="padding: 24px; text-align: center; color: #64748b; background: #fff;  border: 1px solid rgb(219, 215, 215);">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading announcements...
       </div>
@@ -344,13 +344,13 @@ async function loadDashboardAnnouncements() {
         }
 
         return `
-        <div class="small-border-announcement" style=" padding: 16px; margin-bottom: 12px; background: #fff;  border: 2px solid rgb(219, 215, 215);">
+        <div class="small-border-announcement" style=" padding: 16px; margin-bottom: 12px; background: #fff;  border: 1px solid rgb(219, 215, 215);">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
             <h4 style="margin: 0; font-size: 1.05rem; color: #0f172a; font-weight: 600;">${escapeHtml(ann.title)}</h4>
             <span class="announcement-status" style="font-size: 0.75rem; padding: 3px 10px; background: ${statusBg}; color: ${statusColor}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;">${escapeHtml(ann.status)}</span>
           </div>
           <p style="margin: 0 0 12px 0; font-size: 0.95rem; color: #334155; line-height: 1.5;">${escapeHtml(ann.message)}</p>
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #64748b;  border-top: 2px solid rgb(219, 215, 215);">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #64748b;  border-top: 1px solid rgb(219, 215, 215);">
             <span><i class="fa-solid fa-users" style="margin-right: 4px;"></i> Target: ${escapeHtml(ann.target_audience)}</span>
             <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> ${ann.expiry_date || "No expiry date"}</span>
           </div>
