@@ -665,6 +665,7 @@ tr {
 
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     flex-direction: row;
     gap: 8px;
     margin: 10px 0;
@@ -686,6 +687,7 @@ tr {
 
   .timetables-table-card {
     background: #ffffff;
+    border-radius: 10px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
@@ -790,8 +792,9 @@ tr {
 
   .timetable-modal-header button,
   .edit-timetable-modal-header button,
+  .view-timetable-modal-header button,
   .lesson-modal-header button,
-  .edit-lesson-modal-header button,
+  .edit-lesson-modal-header button {
     cursor: pointer;
     color: #f9fafb;
     border: 1px solid rgb(219, 215, 215);
@@ -827,6 +830,7 @@ tr {
   .timetable-table-card,
   .timetables-table-card,
   .edit-timetable-table-card {
+    border-radius: 10px;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -860,7 +864,7 @@ tr {
   .edit-timetable-modal-footer,
   .view-timetable-modal-footer,
   .lesson-modal-footer,
-  .edit-lesson-modal-footer{
+  .edit-lesson-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
