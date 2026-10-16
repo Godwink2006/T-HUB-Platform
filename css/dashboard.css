@@ -220,6 +220,35 @@ body {
   line-height: 1.5;
   color: #6b7280;
   white-space: pre-line;
+  }
+
+.small-border-announcement {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.small-border-announcement > div:first-child {
+  margin-bottom: 0 !important;
+  gap: 16px;
+}
+
+.small-border-announcement h4,
+.small-border-announcement p {
+  letter-spacing: 0.01em;
+}
+
+.small-border-announcement p {
+  line-height: 1.7 !important;
+  white-space: pre-wrap;
+}
+
+.small-border-announcement > div:last-child {
+  padding-top: 12px;
+}
+
+.small-border-announcement .announcement-status {
+  flex-shrink: 0;
 }
 
 .announcement-empty {
