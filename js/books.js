@@ -4,7 +4,6 @@ async function loadBookCatalog() {
   const gridContainer = document.getElementById("bookCardGrid");
   if (!gridContainer) return;
 
-
   gridContainer.innerHTML = `
     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #64748b;">
       <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem; font-size: 1.2rem;"></i>
@@ -113,7 +112,6 @@ function renderBookCards(booksToRender) {
   });
 }
 
-
 const catalogSearchInput = document.getElementById("catalogSearchInput");
 if (catalogSearchInput) {
   catalogSearchInput.addEventListener("input", (e) => {
@@ -136,7 +134,6 @@ if (catalogSearchInput) {
     renderBookCards(filtered);
   });
 }
-
 
 document.addEventListener("DOMContentLoaded", () => {
   loadBookCatalog();
@@ -275,7 +272,6 @@ function getSafeProfilePhotoUrl(photoUrl) {
   return window.DEFAULT_PROFILE_AVATAR || "";
 }
 
-
 function formatDate(dateString) {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -288,7 +284,6 @@ function formatDate(dateString) {
   }).format(date);
 }
 
-
 function escapeHtml(str) {
   if (!str) return "";
   return String(str)
@@ -299,7 +294,6 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-
 function closeStudentHistoryModal() {
   const studentModal = document.getElementById("studentHistoryModal");
   if (studentModal) {
@@ -309,7 +303,6 @@ function closeStudentHistoryModal() {
     unLockBodyScroll();
   }
 }
-
 
 window.addEventListener("click", (e) => {
   const studentModal = document.getElementById("studentHistoryModal");

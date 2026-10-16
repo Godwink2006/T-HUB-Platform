@@ -1,6 +1,5 @@
 
 
-
 create or replace function public.promote_students_to_semester(
 
   p_student_ids uuid[],
@@ -130,7 +129,6 @@ begin
   if not found then
     raise exception 'The source class is not active in this school.' using errcode = '23503';
   end if;
-
 
   for v_student_id in
     select e.student_id

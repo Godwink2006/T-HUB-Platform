@@ -1,14 +1,6 @@
--- Apply after parent_portal_schema_proposal.sql and after the profiles role
--- constraint accepts the `parent` role. This adds read-only access to records
--- belonging to actively linked students. Existing school-wide permissive
--- policies are kept for staff; restrictive policies below narrow parent reads
--- so those existing policies cannot expose classmates' records.
 
 begin;
 
-
--- Private, parameterless helper avoids recursively querying profiles from its
--- own RLS policy. It can only return the role attached to the current JWT user.
 create schema if not exists private;
 revoke all on schema private from public, anon;
 grant usage on schema private to authenticated;
@@ -26,8 +18,6 @@ as $$
 $$;
 revoke all on function private.current_profile_role() from public, anon;
 grant execute on function private.current_profile_role() to authenticated;
--- SECURITY DEFINER prevents attendance/attendance_records RLS policies from
--- recursively evaluating each other. The result is scoped to auth.uid().
 create or replace function private.parent_portal_can_read_attendance(p_attendance_id uuid)
 returns boolean
 language sql
@@ -47,12 +37,6 @@ $$;
 revoke all on function private.parent_portal_can_read_attendance(uuid) from public, anon;
 grant execute on function private.parent_portal_can_read_attendance(uuid) to authenticated;
 
--- Profile access is intentionally handled by the existing non-recursive
--- profile policies. Do not add a policy here that queries profiles through
--- current_profile_role(), because that causes infinite RLS recursion.
-
--- Additive access for parents to the profile of each actively linked student.
--- Keep this separate from existing school/admin policies so those remain intact.
 drop policy if exists "parent_portal_profiles_linked_select" on public.profiles;
 create policy "parent_portal_profiles_linked_select"
   on public.profiles for select to authenticated
@@ -65,7 +49,6 @@ create policy "parent_portal_profiles_linked_select"
     )
   );
 
--- Students: linked parents get the selected child, not the school roster.
 drop policy if exists "parent_portal_students_linked_select" on public.students;
 create policy "parent_portal_students_linked_select"
   on public.students for select to authenticated
@@ -82,7 +65,6 @@ create policy "parent_portal_students_select_scope"
     or exists (select 1 from public.parent_student_links l where l.parent_user_id = (select auth.uid()) and l.student_id = students.id and l.status = 'active')
   );
 
--- Enrollments.
 drop policy if exists "parent_portal_enrollments_linked_select" on public.student_enrollments;
 create policy "parent_portal_enrollments_linked_select"
   on public.student_enrollments for select to authenticated
@@ -98,7 +80,6 @@ create policy "parent_portal_enrollments_select_scope"
     or exists (select 1 from public.parent_student_links l where l.parent_user_id = (select auth.uid()) and l.student_id = student_enrollments.student_id and l.status = 'active')
   );
 
--- Fee balances and payment transactions.
 drop policy if exists "parent_portal_fees_linked_select" on public.student_fees;
 create policy "parent_portal_fees_linked_select"
   on public.student_fees for select to authenticated
@@ -151,8 +132,6 @@ create policy "parent_portal_payment_allocations_select_scope"
     )
   );
 
--- Attendance details are scoped by the child record; session rows are visible
--- only when they include an attendance record for one of the parent's students.
 drop policy if exists "parent_portal_attendance_records_linked_select" on public.attendance_records;
 create policy "parent_portal_attendance_records_linked_select"
   on public.attendance_records for select to authenticated
@@ -180,8 +159,6 @@ create policy "parent_portal_attendance_sessions_select_scope"
     or private.parent_portal_can_read_attendance(attendance.id)
   );
 
--- Grades: score rows and their parent assessment rows are limited to linked
--- students with published/submitted grade records.
 drop policy if exists "parent_portal_grade_records_linked_select" on public.grade_records;
 create policy "parent_portal_grade_records_linked_select"
   on public.grade_records for select to authenticated
@@ -219,8 +196,6 @@ create policy "parent_portal_grades_select_scope"
     )
   );
 
--- Prevent parent accounts from writing school records even if another broad
--- permissive write policy exists. Staff behavior is unchanged.
 do $parent_readonly$
 declare
   table_name text;
@@ -256,8 +231,6 @@ begin
 end;
 $parent_readonly$;
 
--- Parent-visible labels are checked in a private SECURITY DEFINER helper so
--- these lookups do not recursively re-run RLS across the record tables.
 create or replace function private.parent_portal_can_view_context(p_context text, p_id uuid)
 returns boolean
 language sql

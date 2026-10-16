@@ -7,7 +7,7 @@
 .app-person-meta {
   display: inline-flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .app-person-id {

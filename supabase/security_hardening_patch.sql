@@ -1,12 +1,6 @@
--- Live security hardening for profile authorization and privileged RPCs.
--- Apply to the intended Supabase project. This patch is transactional.
 
 begin;
 
--- Users may edit ordinary profile details, but cannot elevate their own role
--- or move their profile to another tenant. Privileged profile changes remain
--- available to server-side service-role workflows and admin changes to other
--- users, subject to the existing RLS policies.
 create or replace function private.prevent_self_profile_privilege_edits()
 returns trigger
 language plpgsql
@@ -37,9 +31,6 @@ create trigger prevent_self_profile_privilege_edits
   before update of role, school_id on public.profiles
   for each row execute function private.prevent_self_profile_privilege_edits();
 
--- Profile row scope is limited to the caller's role and school. The
--- role_and_parent_access_correction.sql migration applies the existing
--- Premium requirement to student and librarian profile/data access.
 drop policy if exists "Clean tier and role profile access" on public.profiles;
 create policy "Clean tier and role profile access"
   on public.profiles for select to authenticated
@@ -56,9 +47,6 @@ create policy "Clean tier and role profile access"
     )
   );
 
--- The plan helper is used by authenticated RLS policies. Bind it to the
--- caller's own school so the exposed RPC cannot be used to enumerate other
--- tenants' subscription tiers.
 create or replace function public.check_school_access(
   target_school_id uuid,
   required_tier text
@@ -75,9 +63,6 @@ declare
   school_created timestamptz;
   active_plan text;
 begin
-  -- Edge Functions call this with their server-only service role after they
-  -- authenticate staff and bind target_school_id to that profile. Keep the
-  -- self-school checks for all client-authenticated calls.
   if caller_role <> 'service_role' then
     if (select auth.uid()) is null then
       return false;
@@ -129,9 +114,6 @@ begin
 end;
 $$;
 
--- Prevent client roles from using school provisioning to create arbitrary
--- tenants, subscriptions, or admin profiles. No frontend or Edge Function in
--- this repository calls this RPC; server-side provisioning may use service_role.
 revoke execute on function public.provision_school_tenant(
   uuid, text, text, text, text, text, text, text, text, text, text, text,
   text, text, text, text, text, text
@@ -141,8 +123,6 @@ grant execute on function public.provision_school_tenant(
   text, text, text, text, text, text
 ) to service_role;
 
--- Rebuild itemized payment recording as a narrowly authorized operation.
--- Locking the fee row serializes balance checks for concurrent RPC requests.
 create or replace function public.record_itemized_payment(
   p_student_fee_id uuid,
   p_student_id uuid,
@@ -317,8 +297,6 @@ grant execute on function public.record_itemized_payment(
   uuid, uuid, numeric, text, text, text, jsonb
 ) to authenticated;
 
--- Bind dashboard statistics to the authenticated profile instead of trusting
--- client-supplied user, role, and tenant identifiers.
 create or replace function public.get_dashboard_stats(
   p_school_id uuid,
   p_user_id uuid,
@@ -439,8 +417,6 @@ begin
 end;
 $$;
 
--- Retain the legacy three-argument overload, but run it through the same
--- authenticated, school-bound implementation.
 create or replace function public.get_dashboard_stats(
   p_school_id uuid,
   p_user_id uuid,
@@ -469,8 +445,6 @@ revoke execute on function public.get_dashboard_stats(uuid, uuid, text)
 grant execute on function public.get_dashboard_stats(uuid, uuid, text)
   to authenticated;
 
--- The control-panel dashboard calls this aggregate from an authenticated
--- browser session. Return the global total only to active super admins.
 create or replace function public.get_total_storage_used()
 returns bigint
 language sql
@@ -486,8 +460,6 @@ $$;
 revoke execute on function public.get_total_storage_used() from public, anon, authenticated;
 grant execute on function public.get_total_storage_used() to authenticated, service_role;
 
--- Narrow ID-based boolean helpers to signed-in users and bind user parameters
--- to auth.uid() where the helper answers a caller-specific question.
 create or replace function public.teacher_has_student(p_teacher_id uuid, p_student_id uuid)
 returns boolean
 language sql

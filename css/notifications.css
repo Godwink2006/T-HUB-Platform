@@ -29,7 +29,6 @@
   font-size: 14px;
 }
 
-
 .btn-primary-action {
   background: #2563eb;
   color: white;
@@ -44,15 +43,13 @@
   background: #1d4ed8;
 }
 
-
 .notif-tabs-container {
   display: flex;
-  gap: 12px;
+  gap: 11px;
   margin-bottom: 20px;
-  border-bottom: 2px solid rgb(219, 215, 215);
-  padding-bottom: 12px;
+  border-bottom: 1px solid rgb(219, 215, 215);
+  padding-bottom: 11px;
 }
-
 
 .notif-tab {
   background: #f3f4f6;
@@ -70,14 +67,13 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-  margin-top: 12px;
-  border: 2px solid rgb(219, 215, 215);
+  margin-top: 11px;
+  border: 1px solid rgb(219, 215, 215);
   width: 70px;
   justify-content: space-between;
   background: #1f2937;
   color: #f9fafb;
 }
-
 
 .notif-tab.active {
   background: #eff6ff;
@@ -85,10 +81,9 @@
   font-weight: 600;
 }
 
-
 .notifications-card-list {
   background: white;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   overflow: hidden;
   margin-bottom: 5px;
 }

@@ -1,6 +1,5 @@
 
 
-
 grant usage on schema public to service_role;
 grant select on table
   public.profiles,
@@ -86,8 +85,6 @@ begin
   ) then
     raise exception 'Fee structure does not match the school, class, year, and term.' using errcode = '23503';
   end if;
-
-
 
   perform s.id
   from public.students s

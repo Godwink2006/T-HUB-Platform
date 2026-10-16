@@ -27,8 +27,6 @@ window.getStudentTransferHistoryIndex = async function (client = window.supabase
   };
 
   for (const transfer of index.transfers) {
-    // The source school's records are current again when the student returns
-    // there. Only suppress snapshots from schools other than the active one.
     if (String(transfer.source_school_id || "").toLowerCase() === index.currentSchoolId) continue;
     for (const record of Array.isArray(transfer.records) ? transfer.records : []) {
       const type = String(record.record_type || "").toLowerCase();

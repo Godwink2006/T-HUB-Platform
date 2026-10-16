@@ -1,7 +1,5 @@
 
 
-
-
 create or replace function public.move_students_to_new_academic_year(
   p_school_id uuid,
   p_student_ids uuid[],

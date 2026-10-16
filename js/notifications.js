@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   let currentFilter = "all";
   let notificationsData = [];
 
-
   const {
     data: { session },
     error: sessionError,
@@ -16,7 +15,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
   const userId = session.user.id;
-
 
   async function fetchNotifications() {
     try {
@@ -34,7 +32,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       notificationList.innerHTML = `<div style="padding: 24px; text-align: center; color: #ef4444;">Failed to load notifications.</div>`;
     }
   }
-
 
   function renderNotifications() {
     let filtered = notificationsData;
@@ -68,7 +65,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       )
       .join("");
 
-
     document.querySelectorAll(".mark-read-single").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         e.stopPropagation();
@@ -77,7 +73,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
   }
-
 
   async function markAsRead(id) {
     try {
@@ -88,7 +83,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (error) throw error;
 
-
       notificationsData = notificationsData.map((n) =>
         n.id === id ? { ...n, is_read: true } : n,
       );
@@ -97,7 +91,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Error updating notification:", err);
     }
   }
-
 
   markAllReadBtn.addEventListener("click", async () => {
     try {
@@ -123,7 +116,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       tabs.forEach((t) => {
@@ -142,7 +134,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderNotifications();
     });
   });
-
 
   fetchNotifications();
 });

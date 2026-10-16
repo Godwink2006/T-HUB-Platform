@@ -52,7 +52,6 @@ function clearDraftStorage() {
   const getEl = (id) => document.getElementById(id);
   const supabaseClient = window.supabaseClient || window.supabase;
 
-
   function escapeHTML(str) {
     if (!str) return "";
     return String(str)
@@ -75,7 +74,6 @@ function clearDraftStorage() {
     const form = getEl(formId);
     if (form) form.reset();
   }
-
 
   async function fetchUserProfileAndSchool() {
     try {
@@ -102,7 +100,6 @@ function clearDraftStorage() {
       return null;
     }
   }
-
 
   async function loadDropdownData() {
     try {
@@ -262,8 +259,6 @@ function clearDraftStorage() {
       : "";
   }
 
-
-
   function bindCascadingEvents() {
     getEl("timetableClassSelect")?.addEventListener("change", () => {
       updateCascadingDropdowns("addLesson");
@@ -312,9 +307,6 @@ function clearDraftStorage() {
     });
     select.innerHTML = html;
   }
-
-
-
 
   function resolveLessonDisplayData(lesson) {
     if (lesson.is_break) {
@@ -799,8 +791,6 @@ function clearDraftStorage() {
       state.editingLessonId = null;
     });
 
-
-
     function updatePeriodTimeLabel(selectEl, displayEl) {
       if (!selectEl || !displayEl) return;
 
@@ -822,7 +812,6 @@ function clearDraftStorage() {
       displayEl.textContent = timeText || "--:--";
     }
 
-
     function setupPeriodTimeDisplay(selectId, displayId) {
       const select = getEl(selectId);
       const display = getEl(displayId);
@@ -833,7 +822,6 @@ function clearDraftStorage() {
         updatePeriodTimeLabel(select, display);
       });
     }
-
 
     function ensureDropdownOptionsExist(prefix) {
       const subjectSelect =
@@ -872,7 +860,6 @@ function clearDraftStorage() {
       }
     }
 
-
     function populateEditFormValues(lesson) {
       const isBreak = Boolean(lesson.is_break);
 
@@ -910,7 +897,6 @@ function clearDraftStorage() {
         getEl("editLessonTimeDisplay") || getEl("editTimeDisplay");
       updatePeriodTimeLabel(periodSelect, editTimeDisplay);
     }
-
 
     function extractLessonFormData(prefix) {
       const isBreak =
@@ -1143,7 +1129,6 @@ function clearDraftStorage() {
 
   let cachedTimetables = [];
 
-
   function applyTimetableFilters() {
     const searchQuery = (getEl("timetableSearchInput")?.value || "")
       .toLowerCase()
@@ -1173,7 +1158,6 @@ function clearDraftStorage() {
 
     renderTimetablesTable(filtered);
   }
-
 
   function renderTimetablesTable(list) {
     const tbody = getEl("timetablesTableBody");
@@ -1213,7 +1197,6 @@ function clearDraftStorage() {
       })
       .join("");
   }
-
 
   function populateAcademicYearFilterOptions(timetables) {
     const yearSelect = getEl("academicYearFilter");

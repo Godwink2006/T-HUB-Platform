@@ -29,7 +29,7 @@ body {
 }
 
 .topbar h1 {
-  font-size: 32px;
+  font-size: 31px;
   color: #1f2937;
 }
 
@@ -70,7 +70,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 1px solid #14532d;
   font-size: 14px;
 }
 
@@ -83,7 +83,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffffff;
@@ -100,7 +100,7 @@ body {
 
 .assessment-table-header {
   padding: 20px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   border-bottom: none;
 }
 
@@ -129,7 +129,7 @@ body {
 
 .assessment-table-wrapper thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .assessment-table-wrapper th {
@@ -137,13 +137,13 @@ body {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   white-space: nowrap;
 }
 
 .assessment-table-wrapper td {
   padding: 18px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   font-size: 14px;
   color: #374151;
 }
@@ -155,7 +155,7 @@ body {
 .assessment-status {
   display: inline-flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 8px 11px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -169,10 +169,6 @@ body {
   background: #fcdcdc;
   color: #651616;
 }
-
-
-
-
 
 .assessment-actions {
   display: flex;
@@ -197,10 +193,6 @@ body {
   background: #fde68a;
 }
 
-
-
-
-
 .assessment-modal {
   position: fixed;
   top: 0;
@@ -221,10 +213,6 @@ body {
 .assessment-modal.active {
   display: flex;
 }
-
-
-
-
 
 .assessment-modal-content {
   overflow: auto;
@@ -251,10 +239,6 @@ body {
   }
 }
 
-
-
-
-
 .assessment-modal-header {
   display: flex;
   justify-content: space-between;
@@ -262,11 +246,11 @@ body {
 
   padding: 20px 25px;
 
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .assessment-modal-header h2 {
-  font-size: 22px;
+  font-size: 21px;
   color: #1f2937;
 }
 
@@ -281,20 +265,12 @@ body {
   height: 40px;
   width: 40px;
 
-  font-size: 22px;
+  font-size: 21px;
 }
-
-
-
-
 
 .assessment-modal-body {
   padding: 25px;
 }
-
-
-
-
 
 .assessment-modal-body form {
   display: flex;
@@ -327,9 +303,9 @@ body {
 .form-group textarea {
   width: 100%;
 
-  padding: 12px 15px;
+  padding: 11px 15px;
 
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 
   outline: none;
 
@@ -353,10 +329,6 @@ body {
   grid-column: 1 / -1;
 }
 
-
-
-
-
 .assessment-modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -364,15 +336,11 @@ body {
 
   padding: 20px 25px;
 
-  border-top: 2px solid rgb(219, 215, 215);
+  border-top: 1px solid rgb(219, 215, 215);
 }
 
-
-
-
-
 .cancel-btn {
-  padding: 12px 22px;
+  padding: 11px 21px;
 
   border: none;
 
@@ -382,12 +350,8 @@ body {
   background: #1f2937;
 }
 
-
-
-
-
 .save-btn {
-  padding: 12px 22px;
+  padding: 11px 21px;
 
   border: none;
 
@@ -396,13 +360,9 @@ body {
 
   cursor: pointer;
 }
-
-
-
-
 
 .edit-btn {
-  padding: 12px 22px;
+  padding: 11px 21px;
 
   border: none;
 
@@ -411,10 +371,6 @@ body {
 
   cursor: pointer;
 }
-
-
-
-
 
 .confirm-modal {
   width: 430px;
@@ -428,10 +384,6 @@ body {
 
   animation: assessmentModalShow 0.25s ease;
 }
-
-
-
-
 
 .confirm-icon {
   width: 70px;
@@ -450,10 +402,6 @@ body {
   font-size: 28px;
 }
 
-
-
-
-
 .confirm-modal h2 {
   margin-bottom: 15px;
 
@@ -467,10 +415,6 @@ body {
 
   margin-bottom: 5px;
 }
-
-
-
-
 
 @media screen and (max-width: 768px) {
   * {
@@ -528,7 +472,7 @@ body {
     align-items: center !important;
     display: grid !important;
     grid-template-columns: 1fr auto !important;
-    gap: 10px 12px !important;
+    gap: 10px 11px !important;
   }
 
   .topbar h1,
@@ -544,7 +488,7 @@ body {
 
   .topbar p {
     color: #6b7280;
-    margin-top: 2px;
+    margin-top: 1px;
     font-size: 13px;
   }
 
@@ -585,7 +529,7 @@ body {
     justify-content: center;
     gap: 6px;
     cursor: pointer;
-    border: 2px solid #14532d;
+    border: 1px solid #14532d;
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
@@ -607,7 +551,7 @@ body {
     padding: 0 8px;
     outline: none;
     background: #ffffff;
-    font-size: 12px;
+    font-size: 11px;
     flex: 1;
     min-width: 0;
     border-radius: 10px;
@@ -634,7 +578,7 @@ body {
   th {
     padding: 8px 10px;
     text-align: left;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #6b7280;
     border: 1.5px solid rgb(219, 215, 215);
@@ -643,13 +587,13 @@ body {
 
   th,
   td {
-    padding: 12px 14px !important;
+    padding: 11px 14px !important;
     font-size: 14px !important;
   }
 
   td {
     padding: 8px 10px;
-    font-size: 12px;
+    font-size: 11px;
     border: 1.5px solid rgb(219, 215, 215);
     white-space: nowrap;
   }
@@ -748,7 +692,7 @@ body {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
     padding: 14px 20px;
     border-top: 1.5px solid rgb(219, 215, 215);
   }
@@ -758,7 +702,7 @@ body {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
     padding: 14px 20px;
     border-top: 1.5px solid rgb(219, 215, 215);
   }
@@ -766,7 +710,7 @@ body {
   .form-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 11px;
   }
 
   .form-group {
@@ -776,7 +720,7 @@ body {
 
   .form-group label {
     margin-bottom: 4px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     color: #374151;
   }

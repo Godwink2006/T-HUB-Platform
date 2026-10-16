@@ -91,7 +91,7 @@
 }
 
 .topbar h1 {
-  font-size: 32px;
+  font-size: 31px;
   color: #1f2937;
 }
 
@@ -109,7 +109,7 @@
 .setting-card {
   background: #ffff;
   padding: 20px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .setting-card h2 {
@@ -133,7 +133,7 @@
   justify-content: space-between;
   align-items: flex-start;
   min-height: 160px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 11px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 }
 
@@ -235,7 +235,7 @@ body.settings-modal-open {
 }
 
 .clear-data-actions button {
-  min-height: 42px;
+  min-height: 41px;
   padding: 10px 14px;
   border: 1px solid transparent;
   cursor: pointer;
@@ -264,12 +264,12 @@ body.settings-modal-open {
 
 @media (max-width: 480px) {
   .clear-data-modal {
-    padding: 12px;
+    padding: 11px;
   }
 
   .clear-data-card {
-    padding: 22px;
-    border-radius: 12px;
+    padding: 21px;
+    border-radius: 11px;
   }
 
   .clear-data-actions {
@@ -280,10 +280,6 @@ body.settings-modal-open {
     width: 100%;
   }
 }
-
-
-
-
 
 @media screen and (max-width: 768px) {
   .settings-container {
@@ -371,7 +367,7 @@ body.settings-modal-open {
 .skeleton-title {
   height: 20px;
   width: 50%;
-  margin-bottom: 12px;
+  margin-bottom: 11px;
 }
 
 .skeleton-text {

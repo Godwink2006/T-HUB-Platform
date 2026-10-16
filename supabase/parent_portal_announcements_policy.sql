@@ -1,6 +1,3 @@
--- Add parent read access to announcements relevant to an actively linked
--- student. Existing announcement policies are intentionally left untouched.
--- Requires parent_portal_data_access.sql (private.current_profile_role()).
 
 begin;
 

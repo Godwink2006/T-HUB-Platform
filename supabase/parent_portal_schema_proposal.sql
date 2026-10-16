@@ -1,7 +1,3 @@
--- Parent portal foundation. Review and apply to the intended Supabase project.
--- Parent accounts are Supabase Auth users with a profiles row whose role is
--- assigned by the trusted invite-parent Edge Function. This link table is the
--- authorization source; a parent cannot create or edit links from the browser.
 
 begin;
 

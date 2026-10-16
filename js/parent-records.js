@@ -197,7 +197,6 @@ async function loadParentRecordData(
     parentRecordState.timetable = timetable;
     parentRecordState.timetableLessons = lessons || [];
 
-    // Accurate teacher names for this student's class timetable
     const { data: teachers, error: teachersError } = await client.rpc(
       "parent_portal_timetable_teacher_names",
       { p_student_id: studentId },
@@ -250,7 +249,6 @@ async function loadParentRecordData(
     if (result.error) throw result.error;
     parentRecordState.attendance = result.data || [];
   } else {
-    // --- GRADES VIEW BLOCK ---
     const result = await client
       .from("grade_records")
       .select(
@@ -313,7 +311,6 @@ async function loadParentRecordData(
     }
   } // <--- THIS CLOSES THE `else` BLOCK FOR GRADES PROPERLY
 
-  // --- COMMON SCHOOL MAP RESOLUTION (Runs for all views safely) ---
   const schoolIds = [
     ...new Set(
       [
@@ -391,7 +388,6 @@ function setRecordStudentPhoto(shell, photoUrl, name) {
         image.hidden = false;
       }
     } catch {
-      // Keep the initials placeholder when a profile photo URL is invalid.
     }
   }
   image.onerror = () => {
@@ -413,7 +409,6 @@ function getParentRecordContext(row, type) {
     if (key && parentRecordState.schools.has(key)) {
       return parentRecordState.schools.get(key);
     }
-    // Only use current school when id matches or is missing — not for other schools
     if (!key || key === currentSchoolId) {
       return currentSchoolName || undefined;
     }

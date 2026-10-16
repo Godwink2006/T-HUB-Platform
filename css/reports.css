@@ -63,7 +63,7 @@ body {
   text-decoration: none;
 
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: 11px;
   transition: 0.3s;
 }
 
@@ -96,7 +96,7 @@ body {
 }
 
 .topbar h1 {
-  font-size: 32px;
+  font-size: 31px;
   color: #1f2937;
 }
 
@@ -115,7 +115,7 @@ body {
   background: #ffff;
   padding: 20px;
   border-radius: 18px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .report-card h4 {
@@ -155,7 +155,7 @@ body {
   background: #fff;
   padding: 20px;
   border-radius: 18px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .manage-report-btn {

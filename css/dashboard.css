@@ -13,12 +13,6 @@ body {
   display: flex;
 }
 
-#openAnnouncementModal,
-#class-dashboard-card,
-#student-dashboard-card,
-#teacher-dashboard-card,
-#enrollment-dashboard-card,
-#attendance-dashboard-card {
   display: none;
 }
 
@@ -33,7 +27,7 @@ body {
 }
 
 .empty-state i {
-  margin-bottom: 12px;
+  margin-bottom: 11px;
   opacity: 1.8;
 }
 
@@ -125,7 +119,7 @@ body {
 }
 
 .topbar h1 {
-  font-size: 32px;
+  font-size: 31px;
   color: #1f2937;
 }
 
@@ -141,7 +135,7 @@ body {
 }
 
 .top-right i {
-  font-size: 22px;
+  font-size: 21px;
   color: #6b7280;
   cursor: pointer;
 }
@@ -220,6 +214,35 @@ body {
   line-height: 1.5;
   color: #6b7280;
   white-space: pre-line;
+  }
+
+.small-border-announcement {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.small-border-announcement > div:first-child {
+  margin-bottom: 0 !important;
+  gap: 16px;
+}
+
+.small-border-announcement h4,
+.small-border-announcement p {
+  letter-spacing: 0.01em;
+}
+
+.small-border-announcement p {
+  line-height: 1.7 !important;
+  white-space: pre-wrap;
+}
+
+.small-border-announcement > div:last-child {
+  padding-top: 12px;
+}
+
+.small-border-announcement .announcement-status {
+  flex-shrink: 0;
 }
 
 .announcement-empty {
@@ -232,7 +255,7 @@ body {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 12px 15px;
+  padding: 11px 15px;
   border: 1px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
@@ -276,7 +299,7 @@ body {
 }
 
 .announcement-modal-header h2 {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .announcement-modal-header button {
@@ -287,7 +310,7 @@ body {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .announcement-modal-body {
@@ -358,7 +381,7 @@ body {
 .dashboard-activity-list li {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   padding: 15px 0;
   border-bottom: 1px solid rgb(219, 215, 215);
   color: #4b5563;
@@ -471,7 +494,7 @@ body {
 }
 
 .date-modal-header h2 {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .date-modal-header button {
@@ -482,7 +505,7 @@ body {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .date-modal-body {
@@ -503,7 +526,7 @@ body {
 
 .form-group input {
   width: 100%;
-  padding: 12px 15px;
+  padding: 11px 15px;
   border: 1px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
@@ -517,7 +540,7 @@ body {
 }
 
 .save-btn {
-  padding: 12px 22px;
+  padding: 11px 21px;
   border: none;
   background: #2563eb;
   color: #ffff;
@@ -525,7 +548,7 @@ body {
 }
 
 .cancel-btn {
-  padding: 12px 22px;
+  padding: 11px 21px;
   border: none;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -624,10 +647,10 @@ body {
 }
 
 .sub-dot {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .green-dot {

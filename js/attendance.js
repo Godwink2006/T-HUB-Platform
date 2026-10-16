@@ -502,7 +502,6 @@ async function loadRosterIntoModal(classId) {
     const cleanClassId = classId ? classId.trim() : "";
     console.log("Querying active students via RPC for class_id:", cleanClassId);
 
-
     const { data: activeStudents, error: studentErr } =
       await supabaseClient.rpc("get_active_class_students", {
         p_class_id: cleanClassId,
@@ -765,7 +764,6 @@ async function loadAttendanceTable() {
     const user = (await supabaseClient.auth.getUser()).data?.user;
     if (!user) return;
 
-
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("role")
@@ -775,7 +773,6 @@ async function loadAttendanceTable() {
     if (profileError) {
       console.error("Error fetching profile role:", profileError);
     }
-
 
     let query = supabaseClient.from("attendance").select(
       `
@@ -799,7 +796,6 @@ async function loadAttendanceTable() {
     } else if (shouldFilterAttendanceToSubmitted(role)) {
       query = query.eq("status", "submitted");
     }
-
 
     const { data: attendanceList, error } = await query.order("date", {
       ascending: false,

@@ -1,8 +1,5 @@
 begin;
 
--- Librarians need historical transfer snapshots to identify borrowers whose
--- live profile now belongs to another school. Limit access to snapshots for
--- students with a borrowing record in the librarian's own school.
 drop policy if exists "librarians_read_library_transfer_snapshots"
   on public.student_enrollments;
 create policy "librarians_read_library_transfer_snapshots"

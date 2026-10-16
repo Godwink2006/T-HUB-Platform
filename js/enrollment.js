@@ -178,7 +178,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
     } catch {
-      // Clipboard permissions can reject writes even when the API exists.
     }
 
     const fallback = document.createElement("textarea");

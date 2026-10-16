@@ -421,7 +421,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const backBtn = document.getElementById("backBtn");
   if (!backBtn) return;
 
-  // 1. Check if came from parent portal via URL param (e.g. my-profile.html?from=parent)
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("from") === "parent") {
     backBtn.onclick = () => {
@@ -430,7 +429,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 2. Otherwise check signed-in user's role from Supabase
   try {
     const {
       data: { user },
@@ -445,7 +443,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const role = profile?.role?.toLowerCase();
 
-      // Example in my-profile.js back button:
       backBtn.onclick = () => {
         if (isParent) {
           window.location.replace("parent-dashboard.html"); // Prevents back-swipe

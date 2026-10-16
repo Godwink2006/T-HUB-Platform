@@ -1,6 +1,3 @@
--- Replace the global enrollment-status pre-flight in
--- save_attendance_with_records. A transferred enrollment at another school
--- must not block attendance for the student's current school and year.
 
 begin;
 

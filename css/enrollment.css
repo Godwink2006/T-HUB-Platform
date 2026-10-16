@@ -9,7 +9,7 @@
   border-collapse: collapse;
   background: #fff;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -32,24 +32,23 @@ body.modal-open {
   display: grid;
   grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(145px, 1fr)) auto;
   align-items: end;
-  gap: 12px;
+  gap: 11px;
   margin: 16px 10px 0;
   padding: 16px;
   background: #fff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .enrollment-transfer-toolbar {
   display: flex;
   justify-content: flex-end;
-  margin: 0 10px 12px;
+  margin: 0 10px 11px;
 }
 
-#btnReceiveStudentTransfer {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
+  min-height: 41px;
   padding: 9px 16px;
   border: 0;
   cursor: pointer;
@@ -67,7 +66,7 @@ body.modal-open {
   display: block;
   margin-bottom: 6px;
   color: #475569;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -76,7 +75,7 @@ body.modal-open {
   width: 100%;
   min-height: 40px;
   padding: 8px 10px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   background: #fff;
   color: #0f172a;
   font: inherit;
@@ -85,13 +84,13 @@ body.modal-open {
 
 .enrollment-search-field input:focus,
 .enrollment-filter-field select:focus {
-  outline: 2px solid rgba(37, 99, 235, 0.2);
+  outline: 1px solid rgba(37, 99, 235, 0.2);
   border-color: #2563eb;
 }
 
 .clear-filters-btn {
   min-height: 40px;
-  padding: 8px 12px;
+  padding: 8px 11px;
   border-radius: 0;
   background: #1f2937;
   color: #fff;
@@ -108,7 +107,7 @@ body.modal-open {
 .enrollment-result-count {
   grid-column: 1 / -1;
   color: #64748b;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .enrollment-empty-state {
@@ -136,7 +135,6 @@ body.modal-open {
     justify-content: stretch;
   }
 
-  #btnReceiveStudentTransfer {
     width: 100%;
     justify-content: center;
   }
@@ -162,7 +160,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 th {
@@ -170,7 +168,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 td {
@@ -178,9 +176,8 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
-
 
 .bulk-action-bar {
   display: none;
@@ -238,7 +235,6 @@ tr {
   }
 }
 
-
 .modal-overlay {
   display: none;
   position: fixed;
@@ -246,8 +242,8 @@ tr {
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  padding: max(12px, env(safe-area-inset-top)) 12px
-    max(12px, env(safe-area-inset-bottom));
+  padding: max(11px, env(safe-area-inset-top)) 11px
+    max(11px, env(safe-area-inset-bottom));
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(1px);
   justify-content: center;
@@ -280,24 +276,24 @@ tr {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 11px;
   margin: 16px 0 10px;
   padding: 14px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   background: #f8fafc;
 }
 
 .transfer-code-card code {
   overflow-wrap: anywhere;
   color: #0f172a;
-  font-size: clamp(16px, 4vw, 22px);
+  font-size: clamp(16px, 4vw, 21px);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .transfer-code-note {
   margin-top: 10px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .incoming-transfer-preview {
@@ -312,7 +308,7 @@ tr {
   gap: 9px;
   margin-top: 14px;
   padding: 14px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   background: #f8fafc;
   color: #334155;
 }
@@ -338,7 +334,7 @@ tr {
 }
 .form-control {
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 11px;
   border: 1px solid #cbd5e1;
   font-size: 14px;
   margin-bottom: 14px;
@@ -362,15 +358,13 @@ tr {
   font-weight: 500;
 }
 
-
 .status-badge {
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: capitalize;
   display: inline-block;
 }
-
 
 .status-badge.normal {
   background-color: #e2e8f0;
@@ -397,12 +391,10 @@ tr {
   color: #6b21a8;
 }
 
-
 .tooltip-container {
   position: relative;
   display: inline-block;
 }
-
 
 .tooltip-container .tooltip-card {
   visibility: hidden;
@@ -410,7 +402,7 @@ tr {
   background-color: #fff;
   color: #000;
   text-align: left;
-  padding: 12px;
+  padding: 11px;
   position: absolute;
   z-index: 1000;
   bottom: 135%;
@@ -420,11 +412,11 @@ tr {
   transition:
     opacity 0.25s ease-in-out,
     transform 0.25s ease-in-out;
-  font-size: 12px;
+  font-size: 11px;
   box-shadow:
     0 -4px 15px -3px rgba(0, 0, 0, 0.25),
     0 10px 15px -3px rgba(0, 0, 0, 0.4),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    0 4px 6px -1px rgba(0, 0, 0, 0.05);
   pointer-events: none;
 }
 
@@ -439,11 +431,10 @@ tr {
   border-color: #1e293b transparent transparent transparent;
 }
 
-
 .tooltip-container:hover .tooltip-card {
   visibility: visible;
   opacity: 1;
-  transform: translateX(-50%) translateY(-2px);
+  transform: translateX(-50%) translateY(-1px);
 }
 
 .back-academics-btn {
@@ -465,7 +456,7 @@ tr {
   .bulk-action-bar {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 11px;
     padding: 14px;
     min-width: unset;
     width: 92%;
@@ -513,15 +504,12 @@ tr {
     padding: 16px;
   }
 
-  #actionModal .modal-content > div:last-child {
     flex-wrap: wrap;
   }
 
-  #actionModal .modal-content > div:last-child button {
     flex: 1 1 110px;
   }
 }
-
 
 .topbar {
   margin-bottom: 14px;
@@ -544,7 +532,7 @@ tr {
 @media (max-width: 480px) {
   th,
   td {
-    padding: 12px 10px;
+    padding: 11px 10px;
     font-size: 13px;
   }
 

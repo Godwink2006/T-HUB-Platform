@@ -16,15 +16,15 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   background-color: #ffffff;
   padding: 16px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   margin-top: 10px;
 }
 
 .form-control {
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .filters-bar .form-control:hover {
@@ -66,7 +66,7 @@ p {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 h2 {
@@ -76,7 +76,7 @@ h2 {
 }
 
 h1 {
-  font-size: 32px;
+  font-size: 31px;
   color: #1f2937;
 }
 
@@ -91,7 +91,7 @@ h1 {
   padding: 0.35rem 0.75rem;
   font-size: 0.85rem;
   font-weight: 600;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .role-tag {
@@ -107,13 +107,13 @@ h1 {
 .role-tag.class-teacher {
   background-color: #dcfce7;
   color: #15803d;
-  border: 2px solid #15803d;
+  border: 1px solid #15803d;
 }
 
 .role-tag.subject-teacher {
   background-color: #f3f4f6;
   color: #4b5563;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .card-details {
@@ -147,7 +147,7 @@ h1 {
   text-decoration: none;
   font-size: 0.85rem;
   transition: all 0.2s ease;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .card-btn:hover {
@@ -157,7 +157,7 @@ h1 {
 }
 
 .card-btn.primary {
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   background: #f8fafc;
   color: #334155;
 }
@@ -171,7 +171,7 @@ h1 {
 .class-badge {
   background-color: #f1f5f9;
   color: #475569;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 @media screen and (max-width: 768px) {

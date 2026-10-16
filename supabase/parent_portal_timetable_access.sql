@@ -1,7 +1,3 @@
--- Add read-only timetable access for parents of students in the timetable's
--- current class. This is separate from existing policies; it only creates
--- timetable-specific policies and a private lookup helper.
--- Apply after parent_portal_data_access.sql.
 
 begin;
 
@@ -71,11 +67,6 @@ create policy "parent_portal_timetable_lessons_select_scope"
     or (select private.parent_portal_can_read_timetable(timetable_id, school_id))
   );
 
--- Timetable lesson labels need their own parent read path. The existing
--- parent label policies only expose subjects/periods referenced by historical
--- grades or attendance records, so they do not cover a newly scheduled class.
--- These additive policies expose only labels attached to a timetable the
--- parent's actively linked student can read.
 drop policy if exists "parent_portal_timetable_subject_labels_select"
   on public.subjects;
 create policy "parent_portal_timetable_subject_labels_select"
