@@ -831,6 +831,63 @@ tr {
   border-collapse: collapse;
 }
 
+@media screen and (max-width: 768px) {
+  .finance-page .payments-container {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .finance-page .payments-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
+    padding: 18px 12px 32px;
+    overflow-x: hidden;
+  }
+
+  .finance-page .topbar {
+    width: 100%;
+    min-width: 0;
+    gap: 12px;
+  }
+
+  .finance-page .toolbar {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .finance-page .toolbar input,
+  .finance-page .toolbar select {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .finance-page .payments-table-card,
+  .finance-page .payment-table-card {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .finance-page .payments-table-card table,
+  .finance-page .payment-table-card table {
+    width: max-content;
+    min-width: 720px;
+  }
+
+  .finance-page .payments-table-card th,
+  .finance-page .payments-table-card td,
+  .finance-page .payment-table-card th,
+  .finance-page .payment-table-card td {
+    white-space: nowrap;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
