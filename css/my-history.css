@@ -355,6 +355,21 @@ p.subtitle {
 }
 
 @media (max-width: 680px) {
+  .toolbar,
+  .history-empty,
+  .transfer-history-card,
+  .card-section,
+  .history-date,
+  .history-field,
+  .fee-items,
+  .back-btn,
+  .toolbar input,
+  .toolbar select,
+  .history-record summary,
+  .status-pill {
+    border-radius: 10px;
+  }
+
   .toolbar label {
     flex: 1 1 calc(50% - 6px);
   }
