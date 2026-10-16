@@ -338,13 +338,13 @@ async function loadDashboardAnnouncements() {
         }
 
         return `
-        <div class="small-border-announcement" style=" padding: 16px; margin-bottom: 12px; background: #fff;  border: 1px solid rgb(219, 215, 215);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+        <div class="announcement-item" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; margin-bottom: 12px; background: #fff; border: 1px solid rgb(219, 215, 215);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
             <h4 style="margin: 0; font-size: 1.05rem; color: #0f172a; font-weight: 600;">${escapeHtml(ann.title)}</h4>
             <span class="announcement-status" style="font-size: 0.75rem; padding: 3px 10px; background: ${statusBg}; color: ${statusColor}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;">${escapeHtml(ann.status)}</span>
           </div>
-          <p style="margin: 0 0 12px 0; font-size: 0.95rem; color: #334155; line-height: 1.5;">${escapeHtml(ann.message)}</p>
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #64748b;  border-top: 1px solid rgb(219, 215, 215);">
+          <p style="margin: 0; font-size: 0.95rem; color: #334155; line-height: 1.7; white-space: pre-wrap;">${escapeHtml(ann.message)}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; font-size: 0.8rem; color: #64748b; border-top: 1px solid rgb(219, 215, 215);">
             <span><i class="fa-solid fa-users" style="margin-right: 4px;"></i> Target: ${escapeHtml(ann.target_audience)}</span>
             <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> ${ann.expiry_date || "No expiry date"}</span>
           </div>
