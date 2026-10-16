@@ -1,13 +1,4 @@
--- Review proposal only. This file is not a migration and has not been applied.
--- It adds transfer-only tables and one source-school code-generation function.
--- Existing application tables and policies are not changed.
 
--- Populate this allowlist through a trusted administrator workflow. Do not
--- expose INSERT/UPDATE access to browser clients; it is the authorization
--- source for the SECURITY DEFINER functions in this proposal.
--- After manually verifying the admin and school IDs, provision access with:
--- insert into public.student_transfer_admins (user_id, school_id)
--- values ('<verified-auth-user-uuid>', '<verified-school-uuid>');
 create table public.student_transfer_admins (
   user_id uuid not null references public.profiles (id),
   school_id uuid not null,
@@ -73,9 +64,6 @@ alter table public.student_transfer_admins enable row level security;
 alter table public.student_transfers enable row level security;
 alter table public.student_transfer_history enable row level security;
 
--- No direct browser table access. Preview and acceptance are defined in the
--- separately reviewed student_transfer_acceptance.sql file. A history-read
--- function must be added before exposing snapshots in the student UI.
 revoke all on table public.student_transfer_admins from public, anon, authenticated;
 revoke all on table public.student_transfers from public, anon, authenticated;
 revoke all on table public.student_transfer_history from public, anon, authenticated;
@@ -118,8 +106,6 @@ begin
     raise exception 'Your account is not linked to a school.';
   end if;
 
-  -- Only issue a transfer code for a student enrolled in the sending
-  -- school's single active academic year and active term.
   select count(*), (array_agg(year.id))[1]
     into v_active_year_count, v_active_year_id
   from public.academic_years as year
