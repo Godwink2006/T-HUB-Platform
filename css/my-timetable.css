@@ -28,7 +28,7 @@
 }
 
 .topbar h1 {
-  font-size: 31px;
+  font-size: 32px;
   color: #1f2937;
 }
 
@@ -63,11 +63,11 @@
 
 .meta-banner {
   display: flex;
-  gap: 31px;
+  gap: 32px;
   background: #ffffff;
   padding: 16px 24px;
   margin-bottom: 24px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .meta-banner.hidden {
@@ -77,7 +77,7 @@
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
 }
 
 .meta-item i {
@@ -108,7 +108,7 @@
 
 .day-card {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -132,7 +132,7 @@
 }
 
 .day-card-body {
-  padding: 11px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -141,8 +141,8 @@
 
 .lesson-card-item {
   background: #f8fafc;
-  border: 1px solid rgb(219, 215, 215);
-  padding: 11px;
+  border: 2px solid rgb(219, 215, 215);
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -181,7 +181,7 @@
 
 .loading-state i {
   font-size: 2rem;
-  margin-bottom: 11px;
+  margin-bottom: 12px;
   color: #6b7280;
 }
 
@@ -213,7 +213,7 @@
 }
 
 .topbar-title h1 {
-  font-size: 31px;
+  font-size: 32px;
   color: #1f2937;
   margin: 0;
 }
@@ -227,13 +227,13 @@
 .topbar-filters {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   margin-bottom: 10px;
 }
 
 .topbar-filters .form-control {
-  padding: 8px 11px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 8px 12px;
+  border: 2px solid rgb(219, 215, 215);
   background-color: #ffffff;
   color: #374151;
   font-size: 0.9rem;

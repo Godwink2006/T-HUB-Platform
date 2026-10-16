@@ -34,11 +34,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .enterGrade-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .enterGrade-modal-header button {
@@ -49,7 +49,7 @@
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .enterGrade-modal-body {
@@ -93,11 +93,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .editGrade-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .editGrade-modal-header button {
@@ -108,7 +108,7 @@
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .editGrade-modal-body {
@@ -145,7 +145,7 @@ body {
 }
 
 .topbar h1 {
-  font-size: 31px;
+  font-size: 32px;
   color: #1f2937;
 }
 
@@ -170,7 +170,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 1px solid #14532d;
+  border: 2px solid #14532d;
 }
 
 .back-grades-btn {
@@ -198,7 +198,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -220,7 +220,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 th {
@@ -228,7 +228,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 td {
@@ -236,7 +236,7 @@ td {
 }
 
 tr {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .badge {
@@ -244,7 +244,7 @@ tr {
   align-items: center;
   padding: 5px 10px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -276,7 +276,7 @@ tr {
 .grade-creator-meta {
   display: inline-flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .grade-creator-name {
@@ -347,11 +347,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .grade-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .grade-modal-header button {
@@ -362,7 +362,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .grade-modal-body {
@@ -392,8 +392,8 @@ tr {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 11px 15px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 12px 15px;
+  border: 2px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -414,7 +414,7 @@ tr {
 }
 
 .cancel-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -423,7 +423,7 @@ tr {
 }
 
 .save-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   background: #2563eb;
   color: #ffff;
@@ -485,7 +485,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .view-modal-footer {
@@ -502,7 +502,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 @media screen and (max-width: 768px) {
@@ -516,7 +516,7 @@ tr {
     height: min(92vh, 760px);
     max-height: 92vh;
     overflow: hidden;
-    border-radius: 11px;
+    border-radius: 12px;
   }
 
   .enterGrade-modal-header,
@@ -549,7 +549,7 @@ tr {
     flex: 1;
     min-height: 120px;
     overflow-y: auto;
-    border: 1px solid rgb(219, 215, 215);
+    border: 2px solid rgb(219, 215, 215);
     margin-top: 10px;
   }
 
@@ -560,7 +560,7 @@ tr {
   .topbar {
     display: grid !important;
     grid-template-columns: 1fr auto !important;
-    gap: 10px 11px !important;
+    gap: 10px 12px !important;
     align-items: center !important;
   }
 
@@ -576,7 +576,7 @@ tr {
 
   .topbar p {
     font-size: 13px;
-    margin-top: 1px;
+    margin-top: 2px;
   }
 
   .top-right {
@@ -599,7 +599,7 @@ tr {
     cursor: pointer;
     background: #15803d;
     color: #ffffff;
-    border: 1px solid #14532d;
+    border: 2px solid #14532d;
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
@@ -635,9 +635,9 @@ tr {
   .toolbar input,
   .toolbar select {
     height: 40px;
-    border: 1px solid rgb(219, 215, 215);
+    border: 2px solid rgb(219, 215, 215);
     padding: 0 10px;
-    font-size: 11px;
+    font-size: 12px;
     flex: 1 1 calc(50% - 8px);
     min-width: 0;
     border-radius: 10px;
@@ -659,7 +659,7 @@ tr {
 
   th,
   td {
-    padding: 11px 14px !important;
+    padding: 12px 14px !important;
     font-size: 13px !important;
     white-space: nowrap;
   }
@@ -713,7 +713,7 @@ tr {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 11px;
+    gap: 12px;
     padding: 14px 18px;
     border-top: 1.5px solid rgb(219, 215, 215);
     margin-top: 0;
@@ -724,13 +724,13 @@ tr {
   .form-grid,
   .details-grid {
     grid-template-columns: 1fr;
-    gap: 11px;
+    gap: 12px;
   }
 
   .form-group label,
   .details-item label {
     margin-bottom: 4px;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .form-group input,
@@ -739,7 +739,7 @@ tr {
     border: 1.5px solid rgb(219, 215, 215);
     font-size: 13px;
     border-radius: 10px;
-    padding: 10px 11px;
+    padding: 10px 12px;
   }
 
   .cancel-btn,
@@ -761,7 +761,7 @@ tr {
   .editGrade-modal-content,
   .grade-modal-content,
   .view-grade-modal-content {
-    border-radius: 11px;
+    border-radius: 12px;
     overflow: hidden;
   }
 
@@ -769,8 +769,8 @@ tr {
   .editGrade-modal-header,
   .grade-modal-header,
   .view-grade-modal-header {
-    border-top-left-radius: 11px;
-    border-top-right-radius: 11px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
   }
 
   .cancel-btn,

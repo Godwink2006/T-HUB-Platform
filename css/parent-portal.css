@@ -12,11 +12,11 @@ body.parent-portal {
 .parent-topbar {
   align-items: center;
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   display: flex;
   justify-content: space-between;
-  min-height: 71px;
-  padding: 11px clamp(20px, 5vw, 71px);
+  min-height: 72px;
+  padding: 12px clamp(20px, 5vw, 72px);
 }
 
 .parent-brand {
@@ -25,18 +25,18 @@ body.parent-portal {
   display: flex;
   font-size: 1.05rem;
   font-weight: 700;
-  gap: 11px;
+  gap: 12px;
   text-decoration: none;
 }
 .parent-brand > i {
   align-items: center;
   background: #eaf1ff;
-  border-radius: 11px;
+  border-radius: 12px;
   color: #2563eb;
   display: flex;
-  height: 41px;
+  height: 42px;
   justify-content: center;
-  width: 41px;
+  width: 42px;
 }
 .parent-brand small {
   color: #60708a;
@@ -61,10 +61,10 @@ body.parent-portal {
 .parent-main {
   margin: 0 auto;
   max-width: 1120px;
-  padding: 41px 21px 71px;
+  padding: 42px 22px 72px;
 }
 .parent-welcome {
-  margin-bottom: 31px;
+  margin-bottom: 32px;
 }
 .parent-eyebrow {
   color: #2563eb;
@@ -89,7 +89,7 @@ body.parent-portal {
 .selected-student-panel,
 .parent-form {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 16px;
 }
 .children-section {
@@ -116,8 +116,8 @@ body.parent-portal {
 }
 .parent-child-card {
   align-items: center;
-  border: 1px solid rgb(219, 215, 215);
-  border-radius: 11px;
+  border: 2px solid rgb(219, 215, 215);
+  border-radius: 12px;
   display: flex;
   gap: 14px;
   justify-content: space-between;
@@ -136,17 +136,17 @@ body.parent-portal {
   border-radius: 50%;
   color: #2563eb;
   display: inline-flex;
-  flex: 0 0 51px;
-  height: 51px;
+  flex: 0 0 52px;
+  height: 52px;
   justify-content: center;
   overflow: hidden;
   position: relative;
-  width: 51px;
+  width: 52px;
 }
 .parent-student-avatar-large {
-  flex-basis: 71px;
-  height: 71px;
-  width: 71px;
+  flex-basis: 72px;
+  height: 72px;
+  width: 72px;
 }
 .parent-student-avatar-shell img {
   height: 100%;
@@ -212,7 +212,7 @@ body.parent-portal {
 .parent-record-author {
   display: inline-flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 110px;
 }
 .parent-record-author strong {
@@ -225,7 +225,7 @@ body.parent-portal {
   font-size: 0.72rem;
 }
 .parent-linked-parents {
-  margin-top: 21px;
+  margin-top: 22px;
 }
 .parent-link-search-label {
   color: #475569;
@@ -234,7 +234,7 @@ body.parent-portal {
   margin: 0 0 6px;
 }
 .parent-portal .parent-link-search {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
   color: #0f172a;
   font: inherit;
@@ -246,7 +246,7 @@ body.parent-portal {
 }
 .parent-portal .parent-link-search:focus {
   border-color: #2563eb;
-  outline: 1px solid rgb(37 99 235 / 20%);
+  outline: 2px solid rgb(37 99 235 / 20%);
 }
 .parent-links-list {
   display: grid;
@@ -254,7 +254,7 @@ body.parent-portal {
 }
 .parent-portal .parent-link-row {
   align-items: center;
-  border: 1px solid #cbd5e1;
+  border: 2px solid #cbd5e1;
   border-radius: 9px;
   display: flex;
   gap: 16px;
@@ -279,7 +279,7 @@ body.parent-portal {
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  padding: 9px 11px;
+  padding: 9px 12px;
 }
 .parent-link-row button:disabled {
   cursor: wait;
@@ -289,7 +289,7 @@ body.parent-portal {
   border: 0;
   box-shadow: 0 24px 70px rgb(15 23 42 / 28%);
   color: #0f172a;
-  max-width: min(440px, calc(100vw - 31px));
+  max-width: min(440px, calc(100vw - 32px));
   padding: 0;
   width: 100%;
 }
@@ -332,7 +332,7 @@ body.parent-portal {
 }
 .parent-unlink-cancel {
   background: #1f2937;
-  border: 1px solid #1f2937;
+  border: 2px solid #1f2937;
   color: #fff;
 }
 .parent-unlink-cancel:hover {
@@ -341,24 +341,24 @@ body.parent-portal {
 }
 .parent-unlink-confirm {
   background: #b91c1c;
-  border: 1px solid #b91c1c;
+  border: 2px solid #b91c1c;
   color: white;
 }
 .parent-unlink-dialog-actions button:focus-visible {
   outline: 3px solid rgb(37 99 235 / 45%);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 .parent-announcements {
-  border-top: 1px solid rgb(219, 215, 215);
-  margin-top: 21px;
+  border-top: 2px solid rgb(219, 215, 215);
+  margin-top: 22px;
   padding-top: 18px;
 }
 .parent-announcements h3 {
   margin: 0 0 14px;
 }
 .parent-announcement {
-  border: 1px solid rgb(219, 215, 215);
-  margin-bottom: 11px;
+  border: 2px solid rgb(219, 215, 215);
+  margin-bottom: 12px;
   padding: 16px;
 }
 .parent-announcement h4 {
@@ -379,7 +379,7 @@ body.parent-portal {
   border-left: 5px solid #dc2626;
 }
 .selected-student-panel {
-  margin-top: 21px;
+  margin-top: 22px;
   padding: 24px;
 }
 .selected-student-heading {
@@ -394,7 +394,7 @@ body.parent-portal {
 .parent-record-links,
 .parent-record-tabs {
   display: grid;
-  gap: 11px;
+  gap: 12px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
   margin-top: 20px;
 }
@@ -402,7 +402,7 @@ body.parent-portal {
 .parent-record-tabs a {
   align-items: center;
   background: #f7f9fc;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 10px;
   color: #172033;
   display: flex;
@@ -438,7 +438,7 @@ body.parent-portal {
 }
 .parent-record-panel {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 16px;
   margin-top: 20px;
   padding: 24px;
@@ -455,7 +455,7 @@ body.parent-portal {
 }
 .parent-record-filters {
   display: grid;
-  gap: 11px;
+  gap: 12px;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   margin-bottom: 20px;
 }
@@ -471,11 +471,11 @@ body.parent-portal {
 }
 .parent-record-filters select {
   background: #fff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 8px;
   color: #172033;
   font: inherit;
-  min-height: 41px;
+  min-height: 42px;
   padding: 8px;
   width: 100%;
 }
@@ -496,8 +496,8 @@ body.parent-portal {
 }
 .parent-record-content th,
 .parent-record-content td {
-  border: 1px solid rgb(219, 215, 215);
-  padding: 11px 10px;
+  border: 2px solid rgb(219, 215, 215);
+  padding: 12px 10px;
   text-align: left;
   vertical-align: top;
 }
@@ -511,7 +511,7 @@ body.parent-portal {
 }
 .parent-record-content .parent-empty {
   color: #60708a;
-  padding: 28px 11px;
+  padding: 28px 12px;
   text-align: center;
 }
 .parent-record-content .parent-error {
@@ -568,12 +568,12 @@ body.parent-portal {
 .parent-form input,
 .parent-form select {
   background: white;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 9px;
   color: #172033;
   font: inherit;
   min-height: 46px;
-  padding: 10px 11px;
+  padding: 10px 12px;
   width: 100%;
 }
 .parent-form input:focus,
@@ -582,7 +582,7 @@ body.parent-portal {
 .parent-primary-button:focus-visible,
 .parent-signout:focus-visible {
   outline: 1px solid rgb(37 99 235 / 30%);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 .parent-form-hint {
   color: #60708a;
@@ -654,7 +654,7 @@ body.parent-portal {
 .parent-portal .selected-student-panel,
 .parent-portal .parent-form,
 .parent-portal .parent-record-panel {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
 }
 .parent-portal .parent-form {
@@ -680,7 +680,7 @@ body.parent-portal {
 .parent-portal .parent-form input,
 .parent-portal .parent-form select,
 .parent-portal .parent-record-filters select {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
   color: #0f172a;
   font-size: 13px;
@@ -691,7 +691,7 @@ body.parent-portal {
 .parent-portal .parent-form select:focus,
 .parent-portal .parent-record-filters select:focus {
   border-color: #2563eb;
-  outline: 1px solid rgb(37 99 235 / 20%);
+  outline: 2px solid rgb(37 99 235 / 20%);
 }
 .parent-portal .parent-form-hint {
   color: #64748b;
@@ -819,7 +819,7 @@ body.parent-portal {
 
 .parent-stat-card {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 10px;
   padding: 16px 18px;
   display: flex;
@@ -838,7 +838,7 @@ body.parent-portal {
   color: #172033;
   font-size: 1.85rem;
   font-weight: 700;
-  margin: 6px 0 1px;
+  margin: 6px 0 2px;
   line-height: 1.2;
 }
 
@@ -866,7 +866,7 @@ body.parent-portal {
 
 .parent-profile-header-card {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 24px;
   margin-bottom: 24px;
 }
@@ -883,16 +883,16 @@ body.parent-portal {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 71px;
-  height: 71px;
-  min-width: 71px;
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
   border-radius: 50%;
   background: #e2e8f0;
   color: #334155;
   font-weight: 700;
   font-size: 1.5rem;
   overflow: hidden;
-  border-top: 1px solid rgb(219, 215, 215);
+  border-top: 2px solid rgb(219, 215, 215);
 }
 
 .parent-avatar {
@@ -908,7 +908,7 @@ body.parent-portal {
   letter-spacing: 0.05em;
   color: #2563eb;
   background-color: #eff6ff;
-  padding: 1px 8px;
+  padding: 2px 8px;
   margin-bottom: 4px;
 }
 
@@ -928,17 +928,17 @@ body.parent-portal {
 .parent-contact-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 11px;
+  gap: 12px;
   padding-top: 16px;
-  border-top: 1px solid rgb(219, 215, 215);
+  border-top: 2px solid rgb(219, 215, 215);
 }
 
 .contact-pill {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   background: #f8fafc;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 10px 14px;
 }
 
@@ -947,7 +947,7 @@ body.parent-portal {
   color: #2563eb;
   background: #ffffff;
   padding: 8px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .pill-label {
@@ -969,7 +969,7 @@ body.parent-portal {
 .parent-profile-actions {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgb(219, 215, 215);
+  border-top: 2px solid rgb(219, 215, 215);
 }
 
 .btn-change-profile {
