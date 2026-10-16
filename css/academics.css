@@ -91,7 +91,7 @@ body {
 }
 
 .topbar h1 {
-  font-size: 32px;
+  font-size: 31px;
   color: #1f2937;
 }
 
@@ -114,8 +114,8 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   min-height: 160px;
-  border: 2px solid rgb(219, 215, 215);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgb(219, 215, 215);
+  box-shadow: 0 4px 11px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 }
 
@@ -179,7 +179,7 @@ body {
 .skeleton-title {
   height: 20px;
   width: 50%;
-  margin-bottom: 12px;
+  margin-bottom: 11px;
 }
 
 .skeleton-text {

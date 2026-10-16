@@ -27,7 +27,7 @@ body {
 }
 
 .topbar h1 {
-  font-size: 32px;
+  font-size: 31px;
   color: #1f2937;
 }
 
@@ -52,7 +52,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 1px solid #14532d;
 }
 
 .back-academic-settings-btn {
@@ -79,7 +79,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -101,7 +101,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 th {
@@ -109,7 +109,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 td {
@@ -117,7 +117,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .status {
@@ -221,11 +221,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .structure-modal-header h2 {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .structure-modal-header button {
@@ -236,7 +236,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .structure-modal-body {
@@ -248,11 +248,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .editstructure-modal-header h2 {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .editstructure-modal-header button {
@@ -263,7 +263,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .editstructure-modal-body {
@@ -292,8 +292,8 @@ tr {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  padding: 11px 15px;
+  border: 1px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -321,7 +321,7 @@ tr {
 }
 
 .cancel-btn {
-  padding: 12px 22px;
+  padding: 11px 21px;
   border: none;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -330,7 +330,7 @@ tr {
 }
 
 .save-btn {
-  padding: 12px 22px;
+  padding: 11px 21px;
   border: none;
   background: #2563eb;
   color: #ffff;
@@ -347,7 +347,7 @@ tr {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 1px solid #14532d;
   margin-top: 10px;
 }
 
@@ -412,11 +412,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .addItem-modal-header h2 {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .addItem-modal-header button {
@@ -427,7 +427,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .confirm-modal {
@@ -514,7 +514,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .view-structure-modal-footer {
@@ -531,7 +531,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 22px;
+  font-size: 21px;
 }
 
 @media screen and (max-width: 768px) {
@@ -585,7 +585,7 @@ tr {
     align-items: center !important;
     display: grid !important;
     grid-template-columns: 1fr auto !important;
-    gap: 10px 12px !important;
+    gap: 10px 11px !important;
   }
 
   .topbar h1 {
@@ -595,7 +595,7 @@ tr {
 
   .topbar p {
     color: #6b7280;
-    margin-top: 2px;
+    margin-top: 1px;
     font-size: 13px;
   }
 
@@ -629,7 +629,7 @@ tr {
     grid-column: 2;
     background: #15803d;
     color: #ffffff;
-    border: 2px solid #14532d;
+    border: 1px solid #14532d;
     flex: 1 !important;
     height: 40px !important;
     padding: 0 16px;
@@ -659,7 +659,7 @@ tr {
     padding: 0 8px;
     outline: none;
     background: #ffffff;
-    font-size: 12px;
+    font-size: 11px;
     flex: 1;
     min-width: 0;
     border-radius: 10px;
@@ -693,7 +693,7 @@ tr {
   th {
     padding: 8px 10px;
     text-align: left;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #6b7280;
     border: 1.5px solid rgb(219, 215, 215);
@@ -702,13 +702,13 @@ tr {
 
   th,
   td {
-    padding: 12px 14px !important;
+    padding: 11px 14px !important;
     font-size: 14px !important;
   }
 
   td {
     padding: 8px 10px;
-    font-size: 12px;
+    font-size: 11px;
     border: 1.5px solid rgb(219, 215, 215);
     white-space: nowrap;
   }
@@ -831,7 +831,7 @@ tr {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
     padding: 14px 20px;
     border-top: 1.5px solid rgb(219, 215, 215);
   }
@@ -839,7 +839,7 @@ tr {
   .form-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 11px;
   }
 
   .form-group {
@@ -849,7 +849,7 @@ tr {
 
   .form-group label {
     margin-bottom: 4px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     color: #374151;
   }
