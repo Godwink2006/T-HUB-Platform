@@ -1,4 +1,3 @@
--- Repair only the parent portal attendance policies. Existing staff policies are untouched.
 begin;
 
 create or replace function private.parent_portal_can_read_attendance(p_attendance_id uuid)

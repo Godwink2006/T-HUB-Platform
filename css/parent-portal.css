@@ -609,7 +609,6 @@ body.parent-portal {
   opacity: 0.65;
 }
 
-/* Keep the staff invitation screen consistent with the main school app. */
 body.parent-portal {
   background: #f6f5f5;
   color: #111827;
@@ -790,7 +789,7 @@ body.parent-portal {
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 300px; /* Adjust this height if you want it to center vertically across a whole section */
+  min-height: 300px;
 }
 
 .empty-state-card .icon-wrapper {
@@ -811,7 +810,6 @@ body.parent-portal {
   margin: 0 auto;
 }
 
-/* Calculation summary stat cards */
 .parent-stats-grid {
   display: grid;
   gap: 14px;
@@ -866,7 +864,6 @@ body.parent-portal {
   color: #2563eb;
 }
 
-/* Profile Header Main Card */
 .parent-profile-header-card {
   background: #ffffff;
   border: 1px solid rgb(219, 215, 215);
@@ -874,7 +871,6 @@ body.parent-portal {
   margin-bottom: 24px;
 }
 
-/* Flex Row for Avatar + Name */
 .parent-profile-main {
   display: flex;
   align-items: center;
@@ -882,7 +878,6 @@ body.parent-portal {
   margin-bottom: 20px;
 }
 
-/* Avatar Shell */
 .parent-avatar-shell {
   position: relative;
   display: flex;
@@ -906,7 +901,6 @@ body.parent-portal {
   object-fit: cover;
 }
 
-/* Badge & Titles */
 .parent-badge {
   display: inline-block;
   font-size: 0.75rem;
@@ -918,7 +912,6 @@ body.parent-portal {
   margin-bottom: 4px;
 }
 
-#parentWelcomeTitle {
   font-size: 1.5rem;
   font-weight: 700;
   color: #0f172a;
@@ -932,7 +925,6 @@ body.parent-portal {
   margin: 4px 0 0 0;
 }
 
-/* Contact Info Pill Grid */
 .parent-contact-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -974,14 +966,12 @@ body.parent-portal {
   word-break: break-all;
 }
 
-/* Profile Action Container */
 .parent-profile-actions {
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid rgb(219, 215, 215);
 }
 
-/* Change Profile Button */
 .btn-change-profile {
   display: inline-flex;
   align-items: center;

@@ -1,6 +1,5 @@
 
 
-
 @media (min-width: 1024px) {
   .form-section,
   .form-section h3,
@@ -169,14 +168,12 @@ body {
   border-radius: 10px;
 }
 
-#schoolProfileForm,
 form {
   visibility: hidden;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
 }
 
-#schoolProfileForm.auth-ready,
 form.auth-ready {
   visibility: visible;
   opacity: 1;
@@ -211,13 +208,11 @@ form.auth-ready {
   }
 }
 
-#schoolProfileForm {
   display: none;
   opacity: 0;
   transition: opacity 0.25s ease-in-out;
 }
 
-#schoolProfileForm.auth-ready {
   display: block;
   opacity: 1;
 }

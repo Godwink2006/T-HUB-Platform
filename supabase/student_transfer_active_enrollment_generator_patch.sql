@@ -1,5 +1,3 @@
--- Replace only the transfer-code generator. This patch requires the existing
--- student_transfer_admins and student_transfers tables.
 BEGIN;
 
 CREATE OR REPLACE FUNCTION public.generate_student_transfer_code(

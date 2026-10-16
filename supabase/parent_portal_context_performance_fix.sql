@@ -1,8 +1,4 @@
--- Optimize parent portal label lookups to avoid nested RLS scans/timeouts.
--- Only policies with the parent_portal_ prefix are replaced.
 begin;
--- Parent-visible labels are checked in a private SECURITY DEFINER helper so
--- these lookups do not recursively re-run RLS across the record tables.
 create or replace function private.parent_portal_can_view_context(p_context text, p_id uuid)
 returns boolean
 language sql

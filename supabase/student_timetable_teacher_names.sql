@@ -1,6 +1,3 @@
--- Return only teacher names associated with the signed-in student's own
--- current class timetable. This lets the timetable label teachers without
--- granting students SELECT access to other profiles or profile columns.
 
 begin;
 

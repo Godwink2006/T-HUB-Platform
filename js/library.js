@@ -196,7 +196,6 @@ if (saveBookBtn) {
 async function handleSaveBook() {
   const saveButton = document.getElementById("saveBook");
 
-
   const book_code = document.getElementById("bookCode").value.trim();
   const title = document.getElementById("bookTitle").value.trim();
   const author = document.getElementById("bookAuthor").value.trim();
@@ -212,7 +211,6 @@ async function handleSaveBook() {
   const status = statusInput
     ? statusInput.value.trim().toLowerCase()
     : "active";
-
 
   if (
     !book_code ||
@@ -475,7 +473,6 @@ async function loadBooksTable() {
 
     if (error) throw error;
 
-
     const { data: allBorrowings, error: borrowError } =
       await window.supabaseClient
         .from("book_borrowings")
@@ -524,7 +521,6 @@ async function loadBooksTable() {
         book.cover_image_url ||
         "https://cdn-icons-png.flaticon.com/512/29/29302.png";
       const departmentName = book.departments ? book.departments.name : "-";
-
 
       const activeBorrowedCount = allBorrowings
         ? allBorrowings.filter((b) => b.book_id === book.id).length
@@ -819,7 +815,6 @@ async function handleUpdateBook() {
     const photoInput = document.getElementById("editAvatarInput");
     let coverBase64 = null;
 
-
     if (photoInput && photoInput.files[0]) {
       saveBtn.textContent = "Compressing cover...";
       const compressedBlob = await compressImageToBlob(
@@ -830,12 +825,10 @@ async function handleUpdateBook() {
       coverBase64 = await blobToBase64(compressedBlob);
     }
 
-
     const currentBorrowed =
       Number(currentOriginalBookData?.active_borrowed_count) || 0;
 
     const newTotal = parseInt(copies_total, 10);
-
 
     const newAvailable = Math.max(0, newTotal - currentBorrowed);
 
@@ -932,7 +925,6 @@ async function openViewBookModal(bookId) {
       book.shelf_location || "-";
     document.getElementById("viewBookDescription").textContent =
       book.description || "-";
-
 
     const { data: borrowings, error: borrowError } = await window.supabaseClient
       .from("book_borrowings")
@@ -1435,7 +1427,6 @@ if (returnForm) {
   });
 }
 
-
 document
   .getElementById("closeReturnBorrowModal")
   ?.addEventListener("click", () => {
@@ -1453,7 +1444,6 @@ document
     if (!currentViewBookId) return;
 
     document.getElementById("viewBookModal").style.display = "none";
-
 
     openReturnModal(currentViewBookId);
   });

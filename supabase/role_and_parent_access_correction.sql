@@ -1,8 +1,5 @@
 begin;
 
--- Keep profile row scopes, then require Premium for student and librarian
--- access to their profile and the school records covered by the tier guards
--- below. Parent own-profile and linked-student checks remain separate.
 drop policy if exists "Clean tier and role profile access" on public.profiles;
 create policy "Clean tier and role profile access"
 on public.profiles
@@ -20,8 +17,6 @@ using (
   )
 );
 
--- Linked parent reads still require an active same-school link and Standard+
--- inside the dedicated parent policies. Keep this policy parent-only.
 drop policy if exists parent_portal_profile_select_scope on public.profiles;
 create policy parent_portal_profile_select_scope
 on public.profiles
@@ -59,9 +54,6 @@ using (
   )
 );
 
--- These generated permissive policies returned TRUE for every non-parent
--- (and anonymous role), OR-ing around the table's real tenant/role policies.
--- Parent-specific *_linked_select policies remain in place.
 drop policy if exists parent_portal_attendance_sessions_select_scope on public.attendance;
 drop policy if exists parent_portal_attendance_records_select_scope on public.attendance_records;
 drop policy if exists parent_portal_grade_records_select_scope on public.grade_records;
@@ -74,9 +66,6 @@ drop policy if exists parent_portal_students_select_scope on public.students;
 drop policy if exists parent_portal_timetable_lessons_select_scope on public.timetable_lessons;
 drop policy if exists parent_portal_timetables_select_scope on public.timetables;
 
--- These "exclude graduated" policies were standalone permissive policies
--- with a tautological school_id self-comparison. They exposed all rows when
--- the caller was not graduated, bypassing the explicit tenant policies.
 drop policy if exists "Exclude graduated and transferred students" on public.announcements;
 drop policy if exists "Exclude Graduated and Transfered student from this school" on public.books;
 drop policy if exists "Exclude Graduated and Transfered student" on public.profiles;
@@ -85,9 +74,6 @@ drop policy if exists "Exclude Graduated and Transfered student" on public.teach
 drop policy if exists "Exclude Graduated and Transfered student" on public.timetable_lessons;
 drop policy if exists "Exclude Graduated and Transfered student" on public.timetables;
 
--- Preserve the intended parent read-only barrier as RESTRICTIVE policies.
--- The original policies were permissive and returned TRUE for everyone other
--- than parents, thereby overriding the role-specific write policies.
 do $$
 declare
   table_name text;
@@ -131,11 +117,6 @@ begin
 end
 $$;
 
--- The original profile rule required Premium for student and librarian
--- access. Carry that same requirement through every table where their
--- current RLS policies permit access to own/student/school records. These
--- RESTRICTIVE guards are ANDed with the role and tenant policies; they do not
--- grant access by themselves, and other roles pass through unchanged.
 do $$
 declare
   table_name text;

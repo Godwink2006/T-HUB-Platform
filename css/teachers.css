@@ -1,7 +1,5 @@
 
 
-
-
 * {
   margin: 0;
   padding: 0;
@@ -24,10 +22,6 @@ body {
     transform: scale(1);
   }
 }
-
-
-
-
 
 .teachers-container {
   display: flex;
@@ -105,10 +99,6 @@ body {
   overflow-y: auto;
 }
 
-
-
-
-
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -177,10 +167,6 @@ body {
 .toolbar input {
   width: 320px;
 }
-
-
-
-
 
 .teachers-table-card {
   background: #ffffff;
@@ -254,10 +240,6 @@ tr {
   background: #fef3c7;
   color: #d97706;
 }
-
-
-
-
 
 .modal-teacher,
 .view-teacher-modal,
@@ -463,7 +445,6 @@ tr {
   font-size: 13px;
 }
 
-#closeViewTeacherModal {
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -595,10 +576,6 @@ tr {
   width: 100%;
   max-width: 150px;
 }
-
-
-
-
 
 @media screen and (max-width: 768px) {
   .topbar {
@@ -753,7 +730,6 @@ tr {
 
   .teacher-modal-header button,
   .edit-teacher-modal-header button,
-  #closeViewTeacherModal {
     height: 34px;
     width: 34px;
     font-size: 16px;

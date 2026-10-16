@@ -95,7 +95,6 @@ async function loadParentLinks() {
     if (error) {
       let detailedMsg = error.message;
       try {
-        // If the error response contains JSON data from the Edge Function
         const errContext = await error.context?.json();
         if (errContext?.message) detailedMsg = errContext.message;
       } catch (_) {}

@@ -13,12 +13,6 @@ body {
   display: flex;
 }
 
-#openAnnouncementModal,
-#class-dashboard-card,
-#student-dashboard-card,
-#teacher-dashboard-card,
-#enrollment-dashboard-card,
-#attendance-dashboard-card {
   display: none;
 }
 

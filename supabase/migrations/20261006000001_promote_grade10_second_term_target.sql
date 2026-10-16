@@ -1,6 +1,5 @@
 
 
-
 create or replace function public.promote_grade9_students_transaction(
   p_school_id uuid,
   p_student_ids uuid[],

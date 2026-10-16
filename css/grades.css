@@ -495,7 +495,6 @@ tr {
   margin-top: 30px;
 }
 
-#closeViewGradeModal {
   cursor: pointer;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -520,14 +519,12 @@ tr {
     border-radius: 11px;
   }
 
-
   .enterGrade-modal-header,
   .editGrade-modal-header,
   .enterGrade-modal-footer,
   .editGrade-modal-footer {
     flex-shrink: 0;
   }
-
 
   .enterGrade-modal-body,
   .editGrade-modal-body {
@@ -547,7 +544,6 @@ tr {
     min-height: 0;
   }
 
-
   .enterGrade-table-card,
   .editGrade-table-card {
     flex: 1;
@@ -556,7 +552,6 @@ tr {
     border: 1px solid rgb(219, 215, 215);
     margin-top: 10px;
   }
-
 
   .grades-container {
     flex-direction: column;
@@ -628,7 +623,6 @@ tr {
     margin-top: 0;
   }
 
-
   .toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -652,7 +646,6 @@ tr {
   .toolbar input {
     width: auto;
   }
-
 
   .grade-table-card {
     overflow-x: auto;
@@ -701,7 +694,6 @@ tr {
   .enterGrade-modal-header button,
   .editGrade-modal-header button,
   .grade-modal-header button,
-  #closeViewGradeModal {
     height: 34px;
     width: 34px;
     font-size: 16px;
@@ -729,7 +721,6 @@ tr {
     border-bottom-right-radius: 10px;
   }
 
-
   .form-grid,
   .details-grid {
     grid-template-columns: 1fr;
@@ -750,7 +741,6 @@ tr {
     border-radius: 10px;
     padding: 10px 11px;
   }
-
 
   .cancel-btn,
   .save-btn {

@@ -30,7 +30,6 @@ function setFinanceModalVisibility(modal, isVisible) {
   }
 }
 
-
 const recordPaymentBtn = document.getElementById("addRecordPayment");
 const recordModal = document.getElementById("addRecordPaymentModal");
 
@@ -42,9 +41,7 @@ if (recordPaymentBtn) {
       return;
     }
 
-
     setFinanceModalVisibility(recordModal, true);
-
 
     loadFeeItemAllocations(activeFeeId);
   });
@@ -320,7 +317,6 @@ async function viewFeeDetails(feeId) {
   const modal = document.getElementById("viewPaymentModal");
   if (!modal) return;
 
-
   setFinanceModalVisibility(modal, true);
 
   try {
@@ -350,7 +346,6 @@ async function viewFeeDetails(feeId) {
       recordPaymentBtn.setAttribute("data-fee-id", feeId);
       recordPaymentBtn.setAttribute("data-student-id", fee.student_id);
     }
-
 
     let studentRecord = null;
     let enrollmentIdentity = null;
@@ -403,7 +398,6 @@ async function viewFeeDetails(feeId) {
 
     if (txError) throw txError;
 
-
     document.getElementById("modal-student-name").textContent =
       studentIdentity.name;
     document.getElementById("modal-student-id").textContent =
@@ -432,7 +426,6 @@ async function viewFeeDetails(feeId) {
     document.getElementById("modal-class").textContent =
       fee.classes?.name || "N/A";
 
-
     const feeSummaryTbody = document.getElementById("modal-fee-summary-tbody");
     if (feeSummaryTbody) {
       feeSummaryTbody.innerHTML = `
@@ -455,7 +448,6 @@ async function viewFeeDetails(feeId) {
       `;
     }
 
-
     const historyTbody = document.getElementById("modal-payment-history-tbody");
     if (historyTbody) {
       if (!transactions || transactions.length === 0) {
@@ -472,7 +464,6 @@ async function viewFeeDetails(feeId) {
               year: "numeric",
             },
           );
-
 
           let allocationsHtml =
             '<ul style="margin: 4px 0 0 15px; padding: 0; font-size: 0.9em; color: #555;">';
@@ -579,7 +570,6 @@ if (savePaymentBtn) {
     ).value;
     const notes = document.getElementById("payment-notes-input")?.value || null;
 
-
     let totalPayment = 0;
     const allocations = [];
 
@@ -635,7 +625,6 @@ if (savePaymentBtn) {
       setFinanceModalVisibility(recordModal, false);
       document.getElementById("recordPaymentForm")?.reset();
 
-
       if (typeof viewFeeDetails === "function") viewFeeDetails(activeFeeId);
       if (typeof loadStudentFees === "function") loadStudentFees();
     } catch (err) {
@@ -673,14 +662,12 @@ async function loadFeeItemAllocations(feeId) {
 
     const items = feeRecord.fee_breakdown;
 
-
     container.innerHTML = "";
     items.forEach((item) => {
       const itemRow = document.createElement("div");
       itemRow.className = "allocation-row";
       itemRow.style.cssText =
         "display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;";
-
 
       const itemName = item.name || item.fee_name || "Fee Item";
 
@@ -702,7 +689,6 @@ async function loadFeeItemAllocations(feeId) {
       `;
       container.appendChild(itemRow);
     });
-
 
     document.querySelectorAll(".item-payment-input").forEach((input) => {
       input.addEventListener("input", updateAllocationTotal);
@@ -740,7 +726,6 @@ function updateResponseTypeTotal() {
   document.querySelectorAll(".item-payment-input").forEach((input) => {
     const val = parseFloat(input.value) || 0;
     const max = parseFloat(input.getAttribute("data-max"));
-
 
     if (val > max) {
       alert(

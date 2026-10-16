@@ -1,7 +1,5 @@
 
 
-
-
 create or replace function public.promote_students_to_new_academic_year(
   p_enrollment_ids uuid[],
   p_target_academic_year_id uuid,
@@ -145,7 +143,6 @@ begin
   if not found then
     raise exception 'Fee structure must be active and match the target class, school, year, and first term.' using errcode = '23503';
   end if;
-
 
   for v_student_id in
     select e.student_id

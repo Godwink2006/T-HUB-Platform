@@ -1,21 +1,14 @@
--- Review proposal only. Requires student_transfer_proposal.sql first.
--- Accepting a transfer keeps the student's existing Auth user ID and login.
--- Source attendance, grades, fees, and payments remain unchanged; JSON snapshots
--- are added to student_transfer_history for a future read-only history screen.
 
 BEGIN;
 
 ALTER TABLE public.student_transfers
   ADD COLUMN IF NOT EXISTS source_student_code text;
 
--- Preserve the sender-school identity on the historical enrollment itself.
--- The student's live profile moves to the receiving school during acceptance.
 ALTER TABLE public.student_enrollments
   ADD COLUMN IF NOT EXISTS student_name_snapshot text,
   ADD COLUMN IF NOT EXISTS student_code_snapshot text,
   ADD COLUMN IF NOT EXISTS student_photo_snapshot text;
 
--- Backfill older completed transfers where the source enrollment still exists.
 UPDATE public.student_enrollments AS enrollment
 SET student_name_snapshot = coalesce(
       enrollment.student_name_snapshot,
@@ -464,8 +457,6 @@ begin
             v_transfer.source_student_id, v_record_type;
   end loop;
 
-  -- Snapshot identity on every source-school enrollment for this student,
-  -- including older rows marked Promoted, before moving the live profile.
   update public.student_enrollments
   set student_name_snapshot = coalesce(student_name_snapshot, v_student_name),
       student_code_snapshot = coalesce(student_code_snapshot, v_source_student_code)

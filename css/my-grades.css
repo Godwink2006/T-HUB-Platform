@@ -28,7 +28,6 @@
   margin: 0;
 }
 
-
 .toolbar {
   display: flex;
   flex-direction: row;
@@ -86,7 +85,6 @@
   padding-bottom: 8px;
 }
 
-
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -116,13 +114,11 @@
   background-color: #f9fafb;
 }
 
-
 .score-value {
   font-weight: 700;
   color: #059669;
 }
 
-#studentGradesReport {
   border-radius: 10px;
 }
 
@@ -130,7 +126,6 @@
   color: #6b7280;
   font-size: 0.8rem;
 }
-
 
 @media (max-width: 768px) {
   .toolbar {
@@ -155,7 +150,6 @@
   }
 }
 
-
 .status-badge {
   padding: 4px 10px;
   font-size: 11px;
@@ -163,7 +157,6 @@
   text-transform: capitalize;
   display: inline-block;
 }
-
 
 .status-badge.normal {
   background-color: #e2e8f0;
@@ -190,7 +183,6 @@
   color: #6b21a8;
 }
 
-/* Calculation summary stat cards */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

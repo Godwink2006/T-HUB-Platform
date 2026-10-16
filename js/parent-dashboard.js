@@ -115,7 +115,6 @@ const DEFAULT_PARENT_PORTAL_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
 window.renderParentPortalProfile = function (profile, authUser) {
-  // Extract values dynamically with fallback states only for missing data
   const name = String(
     profile?.full_name || authUser?.user_metadata?.full_name || "Parent",
   );
@@ -124,24 +123,20 @@ window.renderParentPortalProfile = function (profile, authUser) {
     profile?.phone_number || profile?.phone || "Phone not added",
   );
 
-  // DOM Elements mapping
   const welcomeNameElement = document.getElementById("parentName");
   const nameElement = document.getElementById("parentAccountName");
   const emailElement = document.getElementById("parentAccountEmail");
   const phoneElement = document.getElementById("parentAccountPhone");
 
-  // Populate dynamic text fields
   if (welcomeNameElement) welcomeNameElement.textContent = name;
   if (nameElement) nameElement.textContent = name;
   if (emailElement) emailElement.textContent = email;
   if (phoneElement) phoneElement.textContent = phone;
 
-  // Avatar & Dynamic Initials Generation
   const avatarShell = document.getElementById("parentPhoto");
   const avatar = avatarShell?.querySelector(".parent-avatar");
   const initials = avatarShell?.querySelector(".parent-avatar-initials");
 
-  // Generate initials dynamically from the actual fetched name
   const computedInitials =
     name
       .trim()
@@ -160,7 +155,6 @@ window.renderParentPortalProfile = function (profile, authUser) {
 
   avatar.alt = `${name} profile photo`;
 
-  // Load custom user photo URL dynamically if present
   const photoUrl = profile?.photo_url;
   if (photoUrl) {
     try {
@@ -179,7 +173,6 @@ window.renderParentPortalProfile = function (profile, authUser) {
     avatar.src = DEFAULT_PARENT_PORTAL_AVATAR;
   }
 
-  // Fallback for broken/failed image loads
   avatar.onerror = () => {
     avatar.onerror = null;
     avatar.hidden = true;
@@ -339,7 +332,6 @@ function setParentStudentPhoto(shell, photoUrl, name) {
         image.hidden = false;
       }
     } catch {
-      // Leave the styled initials placeholder when a profile photo URL is invalid.
     }
   }
   image.onerror = () => {

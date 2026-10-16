@@ -432,7 +432,6 @@ tr {
   margin-top: 30px;
 }
 
-#closeViewStudentModal {
   cursor: pointer;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -696,7 +695,6 @@ tr {
 
   .student-modal-header button,
   .edit-student-modal-header button,
-  #closeViewStudentModal {
     height: 34px;
     width: 34px;
     font-size: 16px;

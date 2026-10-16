@@ -196,7 +196,6 @@ async function fetchFilteredSubjects() {
     departments ( id, name )
   `);
 
-
   if (departmentId) {
     query = query.eq("department_id", departmentId);
   }

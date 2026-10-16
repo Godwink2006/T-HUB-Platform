@@ -524,7 +524,6 @@ tr {
   margin-top: 30px;
 }
 
-#closeViewStructureModal {
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
@@ -802,7 +801,6 @@ tr {
   .structure-modal-header button,
   .editstructure-modal-header button,
   .addItem-modal-header button,
-  #closeViewStructureModal {
     cursor: pointer;
     color: #f9fafb;
     border: none;
