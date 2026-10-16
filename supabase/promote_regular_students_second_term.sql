@@ -1,6 +1,5 @@
 
 
-
 create or replace function public.promote_regular_students_to_second_term(
   p_enrollment_ids uuid[],
   p_target_class_id uuid,
@@ -9,8 +8,6 @@ create or replace function public.promote_regular_students_to_second_term(
 returns jsonb
 language plpgsql
 security invoker
-
-
 
 set search_path = public, auth, pg_temp
 as $function$
@@ -124,7 +121,6 @@ begin
     raise exception 'Select students from one first-term class at a time.' using errcode = '23514';
   end if;
 
-
   for v_student_id in
     select e.student_id
     from public.student_enrollments as e
@@ -167,7 +163,6 @@ begin
   if not found then
     raise exception 'Fee structure must be active and match the target class, school, active year, and second term.' using errcode = '23503';
   end if;
-
 
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(v_school_id::text || ':class:' || p_target_class_id::text || ':' || v_second_term_id::text, 0)

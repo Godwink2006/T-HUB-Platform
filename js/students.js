@@ -255,7 +255,6 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const closeViewBtn = document.getElementById("closeViewBtn");
 
-
   const editStudentModal = document.getElementById("editStudentModal");
   const closeEditStudentModal = document.getElementById(
     "closeEditStudentModal",
@@ -821,10 +820,8 @@ const formatDate = (dateString) => {
   });
 };
 
-
 async function viewStudent(id) {
   let student = null;
-
 
   try {
     const { data, error } = await supabaseClient
@@ -850,7 +847,6 @@ async function viewStudent(id) {
     );
   }
 
-
   if (!student) {
     student = (window.allStudentsCache || []).find((s) => s.id === id);
   }
@@ -860,7 +856,6 @@ async function viewStudent(id) {
     showToast("Student record not found.", "error");
     return;
   }
-
 
   const profile = student.profiles || {};
 
@@ -912,7 +907,6 @@ async function viewStudent(id) {
   document.getElementById("viewStudentUpdatedAt").textContent = formatDate(
     student.updated_at || profile.updated_at,
   );
-
 
   const viewStudentModal = document.getElementById("viewStudentModal");
   if (viewStudentModal) {

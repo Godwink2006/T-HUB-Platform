@@ -17,10 +17,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const userId = session.user.id;
   const historyIndex = await window.getStudentTransferHistoryIndex(client);
 
-
   await populateFilterDropdowns(userId, client, historyIndex);
   await loadStudentFeesAndHistory(userId, {}, historyIndex);
-
 
   document
     .getElementById("filterAcademicYear")
@@ -32,7 +30,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     .getElementById("filterTerm")
     .addEventListener("change", () => triggerFilter(userId, historyIndex));
 });
-
 
 async function populateFilterDropdowns(authUserId, client, historyIndex) {
   try {
@@ -116,7 +113,6 @@ function renderFeesTable(fees, container) {
     const yearLabel = fee.academic_years?.year_label || "-";
     const termName = fee.terms?.name || "-";
     const className = fee.classes?.name || "-";
-
 
     let breakdownHtml = `<span style="color: var(--text-muted); font-style: italic;">No items specified</span>`;
     if (fee.fee_breakdown) {
@@ -214,7 +210,6 @@ async function loadStudentFeesAndHistory(authUserId, filters = {}, historyIndex)
     }
 
     renderFeesTable(fees, feesContainer);
-
 
     const activeFeeIds = fees.map((f) => f.id);
     await loadFilteredTransactions(

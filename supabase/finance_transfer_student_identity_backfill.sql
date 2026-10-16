@@ -1,5 +1,3 @@
--- Preserve the current identity on receiving-school enrollment rows for
--- completed transfers. Safe to rerun; existing snapshots are not overwritten.
 alter table public.student_enrollments
   add column if not exists student_photo_snapshot text;
 

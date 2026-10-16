@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function initStudentContext() {
   const client = window.supabaseClient || supabaseClient;
 
-
   const {
     data: { user },
     error: userErr,
@@ -16,13 +15,10 @@ async function initStudentContext() {
     return;
   }
 
-  // The transfer history RPC identifies records that must stay out of the
-  // current-school grade view. Load it before choosing a default grade period.
   const historyIndex = await window.getStudentTransferHistoryIndex(client);
 
   const yearSelect = document.getElementById("studentAcademicYearSelect");
   const termSelect = document.getElementById("studentTermSelect");
-
 
   async function loadTermsForYear(selectedYearId, preselectTermId = null) {
     if (!termSelect) return;
@@ -47,7 +43,6 @@ async function initStudentContext() {
         opt.value = t.id;
         opt.textContent = t.name;
 
-
         if (preselectTermId ? t.id === preselectTermId : t === terms[0]) {
           opt.selected = true;
         }
@@ -55,7 +50,6 @@ async function initStudentContext() {
       });
     }
   }
-
 
   const { data: userGrades } = await client
     .from("grade_records")
@@ -73,7 +67,6 @@ async function initStudentContext() {
   const targetAssessmentId = currentUserGrade?.grades?.assessment_id;
   const targetClassId = currentUserGrade?.grades?.class_id;
   const targetSubjectId = currentUserGrade?.grades?.subject_id;
-
 
   const { data: years, error: yearsErr } = await client
     .from("academic_years")
@@ -96,14 +89,12 @@ async function initStudentContext() {
       opt.value = y.id;
       opt.textContent = y.year_label;
 
-
       if (targetYearId ? y.id === targetYearId : y === years[0]) {
         opt.selected = true;
       }
       yearSelect.appendChild(opt);
     });
   }
-
 
   const activeYearId = yearSelect?.value;
   if (activeYearId) {
@@ -181,7 +172,6 @@ async function initStudentContext() {
     );
   }
 
-
   if (activeYearId && activeTermId && assessmentSelect?.value) {
     await loadClassesForSelection(
       activeYearId,
@@ -202,7 +192,6 @@ async function initStudentContext() {
     }
   }
 
-
   await loadStudentGrades(user.id);
 }
 
@@ -217,7 +206,6 @@ async function loadAssessmentsForYearAndTerm(
   assessmentSelect.innerHTML = `<option value="">Select Assessment / Period</option>`;
   if (!academicYearId || !termId) return;
 
-
   const { data: gradeEntries, error } = await supabaseClient
     .from("grades")
     .select("assessment_id, assessments ( id, name )")
@@ -228,7 +216,6 @@ async function loadAssessmentsForYearAndTerm(
     console.error("Error loading assessments for period:", error);
     return;
   }
-
 
   const uniqueAssessments = new Map();
   gradeEntries?.forEach((entry) => {
@@ -243,7 +230,6 @@ async function loadAssessmentsForYearAndTerm(
       const opt = document.createElement("option");
       opt.value = id;
       opt.textContent = name;
-
 
       if (preselectAssessmentId ? id === preselectAssessmentId : index === 0) {
         opt.selected = true;
@@ -316,7 +302,6 @@ async function loadStudentGrades(authUserId) {
     const historyIndex = await window.getStudentTransferHistoryIndex(client);
     const historicalGradeIds = historyIndex?.recordIds?.grade || new Set();
 
-
     let query = client
       .from("grade_records")
       .select(
@@ -346,7 +331,6 @@ async function loadStudentGrades(authUserId) {
       .eq("student_id", authUserId)
       .eq("grades.status", "submitted");
 
-
     if (termId) query = query.eq("grades.term_id", termId);
     if (yearId) query = query.eq("grades.academic_year_id", yearId);
     if (assessmentId) query = query.eq("grades.assessment_id", assessmentId);
@@ -368,7 +352,6 @@ async function loadStudentGrades(authUserId) {
         </p>`;
       return;
     }
-
 
     const grouped = new Map();
 
@@ -507,7 +490,6 @@ function renderStudentGradesStats(records) {
   `;
 }
 
-
 async function loadClassesForSelection(
   yearId,
   termId,
@@ -551,7 +533,6 @@ async function loadClassesForSelection(
     index++;
   });
 }
-
 
 async function loadSubjectsForSelection(
   yearId,

@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadStudentAttendanceData(userId, historyIndex) {
   const client = window.supabaseClient || supabaseClient;
 
-
   const { data: attendanceRecords, error: arError } = await client
     .from("attendance_records")
     .select("id, status, created_at, student_id, attendance_id")
@@ -35,11 +34,9 @@ async function loadStudentAttendanceData(userId, historyIndex) {
     return;
   }
 
-
   const attendanceIds = [
     ...new Set(currentAttendanceRecords.map((r) => r.attendance_id).filter(Boolean)),
   ];
-
 
   let attendanceMap = {};
   if (attendanceIds.length > 0) {
@@ -71,7 +68,6 @@ async function loadStudentAttendanceData(userId, historyIndex) {
       );
     }
   }
-
 
   allAttendanceRecords = currentAttendanceRecords
     .map((record) => ({

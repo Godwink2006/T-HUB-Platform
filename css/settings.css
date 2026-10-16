@@ -281,10 +281,6 @@ body.settings-modal-open {
   }
 }
 
-
-
-
-
 @media screen and (max-width: 768px) {
   .settings-container {
     flex-direction: column;

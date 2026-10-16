@@ -945,7 +945,6 @@ async function fetchFilteredFeeStructures() {
   if (semesterId) query = query.eq("term_id", semesterId);
   if (classId) query = query.eq("class_id", classId);
 
-
   if (statusFilter === "active") {
     query = query.eq("status", "Active");
   } else if (statusFilter === "inactive") {

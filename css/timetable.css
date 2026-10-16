@@ -574,7 +574,6 @@ tr {
   margin-top: 30px;
 }
 
-#closeViewTimetableModal {
   cursor: pointer;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
@@ -584,10 +583,6 @@ tr {
   width: 40px;
   font-size: 21px;
 }
-
-
-
-
 
 @media screen and (max-width: 768px) {
   th,
@@ -797,7 +792,6 @@ tr {
   .edit-timetable-modal-header button,
   .lesson-modal-header button,
   .edit-lesson-modal-header button,
-  #closeViewTimetableModal {
     cursor: pointer;
     color: #f9fafb;
     border: 1px solid rgb(219, 215, 215);

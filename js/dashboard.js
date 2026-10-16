@@ -118,7 +118,6 @@ if (saveAnnouncementBtn) {
       document.getElementById("announcementExpiry").value || null;
     const message = document.getElementById("announcementMessage").value.trim();
 
-
     const checkedAudiences = Array.from(
       document.querySelectorAll('input[name="announcementAudience"]:checked'),
     ).map((cb) => cb.value);
@@ -134,7 +133,6 @@ if (saveAnnouncementBtn) {
         showToast("Please select at least one target audience.", "error");
       return;
     }
-
 
     const target_audience = checkedAudiences.join(", ");
 
@@ -276,7 +274,6 @@ async function loadDashboardAnnouncements() {
       if (openTeacherBtn) openTeacherBtn.style.display = "block";
     }
 
-
     const allowedStaffRoles = ["admin", "teacher", "accountant", "librarian"];
 
     if (allowedStaffRoles.includes(profile.role)) {
@@ -291,7 +288,6 @@ async function loadDashboardAnnouncements() {
 
     const today = new Date().toISOString().split("T")[0];
 
-
     const { data: announcements, error: fetchError } =
       await window.supabaseClient
         .from("announcements")
@@ -301,7 +297,6 @@ async function loadDashboardAnnouncements() {
         .order("created_at", { ascending: false });
 
     if (fetchError) throw fetchError;
-
 
     const filteredAnnouncements = (announcements || []).filter((ann) => {
       if (profile.role === "admin") return true;
@@ -313,7 +308,6 @@ async function loadDashboardAnnouncements() {
       const userRole = (profile.role || "").trim().toLowerCase();
       return audiences.includes("all") || audiences.includes(userRole);
     });
-
 
     if (filteredAnnouncements.length === 0) {
       previewContainer.innerHTML = `
@@ -362,7 +356,6 @@ async function loadDashboardAnnouncements() {
     console.error("Error loading announcements:", err);
   }
 }
-
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDashboardAnnouncements();
@@ -419,7 +412,6 @@ async function loadDashboardStats(schoolId) {
       document.getElementById("studentSubtext").textContent =
         "0 Active / 0 Total";
     }
-
 
     const { data: teachersData, error: teacherError } =
       await window.supabaseClient
@@ -495,7 +487,6 @@ async function loadDashboardStats(schoolId) {
         document.getElementById("attendanceCount").textContent =
           `${percentage}%`;
 
-
         let statusLabel = "Normal";
         let statusColor = "#475569";
 
@@ -550,7 +541,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
       .select("school_id, role")
@@ -592,7 +582,6 @@ async function updateNotificationBadge(userId) {
     const badge = document.getElementById("sidebarNotificationBadge");
     if (!badge) return;
 
-
     const unreadCount = count ?? 0;
 
     if (!error && unreadCount > 0) {
@@ -619,7 +608,6 @@ async function loadEnrollmentStats(
       return;
     }
 
-
     const {
       data: { user },
     } = await window.supabaseClient.auth.getUser();
@@ -637,10 +625,8 @@ async function loadEnrollmentStats(
 
     const userRole = profile.role;
 
-
     const formattedStart = customStart ? `${customStart}T00:00:00` : null;
     const formattedEnd = customEnd ? `${customEnd}T23:59:59` : null;
-
 
     const { data: stats, error } = await window.supabaseClient.rpc(
       "get_dashboard_stats",
@@ -655,7 +641,6 @@ async function loadEnrollmentStats(
     );
 
     if (error) throw error;
-
 
     document.getElementById("totalEnrollmentCount").textContent = (
       stats.total || 0
@@ -675,7 +660,6 @@ const closeDateModalBtn = document.getElementById("closeDateModal");
 const cancelDateModalBtn = document.getElementById("cancelDateModal");
 const applyDateBtn = document.getElementById("applyDateBtn");
 
-
 document
   .querySelector(".filter-menu a.custom-date")
   .addEventListener("click", (e) => {
@@ -685,7 +669,6 @@ document
 
 closeDateModalBtn.addEventListener("click", closeDateModal);
 cancelDateModalBtn.addEventListener("click", closeDateModal);
-
 
 applyDateBtn.addEventListener("click", async () => {
   const startDate = document.getElementById("startDateInput").value;
@@ -701,14 +684,12 @@ applyDateBtn.addEventListener("click", async () => {
     return;
   }
 
-
   const btnSpan = document.querySelector(".filter-dropdown .selected-filter");
   if (btnSpan) btnSpan.textContent = `${startDate} to ${endDate}`;
 
   dateModal.style.display = "none";
 
   unLockBodyScroll();
-
 
   await loadEnrollmentStats("custom", startDate, endDate);
 });
@@ -719,12 +700,10 @@ document.querySelectorAll(".filter-menu a").forEach((link) => {
     const filterText = e.target.textContent;
     const filterType = e.target.getAttribute("data-filter");
 
-
     const btnSpan = e.target
       .closest(".filter-dropdown")
       .querySelector(".selected-filter");
     if (btnSpan) btnSpan.textContent = filterText;
-
 
     loadEnrollmentStats(filterType);
   });

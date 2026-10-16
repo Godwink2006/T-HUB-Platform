@@ -74,8 +74,6 @@ Deno.serve(async (request) => {
     if (studentError) throw new Error(`Could not verify the student: ${studentError.message}`);
     if (!student) return respond({ success: false, message: "That student is not in your school." }, 404);
 
-    // Reuse a previously invited parent account for siblings without exposing
-    // an Auth admin lookup endpoint to the browser.
     const { data: existingLink, error: linkLookupError } = await adminClient
       .from("parent_student_links")
       .select("parent_user_id")

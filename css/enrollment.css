@@ -45,7 +45,6 @@ body.modal-open {
   margin: 0 10px 11px;
 }
 
-#btnReceiveStudentTransfer {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -136,7 +135,6 @@ body.modal-open {
     justify-content: stretch;
   }
 
-  #btnReceiveStudentTransfer {
     width: 100%;
     justify-content: center;
   }
@@ -180,7 +178,6 @@ td {
 tr {
   border: 1px solid rgb(219, 215, 215);
 }
-
 
 .bulk-action-bar {
   display: none;
@@ -237,7 +234,6 @@ tr {
     opacity: 1;
   }
 }
-
 
 .modal-overlay {
   display: none;
@@ -362,7 +358,6 @@ tr {
   font-weight: 500;
 }
 
-
 .status-badge {
   padding: 4px 10px;
   font-size: 11px;
@@ -370,7 +365,6 @@ tr {
   text-transform: capitalize;
   display: inline-block;
 }
-
 
 .status-badge.normal {
   background-color: #e2e8f0;
@@ -397,12 +391,10 @@ tr {
   color: #6b21a8;
 }
 
-
 .tooltip-container {
   position: relative;
   display: inline-block;
 }
-
 
 .tooltip-container .tooltip-card {
   visibility: hidden;
@@ -438,7 +430,6 @@ tr {
   border-style: solid;
   border-color: #1e293b transparent transparent transparent;
 }
-
 
 .tooltip-container:hover .tooltip-card {
   visibility: visible;
@@ -513,15 +504,12 @@ tr {
     padding: 16px;
   }
 
-  #actionModal .modal-content > div:last-child {
     flex-wrap: wrap;
   }
 
-  #actionModal .modal-content > div:last-child button {
     flex: 1 1 110px;
   }
 }
-
 
 .topbar {
   margin-bottom: 14px;

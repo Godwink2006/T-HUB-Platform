@@ -280,7 +280,6 @@ td {
   margin-top: 30px;
 }
 
-#closeViewPaymentModal {
   cursor: pointer;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
@@ -303,7 +302,6 @@ td {
     font-size: 24px;
   }
 
-  #closeViewPaymentModal,
   .save-btn,
   .cancel-btn,
   .recordPayment-modal-header button {
@@ -673,7 +671,6 @@ body {
 }
 
 .recordPayment-modal-header button,
-#closeViewPaymentModal {
   display: grid;
   width: 38px;
   height: 38px;
@@ -845,7 +842,6 @@ tr {
   }
 }
 
-/* Finance page follows the system's square desktop card style. */
 .finance-page .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -914,7 +910,6 @@ tr {
   }
 }
 
-/* Keep finance styling consistent with the other system pages. */
 .finance-page .sidebar {
   background: #1d4ed8;
   box-shadow: none;

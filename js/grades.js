@@ -50,11 +50,9 @@ function initGradeModalEventListeners() {
     .getElementById("cancelGradeModal")
     .addEventListener("click", () => closeModal(gradeModal));
 
-
   document
     .getElementById("loadEnterGrade")
     ?.addEventListener("click", handleLoadStudents);
-
 
   document
     .getElementById("closeEnterGradeModal")
@@ -63,7 +61,6 @@ function initGradeModalEventListeners() {
     .getElementById("cancelEnterGradeModal")
     ?.addEventListener("click", () => closeModal(enterGradeModal));
 
-
   document
     .getElementById("closeViewGradeModal")
     ?.addEventListener("click", () => closeModal(viewGradeModal));
@@ -71,14 +68,12 @@ function initGradeModalEventListeners() {
     .getElementById("closeViewBtn")
     ?.addEventListener("click", () => closeModal(viewGradeModal));
 
-
   document
     .getElementById("closeEditGradeModal")
     ?.addEventListener("click", () => closeModal(editGradeModal));
   document
     .getElementById("cancelEditGradeModal")
     ?.addEventListener("click", () => closeModal(editGradeModal));
-
 
   document.addEventListener("click", (e) => {
     const viewBtn = e.target.closest(".view");
@@ -109,7 +104,6 @@ function initGradeModalEventListeners() {
     }
   });
 
-
   window.addEventListener("click", (e) => {
     if (e.target === gradeModal) closeModal(gradeModal);
     if (e.target === enterGradeModal) closeModal(enterGradeModal);
@@ -125,7 +119,6 @@ function resetGradeModal() {
     document.getElementById("gradeSetupForm");
   if (form) form.reset();
 
-
   const classSelect =
     document.getElementById("gradesClassSelect") ||
     document.getElementById("gradeClassSelect");
@@ -133,13 +126,11 @@ function resetGradeModal() {
     classSelect.value = "";
   }
 
-
   const subjectSelect = document.getElementById("gradeSubjectSelect");
   if (subjectSelect) {
     subjectSelect.innerHTML = `<option value="">Select Subject</option>`;
     subjectSelect.disabled = true;
   }
-
 
   const categorySelect = document.getElementById(
     "gradeAssessmentCategorySelect",
@@ -154,7 +145,6 @@ function initGradeFormListeners() {
     document.getElementById("gradesClassSelect") ||
     document.getElementById("gradeClassSelect");
 
-
   if (classSelect && !classSelect.dataset.listenerBound) {
     classSelect.addEventListener("change", (e) => {
       handleClassSelectChange(e.target.value);
@@ -167,7 +157,6 @@ async function populateClassOptions() {
   const classSelect = document.getElementById("gradesClassSelect");
   if (!classSelect) return;
 
-
   const selectedValue = classSelect.value;
 
   try {
@@ -176,7 +165,6 @@ async function populateClassOptions() {
       data: { user },
     } = await client.auth.getUser();
     if (!user) return;
-
 
     const { data: profile } = await client
       .from("profiles")
@@ -202,7 +190,6 @@ async function populateClassOptions() {
 
       if (error) throw error;
 
-
       classesList = [
         ...new Map(
           (assignments || [])
@@ -210,7 +197,6 @@ async function populateClassOptions() {
             .map((a) => [a.classes.id, a.classes]),
         ).values(),
       ];
-
 
       classesList.sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -224,11 +210,9 @@ async function populateClassOptions() {
       classSelect.appendChild(opt);
     });
 
-
     if (selectedValue) {
       classSelect.value = selectedValue;
     }
-
 
     if (
       !classSelect.dataset.listenersBound &&
@@ -246,7 +230,6 @@ async function populateClassOptions() {
 async function handleClassSelectChange(classId) {
   const subjectSelect = document.getElementById("gradeSubjectSelect");
   if (!subjectSelect) return;
-
 
   subjectSelect.innerHTML = `<option value="">Select Subject</option>`;
   subjectSelect.disabled = true;
@@ -285,7 +268,6 @@ async function handleClassSelectChange(classId) {
         }
       });
 
-
       if (subjectMap.size === 0) {
         const { data: allSubjects } = await client
           .from("subjects")
@@ -315,7 +297,6 @@ async function handleClassSelectChange(classId) {
       subjectSelect.innerHTML = `<option value="">No subjects assigned</option>`;
       return;
     }
-
 
     const sortedSubjects = Array.from(subjectMap.entries()).sort((a, b) =>
       a[1].localeCompare(b[1]),
@@ -364,18 +345,15 @@ async function loadAssessmentCategories() {
       return;
     }
 
-
     activeAssessmentCategories = categories;
     window.activeAssessmentCategories = categories;
     window.activeCategories = categories;
-
 
     assessmentSelect.innerHTML = `<option value="">Select Category</option>`;
 
     categories.forEach((cat) => {
       const opt = document.createElement("option");
       opt.value = cat.id;
-
 
       if (cat.marks != null) {
         opt.dataset.marks = cat.marks;
@@ -422,13 +400,11 @@ async function loadAcademicContext() {
         .ilike("status", "Active")
         .maybeSingle(),
 
-
       client
         .from("terms")
         .select("id, name")
         .ilike("status", "Active")
         .maybeSingle(),
-
 
       client
         .from("assessments")
@@ -437,18 +413,15 @@ async function loadAcademicContext() {
         .order("name", { ascending: true }),
     ]);
 
-
     if (yearRes.data) {
       window.activeAcademicYearId = yearRes.data.id;
       window.activeAcademicYearLabel = yearRes.data.year_label;
     }
 
-
     if (termRes.data) {
       window.activeTermId = termRes.data.id;
       window.activeTermLabel = termRes.data.name;
     }
-
 
     if (assessmentRes.data) {
       window.activeAssessment = assessmentRes.data;
@@ -464,7 +437,6 @@ async function loadAcademicContext() {
 async function handleLoadStudents(e) {
   if (e) e.preventDefault();
 
-
   const classSelect =
     document.getElementById("gradesClassSelect") ||
     document.getElementById("gradeClassSelect");
@@ -472,7 +444,6 @@ async function handleLoadStudents(e) {
   const categorySelect = document.getElementById(
     "gradeAssessmentCategorySelect",
   );
-
 
   if (!classSelect || !classSelect.value || classSelect.value.trim() === "") {
     showToast("Please select a Class.", "error");
@@ -497,7 +468,6 @@ async function handleLoadStudents(e) {
     return;
   }
 
-
   const classId = classSelect.value;
   const className = classSelect.options[classSelect.selectedIndex].text;
 
@@ -508,7 +478,6 @@ async function handleLoadStudents(e) {
   const categoryName =
     categorySelect.options[categorySelect.selectedIndex].text;
 
-
   const assessmentsList = window.activeAssessment || activeAssessment || [];
   const selectedAssessment =
     Array.isArray(assessmentsList) && assessmentsList.length > 0
@@ -517,7 +486,6 @@ async function handleLoadStudents(e) {
 
   const assessmentId = selectedAssessment ? selectedAssessment.id : null;
   const assessmentName = selectedAssessment ? selectedAssessment.name : "";
-
 
   const categoriesList =
     window.activeCategories || window.activeAssessmentCategories || [];
@@ -552,7 +520,6 @@ async function handleLoadStudents(e) {
   const effectiveMaxMarks = Math.min(periodMax, categoryMax);
   const finalMaxMarks = isFinite(effectiveMaxMarks) ? effectiveMaxMarks : null;
 
-
   currentGradeSession = {
     classId,
     className,
@@ -566,7 +533,6 @@ async function handleLoadStudents(e) {
     academicYearId: window.activeAcademicYearId || activeAcademicYearId || null,
     termId: window.activeTermId || activeTermId || null,
   };
-
 
   const elYear = document.getElementById("enterGradeModalYear");
   const elTerm = document.getElementById("enterGradeModalTerm");
@@ -605,7 +571,6 @@ async function handleLoadStudents(e) {
     elYear.textContent = window.activeAcademicYearLabel || "Active Year";
   if (elTerm) elTerm.textContent = window.activeTermLabel || "Active Term";
 
-
   const setupModal = document.getElementById("gradeModal");
   const enterGradeModal = document.getElementById("enterGradeModal");
 
@@ -636,14 +601,12 @@ async function handleSaveGrades(e) {
     return;
   }
 
-
   const statusSelect =
     document.getElementById("gradeStatusSelect") ||
     document.getElementById("enterGradeModalStatus");
   const selectedStatus = statusSelect
     ? statusSelect.value.toLowerCase()
     : "drafted";
-
 
   const scoreInputs = document.querySelectorAll(".student-score-input");
   const recordsPayload = [];
@@ -655,7 +618,6 @@ async function handleSaveGrades(e) {
 
     if (rawVal !== "") {
       const score = Number(rawVal);
-
 
       if (
         currentGradeSession.maxMarks !== null &&
@@ -687,7 +649,6 @@ async function handleSaveGrades(e) {
     return;
   }
 
-
   if (saveBtn) {
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving...";
@@ -697,7 +658,6 @@ async function handleSaveGrades(e) {
     const client = window.supabaseClient || supabaseClient;
 
     const targetAssessmentId = currentGradeSession.assessmentId || null;
-
 
     const { data: gradeId, error } = await client.rpc("save_grade_session", {
       p_class_id: currentGradeSession.classId,
@@ -715,12 +675,10 @@ async function handleSaveGrades(e) {
 
     showToast("Grades saved successfully!", "success");
 
-
     const enterGradeModal = document.getElementById("enterGradeModal");
     if (enterGradeModal && typeof closeModal === "function") {
       closeModal(enterGradeModal);
     }
-
 
     if (typeof loadGradesList === "function") {
       loadGradesList();
@@ -746,7 +704,6 @@ async function handleSaveGrades(e) {
   } catch (err) {
     console.error("Error saving grade session:", err);
 
-
     if (err.code === "23505" || err.message?.includes("already exists")) {
       showToast(
         "A grade session for this Subject, Category, and Period already exists!",
@@ -763,7 +720,6 @@ async function handleSaveGrades(e) {
   }
 }
 
-
 document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.getElementById("saveGradesBtn");
   if (saveBtn) {
@@ -775,14 +731,11 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
   const tbody = document.getElementById("gradeRosterTableBody");
   if (!tbody) return;
 
-
   tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 16px; color: #6b7280;">Loading student roster...</td></tr>`;
 
   try {
     const client = window.supabaseClient || supabaseClient;
     const cleanClassId = classId ? classId.trim() : "";
-
-
 
     const { data: activeStudents, error: studentErr } = await client.rpc(
       "get_active_class_students",
@@ -947,7 +900,6 @@ async function loadGradesList() {
   try {
     const client = window.supabaseClient || supabaseClient;
 
-
     let query = client
       .from("grades")
       .select(
@@ -965,7 +917,6 @@ async function loadGradesList() {
       `,
       )
       .order("created_at", { ascending: false });
-
 
     if (selectedClass) {
       query = query.eq("class_id", selectedClass);
@@ -1026,7 +977,6 @@ async function loadGradesList() {
       return;
     }
 
-
     tbody.innerHTML = filteredGrades
       .map((item) => {
         const gradeId = item.id || item.grade_id;
@@ -1078,9 +1028,6 @@ async function loadGradesList() {
 
   }
 }
-
-
-
 
 async function handleViewGrades(gradeId) {
   if (!gradeId || gradeId === "undefined") {
@@ -1139,7 +1086,6 @@ async function handleViewGrades(gradeId) {
       grade.created_by,
     ]);
 
-
     const escapeHtml = (str) =>
       String(str ?? "")
         .replace(/&/g, "&amp;")
@@ -1147,7 +1093,6 @@ async function handleViewGrades(gradeId) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-
 
     document.getElementById("viewModalClass").textContent =
       grade.classes?.name || "-";
@@ -1172,7 +1117,6 @@ async function handleViewGrades(gradeId) {
     document.getElementById("viewModalCreator").innerHTML = renderGradeCreator(
       creatorProfiles.get(grade.created_by),
     );
-
 
     const tbody = document.getElementById("viewGradeTableBody");
     const records = grade.grade_records || [];
@@ -1232,8 +1176,6 @@ async function handleViewGrades(gradeId) {
   }
 }
 
-
-
 async function handleEditGrades(gradeId) {
   if (!gradeId || gradeId === "undefined") {
     console.error("handleEditGrades received invalid gradeId:", gradeId);
@@ -1246,7 +1188,6 @@ async function handleEditGrades(gradeId) {
 
   currentEditGradeId = gradeId;
 
-
   const escapeHtml = (str) =>
     String(str ?? "")
       .replace(/&/g, "&amp;")
@@ -1254,7 +1195,6 @@ async function handleEditGrades(gradeId) {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
-
 
   const skeletonText = `<span class="skeleton-text">Loading...</span>`;
   document.getElementById("editModalClass").innerHTML = skeletonText;
@@ -1310,7 +1250,6 @@ async function handleEditGrades(gradeId) {
       grade.created_by,
     ]);
 
-
     const categoryMax =
       grade.assessment_categories?.marks != null
         ? Number(grade.assessment_categories.marks)
@@ -1321,13 +1260,11 @@ async function handleEditGrades(gradeId) {
         ? Number(grade.assessments.maximum_marks)
         : null;
 
-
     const effectiveMax = Math.min(
       categoryMax ?? Infinity,
       periodMax ?? Infinity,
     );
     const finalMaxMarks = isFinite(effectiveMax) ? effectiveMax : null;
-
 
     const elCatMax = document.getElementById("editModalCategoryMax");
     if (elCatMax) {
@@ -1341,13 +1278,11 @@ async function handleEditGrades(gradeId) {
         periodMax !== null ? `(Period Max: ${periodMax})` : "";
     }
 
-
     const elMaxMarks = document.getElementById("editModalMaxMarks");
     if (elMaxMarks) {
       elMaxMarks.textContent =
         finalMaxMarks !== null ? `${finalMaxMarks} Marks` : "No Limit";
     }
-
 
     document.getElementById("editModalClass").textContent =
       grade.classes?.name || "-";
@@ -1469,7 +1404,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const action = btn.getAttribute("data-action");
 
-
     const row = btn.closest("tr");
     const gradeId =
       btn.getAttribute("data-grade-id") || row?.getAttribute("data-grade-id");
@@ -1506,10 +1440,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     initGradeFormListeners();
   }
 
-
   initToolbarListeners();
   await populateToolbarDropdowns();
-
 
   await loadAcademicContext();
   await populateClassOptions();
@@ -1520,7 +1452,6 @@ document
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!currentEditGradeId) return;
-
 
     const statusSelect = document.getElementById("editModalStatusSelect");
     const currentStatus = statusSelect
@@ -1540,7 +1471,6 @@ document
         hasScoresChanged = true;
       }
     });
-
 
     if (!hasStatusChanged && !hasScoresChanged) {
       if (typeof showToast === "function") {
@@ -1657,7 +1587,6 @@ document
     }
   });
 
-
 async function populateToolbarDropdowns() {
   const classFilter = document.getElementById("gradeToolbarClassSelect");
   const subjectFilter = document.getElementById("gradeToolbarSubjectSelect");
@@ -1672,7 +1601,6 @@ async function populateToolbarDropdowns() {
       client.from("assessment_categories").select("id, name").order("name"),
     ]);
 
-
     if (classFilter && classRes.data) {
       classFilter.innerHTML = `<option value="">All Classes</option>`;
       classRes.data.forEach((c) => {
@@ -1680,14 +1608,12 @@ async function populateToolbarDropdowns() {
       });
     }
 
-
     if (subjectFilter && subjectRes.data) {
       subjectFilter.innerHTML = `<option value="">All Subjects</option>`;
       subjectRes.data.forEach((s) => {
         subjectFilter.appendChild(new Option(s.name, s.id));
       });
     }
-
 
     if (categoryFilter && categoryRes.data) {
       categoryFilter.innerHTML = `<option value="">All Assessment Categories</option>`;
@@ -1699,7 +1625,6 @@ async function populateToolbarDropdowns() {
     console.error("Error populating toolbar filters:", err);
   }
 }
-
 
 function handleToolbarFilter() {
   const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")

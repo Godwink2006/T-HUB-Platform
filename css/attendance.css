@@ -427,7 +427,6 @@ tr {
   margin-top: 30px;
 }
 
-#closeViewAttendanceModal {
   cursor: pointer;
   color: #ffffff;
   background: #1f2937;
@@ -438,7 +437,6 @@ tr {
   font-size: 21px;
 }
 
-#attendanceWorkflowStatus {
   font-weight: 600;
   font-size: 0.95rem;
   padding: 8px 11px;
@@ -448,11 +446,6 @@ tr {
   margin-bottom: 5px;
 }
 
-
-
-
-
-#editAttendanceModal.modal {
   display: none;
   position: fixed;
   inset: 0;
@@ -464,12 +457,9 @@ tr {
   animation: fadeIn 0.2s ease-out;
 }
 
-#editAttendanceModal.modal.active,
-#editAttendanceModal.modal[style*="display: block"] {
   display: flex !important;
 }
 
-#editAttendanceModal .modal-content {
   background-color: #ffffff;
   width: 100%;
   max-width: 500px;
@@ -479,7 +469,6 @@ tr {
   max-height: 90vh;
 }
 
-#editAttendanceModal .modal-header {
   padding: 16px 20px;
   border: 1px solid rgb(219, 215, 215);
   display: flex;
@@ -488,14 +477,12 @@ tr {
   background-color: #ffffff;
 }
 
-#editAttendanceModal .modal-header h2 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #0f172a;
   margin: 0;
 }
 
-#editAttendanceModal .close-btn {
   background: transparent;
   border: none;
   font-size: 1.5rem;
@@ -507,12 +494,10 @@ tr {
   padding: 4px 8px;
 }
 
-#editAttendanceModal .modal-body {
   padding: 20px;
   overflow-y: auto;
 }
 
-#editAttendanceModal .form-group label {
   font-size: 0.85rem;
   font-weight: 600;
   color: #334155;
@@ -521,14 +506,12 @@ tr {
   margin-bottom: 6px;
 }
 
-#editAttendanceModal #editWorkflowStatus {
   background-color: #f8fafc;
   color: #0f172a;
   font-weight: 500;
   font-size: 0.925rem;
 }
 
-#editAttendanceModal .studentAttendance-table-card {
   margin-top: 15px;
   max-height: 280px;
   overflow-y: auto;
@@ -536,20 +519,17 @@ tr {
   -webkit-overflow-scrolling: touch;
 }
 
-#editAttendanceModal table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
-#editAttendanceModal thead {
   background-color: #f8fafc;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-#editAttendanceModal th {
   padding: 10px 14px;
   font-size: 0.75rem;
   font-weight: 700;
@@ -558,22 +538,18 @@ tr {
   letter-spacing: 0.05em;
 }
 
-#editAttendanceModal td {
   padding: 10px 14px;
   font-size: 0.9rem;
   color: #1e293b;
   vertical-align: middle;
 }
 
-#editAttendanceModal tbody tr:last-child td {
   border-bottom: none;
 }
 
-#editAttendanceModal tbody tr:hover {
   background-color: #f8fafc;
 }
 
-#editAttendanceModal .edit-status-dropdown {
   padding: 6px 10px;
   border: 1px solid rgb(219, 215, 215);
   background-color: #ffffff;
@@ -584,12 +560,10 @@ tr {
   cursor: pointer;
 }
 
-#editAttendanceModal .modal-footer {
   padding-top: 15px;
   border-top: 1px solid rgb(219, 215, 215);
 }
 
-#editAttendanceModal .cancel-btn {
   color: #ffffff;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
@@ -600,13 +574,11 @@ tr {
   cursor: pointer;
 }
 
-#editAttendanceModal .save-btn {
   font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
 }
 
-#editAttendanceModal .save-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
@@ -706,7 +678,6 @@ tr {
     width: 100%;
   }
 
-  #attendanceSearchInput {
     grid-column: 1 / -1;
   }
 
@@ -762,7 +733,6 @@ tr {
   .attendance-modal-content,
   .studentAttendance-modal-content,
   .view-attendance-modal-content,
-  #editAttendanceModal .edit-draft-modal-content {
     display: flex;
     flex-direction: column;
     width: calc(100vw - 24px);
@@ -780,7 +750,6 @@ tr {
 
   .studentAttendance-modal-content,
   .view-attendance-modal-content,
-  #editAttendanceModal .edit-draft-modal-content {
     height: min(760px, calc(100vh - 24px));
     height: min(760px, calc(100dvh - 24px));
   }
@@ -788,7 +757,6 @@ tr {
   .modal-attendance,
   .modal-studentAttendance,
   .view-attendance-modal,
-  #editAttendanceModal.modal {
     align-items: center;
     justify-content: center;
     padding: 11px;
@@ -798,7 +766,6 @@ tr {
   .attendance-modal-header,
   .studentAttendance-modal-header,
   .view-attendance-modal-header,
-  #editAttendanceModal .modal-header {
     padding: 14px 20px;
     border-bottom: 1.5px solid rgb(219, 215, 215);
     flex: 0 0 auto;
@@ -807,14 +774,11 @@ tr {
   .attendance-modal-header h2,
   .studentAttendance-modal-header h2,
   .view-attendance-modal-header h2,
-  #editAttendanceModal .modal-header h2 {
     font-size: 18px;
   }
 
   .attendance-modal-header button,
   .studentAttendance-modal-header button,
-  #closeViewAttendanceModal,
-  #editAttendanceModal .close-btn {
     height: 34px;
     width: 34px;
     font-size: 16px;
@@ -824,7 +788,6 @@ tr {
   .attendance-modal-body,
   .studentAttendance-modal-body,
   .view-attendance-body,
-  #editAttendanceModal .modal-body {
     padding: 10px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -834,7 +797,6 @@ tr {
 
   .studentAttendance-modal-body .studentAttendance-table-card,
   .view-attendance-body .studentAttendance-table-card,
-  #editAttendanceModal .studentAttendance-table-card {
     max-height: min(36vh, 300px);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
@@ -843,14 +805,12 @@ tr {
   .attendance-modal-footer,
   .studentAttendance-modal-footer,
   .view-modal-footer,
-  #editAttendanceModal .modal-footer {
     flex: 0 0 auto;
   }
 
   .attendance-modal-footer,
   .studentAttendance-modal-footer,
   .view-modal-footer,
-  #editAttendanceModal .modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -875,8 +835,6 @@ tr {
   .form-group input,
   .form-group select,
   .form-group textarea,
-  #attendanceWorkflowStatus,
-  #editAttendanceModal .edit-status-dropdown {
     border: 1.5px solid rgb(219, 215, 215);
     font-size: 13px;
     border-radius: 10px;
@@ -889,8 +847,6 @@ tr {
 
   .cancel-btn,
   .save-btn,
-  #editAttendanceModal .cancel-btn,
-  #editAttendanceModal .save-btn {
     flex: 1;
     padding: 10px 16px;
     border-radius: 10px;
@@ -898,7 +854,6 @@ tr {
     font-weight: 500;
   }
 }
-
 
 .edit-draft-modal-content {
   background-color: #ffffff;
@@ -910,7 +865,6 @@ tr {
   box-sizing: border-box;
 }
 
-
 .edit-draft-modal-content .modal-body {
   overflow-y: auto;
   overflow-x: hidden;
@@ -918,13 +872,10 @@ tr {
   min-width: 0;
 }
 
-
-#editAttendanceForm {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
-
 
 .studentAttendance-table-card {
   width: 100%;
@@ -933,7 +884,6 @@ tr {
   -webkit-overflow-scrolling: touch;
   min-width: 0;
 }
-
 
 .studentAttendance-table-card table {
   width: 100%;
