@@ -95,7 +95,7 @@ body {
 }
 
 .topbar h1 {
-  font-size: 31px;
+  font-size: 32px;
   color: #1f2937;
 }
 
@@ -111,7 +111,7 @@ body {
 }
 
 .top-right i {
-  font-size: 21px;
+  font-size: 22px;
   color: #6b7280;
   cursor: pointer;
 }
@@ -149,7 +149,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 1px solid #14532d;
+  border: 2px solid #14532d;
 }
 
 .toolbar {
@@ -204,7 +204,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 th {
@@ -212,7 +212,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 td {
@@ -220,7 +220,7 @@ td {
 }
 
 tr {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .books-actions-btn {
@@ -270,11 +270,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .book-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .book-modal-header button {
@@ -285,7 +285,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .book-modal-body {
@@ -314,8 +314,8 @@ tr {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 11px 15px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 12px 15px;
+  border: 2px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -336,7 +336,7 @@ tr {
 }
 
 .cancel-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -345,7 +345,7 @@ tr {
 }
 
 .save-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   background: #2563eb;
   color: #ffff;
@@ -406,7 +406,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .view-modal-footer {
@@ -423,7 +423,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .edit-modal-book {
@@ -455,11 +455,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .edit-book-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .edit-book-modal-header button {
@@ -470,7 +470,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .edit-book-modal-body {
@@ -485,7 +485,7 @@ tr {
 }
 
 .edit-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   background: #2563eb;
   color: #ffff;
@@ -532,11 +532,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .addBook-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .addBook-modal-header button {
@@ -547,7 +547,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .editBook-modal {
@@ -590,11 +590,11 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .editBook-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .editBook-modal-header button {
@@ -605,7 +605,7 @@ tr {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 @keyframes modalShow {
@@ -626,8 +626,8 @@ tr {
 }
 
 .book-photo {
-  width: 41px;
-  height: 41px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -650,14 +650,14 @@ tr {
   gap: 1.25rem;
   padding: 0.75rem;
   background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
 }
 
 .avatar-preview-wrapper {
   width: 70px;
   height: 70px;
   overflow: hidden;
-  border: 1px solid #cbd5e1;
+  border: 2px solid #cbd5e1;
   background-color: #ffffff;
   flex-shrink: 0;
   border-radius: 50%;
@@ -685,7 +685,7 @@ tr {
   font-weight: 500;
   background: #15803d;
   color: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 2px solid #cbd5e1;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -725,13 +725,13 @@ tr {
 @media (max-width: 768px) {
   .books-main-content {
     min-width: 0;
-    padding: 64px 10px 11px;
+    padding: 64px 10px 12px;
   }
 
   .topbar {
     align-items: center;
     gap: 8px;
-    margin-bottom: 11px;
+    margin-bottom: 12px;
   }
 
   .topbar h1 {
@@ -753,7 +753,7 @@ tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 8px;
-    margin: 11px 0;
+    margin: 12px 0;
   }
 
   .toolbar input,
@@ -790,7 +790,7 @@ tr {
   .edit-modal-book,
   .addBook-modal,
   .editBook-modal {
-    padding: 11px;
+    padding: 12px;
   }
 
   .book-modal-body,
@@ -798,7 +798,7 @@ tr {
   .edit-book-modal-body,
   .addBook-modal-body,
   .editBook-modal-body {
-    padding: 11px;
+    padding: 12px;
   }
 
   .book-modal-content h2,
@@ -825,7 +825,7 @@ tr {
   .save-btn,
   .edit-btn,
   .upload-btn {
-    padding: 9px 11px;
+    padding: 9px 12px;
     font-size: 0.82rem;
   }
 
@@ -834,7 +834,7 @@ tr {
   .edit-book-modal-header,
   .addBook-modal-header,
   .editBook-modal-header {
-    padding: 10px 11px;
+    padding: 10px 12px;
   }
 
   .book-modal-footer,

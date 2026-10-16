@@ -60,10 +60,10 @@ p.subtitle {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 11px;
+  gap: 12px;
   background-color: #ffffff;
   padding: 16px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   margin-bottom: 24px;
 }
 
@@ -73,7 +73,7 @@ p.subtitle {
   gap: 6px;
   flex: 1 1 140px;
   min-width: 0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #64748b;
 }
@@ -86,7 +86,7 @@ p.subtitle {
 .toolbar select {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   font-size: 0.875rem;
   color: #374151;
   background-color: #ffffff;
@@ -113,14 +113,14 @@ p.subtitle {
 }
 
 .history-state {
-  margin: 11px 0;
+  margin: 12px 0;
   font-size: 14px;
   color: #64748b;
 }
 
 .history-empty {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 40px 24px;
   text-align: center;
 }
@@ -131,7 +131,7 @@ p.subtitle {
 }
 
 .history-empty h2 {
-  margin: 11px 0 6px;
+  margin: 12px 0 6px;
   font-size: 18px;
   font-weight: 600;
   color: #0f172a;
@@ -149,7 +149,7 @@ p.subtitle {
 
 .transfer-history-card {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 16px;
 }
 
@@ -163,7 +163,7 @@ p.subtitle {
 
 .history-eyebrow {
   color: #64748b;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -184,7 +184,7 @@ p.subtitle {
   padding: 6px 10px;
   background: #f1f5f9;
   color: #334155;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   border: 1px solid #e2e8f0;
 }
@@ -216,8 +216,8 @@ p.subtitle {
 
 .history-group h3 > span {
   display: inline-grid;
-  min-width: 21px;
-  height: 21px;
+  min-width: 22px;
+  height: 22px;
   place-items: center;
   padding: 0 6px;
   background: #f1f5f9;
@@ -228,7 +228,7 @@ p.subtitle {
 }
 
 .history-record-list {
-  border-top: 1px solid rgb(219, 215, 215);
+  border-top: 2px solid rgb(219, 215, 215);
 }
 
 .history-record {
@@ -243,9 +243,9 @@ p.subtitle {
   display: grid;
   grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.5fr) auto;
   align-items: center;
-  gap: 11px;
-  min-height: 51px;
-  padding: 11px 4px;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 4px;
   cursor: pointer;
   list-style: none;
 }
@@ -262,7 +262,7 @@ p.subtitle {
   height: 24px;
   display: grid;
   place-items: center;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   color: #475569;
   font-size: 16px;
   background: #fff;
@@ -306,8 +306,8 @@ p.subtitle {
 
 .history-field {
   min-width: 0;
-  padding: 11px 14px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 12px 14px;
+  border: 2px solid rgb(219, 215, 215);
   background: #f8fafc;
 }
 
@@ -327,7 +327,7 @@ p.subtitle {
 
 .fee-items {
   margin-top: 14px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   overflow: hidden;
 }
 
@@ -336,7 +336,7 @@ p.subtitle {
   padding: 10px 13px;
   background: #f1f5f9;
   color: #64748b;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -419,7 +419,7 @@ p.subtitle {
 
 .card-section {
   background: #ffffff;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -427,15 +427,15 @@ p.subtitle {
   font-size: 18px;
   font-weight: 600;
   color: #0f172a;
-  margin-bottom: 11px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 .history-count-pill {
   display: inline-grid;
-  min-width: 21px;
-  height: 21px;
+  min-width: 22px;
+  height: 22px;
   place-items: center;
   padding: 0 6px;
   background: #f1f5f9;
@@ -457,13 +457,13 @@ p.subtitle {
   background-color: #f1f5f9;
   color: #1e293b;
   font-weight: 600;
-  padding: 10px 11px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 10px 12px;
+  border: 2px solid rgb(219, 215, 215);
   white-space: nowrap;
 }
 .history-table td {
-  padding: 11px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 12px;
+  border: 2px solid rgb(219, 215, 215);
   color: #1e293b;
   vertical-align: top;
 }
@@ -474,7 +474,7 @@ p.subtitle {
 .fee-item-list {
   margin: 0;
   padding-left: 16px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .status-pill {
   display: inline-block;

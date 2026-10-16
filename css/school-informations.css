@@ -51,7 +51,7 @@
 
 .form-section {
   background: white;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 25px;
   border-radius: 10px;
 }
@@ -66,7 +66,7 @@ body {
   margin-bottom: 20px;
   padding-bottom: 5px;
   padding-left: 10px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 10px;
 }
 
@@ -80,8 +80,8 @@ body {
 .school-logo-preview {
   width: 130px;
   height: 130px;
-  border-radius: 11px;
-  border: 1px solid rgb(219, 215, 215);
+  border-radius: 12px;
+  border: 2px solid rgb(219, 215, 215);
   object-fit: cover;
   background: #f4f4f4;
 }
@@ -116,8 +116,8 @@ body {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 11px 15px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 12px 15px;
+  border: 2px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
   border-radius: 10px;
@@ -136,7 +136,7 @@ body {
 }
 
 .cancel-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   cursor: pointer;
   background: #1f2937;
@@ -145,7 +145,7 @@ body {
 }
 
 .save-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   background: #2563eb;
   color: #ffff;
@@ -159,8 +159,8 @@ body {
   display: flex;
   align-items: center;
   cursor: pointer;
-  margin-bottom: 11px;
-  border: 1px solid rgb(219, 215, 215);
+  margin-bottom: 12px;
+  border: 2px solid rgb(219, 215, 215);
   width: 70px;
   justify-content: space-between;
   background: #1f2937;
@@ -220,7 +220,7 @@ form.auth-ready {
 input:disabled,
 select:disabled,
 textarea:disabled {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 
   outline: none !important;
   box-shadow: none !important;
@@ -311,7 +311,7 @@ select:disabled {
   height: 70px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid #cbd5e1;
+  border: 2px solid #cbd5e1;
   background-color: #ffffff;
   flex-shrink: 0;
 }

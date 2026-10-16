@@ -18,7 +18,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -47,7 +47,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 td {
@@ -124,8 +124,8 @@ td {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 11px 15px;
-  border: 1px solid rgb(219, 215, 215);
+  padding: 12px 15px;
+  border: 2px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -139,7 +139,7 @@ td {
 }
 
 .cancel-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   background: #1f2937;
   border: 1px solid rgb(219, 215, 215);
@@ -148,7 +148,7 @@ td {
 }
 
 .save-btn {
-  padding: 11px 21px;
+  padding: 12px 22px;
   border: none;
   background: #2563eb;
   color: #ffff;
@@ -195,11 +195,11 @@ td {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .recordPayment-modal-header h2 {
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .recordPayment-modal-header button {
@@ -210,7 +210,7 @@ td {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 .details-grid {
@@ -270,7 +270,7 @@ td {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .view-payment-modal-footer {
@@ -287,7 +287,7 @@ td {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 21px;
+  font-size: 22px;
 }
 
 @media screen and (max-width: 768px) {
@@ -339,7 +339,7 @@ td {
   }
 
   .topbar p {
-    margin-top: 1px;
+    margin-top: 2px;
     font-size: 13px;
   }
 
@@ -355,7 +355,7 @@ td {
   .toolbar select {
     height: 40px;
     padding: 0 8px;
-    font-size: 11px;
+    font-size: 12px;
     flex: 1;
     min-width: 0;
     border-radius: 10px;
@@ -369,12 +369,12 @@ td {
 
   .form-grid {
     grid-template-columns: 1fr;
-    gap: 11px;
+    gap: 12px;
   }
 
   .form-group label {
     margin-bottom: 4px;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .payments-main-content {
@@ -470,7 +470,7 @@ td {
 }
 
 .topbar h1 {
-  font-size: 31px;
+  font-size: 32px;
   color: #1f2937;
 }
 
@@ -490,7 +490,7 @@ body {
 }
 
 .menu li a {
-  border-radius: 11px;
+  border-radius: 12px;
   color: #dbeafe;
   font-weight: 500;
 }
@@ -506,7 +506,7 @@ body {
 }
 
 .payments-main-content {
-  padding: 30px clamp(18px, 3vw, 41px);
+  padding: 30px clamp(18px, 3vw, 42px);
 }
 
 .topbar {
@@ -526,7 +526,7 @@ body {
 .toolbar {
   align-items: center;
   flex-wrap: wrap;
-  gap: 11px;
+  gap: 12px;
   margin: 0 0 20px;
   padding: 16px;
   border: 1px solid #e5eaf2;
@@ -600,7 +600,7 @@ body {
   align-items: center;
   border-radius: 999px;
   padding: 5px 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -683,7 +683,7 @@ body {
 
 .recordPayment-modal-body,
 .view-payment-body {
-  padding: 21px 24px;
+  padding: 22px 24px;
 }
 
 .form-grid,
@@ -694,7 +694,7 @@ body {
 .form-group label,
 .details-item label {
   color: #64748b;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -702,14 +702,14 @@ body {
 .form-group select,
 .form-group textarea {
   min-height: 44px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   color: #1e293b;
 }
 
 .details-grid {
   padding: 16px;
   border: 1px solid #e8edf4;
-  border-radius: 11px;
+  border-radius: 12px;
   background: #f8fafc;
 }
 
@@ -725,7 +725,7 @@ body {
 
 .payment-table-card h4,
 .fee-allocation-section h4 {
-  margin-bottom: 11px;
+  margin-bottom: 12px;
   color: #172033;
   font-size: 14px;
 }
@@ -736,12 +736,12 @@ body {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 21px;
+  margin-top: 22px;
 }
 
 .cancel-btn,
 .save-btn {
-  min-height: 41px;
+  min-height: 42px;
   padding: 0 17px;
   border-radius: 10px;
   font-size: 13px;
@@ -775,11 +775,11 @@ body {
 
 @media screen and (max-width: 768px) {
   .payments-main-content {
-    padding: 18px 11px;
+    padding: 18px 12px;
   }
 
   .toolbar {
-    padding: 11px;
+    padding: 12px;
     border-radius: 10px;
   }
 
@@ -794,7 +794,7 @@ body {
 
   .recordPayment-modal,
   .view-payment-modal {
-    padding: 11px;
+    padding: 12px;
   }
 
   .recordPayment-modal-content,
@@ -810,13 +810,13 @@ body {
 
   .details-grid {
     grid-template-columns: 1fr 1fr;
-    gap: 11px;
-    padding: 11px;
+    gap: 12px;
+    padding: 12px;
   }
 }
 
 tr {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .finance-page .payments-table-card tbody tr > td {
@@ -845,7 +845,7 @@ tr {
 .finance-page .toolbar {
   display: flex;
   flex-wrap: wrap;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
   box-shadow: none;
 }
@@ -862,7 +862,7 @@ tr {
 
 .finance-page .toolbar input,
 .finance-page .toolbar select {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
   color: #111827;
 }
@@ -1000,14 +1000,14 @@ tr {
 .finance-page .view-payment-modal-content,
 .payment-table-card,
 .finance-page .details-grid {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   border-radius: 0;
   box-shadow: none;
 }
 
 .finance-page .recordPayment-modal-header,
 .finance-page .view-payment-modal-header {
-  border-bottom: 1px solid rgb(219, 215, 215);
+  border-bottom: 2px solid rgb(219, 215, 215);
 }
 
 .finance-page .recordPayment-modal-header button,

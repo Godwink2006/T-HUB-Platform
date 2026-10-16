@@ -13,10 +13,10 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   background-color: #ffffff;
   padding: 16px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   margin-bottom: 24px;
 }
 
@@ -24,7 +24,7 @@
 .toolbar input,
 .toolbar .filter-dropdown {
   padding: 10px 14px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
   font-size: 0.875rem;
   color: #374151;
   background-color: #ffffff;
@@ -96,7 +96,7 @@ p.subtitle {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   padding: 10px;
   margin-bottom: 24px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .table-responsive {
@@ -114,9 +114,9 @@ th {
   background-color: #f1f5f9;
   color: #1e293b;
   font-weight: 600;
-  padding: 11px 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid #e2e8f0;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 td {
@@ -124,21 +124,21 @@ td {
   border-bottom: 1px solid #e2e8f0;
   color: #1e293b;
   vertical-align: top;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 tr:last-child td {
   border-bottom: none;
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 select {
-  border: 1px solid rgb(219, 215, 215);
+  border: 2px solid rgb(219, 215, 215);
 }
 
 .badge {
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   display: inline-block;
 }
@@ -182,7 +182,7 @@ select {
 }
 
 .breakdown-list li {
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 
 .empty-state {
