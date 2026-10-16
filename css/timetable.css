@@ -574,17 +574,86 @@ tr {
   margin-top: 30px;
 }
 
+.view-timetable-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
-  color: #f9fafb;
   border: none;
+  color: #f9fafb;
   height: 40px;
   width: 40px;
   font-size: 22px;
 }
 
 @media screen and (max-width: 768px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .timetables-container,
+  .timetables-main-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .timetables-main-content {
+    padding: 12px;
+    overflow-x: hidden;
+  }
+
+  .topbar {
+    min-width: 0;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .modal-timetable,
+  .edit-modal-timetable,
+  .lesson-modal,
+  .edit-lesson-modal,
+  .view-timetable-modal {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 8px;
+  }
+
+  .timetable-modal-content,
+  .edit-timetable-modal-content,
+  .view-timetable-modal-content,
+  .lesson-modal-content,
+  .edit-lesson-modal-content,
+  .confirm-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 16px);
+    border-radius: 12px;
+  }
+
+  .timetable-modal-header,
+  .edit-timetable-modal-header,
+  .view-timetable-modal-header,
+  .lesson-modal-header,
+  .edit-lesson-modal-header {
+    gap: 12px;
+  }
+
+  .timetable-modal-header h2,
+  .edit-timetable-modal-header h2,
+  .view-timetable-modal-header h2,
+  .lesson-modal-header h2,
+  .edit-lesson-modal-header h2 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
   th,
   td {
     padding: 12px 14px !important;
