@@ -203,23 +203,27 @@ body {
 }
 
 .announcement-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 14px 16px;
   border-bottom: 2px solid rgb(219, 215, 215);
   background: #f9fafb;
 }
 
 .announcement-item h4 {
-  margin-bottom: 6px;
+  margin: 0;
   font-size: 16px;
   font-weight: 600;
   color: #111827;
 }
 
 .announcement-item p {
+  margin: 0;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.7;
   color: #6b7280;
-  white-space: pre-line;
+  white-space: pre-wrap;
 }
 
 .announcement-empty {
