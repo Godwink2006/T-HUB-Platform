@@ -442,12 +442,27 @@ tr {
 }
 
 .edit-book-modal-content {
-  overflow: auto;
-  width: 850px;
-  max-width: 95%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: min(850px, calc(100vw - 24px));
+  max-width: 100%;
+  max-height: calc(100dvh - 24px);
   background: #ffff;
   animation: modalShow 0.25s ease;
-  height: 500px;
+  border-radius: 12px;
+}
+
+.edit-modal-book {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
 }
 
 .edit-book-modal-header {
@@ -967,11 +982,11 @@ tr {
     padding: 0.6rem;
   }
 
-  .book-modal-footer > button,
-  .view-modal-footer > button,
-  .edit-book-modal-footer > button,
-  .addBook-modal-footer > button,
-  .editBook-modal-footer > button {
+  .book-modal-footer button,
+  .view-modal-footer button,
+  .edit-book-modal-footer button,
+  .addBook-modal-footer button,
+  .editBook-modal-footer button {
     flex: 1 1 120px;
   }
 
