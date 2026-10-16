@@ -648,13 +648,17 @@ tr {
   }
 
   .grade-table-card {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    display: block;
     width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
-  table {
-    min-width: 600px;
+  .grade-table-card table {
+    width: max-content;
+    min-width: 720px;
   }
 
   th,
@@ -694,6 +698,7 @@ tr {
   .enterGrade-modal-header button,
   .editGrade-modal-header button,
   .grade-modal-header button,
+  .view-grade-modal-header button {
     height: 34px;
     width: 34px;
     font-size: 16px;
