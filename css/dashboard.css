@@ -158,7 +158,7 @@ body {
 .dashboard-card {
   background: #ffff;
   padding: 20px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .dashboard-card h4 {
@@ -175,7 +175,7 @@ body {
 
 .announcement-cards {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   padding: 20px;
   margin-bottom: 24px;
 }
@@ -203,7 +203,7 @@ body {
 
 .announcement-item {
   padding: 14px 16px;
-  border-bottom: 2px solid rgb(219, 215, 215);
+  border-bottom: 1px solid rgb(219, 215, 215);
   background: #f9fafb;
 }
 
@@ -231,7 +231,7 @@ body {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -270,7 +270,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .announcement-modal-header h2 {
@@ -279,7 +279,7 @@ body {
 
 .announcement-modal-header button {
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -318,7 +318,7 @@ body {
   background: #ffff;
   border: 18px;
   padding: 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   overflow-y: auto;
   height: 470px;
 }
@@ -356,7 +356,7 @@ body {
   align-items: center;
   gap: 12px;
   padding: 15px 0;
-  border-bottom: 2px solid rgb(219, 215, 215);
+  border-bottom: 1px solid rgb(219, 215, 215);
   color: #4b5563;
 }
 
@@ -420,7 +420,7 @@ body {
   display: none;
   z-index: 100;
   animation: modalShow 0.25s ease;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .filter-menu a {
@@ -429,7 +429,7 @@ body {
   color: #374151;
   text-decoration: none;
   transition: 0.3s;
-  border-bottom: 2px solid rgb(219, 215, 215);
+  border-bottom: 1px solid rgb(219, 215, 215);
 }
 
 .filter-menu a:hover {
@@ -463,7 +463,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
 }
 
 .date-modal-header h2 {
@@ -472,7 +472,7 @@ body {
 
 .date-modal-header button {
   cursor: pointer;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -500,7 +500,7 @@ body {
 .form-group input {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -523,7 +523,7 @@ body {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border: 2px solid rgb(219, 215, 215);
+  border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   cursor: pointer;
@@ -581,7 +581,7 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border: 5px dashed rgb(219, 215, 215);
+  border: 2px dashed rgb(219, 215, 215);
 }
 
 .main-stat-number {
@@ -606,7 +606,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  border-top: 2px solid rgb(219, 215, 215);
+  border-top: 1px solid rgb(219, 215, 215);
   padding-top: 15px;
 }
 

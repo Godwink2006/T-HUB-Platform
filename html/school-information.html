@@ -26,14 +26,18 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <section class="settings-page" id="schoolInformationPage">
@@ -219,6 +223,9 @@
               <label for="schoolType">School type</label>
               <select id="schoolType" required>
                 <option>School Type</option>
+                <option>Day School</option>
+                <option>Boarding School</option>
+                <option>Day & Boarding</option>
                 <option>Public</option>
                 <option>Private</option>
                 <option>International</option>
@@ -229,8 +236,10 @@
               <label for="educationLevel">Education Level</label>
               <select id="educationLevel" required>
                 <option>School Level</option>
-                <option>Nursery</option>
+                <option>High School</option>
                 <option>Primary</option>
+                <option>Secondary</option>
+                <option>Nursery</option>
                 <option>Junior Secondary</option>
                 <option>Senior Secondary</option>
                 <option>Primary & Secondary</option>
@@ -251,6 +260,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/school-information.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>
