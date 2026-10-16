@@ -604,6 +604,25 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .attendances-container,
+  .attendances-main-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .attendances-main-content {
+    padding: 12px;
+    overflow-x: hidden;
+  }
+
   .back-academics-btn {
     grid-column: 1;
     width: auto !important;
@@ -678,6 +697,7 @@ tr {
     width: 100%;
   }
 
+  .toolbar input:first-child {
     grid-column: 1 / -1;
   }
 
@@ -732,7 +752,7 @@ tr {
 
   .attendance-modal-content,
   .studentAttendance-modal-content,
-  .view-attendance-modal-content,
+  .view-attendance-modal-content {
     display: flex;
     flex-direction: column;
     width: calc(100vw - 24px);
@@ -749,14 +769,14 @@ tr {
   }
 
   .studentAttendance-modal-content,
-  .view-attendance-modal-content,
+  .view-attendance-modal-content {
     height: min(760px, calc(100vh - 24px));
     height: min(760px, calc(100dvh - 24px));
   }
 
   .modal-attendance,
   .modal-studentAttendance,
-  .view-attendance-modal,
+  .view-attendance-modal {
     align-items: center;
     justify-content: center;
     padding: 12px;
@@ -765,7 +785,7 @@ tr {
 
   .attendance-modal-header,
   .studentAttendance-modal-header,
-  .view-attendance-modal-header,
+  .view-attendance-modal-header {
     padding: 14px 20px;
     border-bottom: 1.5px solid rgb(219, 215, 215);
     flex: 0 0 auto;
@@ -773,12 +793,13 @@ tr {
 
   .attendance-modal-header h2,
   .studentAttendance-modal-header h2,
-  .view-attendance-modal-header h2,
+  .view-attendance-modal-header h2 {
     font-size: 18px;
   }
 
   .attendance-modal-header button,
   .studentAttendance-modal-header button,
+  .view-attendance-modal-header button {
     height: 34px;
     width: 34px;
     font-size: 16px;
@@ -787,7 +808,7 @@ tr {
 
   .attendance-modal-body,
   .studentAttendance-modal-body,
-  .view-attendance-body,
+  .view-attendance-body {
     padding: 10px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -796,7 +817,7 @@ tr {
   }
 
   .studentAttendance-modal-body .studentAttendance-table-card,
-  .view-attendance-body .studentAttendance-table-card,
+  .view-attendance-body .studentAttendance-table-card {
     max-height: min(36vh, 300px);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
@@ -804,13 +825,13 @@ tr {
 
   .attendance-modal-footer,
   .studentAttendance-modal-footer,
-  .view-modal-footer,
+  .view-modal-footer {
     flex: 0 0 auto;
   }
 
   .attendance-modal-footer,
   .studentAttendance-modal-footer,
-  .view-modal-footer,
+  .view-modal-footer {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -834,7 +855,7 @@ tr {
 
   .form-group input,
   .form-group select,
-  .form-group textarea,
+  .form-group textarea {
     border: 1.5px solid rgb(219, 215, 215);
     font-size: 13px;
     border-radius: 10px;
@@ -846,7 +867,7 @@ tr {
   }
 
   .cancel-btn,
-  .save-btn,
+  .save-btn {
     flex: 1;
     padding: 10px 16px;
     border-radius: 10px;
