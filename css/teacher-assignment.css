@@ -52,7 +52,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
 }
 
 .back-academics-btn {
@@ -64,7 +64,7 @@ body {
   cursor: pointer;
   margin-top: 5px;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   width: 25%;
   justify-content: space-between;
@@ -79,7 +79,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -101,7 +101,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 th {
@@ -109,7 +109,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -117,7 +117,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .status {
@@ -195,7 +195,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .assign-modal-header h2 {
@@ -205,7 +205,7 @@ tr {
 .assign-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -240,7 +240,7 @@ tr {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -264,7 +264,7 @@ tr {
   padding: 12px 22px;
   border: none;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   cursor: pointer;
 }
@@ -306,7 +306,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .edit-assign-modal-header h2 {
@@ -316,7 +316,7 @@ tr {
 .edit-assign-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -405,7 +405,6 @@ tr {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border: 1px solid rgb(219, 215, 215);
     background: #1f2937;
     color: #f9fafb;
     font-size: 13px;
@@ -455,7 +454,6 @@ tr {
     justify-content: center;
     gap: 6px;
     cursor: pointer;
-    border: 2px solid #14532d;
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
@@ -473,7 +471,6 @@ tr {
   .toolbar input,
   .toolbar select {
     height: 40px;
-    border: 1.5px solid rgb(219, 215, 215);
     padding: 0 8px;
     font-size: 12px;
     flex: 1;
@@ -491,20 +488,11 @@ tr {
     min-width: 500px;
   }
 
-  thead {
-    border: 1.5px solid rgb(219, 215, 215);
-  }
-
   th,
   td {
     padding: 12px 14px !important;
     font-size: 14px !important;
-    border: 1.5px solid rgb(219, 215, 215);
     white-space: nowrap;
-  }
-
-  tr {
-    border: 1.5px solid rgb(219, 215, 215);
   }
 
   .assigns-status-active {
@@ -524,9 +512,9 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 350px;
-    height: 600px;
-    max-height: 85vh;
+    max-width: 95%;
+    height: 100%;
+    max-height: 650px;
     border-radius: 10px;
     overflow: auto;
   }
@@ -535,12 +523,22 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 350px;
-    height: 480px;
-    max-height: 85vh;
+    max-width: 95%;
+    height: 100%;
+    max-height: 480px;
     border-radius: 10px;
     overflow: auto;
   }
+
+  .toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px; 
+}
+
+.toolbar input[type="text"] {
+  grid-column: span 2;
+}
 
   .confirm-modal {
     display: flex;
@@ -555,7 +553,6 @@ tr {
   .assign-modal-header,
   .edit-assign-modal-header {
     padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
   }
 
   .assign-modal-header h2,
@@ -586,7 +583,6 @@ tr {
     align-items: center;
     gap: 12px;
     padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
   }
 
   .form-grid {
@@ -603,7 +599,6 @@ tr {
   .form-group select,
   .form-group textarea {
     padding: 10px;
-    border: 1.5px solid rgb(219, 215, 215);
     font-size: 13px;
     border-radius: 10px;
   }
