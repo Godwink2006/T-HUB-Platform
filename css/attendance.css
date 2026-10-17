@@ -340,7 +340,7 @@ tr {
 }
 
 .form-group select {
-  width: 30%;
+  width: 100%;
   padding: 8px;
   border: 0.5px solid rgb(219, 215, 215);
   outline: none;
@@ -349,7 +349,7 @@ tr {
 }
 
 .details-item select {
-  width: 30%;
+  width: 100%;
   padding: 5px;
   border: 0.5px solid rgb(219, 215, 215);
   outline: none;
@@ -749,7 +749,7 @@ tr {
   gap: 12px;
   flex: 0 0 auto;
   padding: 14px 20px;
-  border-bottom: 0.5px solid rgb(219, 215, 215);
+  border-bottom: 0.5px solid rgb(219, 215, 215) !important;
 }
 
 #editAttendanceModal .edit-draft-modal-content .modal-header h2 {
