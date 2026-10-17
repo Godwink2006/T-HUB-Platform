@@ -223,7 +223,7 @@ async function openStudentBookHistoryModal(bookId) {
 
     historyContainer.innerHTML = `${bookDetails}${history
       .map((record) => `
-     <div class="small-card" style="background: #f8fafc; padding: 1rem; margin-bottom: 0.75rem; border: 2px solid rgb(219, 215, 215);">
+     <div class="small-card" style="background: #f8fafc; padding: 1rem; margin-bottom: 0.75rem; border: 0.5px solid rgb(219, 215, 215);">
         <p style="margin: 0 0 0.5rem 0;"><strong>Borrowed Date:</strong> ${formatDate(record.borrow_date)}</p>
         <p style="margin: 0 0 0.5rem 0;"><strong>Due Date:</strong> ${formatDate(record.due_date)}</p>
         <p style="margin: 0 0 0.5rem 0;"><strong>Return Date:</strong> ${record.return_date ? formatDate(record.return_date) : "Not returned yet"}</p>
