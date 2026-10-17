@@ -534,9 +534,10 @@ tr {
 
 .view-timetable-modal-content {
   width: 100%;
+  max-width: 900px;
   background: #ffff;
   overflow: auto;
-  height: 445px;
+  height: 550px;
   animation: modalShow 0.25s ease;
 }
 
@@ -585,71 +586,12 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
-  html,
-  body {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  .timetables-container,
-  .timetables-main-content {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .timetables-main-content {
-    padding: 12px;
-    overflow-x: hidden;
-  }
-
-  .topbar {
-    min-width: 0;
-  }
-
-  .toolbar input,
-  .toolbar select {
-    width: 100%;
-    flex: 1 1 100%;
-  }
-
-  .modal-timetable,
-  .edit-modal-timetable,
-  .lesson-modal,
-  .edit-lesson-modal,
-  .view-timetable-modal {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .timetable-modal-content,
-  .edit-timetable-modal-content,
-  .view-timetable-modal-content,
-  .lesson-modal-content,
-  .edit-lesson-modal-content {
-    width: 100%;
-    max-width: 95%;
-    max-height: 650px;
-    border-radius: 12px;
-  }
-
   .timetable-modal-header,
   .edit-timetable-modal-header,
   .view-timetable-modal-header,
   .lesson-modal-header,
   .edit-lesson-modal-header {
     gap: 12px;
-  }
-
-  .timetable-modal-header h2,
-  .edit-timetable-modal-header h2,
-  .view-timetable-modal-header h2,
-  .lesson-modal-header h2,
-  .edit-lesson-modal-header h2 {
-    min-width: 0;
-    overflow-wrap: anywhere;
   }
 
   th,
@@ -780,9 +722,9 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 95%;
+    max-width: 95% !important;
     height: auto;
-    max-height: 650px;
+    max-height: 650px !important;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
@@ -793,9 +735,9 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 95%;
+    max-width: 95% !important;
     height: auto;
-    max-height: 650px;
+    max-height: 650px !important;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
