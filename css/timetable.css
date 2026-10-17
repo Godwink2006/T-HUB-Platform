@@ -84,7 +84,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -132,7 +132,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 th {
@@ -140,7 +140,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -148,7 +148,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .status {
@@ -221,7 +221,7 @@ tr {
 .form-group select {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -238,7 +238,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .lesson-modal-header h2 {
@@ -248,7 +248,7 @@ tr {
 .lesson-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -266,7 +266,7 @@ tr {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
   margin-top: 10px;
 }
 
@@ -288,7 +288,7 @@ tr {
   cursor: pointer;
   color: #ffffff;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .top-right {
@@ -308,7 +308,7 @@ tr {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
 }
 
 .edit-lesson-modal-footer {
@@ -323,7 +323,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .edit-lesson-modal-header h2 {
@@ -333,7 +333,7 @@ tr {
 .edit-lesson-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -428,7 +428,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .timetable-modal-header h2 {
@@ -438,7 +438,7 @@ tr {
 .timetable-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -461,7 +461,7 @@ tr {
   padding: 12px 22px;
   border: none;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   cursor: pointer;
 }
@@ -479,7 +479,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .edit-timetable-modal-header h2 {
@@ -489,7 +489,7 @@ tr {
 .edit-timetable-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -533,7 +533,7 @@ tr {
 }
 
 .view-timetable-modal-content {
-  width: 850px;
+  width: 100%;
   background: #ffff;
   overflow: auto;
   height: 445px;
@@ -564,7 +564,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .view-timetable-modal-footer {
@@ -622,18 +622,16 @@ tr {
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
-    padding: 8px;
   }
 
   .timetable-modal-content,
   .edit-timetable-modal-content,
   .view-timetable-modal-content,
   .lesson-modal-content,
-  .edit-lesson-modal-content,
-  .confirm-modal {
+  .edit-lesson-modal-content {
     width: 100%;
-    max-width: 100%;
-    max-height: calc(100dvh - 16px);
+    max-width: 95%;
+    max-height: 650px;
     border-radius: 12px;
   }
 
@@ -744,7 +742,7 @@ tr {
   .toolbar input,
   .toolbar select {
     height: 40px;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     padding: 0 8px;
     outline: none;
     background: #ffffff;
@@ -768,21 +766,11 @@ tr {
     min-width: 500px;
   }
 
-  thead {
-    background: #f8fafc;
-    border: 1.5px solid rgb(219, 215, 215);
-  }
-
   th,
   td {
     padding: 8px 10px;
     font-size: 12px;
-    border: 1.5px solid rgb(219, 215, 215);
     white-space: nowrap;
-  }
-
-  tr {
-    border: 1.5px solid rgb(219, 215, 215);
   }
 
   .timetable-modal-content,
@@ -792,10 +780,9 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 720px;
+    max-width: 95%;
     height: auto;
-    max-height: calc(100vh - 24px);
-    max-height: calc(100dvh - 24px);
+    max-height: 650px;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
@@ -806,10 +793,9 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 900px;
+    max-width: 95%;
     height: auto;
-    max-height: calc(100vh - 24px);
-    max-height: calc(100dvh - 24px);
+    max-height: 650px;
     background: #ffffff;
     border-radius: 10px;
     animation: modalShow 0.25s ease;
@@ -821,21 +807,7 @@ tr {
   .lesson-modal,
   .edit-lesson-modal,
   .view-timetable-modal {
-    padding: 12px;
-  }
-
-  .confirm-modal {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 420px;
-    height: auto;
-    max-height: calc(100vh - 24px);
-    max-height: calc(100dvh - 24px);
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
+    padding: 10px;
   }
 
   .timetable-modal-header,
@@ -847,7 +819,7 @@ tr {
     justify-content: space-between;
     align-items: center;
     padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
+    border-bottom: 0.5px solid rgb(219, 215, 215);
     flex-shrink: 0;
   }
 
@@ -866,7 +838,7 @@ tr {
   .edit-lesson-modal-header button {
     cursor: pointer;
     color: #f9fafb;
-    border: 1px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     height: 34px;
     width: 34px;
     font-size: 16px;
@@ -899,7 +871,6 @@ tr {
   .timetable-table-card,
   .timetables-table-card,
   .edit-timetable-table-card {
-    border-radius: 10px;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -923,7 +894,7 @@ tr {
   .form-group select {
     width: 100%;
     padding: 10px;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     outline: none;
     font-size: 13px;
     border-radius: 10px;
@@ -940,13 +911,13 @@ tr {
     align-items: center;
     gap: 12px;
     padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
+    border-top: 0.5px solid rgb(219, 215, 215);
     margin-top: 0;
     flex-shrink: 0;
   }
 
   .cancel-btn,
-  .save-btn{
+  .save-btn {
     flex: 1;
     padding: 10px 16px;
     border: none;
@@ -959,7 +930,7 @@ tr {
 
   .cancel-btn {
     background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     color: #f9fafb;
   }
 
