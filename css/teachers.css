@@ -685,9 +685,9 @@ tr {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 350px;
-    height: 600px;
-    max-height: 85vh;
+    max-width: 95%;
+    height: 100%;
+    max-height: 650px;
     border-radius: 10px;
     overflow: auto;
   }
