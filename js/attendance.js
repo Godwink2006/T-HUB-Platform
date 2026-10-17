@@ -69,8 +69,7 @@ function initModalEventListeners() {
 
   document
     .getElementById("addAttendance")
-    ?.addEventListener("click", async () =>
- {
+    ?.addEventListener("click", async () => {
       resetAttendanceModal();
       openModal(attendanceModal);
       await populateClassOptions();
@@ -78,39 +77,30 @@ function initModalEventListeners() {
 
   document
     .getElementById("closeAttendanceModal")
-    ?.addEventListener("click", () =>
- closeModal(attendanceModal));
+    ?.addEventListener("click", () => closeModal(attendanceModal));
   document
     .getElementById("cancelAttendanceModal")
-    ?.addEventListener("click", () =>
- closeModal(attendanceModal));
+    ?.addEventListener("click", () => closeModal(attendanceModal));
 
   document
     .getElementById("closeStudentAttendanceModal")
-    ?.addEventListener("click", () =>
- closeModal(studentAttendanceModal));
+    ?.addEventListener("click", () => closeModal(studentAttendanceModal));
   document
     .getElementById("cancelStudentAttendanceModal")
-    ?.addEventListener("click", () =>
- closeModal(studentAttendanceModal));
+    ?.addEventListener("click", () => closeModal(studentAttendanceModal));
 
-  document.querySelectorAll(".view").forEach((button) =>
- {
-    button.addEventListener("click", () =>
- openModal(viewAttendanceModal));
+  document.querySelectorAll(".view").forEach((button) => {
+    button.addEventListener("click", () => openModal(viewAttendanceModal));
   });
 
   document
     .getElementById("closeViewAttendanceModal")
-    ?.addEventListener("click", () =>
- closeModal(viewAttendanceModal));
+    ?.addEventListener("click", () => closeModal(viewAttendanceModal));
   document
     .getElementById("closeViewBtn")
-    ?.addEventListener("click", () =>
- closeModal(viewAttendanceModal));
+    ?.addEventListener("click", () => closeModal(viewAttendanceModal));
 
-  window.addEventListener("click", (e) =>
- {
+  window.addEventListener("click", (e) => {
     if (e.target === attendanceModal) closeModal(attendanceModal);
     if (e.target === studentAttendanceModal) closeModal(studentAttendanceModal);
     if (e.target === viewAttendanceModal) closeModal(viewAttendanceModal);
@@ -165,13 +155,11 @@ function initAttendanceModalLogic() {
   const studentForm = document.getElementById("studentAttendanceForm");
   const draftBtn = document.getElementById("saveDraftAttendanceBtn");
 
-  classSelect?.addEventListener("change", async (e) =>
- {
+  classSelect?.addEventListener("change", async (e) => {
     await handleClassSelectChange(e.target.value);
   });
 
-  loadStudentsBtn?.addEventListener("click", async () =>
- {
+  loadStudentsBtn?.addEventListener("click", async () => {
     const classId = classSelect.value;
     const className = classSelect.options[classSelect.selectedIndex]?.text;
     const periodId = periodSelect.value;
@@ -182,8 +170,7 @@ function initAttendanceModalLogic() {
       return;
     }
 
-    let lesson = currentTodayLessons.find((l) =>
- l.period_id === periodId);
+    let lesson = currentTodayLessons.find((l) => l.period_id === periodId);
     let subjectId = lesson ? lesson.subject_id : null;
     let subjectName = lesson?.subjects?.name || null;
 
@@ -234,14 +221,12 @@ function initAttendanceModalLogic() {
     });
   });
 
-  studentForm?.addEventListener("submit", async (e) =>
- {
+  studentForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     await handleSaveAttendance("submitted");
   });
 
-  draftBtn?.addEventListener("click", async () =>
- {
+  draftBtn?.addEventListener("click", async () => {
     await handleSaveAttendance("drafted");
   });
 }
@@ -249,9 +234,7 @@ function initAttendanceModalLogic() {
 async function populateClassOptions() {
   const classSelect = document.getElementById("attendanceClassSelect");
   if (!classSelect) return;
-  classSelect.innerHTML = `<option value=""
-Select Class</option
-`;
+  classSelect.innerHTML = `<option value="">Select Class</option>`;
 
   const user = (await supabaseClient.auth.getUser()).data?.user;
   if (!user) return;
@@ -290,10 +273,8 @@ Select Class</option
       classes = [
         ...new Map(
           (assignments || [])
-            .filter((assignment) =>
- assignment.classes)
-            .map((assignment) =>
- [
+            .filter((assignment) => assignment.classes)
+            .map((assignment) => [
               assignment.classes.id,
               assignment.classes,
             ]),
@@ -303,8 +284,7 @@ Select Class</option
       throw new Error("Only administrators and teachers can take attendance.");
     }
 
-    classes.forEach((cls) =>
- {
+    classes.forEach((cls) => {
       const opt = document.createElement("option");
       opt.value = cls.id;
       opt.textContent = cls.name;
@@ -330,9 +310,7 @@ async function handleClassSelectChange(classId) {
   const periodSelect = document.getElementById("attendancePeriodSelect");
   if (!periodSelect) return;
 
-  periodSelect.innerHTML = `<option value=""
-Select Period</option
-`;
+  periodSelect.innerHTML = `<option value="">Select Period</option>`;
   periodSelect.disabled = true;
   currentTodayLessons = [];
 
@@ -417,8 +395,7 @@ Select Period</option
 
     currentTodayLessons = lessons;
 
-    lessons.forEach((l) =>
- {
+    lessons.forEach((l) => {
       if (l.is_break === true) return;
 
       if (l.periods) {
@@ -462,8 +439,7 @@ async function loadDefaultPeriods(periodSelect) {
     }
 
     if (defaultPeriods && defaultPeriods.length > 0) {
-      defaultPeriods.forEach((p) =>
- {
+      defaultPeriods.forEach((p) => {
         const periodName = p.name || "";
         const isBreak =
           periodName.toLowerCase().includes("recess") ||
@@ -510,22 +486,13 @@ async function openStudentAttendanceModal(sessionData) {
       getAttendancePhotoUrl(currentAttendanceSession.teacherPhotoUrl),
     );
     elTeacher.innerHTML = `
-      <span class="app-person-cell attendance-teacher-identity"
-
-        <img class="app-person-avatar" src="${teacherPhoto}" alt="" loading="lazy" /
-
-        <span class="app-person-meta"
-
-          <span
-${escapeHtml(currentAttendanceSession.teacherName || "-")}</span
-
-          <small class="app-person-id"
-Staff ID: ${escapeHtml(currentAttendanceSession.teacherStaffId || "Not assigned")}</small
-
-        </span
-
-      </span
-
+      <span class="app-person-cell attendance-teacher-identity">
+        <img class="app-person-avatar" src="${teacherPhoto}" alt="" loading="lazy" />
+        <span class="app-person-meta">
+          <span>${escapeHtml(currentAttendanceSession.teacherName || "-")}</span>
+          <small class="app-person-id">Staff ID: ${escapeHtml(currentAttendanceSession.teacherStaffId || "Not assigned")}</small>
+        </span>
+      </span>
     `;
   }
   if (elDate) elDate.textContent = currentAttendanceSession.dateStr;
@@ -539,11 +506,7 @@ async function loadRosterIntoModal(classId) {
   const tbody = document.getElementById("studentAttendanceRosterBody");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; padding: 12px;"
-Loading students...</td
-</tr
-`;
+  tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px;">Loading students...</td></tr>`;
 
   try {
     const cleanClassId = classId ? classId.trim() : "";
@@ -556,27 +519,18 @@ Loading students...</td
 
     if (studentErr) {
       console.error("Error fetching active students:", studentErr);
-      tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;"
-Error loading students: ${escapeHtml(studentErr.message)}</td
-</tr
-`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Error loading students: ${escapeHtml(studentErr.message)}</td></tr>`;
       return;
     }
 
     console.log("Filtered active students from database:", activeStudents);
 
     if (!activeStudents || activeStudents.length === 0) {
-      tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;"
-No active students found for this class.</td
-</tr
-`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">No active students found for this class.</td></tr>`;
       return;
     }
 
-    const studentIds = activeStudents.map((student) =>
- student.id).filter(Boolean);
+    const studentIds = activeStudents.map((student) => student.id).filter(Boolean);
     const { data: studentProfiles, error: profileError } = await supabaseClient
       .from("profiles")
       .select("id, photo_url")
@@ -586,13 +540,11 @@ No active students found for this class.</td
       console.error("Could not load student photos for attendance roster:", profileError);
     }
     const studentPhotoById = new Map(
-      (studentProfiles || []).map((profile) =>
- [profile.id, profile.photo_url]),
+      (studentProfiles || []).map((profile) => [profile.id, profile.photo_url]),
     );
 
     tbody.innerHTML = "";
-    activeStudents.forEach((student) =>
- {
+    activeStudents.forEach((student) => {
       const displayName =
         student.full_name ||
         (student.student_id
@@ -605,50 +557,27 @@ No active students found for this class.</td
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td style="padding: 10px 12px; font-weight: 500;"
-
-          <span class="app-person-cell"
-
-            <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" /
-
-            <span class="app-person-meta"
-
-              <span
-${escapeHtml(displayName)}</span
-
-              <small class="app-person-id"
-Student ID: ${studentCode}</small
-
-            </span
-
-          </span
-
-        </td
-
-        <td style="padding: 10px 12px;"
-
-          <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;"
-
-            <option value="present"
-Present</option
-
-            <option value="absent"
-Absent</option
-
-          </select
-
-        </td
-
+        <td style="padding: 10px 12px; font-weight: 500;">
+          <span class="app-person-cell">
+            <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+            <span class="app-person-meta">
+              <span>${escapeHtml(displayName)}</span>
+              <small class="app-person-id">Student ID: ${studentCode}</small>
+            </span>
+          </span>
+        </td>
+        <td style="padding: 10px 12px;">
+          <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;">
+            <option value="present">Present</option>
+            <option value="absent">Absent</option>
+          </select>
+        </td>
       `;
       tbody.appendChild(tr);
     });
   } catch (err) {
     console.error("Roster exception:", err);
-    tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;"
-Failed to load roster.</td
-</tr
-`;
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Failed to load roster.</td></tr>`;
   }
 }
 
@@ -768,8 +697,7 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
     );
     const recordsPayload = [];
 
-    statusDropdowns.forEach((dropdown) =>
- {
+    statusDropdowns.forEach((dropdown) => {
       const studentId = dropdown.getAttribute("data-student-id");
       const status = dropdown.value;
 
@@ -840,11 +768,7 @@ async function loadAttendanceTable() {
   const tbody = document.getElementById("attendanceTableBody");
   if (!tbody) return;
 
-  tbody.innerHTML = `<tr
-<td colspan="8" style="text-align:center; padding: 16px;"
-Loading attendance records...</td
-</tr
-`;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">Loading attendance records...</td></tr>`;
 
   try {
     const user = (await supabaseClient.auth.getUser()).data?.user;
@@ -889,25 +813,16 @@ Loading attendance records...</td
 
     if (error) {
       console.error("Error loading attendance table:", error);
-      tbody.innerHTML = `<tr
-<td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;"
-Error: ${escapeHtml(error.message)}</td
-</tr
-`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Error: ${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
     if (!attendanceList || attendanceList.length === 0) {
-      tbody.innerHTML = `<tr
-<td colspan="8" style="text-align:center; padding: 16px;"
-No attendance records found.</td
-</tr
-`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
       return;
     }
 
-    const attendanceIds = attendanceList.map((a) =>
- a.id);
+    const attendanceIds = attendanceList.map((a) => a.id);
     const { data: recordsData, error: countErr } = await supabaseClient
       .from("attendance_records")
       .select("attendance_id")
@@ -915,8 +830,7 @@ No attendance records found.</td
 
     const countsMap = new Map();
     if (!countErr && recordsData) {
-      recordsData.forEach((rec) =>
- {
+      recordsData.forEach((rec) => {
         countsMap.set(
           rec.attendance_id,
           (countsMap.get(rec.attendance_id) || 0) + 1,
@@ -925,8 +839,7 @@ No attendance records found.</td
     }
 
     tbody.innerHTML = "";
-    attendanceList.forEach((item) =>
- {
+    attendanceList.forEach((item) => {
       const className = item.classes?.name || "N/A";
       const classId = item.classes?.id || item.class_id || "";
 
@@ -944,28 +857,16 @@ No attendance records found.</td
       const isDraft = item.status === "drafted";
 
       const statusBadge = isDraft
-        ? `<span class="status-badge status-drafted"
-Drafted</span
-`
-        : `<span class="status-badge status-submitted"
-Submitted</span
-`;
+        ? `<span class="status-badge status-drafted">Drafted</span>`
+        : `<span class="status-badge status-submitted">Submitted</span>`;
 
       const actionButton = isDraft
-        ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft"
-
-             <i class="fa-solid fa-pen-to-square"
-</i
-
-           </button
-`
-        : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details"
-
-             <i class="fa-solid fa-eye"
-</i
-
-           </button
-`;
+        ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
+             <i class="fa-solid fa-pen-to-square"></i>
+           </button>`
+        : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
+             <i class="fa-solid fa-eye"></i>
+           </button>`;
 
       const tr = document.createElement("tr");
 
@@ -976,30 +877,14 @@ Submitted</span
       tr.dataset.termId = termId;
 
       tr.innerHTML = `
-        <td
-${escapeHtml(className)}</td
-
-        <td
-${escapeHtml(subjectName)}</td
-
-        <td data-year-id="${yearId}"
-${escapeHtml(yearName)}</td
-
-        <td data-term-id="${termId}"
-${escapeHtml(termName)}</td
-
-        <td
-${formattedDate}</td
-
-        <td
-${studentCount}</td
-
-        <td
-${statusBadge}</td
-
-        <td
-${actionButton}</td
-
+        <td>${escapeHtml(className)}</td>
+        <td>${escapeHtml(subjectName)}</td>
+        <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
+        <td data-term-id="${termId}">${escapeHtml(termName)}</td>
+        <td>${formattedDate}</td>
+        <td>${studentCount}</td>
+        <td>${statusBadge}</td>
+        <td>${actionButton}</td>
       `;
 
       tbody.appendChild(tr);
@@ -1016,11 +901,7 @@ ${actionButton}</td
     attachTableActionListeners();
   } catch (err) {
     console.error("Attendance table exception:", err);
-    tbody.innerHTML = `<tr
-<td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;"
-Failed to load attendance logs.</td
-</tr
-`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
   }
 }
 
@@ -1051,8 +932,7 @@ function populateAttendanceFilterOptions(
   select.replaceChildren(new Option(allLabel, "all"));
 
   const options = new Map();
-  records.forEach((item) =>
- {
+  records.forEach((item) => {
     const relation = item[relationName];
     const id = relation?.id || item[idField];
     const label = relation?.name || relation?.year_label;
@@ -1060,10 +940,8 @@ function populateAttendanceFilterOptions(
   });
 
   [...options.entries()]
-    .sort(([, nameA], [, nameB]) =>
- nameA.localeCompare(nameB))
-    .forEach(([id, label]) =>
- {
+    .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
+    .forEach(([id, label]) => {
       select.add(new Option(label, id));
     });
 }
@@ -1080,8 +958,7 @@ function populateAttendanceFilters(records) {
       "All Academic Years",
     ],
     ["attendanceSemesterFilter", "terms", "term_id", "All Semesters"],
-  ].forEach(([selectId, relation, idField, label]) =>
- {
+  ].forEach(([selectId, relation, idField, label]) => {
     const select = document.getElementById(selectId);
     if (select) {
       populateAttendanceFilterOptions(select, records, relation, idField, label);
@@ -1100,8 +977,7 @@ function setupAttendanceFilterListeners() {
     "attendanceDateFilter",
   ];
   if (searchInput) searchInput.oninput = applyAttendanceFilters;
-  filterIds.forEach((id) =>
- {
+  filterIds.forEach((id) => {
     const select = document.getElementById(id);
     if (select) select.onchange = applyAttendanceFilters;
   });
@@ -1134,7 +1010,6 @@ function matchesAttendanceFilters(item, filters) {
 
 function applyAttendanceFilters() {
   const filtered = allAttendanceList.filter((item) =>
-
     matchesAttendanceFilters(item, {
       search: document.getElementById("attendanceSearchInput")?.value || "",
       classId: document.getElementById("attendanceClassFilter")?.value || "all",
@@ -1157,16 +1032,11 @@ async function renderFilteredAttendanceTable(attendanceList) {
   if (!tbody) return;
 
   if (!attendanceList || attendanceList.length === 0) {
-    tbody.innerHTML = `<tr
-<td colspan="8" style="text-align:center; padding: 16px;"
-No attendance records found.</td
-</tr
-`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
     return;
   }
 
-  const attendanceIds = attendanceList.map((a) =>
- a.id);
+  const attendanceIds = attendanceList.map((a) => a.id);
   const { data: recordsData, error: countErr } = await supabaseClient
     .from("attendance_records")
     .select("attendance_id")
@@ -1174,8 +1044,7 @@ No attendance records found.</td
 
   const countsMap = new Map();
   if (!countErr && recordsData) {
-    recordsData.forEach((rec) =>
- {
+    recordsData.forEach((rec) => {
       countsMap.set(
         rec.attendance_id,
         (countsMap.get(rec.attendance_id) || 0) + 1,
@@ -1184,8 +1053,7 @@ No attendance records found.</td
   }
 
   tbody.innerHTML = "";
-  attendanceList.forEach((item) =>
- {
+  attendanceList.forEach((item) => {
     const className = item.classes?.name || "N/A";
     const classId = item.classes?.id || item.class_id || "";
     const subjectName = item.subjects?.name || "General";
@@ -1200,28 +1068,16 @@ No attendance records found.</td
     const isDraft = item.status === "drafted";
 
     const statusBadge = isDraft
-      ? `<span class="status-badge status-drafted"
-Drafted</span
-`
-      : `<span class="status-badge status-submitted"
-Submitted</span
-`;
+      ? `<span class="status-badge status-drafted">Drafted</span>`
+      : `<span class="status-badge status-submitted">Submitted</span>`;
 
     const actionButton = isDraft
-      ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft"
-
-           <i class="fa-solid fa-pen-to-square"
-</i
-
-         </button
-`
-      : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details"
-
-           <i class="fa-solid fa-eye"
-</i
-
-         </button
-`;
+      ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
+           <i class="fa-solid fa-pen-to-square"></i>
+         </button>`
+      : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
+           <i class="fa-solid fa-eye"></i>
+         </button>`;
 
     const tr = document.createElement("tr");
     tr.dataset.attendanceId = item.id;
@@ -1231,30 +1087,14 @@ Submitted</span
     tr.dataset.termId = termId;
 
     tr.innerHTML = `
-      <td
-${escapeHtml(className)}</td
-
-      <td
-${escapeHtml(subjectName)}</td
-
-      <td data-year-id="${yearId}"
-${escapeHtml(yearName)}</td
-
-      <td data-term-id="${termId}"
-${escapeHtml(termName)}</td
-
-      <td
-${formattedDate}</td
-
-      <td
-${studentCount}</td
-
-      <td
-${statusBadge}</td
-
-      <td
-${actionButton}</td
-
+      <td>${escapeHtml(className)}</td>
+      <td>${escapeHtml(subjectName)}</td>
+      <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
+      <td data-term-id="${termId}">${escapeHtml(termName)}</td>
+      <td>${formattedDate}</td>
+      <td>${studentCount}</td>
+      <td>${statusBadge}</td>
+      <td>${actionButton}</td>
     `;
 
     tbody.appendChild(tr);
@@ -1266,10 +1106,8 @@ ${actionButton}</td
 }
 
 function attachTableActionListeners() {
-  document.querySelectorAll(".edit-attendance-btn").forEach((btn) =>
- {
-    btn.addEventListener("click", (e) =>
- {
+  document.querySelectorAll(".edit-attendance-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
       const attendanceId = e.currentTarget.getAttribute("data-attendance-id");
       if (typeof openEditAttendanceModal === "function") {
         openEditAttendanceModal(attendanceId);
@@ -1277,10 +1115,8 @@ function attachTableActionListeners() {
     });
   });
 
-  document.querySelectorAll(".view-attendance-btn").forEach((btn) =>
- {
-    btn.addEventListener("click", (e) =>
- {
+  document.querySelectorAll(".view-attendance-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
       const attendanceId = e.currentTarget.getAttribute("data-attendance-id");
       if (typeof openViewAttendanceModal === "function") {
         openViewAttendanceModal(attendanceId);
@@ -1291,10 +1127,8 @@ function attachTableActionListeners() {
 
 function attachViewButtonListeners() {
   const viewModal = document.getElementById("viewAttendanceModal");
-  document.querySelectorAll(".attendances-actions-btn.view").forEach((btn) =>
- {
-    btn.addEventListener("click", (e) =>
- {
+  document.querySelectorAll(".attendances-actions-btn.view").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
       const attendanceId = e.currentTarget.getAttribute("data-attendance-id");
       if (typeof openViewAttendanceModal === "function") {
         openViewAttendanceModal(attendanceId);
@@ -1358,11 +1192,7 @@ async function openViewAttendanceModal(attendanceId) {
   if (elTeacher) elTeacher.textContent = "Loading...";
   if (elDate) elDate.textContent = "Loading...";
   if (tbody) {
-    tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; padding: 12px;"
-Loading student records...</td
-</tr
-`;
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px;">Loading student records...</td></tr>`;
   }
 
   openModal(modal);
@@ -1389,11 +1219,7 @@ Loading student records...</td
     if (parentErr || !attendance) {
       console.error("Error fetching attendance details:", parentErr);
       if (tbody) {
-        tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;"
-Failed to load attendance metadata.</td
-</tr
-`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">Failed to load attendance metadata.</td></tr>`;
       }
       return;
     }
@@ -1414,22 +1240,13 @@ Failed to load attendance metadata.</td
         getAttendancePhotoUrl(attendance.profiles?.photo_url),
       );
       elTeacher.innerHTML = `
-        <span class="app-person-cell attendance-teacher-identity"
-
-          <img class="app-person-avatar" src="${teacherPhoto}" alt="" loading="lazy" /
-
-          <span class="app-person-meta"
-
-            <span
-${escapeHtml(teacherName)}</span
-
-            <small class="app-person-id"
-Staff ID: ${escapeHtml(teacherStaffId)}</small
-
-          </span
-
-        </span
-
+        <span class="app-person-cell attendance-teacher-identity">
+          <img class="app-person-avatar" src="${teacherPhoto}" alt="" loading="lazy" />
+          <span class="app-person-meta">
+            <span>${escapeHtml(teacherName)}</span>
+            <small class="app-person-id">Staff ID: ${escapeHtml(teacherStaffId)}</small>
+          </span>
+        </span>
       `;
     }
     if (elDate) elDate.textContent = formatDate(attendance.date);
@@ -1444,11 +1261,9 @@ Staff ID: ${escapeHtml(teacherStaffId)}</small
           : "status-drafted";
 
       elWorkflowStatus.innerHTML = `
-        <span class="status-badge ${statusClass}" style="padding: 4px 10px; font-size: 0.85rem; margin-bottom: 5px; font-weight: 600;"
-
+        <span class="status-badge ${statusClass}" style="padding: 4px 10px; font-size: 0.85rem; margin-bottom: 5px; font-weight: 600;">
           ${escapeHtml(statusLabel)}
-        </span
-
+        </span>
       `;
     }
 
@@ -1460,28 +1275,19 @@ Staff ID: ${escapeHtml(teacherStaffId)}</small
     if (recordsErr) {
       console.error("Error fetching attendance student records:", recordsErr);
       if (tbody) {
-        tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;"
-Failed to load student records.</td
-</tr
-`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">Failed to load student records.</td></tr>`;
       }
       return;
     }
 
     if (!records || records.length === 0) {
       if (tbody) {
-        tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; padding: 12px;"
-No student records found for this session.</td
-</tr
-`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px;">No student records found for this session.</td></tr>`;
       }
       return;
     }
 
-    const studentIds = records.map((r) =>
- r.student_id);
+    const studentIds = records.map((r) => r.student_id);
     const identitySnapshots =
       await window.loadTransferredStudentIdentitySnapshots(studentIds);
     const { data: students, error: studentsError } = await supabaseClient
@@ -1493,14 +1299,12 @@ No student records found for this session.</td
       console.error("Could not load student IDs for attendance details:", studentsError);
     }
     const studentMap = new Map(
-      (students || []).map((student) =>
- [student.id, student]),
+      (students || []).map((student) => [student.id, student]),
     );
 
     if (tbody) {
       tbody.innerHTML = "";
-      records.forEach((record) =>
- {
+      records.forEach((record) => {
         const student = studentMap.get(record.student_id);
         const snapshot = identitySnapshots.get(record.student_id);
         const studentName = student?.profiles?.full_name ||
@@ -1522,35 +1326,20 @@ No student records found for this session.</td
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td style="padding: 10px 12px; font-weight: 500;"
-
-            <span class="app-person-cell"
-
-              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" /
-
-              <span class="app-person-meta"
-
-                <span
-${escapeHtml(studentName)}</span
-
-                <small class="app-person-id"
-Student ID: ${studentCode}</small
-
-              </span
-
-            </span
-
-          </td
-
-          <td style="padding: 10px 12px;"
-
-            <span class="status-badge ${statusClass}" style="padding: 4px 10px; font-size: 0.85rem; font-weight: 600;"
-
+          <td style="padding: 10px 12px; font-weight: 500;">
+            <span class="app-person-cell">
+              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+              <span class="app-person-meta">
+                <span>${escapeHtml(studentName)}</span>
+                <small class="app-person-id">Student ID: ${studentCode}</small>
+              </span>
+            </span>
+          </td>
+          <td style="padding: 10px 12px;">
+            <span class="status-badge ${statusClass}" style="padding: 4px 10px; font-size: 0.85rem; font-weight: 600;">
               ${escapeHtml(statusText)}
-            </span
-
-          </td
-
+            </span>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -1558,11 +1347,7 @@ Student ID: ${studentCode}</small
   } catch (err) {
     console.error("View modal exception:", err);
     if (tbody) {
-      tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;"
-An error occurred while loading details.</td
-</tr
-`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">An error occurred while loading details.</td></tr>`;
     }
   }
 }
@@ -1580,22 +1365,19 @@ let currentEditingAttendanceId = null;
 
 document
   .getElementById("closeEditAttendanceModal")
-  ?.addEventListener("click", () =>
- {
+  ?.addEventListener("click", () => {
     closeModal(document.getElementById("editAttendanceModal"));
   });
 
 document
   .getElementById("cancelEditAttendanceModal")
-  ?.addEventListener("click", () =>
- {
+  ?.addEventListener("click", () => {
     closeModal(document.getElementById("editAttendanceModal"));
   });
 
 document
   .getElementById("editAttendanceForm")
-  ?.addEventListener("submit", async (e) =>
- {
+  ?.addEventListener("submit", async (e) => {
     e.preventDefault();
     await handleSaveEditAttendance();
   });
@@ -1638,11 +1420,7 @@ async function openEditAttendanceModal(attendanceId) {
 
   if (creatorElement) creatorElement.textContent = "Loading...";
   if (tbody) {
-    tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center; padding: 12px;"
-Loading...</td
-</tr
-`;
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px;">Loading...</td></tr>`;
   }
 
   openModal(modal);
@@ -1671,22 +1449,13 @@ Loading...</td
         getAttendancePhotoUrl(creator?.photo_url),
       );
       creatorElement.innerHTML = `
-        <span class="app-person-cell attendance-teacher-identity"
-
-          <img class="app-person-avatar" src="${creatorPhoto}" alt="" loading="lazy" /
-
-          <span class="app-person-meta"
-
-            <span
-${escapeHtml(creator?.full_name || "Unknown")}</span
-
-            <small class="app-person-id"
-${escapeHtml(creatorId)}</small
-
-          </span
-
-        </span
-
+        <span class="app-person-cell attendance-teacher-identity">
+          <img class="app-person-avatar" src="${creatorPhoto}" alt="" loading="lazy" />
+          <span class="app-person-meta">
+            <span>${escapeHtml(creator?.full_name || "Unknown")}</span>
+            <small class="app-person-id">${escapeHtml(creatorId)}</small>
+          </span>
+        </span>
       `;
     }
 
@@ -1702,16 +1471,11 @@ ${escapeHtml(creatorId)}</small
 
     if (recordsErr || !records || records.length === 0) {
       if (tbody)
-        tbody.innerHTML = `<tr
-<td colspan="2" style="text-align:center;"
-No students found.</td
-</tr
-`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students found.</td></tr>`;
       return;
     }
 
-    const studentIds = records.map((r) =>
- r.student_id);
+    const studentIds = records.map((r) => r.student_id);
     const identitySnapshots =
       await window.loadTransferredStudentIdentitySnapshots(studentIds);
     const { data: students, error: studentsError } = await supabaseClient
@@ -1723,15 +1487,13 @@ No students found.</td
       console.error("Could not load student IDs for attendance edit:", studentsError);
     }
     const studentMap = new Map(
-      (students || []).map((student) =>
- [student.id, student]),
+      (students || []).map((student) => [student.id, student]),
     );
 
     const initialStudentStatuses = {};
     if (tbody) {
       tbody.innerHTML = "";
-      records.forEach((record) =>
- {
+      records.forEach((record) => {
         const student = studentMap.get(record.student_id);
         const snapshot = identitySnapshots.get(record.student_id);
         const studentName =
@@ -1750,40 +1512,21 @@ No students found.</td
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td
-
-            <span class="app-person-cell"
-
-              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" /
-
-              <span class="app-person-meta"
-
-                <span
-${escapeHtml(studentName)}</span
-
-                <small class="app-person-id"
-Student ID: ${studentCode}</small
-
-              </span
-
-            </span
-
-          </td
-
-          <td
-
-            <select class="edit-status-dropdown" data-student-id="${escapeHtml(record.student_id)}"
-
-              <option value="present" ${record.status === "present" ? "selected" : ""}
-Present</option
-
-              <option value="absent" ${record.status === "absent" ? "selected" : ""}
-Absent</option
-
-            </select
-
-          </td
-
+          <td>
+            <span class="app-person-cell">
+              <img class="app-person-avatar" src="${studentPhoto}" alt="" loading="lazy" />
+              <span class="app-person-meta">
+                <span>${escapeHtml(studentName)}</span>
+                <small class="app-person-id">Student ID: ${studentCode}</small>
+              </span>
+            </span>
+          </td>
+          <td>
+            <select class="edit-status-dropdown" data-student-id="${escapeHtml(record.student_id)}">
+              <option value="present" ${record.status === "present" ? "selected" : ""}>Present</option>
+              <option value="absent" ${record.status === "absent" ? "selected" : ""}>Absent</option>
+            </select>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -1843,8 +1586,7 @@ async function handleSaveEditAttendance() {
     const dropdowns = document.querySelectorAll(".edit-status-dropdown");
     const recordsPayload = [];
 
-    dropdowns.forEach((dd) =>
- {
+    dropdowns.forEach((dd) => {
       const studentId = dd.getAttribute("data-student-id");
       if (studentId) {
         recordsPayload.push({

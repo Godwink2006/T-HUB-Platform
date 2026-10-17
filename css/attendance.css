@@ -106,12 +106,6 @@
   font-family: "Poppins", sans-serif;
 }
 
-html.modal-open,
-body.modal-open {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
 body {
   background: rgb(231, 226, 226);
 }
@@ -611,7 +605,14 @@ tr {
 
 @media screen and (max-width: 768px) {
   html,
-  body {
+html.modal-open,
+body.modal-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
