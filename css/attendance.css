@@ -432,7 +432,7 @@ tr {
   gap: 15px;
   margin-top: 30px;
 }
-
+.view-attendance-modal-header button{
   cursor: pointer;
   color: #ffffff;
   background: #1f2937;
