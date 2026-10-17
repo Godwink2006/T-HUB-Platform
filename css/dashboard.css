@@ -446,7 +446,8 @@ body {
 }
 
 .date-modal-content {
-  width: 450px;
+  max-width: 95%;
+  width: 100%;
   background: #ffff;
   overflow: hidden;
   animation: modalShow 0.25s ease;
