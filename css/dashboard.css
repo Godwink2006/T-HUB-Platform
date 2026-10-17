@@ -446,7 +446,7 @@ body {
 }
 
 .date-modal-content {
-  max-width: 95%;
+  max-width: 50%;
   width: 100%;
   background: #ffff;
   overflow: hidden;
@@ -575,10 +575,11 @@ body {
   .announcement-item {
     border-radius: 10px;
   }
-}
 
-.date-modal-content {
-  width: 90%;
+  .date-modal-content {
+    max-width: 95%;
+    width: 100%;
+  }
 }
 
 .date-modal-header {

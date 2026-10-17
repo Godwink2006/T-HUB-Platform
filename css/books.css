@@ -308,7 +308,7 @@ body {
   background: #1f2937;
   color: #f9fafb;
   cursor: pointer;
-  padding: .75rem;
+  padding: .70rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -393,6 +393,7 @@ body {
     height: 100%;
     max-height: 650px;
     max-width: 95%;
+    width: 100%;
   }
 }
 
