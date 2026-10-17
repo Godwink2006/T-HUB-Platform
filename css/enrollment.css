@@ -1,4 +1,3 @@
-
 .table-container {
   margin: 10px;
   overflow-x: auto;
@@ -36,7 +35,7 @@ body.modal-open {
   margin: 16px 10px 0;
   padding: 16px;
   background: #fff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .enrollment-transfer-toolbar {
@@ -45,11 +44,12 @@ body.modal-open {
   margin: 0 10px 12px;
 }
 
+.topbar {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 42px;
-  padding: 9px 16px;
+  padding: 10px;
   border: 0;
   cursor: pointer;
   font: inherit;
@@ -75,7 +75,7 @@ body.modal-open {
   width: 100%;
   min-height: 40px;
   padding: 8px 10px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #fff;
   color: #0f172a;
   font: inherit;
@@ -84,7 +84,7 @@ body.modal-open {
 
 .enrollment-search-field input:focus,
 .enrollment-filter-field select:focus {
-  outline: 2px solid rgba(37, 99, 235, 0.2);
+  outline: 0.5px solid rgba(37, 99, 235, 0.2);
   border-color: #2563eb;
 }
 
@@ -135,6 +135,7 @@ body.modal-open {
     justify-content: stretch;
   }
 
+  .btn-primary {
     width: 100%;
     justify-content: center;
   }
@@ -160,7 +161,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 th {
@@ -168,7 +169,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -176,7 +177,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .bulk-action-bar {
@@ -279,7 +280,7 @@ tr {
   gap: 12px;
   margin: 16px 0 10px;
   padding: 14px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #f8fafc;
 }
 
@@ -308,7 +309,7 @@ tr {
   gap: 9px;
   margin-top: 14px;
   padding: 14px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #f8fafc;
   color: #334155;
 }
@@ -335,7 +336,7 @@ tr {
 .form-control {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #cbd5e1;
+  border: 0.5px solid #cbd5e1;
   font-size: 14px;
   margin-bottom: 14px;
 }
@@ -349,7 +350,7 @@ tr {
   font-weight: 500;
 }
 .btn-secondary {
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -447,8 +448,8 @@ tr {
   margin-top: 5px;
   color: #ffffff;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
-  width: 8%;
+  border: 0.5px solid rgb(219, 215, 215);
+  width: 50%;
   justify-content: space-between;
 }
 
@@ -502,12 +503,6 @@ tr {
   .modal-content {
     margin: auto 0;
     padding: 16px;
-  }
-
-    flex-wrap: wrap;
-  }
-
-    flex: 1 1 110px;
   }
 }
 
