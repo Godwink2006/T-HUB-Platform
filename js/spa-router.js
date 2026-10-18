@@ -305,18 +305,54 @@
     }));
   }
 
+  function topLevelSidebarShell(body) {
+    const sidebar = body.querySelector("aside.sidebar");
+    if (!sidebar) return null;
+    let shell = sidebar;
+    while (shell.parentElement && shell.parentElement !== body) {
+      shell = shell.parentElement;
+    }
+    return shell.parentElement === body ? shell : null;
+  }
+
+  function isPersistentNavigationNode(node) {
+    return node instanceof Element &&
+      node.matches("#menuToggle, #sidebarOverlay, aside.sidebar");
+  }
+
+  function swapStaffPage(targetBody) {
+    const currentShell = topLevelSidebarShell(document.body);
+    const targetShell = topLevelSidebarShell(targetBody);
+    if (!currentShell || !targetShell) return false;
+
+    // Keep the existing shell and sidebar attached to the live document. Moving
+    // the school logo through a detached document caused a visible repaint on
+    // mobile during otherwise in-place navigation.
+    currentShell.className = targetShell.className;
+    Array.from(currentShell.childNodes).forEach((node) => {
+      if (!isPersistentNavigationNode(node)) node.remove();
+    });
+    Array.from(targetShell.childNodes).forEach((node) => {
+      if (!isPersistentNavigationNode(node)) {
+        currentShell.appendChild(document.importNode(node, true));
+      }
+    });
+
+    closeSidebar();
+    Array.from(document.body.childNodes).forEach((node) => {
+      if (node !== currentShell) node.remove();
+    });
+    Array.from(targetBody.childNodes).forEach((node) => {
+      if (node !== targetShell) document.body.appendChild(document.importNode(node, true));
+    });
+    return true;
+  }
+
   function swapPageBody(targetDoc) {
     const nextBody = targetDoc.body.cloneNode(true);
     nextBody.querySelectorAll("script").forEach((script) => script.remove());
 
-    if (pageFamily(targetDoc) === "staff") {
-      ["#menuToggle", "#sidebarOverlay", "aside.sidebar"].forEach((selector) => {
-        const currentElement = document.querySelector(selector);
-        const nextElement = nextBody.querySelector(selector);
-        if (currentElement && nextElement) nextElement.replaceWith(currentElement);
-      });
-    }
-
+    if (pageFamily(targetDoc) === "staff" && swapStaffPage(nextBody)) return;
     document.body.replaceChildren(...Array.from(nextBody.childNodes));
   }
 
