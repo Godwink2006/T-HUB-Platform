@@ -115,7 +115,7 @@ td {
 
 .form-group label {
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 500;
   color: #374151;
 }
@@ -210,7 +210,7 @@ td {
   border: none;
   height: 40px;
   width: 40px;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .details-grid {
@@ -541,9 +541,6 @@ body {
   height: 44px;
   border-radius: 10px;
   color: #334155;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
 }
 
 .toolbar input {
@@ -579,7 +576,7 @@ body {
 
 .payments-table-card th,
 .payment-table-card th {
-  padding: 15px 18px;
+  padding: 10px 10px;
   color: #64748b;
   font-size: 11px;
   font-weight: 700;
@@ -624,13 +621,10 @@ body {
   width: 36px;
   height: 36px;
   margin: 0;
-  border: 1px solid #bfdbfe;
+  border: 0.5px solid #bfdbfe;
   border-radius: 10px;
   background: #eff6ff;
   color: #2563eb;
-  transition:
-    transform 150ms ease,
-    background 150ms ease;
 }
 
 .payments-actions-btn:hover {
@@ -721,7 +715,7 @@ body {
 
 .payment-table-card {
   margin-top: 18px;
-  padding: 16px;
+  padding: 10px;
 }
 
 .payment-table-card h4,
@@ -742,14 +736,11 @@ body {
 
 .cancel-btn,
 .save-btn {
-  min-height: 42px;
-  padding: 0 17px;
+  min-height: 35px;
+  padding: 0 10px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  transition:
-    transform 150ms ease,
-    background 150ms ease;
 }
 
 .cancel-btn {
@@ -997,7 +988,7 @@ tr {
 
 .finance-page .finance-student-id {
   color: #64748b;
-  font-size: 0.92em;
+  font-size: 0.8em;
 }
 
 .finance-page .finance-student-identity {
@@ -1046,7 +1037,7 @@ tr {
 .finance-page .payments-history-readonly {
   display: block;
   color: #64748b;
-  font-size: 0.78rem;
+  font-size: 0.2rem;
   line-height: 1.4;
 }
 

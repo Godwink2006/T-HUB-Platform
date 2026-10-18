@@ -466,7 +466,7 @@ async function viewFeeDetails(feeId) {
           );
 
           let allocationsHtml =
-            '<ul style="margin: 4px 0 0 15px; padding: 0; font-size: 0.9em; color: #555;">';
+            '<ul style="margin: 4px 0 0 15px; padding: 0; font-size: 0.8em; color: #555;">';
           if (tx.payment_allocations && tx.payment_allocations.length > 0) {
             tx.payment_allocations.forEach((alloc) => {
 
