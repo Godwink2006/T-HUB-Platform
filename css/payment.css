@@ -18,7 +18,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -47,7 +47,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -125,7 +125,7 @@ td {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -142,7 +142,7 @@ td {
   padding: 12px 22px;
   border: none;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   cursor: pointer;
 }
@@ -195,7 +195,7 @@ td {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .recordPayment-modal-header h2 {
@@ -205,7 +205,7 @@ td {
 .recordPayment-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -270,7 +270,7 @@ td {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .view-payment-modal-footer {
@@ -280,9 +280,10 @@ td {
   margin-top: 30px;
 }
 
+.view-payment-modal-header button {
   cursor: pointer;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #f9fafb;
   border: none;
   height: 40px;
@@ -660,7 +661,7 @@ body {
 .view-payment-modal-header {
   padding: 20px 24px;
   border: 0;
-  border-bottom: 1px solid #e8edf4;
+  border-bottom: 0.5px solid #e8edf4;
 }
 
 .recordPayment-modal-header h2,
@@ -670,12 +671,12 @@ body {
   font-weight: 650;
 }
 
-.recordPayment-modal-header button,
+.recordPayment-modal-header button {
   display: grid;
   width: 38px;
   height: 38px;
   place-items: center;
-  border: 1px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
   border-radius: 10px;
   background: #f8fafc;
   color: #475569;
@@ -702,13 +703,13 @@ body {
 .form-group select,
 .form-group textarea {
   min-height: 44px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #1e293b;
 }
 
 .details-grid {
   padding: 16px;
-  border: 1px solid #e8edf4;
+  border: 0.5px solid #e8edf4;
   border-radius: 12px;
   background: #f8fafc;
 }
@@ -752,13 +753,13 @@ body {
 }
 
 .cancel-btn {
-  border: 1px solid #dbe3ee;
+  border: 0.5px solid #dbe3ee;
   background: #ffffff;
   color: #475569;
 }
 
 .save-btn {
-  border: 1px solid #1d4ed8;
+  border: 0.5px solid #1d4ed8;
   background: #2563eb;
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.18);
   color: #ffffff;
@@ -816,15 +817,15 @@ body {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .finance-page .payments-table-card tbody tr > td {
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .finance-page .payments-table-card th {
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .finance-page .payments-table-card table {
@@ -902,7 +903,7 @@ tr {
 .finance-page .toolbar {
   display: flex;
   flex-wrap: wrap;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 0;
   box-shadow: none;
 }
@@ -919,7 +920,7 @@ tr {
 
 .finance-page .toolbar input,
 .finance-page .toolbar select {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 0;
   color: #111827;
 }
@@ -1057,14 +1058,14 @@ tr {
 .finance-page .view-payment-modal-content,
 .payment-table-card,
 .finance-page .details-grid {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 0;
   box-shadow: none;
 }
 
 .finance-page .recordPayment-modal-header,
 .finance-page .view-payment-modal-header {
-  border-bottom: 2px solid rgb(219, 215, 215);
+  border-bottom: 0.5px solid rgb(219, 215, 215);
 }
 
 .finance-page .recordPayment-modal-header button,
