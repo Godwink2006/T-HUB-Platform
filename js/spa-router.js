@@ -275,7 +275,13 @@
         const timeout = setTimeout(() => reject(new Error(`Stylesheet timed out: ${href}`)), 8000);
         link.onload = () => { clearTimeout(timeout); resolve(); };
         link.onerror = () => { clearTimeout(timeout); reject(new Error(`Stylesheet failed: ${href}`)); };
-        document.head.appendChild(link);
+        const sharedStyleBoundary = Array.from(
+          document.querySelectorAll('link[rel="stylesheet"][href]'),
+        ).find((existing) =>
+          SHARED_CSS.has(new URL(existing.href, location.href).pathname.split("/").pop()),
+        );
+        if (sharedStyleBoundary) document.head.insertBefore(link, sharedStyleBoundary);
+        else document.head.appendChild(link);
       }));
     });
     return Promise.all(pending).then(() => targetHrefs);
