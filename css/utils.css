@@ -48,6 +48,16 @@ tbody tr:hover {
   display: none !important;
 }
 
+/* Keep the shared school mark sized while route-specific stylesheets switch. */
+.sidebar .logo img {
+  width: 55px;
+  height: 55px;
+  flex: 0 0 55px;
+  border-radius: 50%;
+  background: #fff;
+  object-fit: cover;
+}
+
 @media screen and (max-width: 768px) {
   .menu-toggle {
     display: flex;
@@ -114,6 +124,12 @@ tbody tr:hover {
     left: 0;
   }
 
+  html.spa-navigating .sidebar {
+    left: -280px !important;
+    visibility: hidden !important;
+    transition: none !important;
+  }
+
   .sidebar-overlay {
     position: fixed;
     top: 0;
@@ -131,6 +147,10 @@ tbody tr:hover {
     display: block;
     opacity: 1;
     visibility: visible;
+  }
+
+  html.spa-navigating .sidebar-overlay {
+    display: none !important;
   }
 
   .settings-main-content,
