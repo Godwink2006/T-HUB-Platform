@@ -495,6 +495,7 @@ tr {
   margin-top: 30px;
 }
 
+.view-grade-modal-header button {
   cursor: pointer;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -557,16 +558,28 @@ tr {
     flex-direction: column;
   }
 
+  .grades-main-content {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    padding: 70px 12px 20px;
+    margin-left: 0 !important;
+  }
+
   .topbar {
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    gap: 10px 12px !important;
-    align-items: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 18px;
+  }
+
+  .topbar > div {
+    min-width: 0;
   }
 
   .topbar h1,
   .topbar p {
-    grid-column: 1 / -1;
     margin: 0;
   }
 
@@ -588,8 +601,8 @@ tr {
   }
 
   .add-grades-btn {
-    grid-column: 2;
-    flex: 1 !important;
+    width: 100%;
+    flex: 0 0 auto !important;
     height: 40px !important;
     padding: 0 16px;
     display: inline-flex;
@@ -624,12 +637,12 @@ tr {
   }
 
   .toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
-    margin: 15px 0;
+    margin: 15px 0 12px;
     width: 100%;
+    min-width: 0;
   }
 
   .toolbar input,
@@ -638,8 +651,9 @@ tr {
     border: 2px solid rgb(219, 215, 215);
     padding: 0 10px;
     font-size: 12px;
-    flex: 1 1 calc(50% - 8px);
     min-width: 0;
+    width: 100%;
+    max-width: 100%;
     border-radius: 10px;
   }
 
@@ -656,9 +670,14 @@ tr {
     -webkit-overflow-scrolling: touch;
   }
 
-  .grade-table-card table {
+  .grade-table-card > .grades-table {
     width: max-content;
     min-width: 720px;
+  }
+
+  .view-grade-body .grade-table-card table {
+    width: max-content;
+    min-width: 440px;
   }
 
   th,
@@ -786,5 +805,20 @@ tr {
   .toolbar select,
   .grades-actions-btn {
     border-radius: 8px;
+  }
+}
+
+@media screen and (max-width: 380px) {
+  .grades-main-content {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topbar h1 {
+    font-size: 22px;
   }
 }
