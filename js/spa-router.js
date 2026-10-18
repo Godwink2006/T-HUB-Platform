@@ -471,6 +471,38 @@
 
   function init() {
     const safe = initialScriptOrderIsSafe();
+    let lastTouchNavigation = null;
+    let touchLinkStart = null;
+    document.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "touch" || !event.isPrimary) {
+        touchLinkStart = null;
+        return;
+      }
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const link = target?.closest("a[href]");
+      touchLinkStart = link
+        ? { url: canonical(link.href), x: event.clientX, y: event.clientY, pointerId: event.pointerId }
+        : null;
+    }, true);
+    const handleTouchNavigation = (event) => {
+      if (event.pointerType !== "touch" || !event.isPrimary) return;
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const link = target?.closest("a[href]");
+      const start = touchLinkStart;
+      touchLinkStart = null;
+      if (!link || link.dataset.spa === "false" || link.target === "_blank" || link.hasAttribute("download")) return;
+      const url = new URL(link.href, location.href);
+      if (
+        !start ||
+        start.pointerId !== event.pointerId ||
+        start.url !== canonical(url.href) ||
+        Math.hypot(event.clientX - start.x, event.clientY - start.y) > 12
+      ) return;
+      if (url.origin !== location.origin || !/\.html$/i.test(url.pathname) || !safe) return;
+      if (event.cancelable) event.preventDefault();
+      lastTouchNavigation = { url: canonical(url.href), time: Date.now() };
+      navigate(url.href);
+    };
     const routerClick = (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       const link = target?.closest("a[href]");
@@ -478,6 +510,14 @@
       if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
       const url = new URL(link.href, location.href);
       if (url.origin !== location.origin || !/\.html$/i.test(url.pathname)) return;
+      if (
+        lastTouchNavigation &&
+        lastTouchNavigation.url === canonical(url.href) &&
+        Date.now() - lastTouchNavigation.time < 1000
+      ) {
+        event.preventDefault();
+        return;
+      }
       if (canonical(url.href) === activeView.url) {
         if (navigating) event.preventDefault();
         return;
@@ -496,6 +536,7 @@
       if (event.state?.spa && safe) navigate(event.state.url || location.href, false);
       else location.reload();
     };
+    document.addEventListener("pointerup", handleTouchNavigation, true);
     document.addEventListener("click", routerClick, true);
     document.addEventListener("pointerover", hoverPrefetch, { passive: true });
     window.addEventListener("popstate", popState);
