@@ -448,10 +448,10 @@ tr {
   overflow: hidden;
   width: min(850px, calc(100vw - 24px));
   max-width: 100%;
-  max-height: calc(100dvh - 24px);
+  max-height: calc(75dvh - 24px);
   background: #ffff;
   animation: modalShow 0.25s ease;
-  border-radius: 12px;
+  overflow-y: auto;
 }
 
 .edit-modal-book {
@@ -1027,6 +1027,14 @@ tr {
 .editBook-modal-content {
   font-family: "Poppins", sans-serif;
   color: #1f2937;
+}
+
+/* Keep the View and Edit Book dialogs in the page's regular, non-italic text style. */
+.view-book-modal-content,
+.view-book-modal-content *,
+.edit-book-modal-content,
+.edit-book-modal-content * {
+  font-style: normal !important;
 }
 
 @media (max-width: 768px) {
