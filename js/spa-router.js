@@ -341,6 +341,11 @@
     });
   }
 
+  function closeSidebar() {
+    document.querySelector("aside.sidebar")?.classList.remove("active");
+    document.getElementById("sidebarOverlay")?.classList.remove("active");
+  }
+
   async function navigate(url, push = true) {
     const targetURL = canonical(url);
     if (navigating) {
@@ -351,6 +356,7 @@
       location.href = url;
       return;
     }
+    closeSidebar();
     navigating = true;
     try {
       const targetDoc = await fetchPage(targetURL);
@@ -370,8 +376,7 @@
       if (push) history.pushState({ spa: true, url: targetURL }, document.title, targetURL);
       await runPageScripts(targetDoc, activeScope);
       window.scrollTo(0, 0);
-      document.getElementById("sidebarOverlay")?.classList.remove("active");
-      document.querySelector("aside.sidebar")?.classList.remove("active");
+      closeSidebar();
     } catch (error) {
       queuedNavigation = null;
       console.error("[SPA Router] Using regular page navigation after route setup failed:", error);

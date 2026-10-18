@@ -390,6 +390,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadDashboardStats(schoolId) {
   try {
+    const dashboardMarker = document.getElementById("totalStudentsCount");
+    if (!dashboardMarker) return;
 
     const { data: studentsData, error: studentError } =
       await window.supabaseClient
@@ -397,6 +399,7 @@ async function loadDashboardStats(schoolId) {
         .select("status")
         .eq("school_id", schoolId)
         .eq("role", "student");
+    if (!dashboardMarker.isConnected) return;
 
     if (!studentError && studentsData) {
       const totalStudents = studentsData.length;
@@ -419,6 +422,7 @@ async function loadDashboardStats(schoolId) {
         .select("status")
         .eq("school_id", schoolId)
         .eq("role", "teacher");
+    if (!dashboardMarker.isConnected) return;
 
     if (!teacherError && teachersData) {
       const totalTeachers = teachersData.length;
@@ -439,6 +443,7 @@ async function loadDashboardStats(schoolId) {
       .from("classes")
       .select("status")
       .eq("school_id", schoolId);
+    if (!dashboardMarker.isConnected) return;
 
     if (!classError && classesData) {
       const totalClasses = classesData.length;
@@ -469,6 +474,7 @@ async function loadDashboardStats(schoolId) {
         .eq("school_id", schoolId)
         .gte("created_at", `${today}T00:00:00`)
         .lte("created_at", `${today}T23:59:59`);
+    if (!dashboardMarker.isConnected) return;
 
     if (!attError && attendanceData && attendanceData.length > 0) {
 
@@ -601,6 +607,11 @@ async function loadEnrollmentStats(
   customEnd = null,
 ) {
   try {
+    const totalElement = document.getElementById("totalEnrollmentCount");
+    const activeElement = document.getElementById("activeEnrollmentCount");
+    const genderElement = document.getElementById("genderBreakdownCount");
+    if (!totalElement || !activeElement || !genderElement) return;
+
     const activeSchoolId = window.currentSchoolId;
 
     if (!activeSchoolId) {
@@ -642,14 +653,18 @@ async function loadEnrollmentStats(
 
     if (error) throw error;
 
-    document.getElementById("totalEnrollmentCount").textContent = (
-      stats.total || 0
-    ).toLocaleString();
-    document.getElementById("activeEnrollmentCount").textContent = (
-      stats.active || 0
-    ).toLocaleString();
-    document.getElementById("genderBreakdownCount").textContent =
-      `${stats.boys || 0} / ${stats.girls || 0}`;
+    // The request may finish after SPA navigation has removed the dashboard.
+    if (
+      !totalElement.isConnected ||
+      !activeElement.isConnected ||
+      !genderElement.isConnected
+    ) {
+      return;
+    }
+
+    totalElement.textContent = (stats.total || 0).toLocaleString();
+    activeElement.textContent = (stats.active || 0).toLocaleString();
+    genderElement.textContent = `${stats.boys || 0} / ${stats.girls || 0}`;
   } catch (err) {
     console.error("Error loading enrollment stats:", err);
   }
