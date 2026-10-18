@@ -12,8 +12,6 @@
 
 .attendances-report-main-content {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
   padding: 10px;
 }
 
@@ -231,7 +229,7 @@ tbody tr:hover {
 /* Mobile Responsiveness */
 @media screen and (max-width: 768px) {
   .attendances-report-main-content {
-    padding: 16px;
+    padding: 10px;
   }
 
   .topbar {
