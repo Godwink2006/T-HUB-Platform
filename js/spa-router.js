@@ -299,6 +299,21 @@
     }));
   }
 
+  function swapPageBody(targetDoc) {
+    const nextBody = targetDoc.body.cloneNode(true);
+    nextBody.querySelectorAll("script").forEach((script) => script.remove());
+
+    if (pageFamily(targetDoc) === "staff") {
+      ["#menuToggle", "#sidebarOverlay", "aside.sidebar"].forEach((selector) => {
+        const currentElement = document.querySelector(selector);
+        const nextElement = nextBody.querySelector(selector);
+        if (currentElement && nextElement) nextElement.replaceWith(currentElement);
+      });
+    }
+
+    document.body.replaceChildren(...Array.from(nextBody.childNodes));
+  }
+
   function updateActiveLink(url) {
     const targetName = new URL(url).pathname.split("/").pop();
     document.querySelectorAll(".menu li").forEach((item) => {
@@ -325,10 +340,9 @@
         location.href = url;
         return;
       }
-      const nextMain = targetDoc.querySelector("main");
       const targetStyles = await loadRouteStyles(targetDoc);
       pauseScope(activeScope);
-      document.querySelector("main").replaceWith(nextMain);
+      swapPageBody(targetDoc);
       document.body.className = targetDoc.body.className;
       document.title = targetDoc.title;
       activeView = { url: targetURL, safe: true };
