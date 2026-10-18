@@ -700,6 +700,9 @@ document.querySelectorAll(".filter-menu a").forEach((link) => {
     const filterText = e.target.textContent;
     const filterType = e.target.getAttribute("data-filter");
 
+    // The custom option opens the date-range modal; it must not query without dates.
+    if (filterType === "custom") return;
+
     const btnSpan = e.target
       .closest(".filter-dropdown")
       .querySelector(".selected-filter");

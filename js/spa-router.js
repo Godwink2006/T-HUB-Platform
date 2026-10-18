@@ -1,446 +1,406 @@
-/**
- * spa-router.js — Client-side SPA router for T-HUB Platform
- *
- * How it works:
- *  1. Intercepts clicks on sidebar <a> links and topbar nav links
- *  2. fetch()es the target .html page, parses it
- *  3. Extracts <main> content + page-specific <link> CSS + page <script> src
- *  4. Injects CSS (once), swaps <main>, injects page <script> (re-executes)
- *  5. Updates history.pushState + active link styling
- *  6. Prefetches on hover (HTML + pre-warms page data via QueryCache)
- *
- * Falls back gracefully:
- *  - External links, #hash-only links, and links with data-spa="false" are skipped
- *  - If the fetch fails the browser performs a normal navigation
- *  - Direct URL access still works (the script just doesn't intercept initial load)
- */
-
 (function () {
   "use strict";
 
-  // ─── Config ────────────────────────────────────────────────────────────────
+  const HTML_TTL = 60_000;
+  const htmlCache = new Map();
+  const pageInflight = new Map();
+  const assetCache = new Map();
+  const loadedExternalScripts = new Map();
+  const managedStyles = new Map();
+  const inlineStyles = new Map();
+  const SHARED_SCRIPTS = new Set([
+    "supabase.js",
+    "utils.js",
+    "app-icons.js",
+    "query-cache.js",
+    "spa-router.js",
+  ]);
+  const SHARED_CSS = new Set(["utils.css", "app-visuals.css"]);
+  const routerScript = document.currentScript;
+  const nativeDocumentRemove = document.removeEventListener.bind(document);
+  const nativeWindowRemove = window.removeEventListener.bind(window);
 
-  /** Pages that live outside /html/ — skip SPA for these */
-  const SPA_SKIP_PATTERNS = [
-    /\/index\.html$/i,
-    /\/parent-set-password\.html$/i,
-  ];
+  let activeView = null;
+  let activeScope = null;
+  let navigating = false;
 
-  /** Max age (ms) for cached HTML fragments */
-  const HTML_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-  /** CSS/JS hosts we treat as "same-app" (not CDN) */
-  const INTERNAL_HOST = window.location.origin;
-
-  // ─── State ─────────────────────────────────────────────────────────────────
-
-  /** Loaded CSS hrefs (absolute URLs) → true */
-  const _loadedCSS = new Set();
-
-  /** Loaded JS srcs (absolute URLs) → true */
-  const _loadedJS = new Set();
-
-  /** HTML fragment cache: url → { html: string, ts: number } */
-  const _htmlCache = new Map();
-
-  /** Currently navigating flag — prevents double-clicks */
-  let _navigating = false;
-
-  // Track the current page JS src so we know what to replace
-  let _currentPageJS = null;
-
-  // ─── Helpers ───────────────────────────────────────────────────────────────
-
-  function resolveURL(href) {
-    try {
-      return new URL(href, window.location.href).href;
-    } catch {
-      return null;
-    }
+  function canonical(url) {
+    const value = new URL(url, location.href);
+    value.hash = "";
+    return value.href;
   }
 
-  function isSameOrigin(url) {
-    try {
-      return new URL(url).origin === window.location.origin;
-    } catch {
-      return false;
-    }
+  function pageFamily(doc) {
+    if (!doc.querySelector("main")) return null;
+    if (doc.querySelector("aside.sidebar")) return "staff";
+    if (doc.querySelector(".parent-topbar")) return "parent";
+    return null;
   }
 
-  function shouldSkip(url) {
-    if (!url) return true;
-    if (!isSameOrigin(url)) return true;
-    const path = new URL(url).pathname;
-    if (SPA_SKIP_PATTERNS.some((rx) => rx.test(path))) return true;
-    // Skip pure hash changes on same page
-    if (
-      url.split("#")[0] === window.location.href.split("#")[0] &&
-      url.includes("#")
-    )
-      return true;
-    return false;
+  function canSwap(targetDoc, url) {
+    const target = new URL(url);
+    if (target.origin !== location.origin || !/\.html$/i.test(target.pathname)) return false;
+    const sourceFamily = pageFamily(document);
+    return sourceFamily !== null && pageFamily(targetDoc) === sourceFamily;
   }
 
-  /** Returns the page filename from a URL, e.g. "students.html" */
-  function pageNameOf(url) {
-    return new URL(url).pathname.split("/").pop() || "dashboard.html";
-  }
-
-  /** Returns the JS src for a page by reading the loaded page's <script> tags */
-  function extractPageJS(doc) {
-    const scripts = Array.from(doc.querySelectorAll("script[src]"));
-    // Page-specific JS is anything under /js/ that is NOT supabase/utils/app-icons/query-cache/spa-router
-    const SHARED = [
-      "supabase.js",
-      "utils.js",
-      "app-icons.js",
-      "query-cache.js",
-      "spa-router.js",
-    ];
-    const pageScript = scripts.find((s) => {
-      const src = s.getAttribute("src") || "";
-      return (
-        src.startsWith("/js/") && !SHARED.some((sh) => src.endsWith(sh))
-      );
-    });
-    return pageScript ? pageScript.getAttribute("src") : null;
-  }
-
-  /** Extract all page-specific CSS <link> hrefs (not shared ones) */
-  function extractPageCSS(doc) {
-    const SHARED_CSS = ["utils.css", "app-visuals.css"];
-    return Array.from(doc.querySelectorAll("link[rel='stylesheet'][href]"))
-      .map((l) => l.getAttribute("href"))
-      .filter(
-        (h) =>
-          h &&
-          h.startsWith("/css/") &&
-          !SHARED_CSS.some((s) => h.endsWith(s)),
-      );
-  }
-
-  /** Fetch + parse an HTML page, return Document */
-  async function fetchPage(url) {
-    const cached = _htmlCache.get(url);
-    if (cached && Date.now() - cached.ts < HTML_CACHE_TTL) {
-      const parser = new DOMParser();
-      return parser.parseFromString(cached.html, "text/html");
-    }
-
-    const res = await fetch(url, { credentials: "same-origin" });
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    const html = await res.text();
-    _htmlCache.set(url, { html, ts: Date.now() });
-    const parser = new DOMParser();
-    return parser.parseFromString(html, "text/html");
-  }
-
-  /** Inject a CSS link if not already loaded */
-  function ensureCSS(href) {
-    const abs = resolveURL(href);
-    if (!abs || _loadedCSS.has(abs)) return;
-    _loadedCSS.add(abs);
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  }
-
-  /**
-   * Dynamically load and execute a page JS file.
-   * Creates a new <script> tag every time (to re-execute).
-   */
-  function loadPageScript(src) {
-    return new Promise((resolve) => {
-      if (!src) return resolve();
-      // Remove any previous page-specific script tag to avoid duplicates
-      const abs = resolveURL(src);
-      const prev = document.querySelector(
-        `script[src="${src}"], script[data-spa-page]`,
-      );
-      if (prev) prev.remove();
-
-      const s = document.createElement("script");
-      s.src = src + "?_spa=" + Date.now(); // bust browser cache for re-execution
-      s.setAttribute("data-spa-page", "true");
-      s.onload = resolve;
-      s.onerror = resolve; // don't block on error
-      document.body.appendChild(s);
+  function pageScripts(doc) {
+    return Array.from(doc.scripts).filter((script) => {
+      if (script.type && !/^(text|application)\/(javascript|ecmascript)$/i.test(script.type)) return false;
+      if (!script.src) return script.textContent.trim().length > 0;
+      const url = new URL(script.src, doc.baseURI);
+      return !SHARED_SCRIPTS.has(url.pathname.split("/").pop());
     });
   }
 
-  // ─── Core navigate ─────────────────────────────────────────────────────────
-
-  async function navigate(url, pushState = true) {
-    if (_navigating) return;
-    if (shouldSkip(url)) {
-      window.location.href = url;
-      return;
-    }
-
-    _navigating = true;
-
-    // Show loading indicator
-    showSPALoader();
-
-    try {
-      // 1. Fetch & parse the target page
-      const targetDoc = await fetchPage(url);
-
-      // 2. Extract <main> content
-      const newMain = targetDoc.querySelector("main");
-      if (!newMain) {
-        // No <main> found — fall back to full navigation
-        window.location.href = url;
-        return;
-      }
-
-      // 3. Inject page CSS (idempotent)
-      const cssLinks = extractPageCSS(targetDoc);
-      cssLinks.forEach(ensureCSS);
-
-      // 4. Get page JS src
-      const pageJSSrc = extractPageJS(targetDoc);
-
-      // 5. Swap <main> with transition
-      const currentMain = document.querySelector("main");
-      if (currentMain) {
-        currentMain.classList.add("spa-fade-out");
-        await delay(150);
-        currentMain.replaceWith(newMain);
-      } else {
-        document.body.appendChild(newMain);
-      }
-
-      // 6. Update <title>
-      const newTitle = targetDoc.querySelector("title");
-      if (newTitle) document.title = newTitle.textContent;
-
-      // 7. Update active sidebar link
-      updateActiveLink(url);
-
-      // 8. Push history
-      if (pushState) {
-        history.pushState({ url }, document.title, url);
-      }
-
-      // 9. Scroll to top
-      window.scrollTo(0, 0);
-
-      // 10. Close mobile sidebar if open
-      closeMobileSidebar();
-
-      // 11. Fade in new content
-      newMain.classList.add("spa-fade-in");
-      requestAnimationFrame(() => {
-        newMain.classList.add("spa-visible");
+  function pageStyles(doc) {
+    return Array.from(doc.querySelectorAll('link[rel="stylesheet"][href]'))
+      .map((link) => new URL(link.href, doc.baseURI).href)
+      .filter((href) => {
+        const url = new URL(href);
+        return url.origin === location.origin &&
+          url.pathname.startsWith("/css/") &&
+          !SHARED_CSS.has(url.pathname.split("/").pop());
       });
+  }
 
-      // 12. Re-run sidebar init (navigation highlighting) using cached auth
-      const authCtx = await window.getAuthContext();
-      if (typeof renderNavigation === "function") {
-        renderNavigation(authCtx?.profile?.role || null);
-      }
+  async function fetchText(url) {
+    const cached = assetCache.get(url);
+    if (cached) return cached;
+    const response = await fetch(url, { credentials: "same-origin" });
+    if (!response.ok) throw new Error(`Could not load ${url}: ${response.status}`);
+    const text = await response.text();
+    assetCache.set(url, text);
+    return text;
+  }
 
-      // 13. Re-wire modal close listeners from utils.js
-      rewireModalListeners();
-
-      // 14. Load and execute the page-specific JS
-      //     (Do this AFTER DOM is in place so querySelector calls in page JS work)
-      await loadPageScript(pageJSSrc);
-
-    } catch (err) {
-      console.error("[SPA Router] Navigation failed:", err);
-      // Fall back to full navigation
-      window.location.href = url;
-    } finally {
-      _navigating = false;
-      hideSPALoader();
+  async function fetchPage(url) {
+    const key = canonical(url);
+    const cached = htmlCache.get(key);
+    if (cached && cached.expiresAt > Date.now()) return cached.doc.cloneNode(true);
+    let pending = pageInflight.get(key);
+    if (!pending) {
+      pending = (async () => {
+        const response = await fetch(key, { credentials: "same-origin" });
+        if (!response.ok) throw new Error(`Could not load page: ${response.status}`);
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const base = doc.createElement("base");
+        base.href = key;
+        doc.head.prepend(base);
+        htmlCache.set(key, { doc, expiresAt: Date.now() + HTML_TTL });
+        return doc;
+      })().finally(() => {
+        if (pageInflight.get(key) === pending) pageInflight.delete(key);
+      });
+      pageInflight.set(key, pending);
     }
+    return (await pending).cloneNode(true);
   }
 
-  // ─── Sidebar / active link ──────────────────────────────────────────────────
-
-  function updateActiveLink(targetURL) {
-    const targetPage = pageNameOf(targetURL);
-    document.querySelectorAll(".menu li").forEach((li) => {
-      li.classList.remove("active");
-      const a = li.querySelector("a");
-      if (!a) return;
-      const linkHref = a.getAttribute("href") || "";
-      const linkPage = linkHref.split("/").pop() || "";
-      if (linkPage === targetPage) {
-        li.classList.add("active");
-      }
-    });
+  function prefetchImage(url) {
+    if (!url || url.startsWith("data:")) return;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = url;
   }
-
-  function closeMobileSidebar() {
-    const sidebar = document.querySelector(".sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    if (sidebar) sidebar.classList.remove("active");
-    if (overlay) overlay.classList.remove("active");
-  }
-
-  // ─── Re-wire utils.js modal listeners after swap ───────────────────────────
-  // utils.js attaches modal listeners on DOMContentLoaded which only fires once.
-  // After each SPA nav we re-attach them so backdrop-click-to-close still works.
-
-  const MODAL_IDS = [
-    "periodModal","editPeriodModal","editSystemUserModal","systemUserModal",
-    "editSubjectModal","subjectModal","structureModal","editStructureModal",
-    "viewStructureModal","termModal","editTermModal","editDepartmentModal",
-    "departmentModal","classModal","editClassModal","academicYearModal",
-    "editAcademicYearModal",
-  ];
-
-  function rewireModalListeners() {
-    // Remove old delegated handler if any, add fresh one
-    document.removeEventListener("click", _modalBackdropHandler, true);
-    document.addEventListener("click", _modalBackdropHandler, true);
-
-    // Image error fallback
-    document.removeEventListener("error", _imgErrorHandler, true);
-    document.addEventListener("error", _imgErrorHandler, true);
-  }
-
-  function _modalBackdropHandler(event) {
-    MODAL_IDS.forEach((id) => {
-      const modal = document.getElementById(id);
-      if (modal && event.target === modal) {
-        modal.classList.remove("active");
-        if (typeof unLockBodyScroll === "function") unLockBodyScroll();
-      }
-    });
-  }
-
-  function _imgErrorHandler(event) {
-    const image = event.target;
-    if (
-      image instanceof HTMLImageElement &&
-      image.matches(
-        ".student-photo,.teacher-photo,.systemUser-photo,.app-person-avatar,#profileAvatar,.view-student-photo,.view-teacher-photo",
-      ) &&
-      image.src !== window.DEFAULT_PROFILE_AVATAR
-    ) {
-      image.src = window.DEFAULT_PROFILE_AVATAR;
-    }
-  }
-
-  // ─── Prefetch on hover ──────────────────────────────────────────────────────
 
   function prefetch(url) {
-    if (!url || shouldSkip(url)) return;
-    const cached = _htmlCache.get(url);
-    if (cached && Date.now() - cached.ts < HTML_CACHE_TTL) return;
-    // Silent background fetch
-    fetch(url, { credentials: "same-origin" })
-      .then((res) => (res.ok ? res.text() : null))
-      .then((html) => {
-        if (html) _htmlCache.set(url, { html, ts: Date.now() });
-      })
-      .catch(() => {});
-  }
-
-  // ─── Click interception ─────────────────────────────────────────────────────
-
-  function interceptClicks() {
-    document.addEventListener("click", (e) => {
-      const a = e.target.closest("a[href]");
-      if (!a) return;
-
-      // Respect opt-out
-      if (a.dataset.spa === "false") return;
-      // Skip modifier keys (open in new tab etc.)
-      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-      // Skip download links
-      if (a.hasAttribute("download")) return;
-      // Skip target="_blank"
-      if (a.target === "_blank") return;
-
-      const url = resolveURL(a.getAttribute("href"));
-      if (!url) return;
-      if (shouldSkip(url)) return;
-
-      e.preventDefault();
-      navigate(url);
-    });
-  }
-
-  // ─── Hover prefetch ─────────────────────────────────────────────────────────
-
-  function attachHoverPrefetch() {
-    // Use event delegation on the sidebar menu and topbar
-    document.addEventListener("mouseover", (e) => {
-      const a = e.target.closest("a[href]");
-      if (!a || a.dataset.spa === "false") return;
-      const url = resolveURL(a.getAttribute("href"));
-      if (url) prefetch(url);
-    });
-  }
-
-  // ─── Popstate (browser back/forward) ───────────────────────────────────────
-
-  function handlePopState() {
-    window.addEventListener("popstate", (e) => {
-      const url = (e.state && e.state.url) || window.location.href;
-      navigate(url, false);
-    });
-  }
-
-  // ─── Loading indicator ──────────────────────────────────────────────────────
-
-  function ensureLoaderEl() {
-    let el = document.getElementById("spa-top-loader");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "spa-top-loader";
-      el.innerHTML = '<div class="spa-loader-bar"></div>';
-      document.body.prepend(el);
+    let key;
+    try {
+      key = canonical(url);
+    } catch {
+      return;
     }
-    return el;
+    if (new URL(key).origin !== location.origin || htmlCache.get(key)?.expiresAt > Date.now()) return;
+    fetchPage(key).then((doc) => {
+      if (!canSwap(doc, key)) return;
+      pageStyles(doc).forEach((href) => fetch(href, { credentials: "same-origin" })
+        .then((response) => response.ok && response.arrayBuffer())
+        .catch(() => {}));
+      pageScripts(doc).forEach((script) => {
+        if (script.src) {
+          const src = new URL(script.src, doc.baseURI).href;
+          if (new URL(src).origin === location.origin) fetchText(src).catch(() => {});
+        }
+      });
+      doc.querySelectorAll("img[src], source[srcset]").forEach((el) => {
+        if (el.hasAttribute("src")) prefetchImage(new URL(el.getAttribute("src"), key).href);
+        (el.getAttribute("srcset") || "").split(",").forEach((candidate) => {
+          const imageURL = candidate.trim().split(/\s+/)[0];
+          if (imageURL) prefetchImage(new URL(imageURL, key).href);
+        });
+      });
+    }).catch(() => {});
   }
 
-  function showSPALoader() {
-    const el = ensureLoaderEl();
-    el.classList.add("active");
+  function createScope() {
+    return { listeners: [], ready: [], exports: new Map(), previousGlobals: new Map() };
   }
 
-  function hideSPALoader() {
-    const el = document.getElementById("spa-top-loader");
-    if (el) el.classList.remove("active");
+  function invokeListener(listener, event, target) {
+    if (typeof listener === "function") return listener.call(target, event);
+    if (listener && typeof listener.handleEvent === "function") return listener.handleEvent(event);
   }
 
-  // ─── Delay helper ───────────────────────────────────────────────────────────
+  function installListenerTracking() {
+    const docAdd = document.addEventListener.bind(document);
+    const docRemove = document.removeEventListener.bind(document);
+    const winAdd = window.addEventListener.bind(window);
+    const winRemove = window.removeEventListener.bind(window);
 
-  function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    document.addEventListener = function (type, listener, options) {
+      if (!activeScope || typeof listener !== "function" && !listener?.handleEvent) {
+        return docAdd(type, listener, options);
+      }
+      if (type === "DOMContentLoaded" && document.readyState !== "loading") {
+        activeScope.ready.push(listener);
+        return;
+      }
+      activeScope.listeners.push({ target: document, type, listener, options });
+      return docAdd(type, listener, options);
+    };
+    document.removeEventListener = function (type, listener, options) {
+      if (activeScope) {
+        activeScope.listeners = activeScope.listeners.filter((entry) =>
+          !(entry.target === document && entry.type === type && entry.listener === listener));
+      }
+      return docRemove(type, listener, options);
+    };
+    window.addEventListener = function (type, listener, options) {
+      if (!activeScope || typeof listener !== "function" && !listener?.handleEvent) {
+        return winAdd(type, listener, options);
+      }
+      if (type === "DOMContentLoaded" && document.readyState !== "loading") {
+        activeScope.ready.push(listener);
+        return;
+      }
+      activeScope.listeners.push({ target: window, type, listener, options });
+      return winAdd(type, listener, options);
+    };
+    window.removeEventListener = function (type, listener, options) {
+      if (activeScope) {
+        activeScope.listeners = activeScope.listeners.filter((entry) =>
+          !(entry.target === window && entry.type === type && entry.listener === listener));
+      }
+      return winRemove(type, listener, options);
+    };
   }
 
-  // ─── Bootstrap ─────────────────────────────────────────────────────────────
+  function pauseScope(scope) {
+    if (!scope) return;
+    scope.listeners.forEach(({ target, type, listener, options }) => {
+      (target === document ? nativeDocumentRemove : nativeWindowRemove)(type, listener, options);
+    });
+    scope.listeners.length = 0;
+    scope.exports.forEach((fn, name) => {
+      if (window[name] === fn) {
+        if (scope.previousGlobals.has(name)) window[name] = scope.previousGlobals.get(name);
+        else delete window[name];
+      }
+    });
+  }
+
+  function discoverFunctions(source) {
+    return Array.from(source.matchAll(/^[ \t]*(?:async\s+)?function\b\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(/gm), (match) => match[1]);
+  }
+
+  function executeCode(source, scope) {
+    const functionNames = discoverFunctions(source);
+    functionNames.forEach((name) => {
+      if (!scope.previousGlobals.has(name)) scope.previousGlobals.set(name, window[name]);
+    });
+    const exports = functionNames.map((name) =>
+      `if (typeof ${name} === "function") { window[${JSON.stringify(name)}] = ${name}; __spaExports.set(${JSON.stringify(name)}, ${name}); }`,
+    ).join("\n");
+    const run = new Function("__spaExports", `${source}\n${exports}`);
+    run(scope.exports);
+  }
+
+  async function loadExternalScript(src) {
+    if (Array.from(document.scripts).some((script) => script.src === src)) return;
+    if (loadedExternalScripts.has(src)) return loadedExternalScripts.get(src);
+    const promise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Could not load script ${src}`));
+      document.head.appendChild(script);
+    });
+    loadedExternalScripts.set(src, promise);
+    try {
+      await promise;
+    } catch (error) {
+      loadedExternalScripts.delete(src);
+      throw error;
+    }
+  }
+
+  async function runPageScripts(doc, scope) {
+    for (const script of pageScripts(doc)) {
+      if (script.src) {
+        const src = new URL(script.src, doc.baseURI).href;
+        if (new URL(src).origin !== location.origin) {
+          await loadExternalScript(src);
+        } else {
+          executeCode(await fetchText(src), scope);
+        }
+      } else {
+        executeCode(script.textContent, scope);
+      }
+    }
+    while (scope.ready.length) {
+      const readyListeners = scope.ready.splice(0);
+      for (const listener of readyListeners) {
+        const event = new Event("DOMContentLoaded");
+        Object.defineProperty(event, "target", { value: document });
+        Object.defineProperty(event, "currentTarget", { value: document });
+        await invokeListener(listener, event, document);
+      }
+    }
+  }
+
+  function loadRouteStyles(doc) {
+    const targetHrefs = new Set(pageStyles(doc));
+    const pending = [];
+    targetHrefs.forEach((href) => {
+      if (managedStyles.has(href)) return;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      link.media = "not all";
+      managedStyles.set(href, link);
+      pending.push(new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error(`Stylesheet timed out: ${href}`)), 8000);
+        link.onload = () => { clearTimeout(timeout); resolve(); };
+        link.onerror = () => { clearTimeout(timeout); reject(new Error(`Stylesheet failed: ${href}`)); };
+        document.head.appendChild(link);
+      }));
+    });
+    return Promise.all(pending).then(() => targetHrefs);
+  }
+
+  function activateStyles(doc, targetHrefs) {
+    managedStyles.forEach((link, href) => { link.media = targetHrefs.has(href) ? "all" : "not all"; });
+    let cached = inlineStyles.get(activeView.url);
+    if (!cached) {
+      cached = Array.from(doc.querySelectorAll("head style"), (style) => {
+        const copy = document.createElement("style");
+        copy.textContent = style.textContent;
+        copy.media = "not all";
+        document.head.appendChild(copy);
+        return copy;
+      });
+      inlineStyles.set(activeView.url, cached);
+    }
+    inlineStyles.forEach((nodes, url) => nodes.forEach((style) => {
+      style.media = url === activeView.url ? "all" : "not all";
+    }));
+  }
+
+  function updateActiveLink(url) {
+    const targetName = new URL(url).pathname.split("/").pop();
+    document.querySelectorAll(".menu li").forEach((item) => {
+      const link = item.querySelector("a[href]");
+      const name = link && new URL(link.href, location.href).pathname.split("/").pop();
+      item.classList.toggle("active", name === targetName);
+    });
+  }
+
+  async function navigate(url, push = true) {
+    if (navigating) return;
+    const targetURL = canonical(url);
+    if (!activeView?.safe || targetURL === activeView.url) {
+      location.href = url;
+      return;
+    }
+    navigating = true;
+    try {
+      const targetDoc = await fetchPage(targetURL);
+      if (!canSwap(targetDoc, targetURL)) {
+        location.href = url;
+        return;
+      }
+      const nextMain = targetDoc.querySelector("main");
+      const targetStyles = await loadRouteStyles(targetDoc);
+      pauseScope(activeScope);
+      document.querySelector("main").replaceWith(nextMain);
+      document.body.className = targetDoc.body.className;
+      document.title = targetDoc.title;
+      activeView = { url: targetURL, safe: true };
+      activeScope = createScope();
+      activateStyles(targetDoc, targetStyles);
+      await runPageScripts(targetDoc, activeScope);
+      updateActiveLink(targetURL);
+      if (push) history.pushState({ spa: true, url: targetURL }, document.title, targetURL);
+      window.scrollTo(0, 0);
+      document.getElementById("sidebarOverlay")?.classList.remove("active");
+      document.querySelector("aside.sidebar")?.classList.remove("active");
+    } catch (error) {
+      console.error("[SPA Router] Using regular page navigation after route setup failed:", error);
+      location.href = url;
+    } finally {
+      navigating = false;
+    }
+  }
+
+  function initialScriptOrderIsSafe() {
+    const scripts = Array.from(document.scripts);
+    const routerIndex = scripts.indexOf(routerScript);
+    if (routerIndex < 0) return false;
+    return !scripts.slice(0, routerIndex).some((script) => {
+      if (!script.src) {
+        return script.textContent.trim().length > 0 &&
+          (!script.type || /^(text|application)\/(javascript|ecmascript)$/i.test(script.type));
+      }
+      const scriptURL = new URL(script.src, location.href);
+      const name = scriptURL.pathname.split("/").pop();
+      return scriptURL.origin === location.origin &&
+        scriptURL.pathname.startsWith("/js/") &&
+        !SHARED_SCRIPTS.has(name);
+    });
+  }
 
   function init() {
-    // Record the initial page state in history so popstate works
-    history.replaceState(
-      { url: window.location.href },
-      document.title,
-      window.location.href,
-    );
+    const safe = initialScriptOrderIsSafe();
+    const routerClick = (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const link = target?.closest("a[href]");
+      if (!link || link.dataset.spa === "false" || link.target === "_blank" || link.hasAttribute("download")) return;
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const url = new URL(link.href, location.href);
+      if (url.origin !== location.origin || !/\.html$/i.test(url.pathname)) return;
+      if (canonical(url.href) === activeView.url) return;
+      if (link.target && link.target !== "_self") return;
+      if (!safe) return;
+      event.preventDefault();
+      navigate(url.href);
+    };
+    const hoverPrefetch = (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const link = target?.closest("a[href]");
+      if (link && link.dataset.spa !== "false") prefetch(link.href);
+    };
+    const popState = (event) => {
+      if (event.state?.spa && safe) navigate(event.state.url || location.href, false);
+      else location.reload();
+    };
+    document.addEventListener("click", routerClick, true);
+    document.addEventListener("pointerover", hoverPrefetch, { passive: true });
+    window.addEventListener("popstate", popState);
 
-    interceptClicks();
-    attachHoverPrefetch();
-    handlePopState();
-
-    // Expose for external use (e.g., programmatic navigation)
+    activeView = { url: canonical(location.href), safe };
+    activeScope = createScope();
+    pageStyles(document).forEach((href) => {
+      const link = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]'))
+        .find((node) => new URL(node.href, location.href).href === href);
+      if (link) managedStyles.set(href, link);
+    });
+    inlineStyles.set(activeView.url, Array.from(document.head.querySelectorAll("style")));
+    installListenerTracking();
+    history.replaceState({ spa: true, url: activeView.url }, document.title, location.href);
     window.SPARouter = { navigate, prefetch };
-
-    console.info("[SPA Router] Initialized ✓");
   }
 
-  // Run after DOM is ready
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
-  } else {
-    init();
-  }
+  init();
 })();

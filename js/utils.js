@@ -839,3 +839,19 @@ window.sendNotification = async function (
     return { success: false, error: err };
   }
 };
+
+// Load the client-side router before page-specific scripts when the document
+// is still being parsed. That lets it manage each page's existing listeners.
+(function loadSPARouter() {
+  if (window.SPARouter || window.__spaRouterLoading) return;
+  window.__spaRouterLoading = true;
+
+  if (document.readyState === "loading" && document.currentScript) {
+    document.write('<script src="/js/spa-router.js"><\/script>');
+    return;
+  }
+
+  const routerScript = document.createElement("script");
+  routerScript.src = "/js/spa-router.js";
+  document.head.appendChild(routerScript);
+})();

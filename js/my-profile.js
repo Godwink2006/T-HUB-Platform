@@ -432,10 +432,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const {
       data: { user },
-    } = await client.auth.getUser();
+    } = await supabaseClient.auth.getUser();
 
     if (user) {
-      const { data: profile } = await client
+      const { data: profile } = await supabaseClient
         .from("profiles")
         .select("role")
         .eq("id", user.id)
@@ -444,7 +444,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const role = profile?.role?.toLowerCase();
 
       backBtn.onclick = () => {
-        if (isParent) {
+        if (role === "parent") {
           window.location.replace("parent-dashboard.html"); // Prevents back-swipe
         } else {
           window.location.replace("settings.html");
@@ -452,7 +452,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
     } else {
       backBtn.onclick = () => {
-        window.location.replace = "settings.html";
+        window.location.replace("settings.html");
       };
     }
   } catch (err) {
