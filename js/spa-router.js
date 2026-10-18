@@ -23,6 +23,7 @@
   let activeView = null;
   let activeScope = null;
   let navigating = false;
+  let queuedNavigation = null;
 
   function canonical(url) {
     const value = new URL(url, location.href);
@@ -308,8 +309,11 @@
   }
 
   async function navigate(url, push = true) {
-    if (navigating) return;
     const targetURL = canonical(url);
+    if (navigating) {
+      queuedNavigation = { url: targetURL, push };
+      return;
+    }
     if (!activeView?.safe || targetURL === activeView.url) {
       location.href = url;
       return;
@@ -330,17 +334,23 @@
       activeView = { url: targetURL, safe: true };
       activeScope = createScope();
       activateStyles(targetDoc, targetStyles);
+      if (push) history.pushState({ spa: true, url: targetURL }, document.title, targetURL);
       await runPageScripts(targetDoc, activeScope);
       updateActiveLink(targetURL);
-      if (push) history.pushState({ spa: true, url: targetURL }, document.title, targetURL);
       window.scrollTo(0, 0);
       document.getElementById("sidebarOverlay")?.classList.remove("active");
       document.querySelector("aside.sidebar")?.classList.remove("active");
     } catch (error) {
+      queuedNavigation = null;
       console.error("[SPA Router] Using regular page navigation after route setup failed:", error);
       location.href = url;
     } finally {
       navigating = false;
+      const nextNavigation = queuedNavigation;
+      queuedNavigation = null;
+      if (nextNavigation && canonical(nextNavigation.url) !== activeView?.url) {
+        navigate(nextNavigation.url, nextNavigation.push);
+      }
     }
   }
 
@@ -370,7 +380,10 @@
       if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
       const url = new URL(link.href, location.href);
       if (url.origin !== location.origin || !/\.html$/i.test(url.pathname)) return;
-      if (canonical(url.href) === activeView.url) return;
+      if (canonical(url.href) === activeView.url) {
+        if (navigating) event.preventDefault();
+        return;
+      }
       if (link.target && link.target !== "_self") return;
       if (!safe) return;
       event.preventDefault();
