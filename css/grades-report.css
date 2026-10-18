@@ -364,3 +364,54 @@ table {
     background: #ffffff;
   }
 }
+/* Rounded UI surfaces on phones; square UI on larger screens. */
+@media screen and (min-width: 769px) {
+  body *:not(img):not(svg):not(canvas) {
+    border-radius: 0 !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  body *:not(img):not(svg):not(canvas) {
+    border-radius: 8px !important;
+  }
+
+  body table:not(img):not(svg):not(canvas),
+  body table *:not(img):not(svg):not(canvas) {
+    border-radius: 0 !important;
+  }
+}
+/* Ensure class-based card and badge rules follow the same responsive radius. */
+@media screen and (min-width: 769px) {
+  body [class]:not(img):not(svg):not(canvas),
+  body *:not(img):not(svg):not(canvas) {
+    border-radius: 0 !important;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  body [class]:not(img):not(svg):not(canvas),
+  body *:not(img):not(svg):not(canvas) {
+    border-radius: 8px !important;
+  }
+
+  body table:not(img):not(svg):not(canvas),
+  body table [class]:not(img):not(svg):not(canvas),
+  body table *:not(img):not(svg):not(canvas) {
+    border-radius: 0 !important;
+  }
+}
+@media screen and (max-width: 768px) {
+  body [class*="-report-table-card"]:not(img):not(svg):not(canvas),
+  body [class*="-record-table-card"]:not(img):not(svg):not(canvas) {
+    border-radius: 0 !important;
+  }
+}
+@media screen and (max-width: 768px) {
+  body table button:not(img):not(svg):not(canvas):not(table):not(thead):not(tbody),
+  body table [class*="btn"]:not(img):not(svg):not(canvas),
+  body table [class*="badge"]:not(img):not(svg):not(canvas),
+  body table [class*="status"]:not(img):not(svg):not(canvas) {
+    border-radius: 8px !important;
+  }
+}
