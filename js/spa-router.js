@@ -50,6 +50,15 @@
       if (script.type && !/^(text|application)\/(javascript|ecmascript)$/i.test(script.type)) return false;
       if (!script.src) return script.textContent.trim().length > 0;
       const url = new URL(script.src, doc.baseURI);
+      // Shared CDN libraries (notably Supabase) are already live on the current
+      // page. Loading them again delays route swaps and can force a full reload
+      // when the remote script request fails on mobile connections.
+      if (
+        url.origin !== location.origin &&
+        Array.from(document.scripts).some((loaded) =>
+          loaded.src && new URL(loaded.src, location.href).href === url.href,
+        )
+      ) return false;
       return !SHARED_SCRIPTS.has(url.pathname.split("/").pop());
     });
   }
@@ -400,6 +409,7 @@
     }
     closeSidebar();
     navigating = true;
+    let pageSwapped = false;
     try {
       const targetDoc = await fetchPage(targetURL);
       if (!canSwap(targetDoc, targetURL)) {
@@ -409,6 +419,7 @@
       const targetStyles = await loadRouteStyles(targetDoc);
       pauseScope(activeScope);
       swapPageBody(targetDoc);
+      pageSwapped = true;
       document.body.className = targetDoc.body.className;
       document.title = targetDoc.title;
       activeView = { url: targetURL, safe: true };
@@ -421,8 +432,16 @@
       closeSidebar();
     } catch (error) {
       queuedNavigation = null;
-      console.error("[SPA Router] Using regular page navigation after route setup failed:", error);
-      location.href = url;
+      if (pageSwapped) {
+        // The new view and persistent sidebar are already in place. Reloading
+        // here discarded them and caused the mobile logo/sidebar flash when a
+        // page-specific initializer threw.
+        console.error("[SPA Router] The page changed, but its initializer failed:", error);
+        closeSidebar();
+      } else {
+        console.error("[SPA Router] Using regular page navigation after route setup failed:", error);
+        location.href = url;
+      }
     } finally {
       navigating = false;
       const nextNavigation = queuedNavigation;
