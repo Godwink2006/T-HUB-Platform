@@ -6,120 +6,302 @@
 }
 
 body {
-  background: rgb(231, 226, 226);
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 .grades-report-container {
   display: flex;
+  min-height: 100vh;
 }
 
 .grades-report-main-content {
   width: 100%;
-  min-height: 100vh;
-  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 30px;
 }
 
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .topbar h1 {
-  font-size: 32px;
-  color: #1f2937;
+  font-size: 28px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .topbar p {
-  color: #6b7280;
-  margin-top: 5px;
-}
-
-.top-right {
-  display: flex;
-  align-items: center;
-  gap: 25px;
+  color: #64748b;
+  margin-top: 4px;
+  font-size: 14px;
 }
 
 .back-grades-report-btn {
-  width: auto;
-  height: 30px;
-  padding: 10px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  margin-top: 5px;
-  border: 2px solid rgb(219, 215, 215);
-  width: 50%;
-  justify-content: space-between;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.back-grades-report-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
 }
 
 .toolbar {
   display: flex;
-  gap: 15px;
-  margin: 25px 0;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+  align-items: center;
 }
 
-.toolbar input,
-.toolbar select {
-  height: 48px;
-  border: 2px solid rgb(219, 215, 215);
-  border-radius: 10px;
-  padding: 0 15px;
-  outline: none;
-  background: #ffff;
-}
-
+.toolbar select,
 .toolbar input {
-  width: 320px;
+  height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 14px;
+  outline: none;
+  background: #ffffff;
+  font-size: 14px;
+  color: #1e293b;
+  min-width: 170px;
+  transition: border-color 0.2s ease;
+}
+
+.toolbar select:focus,
+.toolbar input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
 .grades-report-table-card {
-  background: #ffff;
-  overflow: hidden;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  margin-bottom: 24px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 700px;
 }
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 th {
-  padding: 18px;
+  padding: 14px 16px;
   text-align: left;
-  font-size: 14px;
-  color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 td {
-  padding: 18px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  white-space: nowrap;
 }
 
-tr {
-  border: 2px solid rgb(219, 215, 215);
+tbody tr:last-child td {
+  border-bottom: none;
 }
 
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Action Buttons */
 .grades-report-actions-btn {
-  width: 70px;
-  height: 50px;
-  border: none;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
   cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
   margin-right: 6px;
+  white-space: nowrap;
 }
 
-.save-btn {
-  padding: 8px 18px;
-  border: none;
-  border-radius: 10px;
-  background: #2563eb;
-  color: #ffff;
-  cursor: pointer;
+.btn-print {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-print:hover {
+  background: #e2e8f0;
+}
+
+.btn-pdf {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.btn-pdf:hover {
+  background: #b91c1c;
+}
+
+.btn-excel {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.btn-excel:hover {
+  background: #15803d;
+}
+
+/* Performance Badges */
+.grade-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.grade-badge.distinction {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.grade-badge.credit {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.grade-badge.pass {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.grade-badge.fail {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Detail Section */
+.report-detail-section {
+  margin-top: 15px;
+}
+
+.report-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.report-detail-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.report-detail-count {
+  font-size: 13px;
+  color: #64748b;
+  background: #e2e8f0;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* Mobile Responsiveness */
+@media screen and (max-width: 768px) {
+  .grades-report-main-content {
+    padding: 16px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .topbar h1 {
+    font-size: 22px;
+  }
+
+  .back-grades-report-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .toolbar select,
+  .toolbar input {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .grades-report-actions-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .back-grades-report-btn,
+  .toolbar,
+  .grades-report-actions-btn,
+  .menu-toggle {
+    display: none !important;
+  }
+
+  .grades-report-main-content {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .grades-report-table-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  table {
+    min-width: 100%;
+  }
 }

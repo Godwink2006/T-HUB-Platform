@@ -12,27 +12,26 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>High School Management System</title>
+    <title>Teacher Reports - HSMS</title>
     <link rel="stylesheet" href="/css/teacher-reports.css" />
-    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
     />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <div class="teachers-report-container">
@@ -40,35 +39,35 @@
         <header class="topbar">
           <div>
             <h1>Teacher Reports</h1>
-            <p>View teacher reports.</p>
-
-            <button
-              onclick="window.location.href = 'reports.html'"
-              class="back-teachers-report-btn"
-            >
-              <i class="fa-solid fa-chevron-left"></i>
-              Back
-            </button>
+            <p>Faculty roster overview, subject assignments, and weekly timetable workload distribution.</p>
           </div>
+
+          <button
+            onclick="window.location.href = 'reports.html'"
+            class="back-teachers-report-btn"
+          >
+            <i class="fa-solid fa-chevron-left"></i>
+            Back to Reports
+          </button>
         </header>
 
         <section class="toolbar">
-          <select>
-            <option>Department</option>
+          <select id="filterDepartment">
+            <option value="">All Departments</option>
           </select>
 
-          <select>
-            <option>Status</option>
+          <select id="filterStatus">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
           </select>
 
-          <select>
-            <option>Academic Year</option>
-            <option>2026-2027</option>
-            <option>2025-2026</option>
-            <option>2024-2025</option>
+          <select id="filterYear">
+            <option value="">All Academic Years</option>
           </select>
         </section>
 
+        <!-- Executive Summary Table -->
         <section class="teachers-report-table-card">
           <table>
             <thead>
@@ -83,36 +82,55 @@
               </tr>
             </thead>
 
-            <tbody>
+            <tbody id="teacherSummaryBody">
               <tr>
-                <td>10</td>
-                <td>8</td>
-                <td>2</td>
-                <td>5</td>
-                <td>7</td>
-                <td>7</td>
-
-                <td>
-                  <button class="teachers-report-actions-btn save-btn">
-                    Print Report
-                  </button>
-
-                  <button class="teachers-report-actions-btn save-btn">
-                    Export PDF
-                  </button>
-
-                  <button class="teachers-report-actions-btn save-btn">
-                    Export Excel
-                  </button>
+                <td colspan="7" style="text-align: center; padding: 24px; color: #64748b;">
+                  <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i>
+                  Loading teacher metrics...
                 </td>
               </tr>
             </tbody>
           </table>
         </section>
+
+        <!-- Detailed Breakdown -->
+        <section class="report-detail-section">
+          <div class="report-detail-header">
+            <h3>Faculty Workload Roster</h3>
+            <span class="report-detail-count" id="detailRecordCount">0 teachers</span>
+          </div>
+
+          <div class="teachers-report-table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Staff ID</th>
+                  <th>Teacher Name</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th>Subjects Assigned</th>
+                  <th>Classes Assigned</th>
+                  <th>Timetable Periods / Wk</th>
+                </tr>
+              </thead>
+              <tbody id="teacherDetailBody">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">
+                    Loading faculty details...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/reports-common.js"></script>
+    <script src="/js/teacher-reports.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>

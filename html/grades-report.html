@@ -12,27 +12,26 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>High School Management System</title>
+    <title>Grade Reports - HSMS</title>
     <link rel="stylesheet" href="/css/grades-report.css" />
-    <link rel="preconnect" href="https://fontsgoogleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
     />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <div class="grades-report-container">
@@ -40,32 +39,37 @@
         <header class="topbar">
           <div>
             <h1>Grade Reports</h1>
-            <p>View grade reports.</p>
-
-            <button
-              onclick="window.location.href = 'reports.html'"
-              class="back-grades-report-btn"
-            >
-              <i class="fa-solid fa-chevron-left"></i>
-              Back
-            </button>
+            <p>Comprehensive assessment metrics, student score distributions, and subject averages.</p>
           </div>
+
+          <button
+            onclick="window.location.href = 'reports.html'"
+            class="back-grades-report-btn"
+          >
+            <i class="fa-solid fa-chevron-left"></i>
+            Back to Reports
+          </button>
         </header>
 
         <section class="toolbar">
-          <select>
-            <option>Academic Year</option>
+          <select id="filterYear">
+            <option value="">All Academic Years</option>
           </select>
 
-          <select>
-            <option>Term</option>
+          <select id="filterTerm">
+            <option value="">All Terms</option>
           </select>
 
-          <select>
-            <option>Class</option>
+          <select id="filterClass">
+            <option value="">All Classes</option>
+          </select>
+
+          <select id="filterSubject">
+            <option value="">All Subjects</option>
           </select>
         </section>
 
+        <!-- Executive Summary Table -->
         <section class="grades-report-table-card">
           <table>
             <thead>
@@ -78,34 +82,56 @@
               </tr>
             </thead>
 
-            <tbody>
+            <tbody id="gradeSummaryBody">
               <tr>
-                <td>4</td>
-                <td>98</td>
-                <td>35</td>
-                <td>74.6</td>
-
-                <td>
-                  <button class="grades-report-actions-btn save-btn">
-                    Print Report
-                  </button>
-
-                  <button class="grades-report-actions-btn save-btn">
-                    Export PDF
-                  </button>
-
-                  <button class="grades-report-actions-btn save-btn">
-                    Export Excel
-                  </button>
+                <td colspan="5" style="text-align: center; padding: 24px; color: #64748b;">
+                  <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i>
+                  Loading grade statistics...
                 </td>
               </tr>
             </tbody>
           </table>
         </section>
+
+        <!-- Detailed Breakdown -->
+        <section class="report-detail-section">
+          <div class="report-detail-header">
+            <h3>Assessment Performance Roster</h3>
+            <span class="report-detail-count" id="detailRecordCount">0 records</span>
+          </div>
+
+          <div class="grades-report-table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Class</th>
+                  <th>Subject</th>
+                  <th>Assessment</th>
+                  <th>Score</th>
+                  <th>Max Marks</th>
+                  <th>Percentage</th>
+                  <th>Performance</th>
+                </tr>
+              </thead>
+              <tbody id="gradeDetailBody">
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">
+                    Loading student grade records...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/reports-common.js"></script>
+    <script src="/js/grades-report.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>
