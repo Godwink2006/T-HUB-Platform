@@ -314,12 +314,30 @@
     document.body.replaceChildren(...Array.from(nextBody.childNodes));
   }
 
-  function updateActiveLink(url) {
+  function updateActiveLink(url, targetDoc) {
     const targetName = new URL(url).pathname.split("/").pop();
-    document.querySelectorAll(".menu li").forEach((item) => {
+    const currentItems = Array.from(document.querySelectorAll(".menu li"));
+    const targetItems = Array.from(targetDoc.querySelectorAll(".menu li"));
+    const labelOf = (item) =>
+      item.querySelector("a[href]")?.textContent.replace(/\s+/g, " ").trim();
+
+    currentItems.forEach((item, index) => {
       const link = item.querySelector("a[href]");
+      const label = labelOf(item);
+      const targetItem =
+        targetItems.find((candidate) => labelOf(candidate) === label) ||
+        targetItems[index];
+      const targetLink = targetItem?.querySelector("a[href]");
+
+      if (link && targetLink) {
+        link.setAttribute("href", targetLink.getAttribute("href"));
+      }
+
       const name = link && new URL(link.href, location.href).pathname.split("/").pop();
-      item.classList.toggle("active", name === targetName);
+      item.classList.toggle(
+        "active",
+        targetItem ? targetItem.classList.contains("active") : name === targetName,
+      );
     });
   }
 
@@ -348,9 +366,9 @@
       activeView = { url: targetURL, safe: true };
       activeScope = createScope();
       activateStyles(targetDoc, targetStyles);
+      updateActiveLink(targetURL, targetDoc);
       if (push) history.pushState({ spa: true, url: targetURL }, document.title, targetURL);
       await runPageScripts(targetDoc, activeScope);
-      updateActiveLink(targetURL);
       window.scrollTo(0, 0);
       document.getElementById("sidebarOverlay")?.classList.remove("active");
       document.querySelector("aside.sidebar")?.classList.remove("active");
