@@ -416,6 +416,7 @@ tr {
   margin-top: 30px;
 }
 
+.view-book-modal-header button {
   cursor: pointer;
   border: 1px solid rgb(219, 215, 215);
   background: #1f2937;
@@ -1000,5 +1001,100 @@ tr {
   .books-status-inactive {
     padding: 4px 8px;
     font-size: 0.72rem;
+  }
+}
+
+/* Keep Library page borders consistent with the requested fine 0.5px weight. */
+*,
+*::before,
+*::after {
+  border-width: 0.5px !important;
+}
+
+/* Use the same dark modal scrim across each Library dialog. */
+.modal-book,
+.view-book-modal,
+.edit-modal-book,
+.addBook-modal,
+.editBook-modal {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.book-modal-content,
+.view-book-modal-content,
+.edit-book-modal-content,
+.addBook-modal-content,
+.editBook-modal-content {
+  font-family: "Poppins", sans-serif;
+  color: #1f2937;
+}
+
+@media (max-width: 768px) {
+  .modal-book,
+  .view-book-modal,
+  .edit-modal-book,
+  .addBook-modal,
+  .editBook-modal {
+    padding: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .book-modal-content,
+  .view-book-modal-content,
+  .edit-book-modal-content,
+  .addBook-modal-content,
+  .editBook-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 95%;
+    height: auto;
+    max-height: min(650px, calc(100dvh - 24px));
+    overflow: hidden;
+    border-radius: 10px;
+    font-family: "Poppins", sans-serif;
+  }
+
+  .book-modal-body,
+  .view-book-body,
+  .edit-book-modal-body,
+  .addBook-modal-body,
+  .editBook-modal-body {
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .book-modal-header,
+  .view-book-modal-header,
+  .edit-book-modal-header,
+  .addBook-modal-header,
+  .editBook-modal-header,
+  .book-modal-footer,
+  .view-modal-footer,
+  .edit-book-modal-footer,
+  .addBook-modal-footer,
+  .editBook-modal-footer {
+    flex: 0 0 auto;
+  }
+
+  .view-book-modal-header button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: #1f2937;
+    color: #f9fafb;
+    font: inherit;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
   }
 }
