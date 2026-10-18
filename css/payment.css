@@ -576,7 +576,8 @@ body {
 
 .payments-table-card th,
 .payment-table-card th,
-.payment-table-card tr {
+.payment-table-card tr,
+.payment-table-card td {
   padding: 10px 10px;
   color: #64748b;
   font-size: 11px;
