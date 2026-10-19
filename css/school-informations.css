@@ -208,15 +208,6 @@ form.auth-ready {
   }
 }
 
-  display: none;
-  opacity: 0;
-  transition: opacity 0.25s ease-in-out;
-}
-
-  display: block;
-  opacity: 1;
-}
-
 input:disabled,
 select:disabled,
 textarea:disabled {
