@@ -121,29 +121,72 @@ async function loadParentLinks() {
 function renderParentLinks(query = "") {
   const list = document.getElementById("parentLinksList");
   if (!list) return;
+
   if (!parentInviteLinks.length) {
     list.innerHTML =
       '<p class="parent-state">No active parent links for this school.</p>';
     return;
   }
+
   const links = parentInviteLinks.filter((link) =>
     matchesParentLinkSearch(link, query),
   );
+
   if (!links.length) {
     list.innerHTML =
       '<p class="parent-state">No parent links match your search.</p>';
     return;
   }
+
+  const DEFAULT_AVATAR =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='44' height='44'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
+
   list.replaceChildren(
     ...links.map((link) => {
       const row = document.createElement("div");
       row.className = "parent-link-row";
+
+      // 1. Stacked Avatars (Parent with small Student badge)
+      const avatarStack = document.createElement("div");
+      avatarStack.className = "parent-student-avatar-stack";
+      avatarStack.style.cssText =
+        "position: relative; width: 44px; height: 44px; flex-shrink: 0;";
+
+      const parentAvatar = document.createElement("img");
+      parentAvatar.src = link.parent_photo || DEFAULT_AVATAR;
+      parentAvatar.alt = link.parent_name || "Parent";
+      parentAvatar.title = `Parent: ${link.parent_name || link.parent_email}`;
+      parentAvatar.style.cssText =
+        "width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block;";
+
+      const studentAvatar = document.createElement("img");
+      studentAvatar.src = link.student_photo || DEFAULT_AVATAR;
+      studentAvatar.alt = link.student_name || "Student";
+      studentAvatar.title = `Student: ${link.student_name || "Student"}`;
+      studentAvatar.style.cssText =
+        "position: absolute; bottom: -2px; right: -2px; width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); background-color: #f1f5f9;";
+
+      avatarStack.append(parentAvatar, studentAvatar);
+
+      // 2. Details (Declared BEFORE row.append)
       const details = document.createElement("div");
+
       const parent = document.createElement("strong");
       parent.textContent = link.parent_name || link.parent_email || "Parent";
+
+      const contactInfo = document.createElement("small");
+      contactInfo.style.cssText =
+        "display: block; color: #64748b; font-size: 13px;";
+      contactInfo.textContent = [link.parent_email, link.parent_phone]
+        .filter(Boolean)
+        .join(" · ");
+
       const student = document.createElement("span");
       student.textContent = `${link.student_name || "Student"}${link.student_code ? ` · ${link.student_code}` : ""} · ${link.relationship || "Parent"}`;
-      details.append(parent, student);
+
+      details.append(parent, contactInfo, student);
+
+      // 3. Unlink Button
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = "Unlink";
@@ -152,7 +195,9 @@ function renderParentLinks(query = "") {
         `Unlink ${parent.textContent} from ${link.student_name || "student"}`,
       );
       button.addEventListener("click", () => unlinkParentStudent(link, button));
-      row.append(details, button);
+
+      // 4. Assemble row in correct order
+      row.append(avatarStack, details, button);
       return row;
     }),
   );
@@ -166,6 +211,7 @@ function matchesParentLinkSearch(link, query) {
   const searchableText = [
     link.parent_name,
     link.parent_email,
+    link.parent_phone,
     link.student_name,
     link.student_code,
     link.relationship,
@@ -239,6 +285,14 @@ async function sendParentInvitation(event) {
   body.email = String(body.email || "")
     .trim()
     .toLowerCase();
+  body.phone = (
+    document.getElementById("parentPhone")?.value ||
+    body.phone ||
+    ""
+  ).trim();
+
+  // Print to console to prove it's being sent
+  console.log("PAYLOAD SENT TO EDGE FUNCTION:", body);
   showParentInviteMessage("Sending the invitation…");
   button.disabled = true;
 
@@ -264,6 +318,7 @@ async function sendParentInvitation(event) {
     const select = document.getElementById("parentStudentSelect");
     select.selectedIndex = 0;
     renderParentInviteStudentOptions(select, "");
+    await loadParentLinks();
   } catch (error) {
     let message = error?.message || "The invitation could not be sent.";
     showParentInviteMessage(message, true);

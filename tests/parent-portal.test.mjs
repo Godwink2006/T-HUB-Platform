@@ -79,6 +79,9 @@ test("parent announcement policy is additive and only exposes linked-school audi
   assert.match(source, /link\.school_id = announcements\.school_id/);
   assert.match(source, /link\.status = 'active'/);
   assert.match(source, /'students'.*'parent'.*'parents'/s);
+  assert.match(source, /create policy "parent_portal_announcements_active_student_scope"[\s\S]*?as restrictive/i);
+  assert.match(source, /join public\.student_enrollments as enrollment[\s\S]*?enrollment\.school_id = announcements\.school_id/i);
+  assert.match(source, /enrollment\.enrollment_status[\s\S]*?not in \('graduated', 'transferred'\)/i);
   assert.doesNotMatch(source, /drop policy if exists .*on public\.(?!announcements)/i);
 });
 test("finance filters match student search, term, class, academic year, and status", async () => {
