@@ -12,7 +12,7 @@ body.parent-portal {
 .parent-topbar {
   align-items: center;
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   display: flex;
   justify-content: space-between;
   min-height: 72px;
@@ -47,7 +47,7 @@ body.parent-portal {
 .parent-signout {
   align-items: center;
   background: transparent;
-  border: 1px solid #dce4ee;
+  border: 0.5px solid #dce4ee;
   border-radius: 9px;
   color: #172033;
   cursor: pointer;
@@ -89,7 +89,7 @@ body.parent-portal {
 .selected-student-panel,
 .parent-form {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 16px;
 }
 .children-section {
@@ -116,7 +116,7 @@ body.parent-portal {
 }
 .parent-child-card {
   align-items: center;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 12px;
   display: flex;
   gap: 14px;
@@ -132,7 +132,7 @@ body.parent-portal {
 .parent-student-avatar-shell {
   align-items: center;
   background: #eaf1ff;
-  border: 1px solid #dce4ee;
+  border: 0.5px solid #dce4ee;
   border-radius: 50%;
   color: #2563eb;
   display: inline-flex;
@@ -234,7 +234,7 @@ body.parent-portal {
   margin: 0 0 6px;
 }
 .parent-portal .parent-link-search {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 0;
   color: #0f172a;
   font: inherit;
@@ -254,7 +254,7 @@ body.parent-portal {
 }
 .parent-portal .parent-link-row {
   align-items: center;
-  border: 2px solid #cbd5e1;
+  border: 0.5px solid #cbd5e1;
   border-radius: 9px;
   display: flex;
   gap: 16px;
@@ -332,7 +332,7 @@ body.parent-portal {
 }
 .parent-unlink-cancel {
   background: #1f2937;
-  border: 2px solid #1f2937;
+  border: 0.5px solid #1f2937;
   color: #fff;
 }
 .parent-unlink-cancel:hover {
@@ -341,15 +341,15 @@ body.parent-portal {
 }
 .parent-unlink-confirm {
   background: #b91c1c;
-  border: 2px solid #b91c1c;
+  border: 0.5px solid #b91c1c;
   color: white;
 }
 .parent-unlink-dialog-actions button:focus-visible {
-  outline: 3px solid rgb(37 99 235 / 45%);
+  outline: 0.5px solid rgb(37 99 235 / 45%);
   outline-offset: 2px;
 }
 .parent-announcements {
-  border-top: 2px solid rgb(219, 215, 215);
+  border-top: 0.5px solid rgb(219, 215, 215);
   margin-top: 22px;
   padding-top: 18px;
 }
@@ -357,7 +357,7 @@ body.parent-portal {
   margin: 0 0 14px;
 }
 .parent-announcement {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   margin-bottom: 12px;
   padding: 16px;
 }
@@ -402,7 +402,7 @@ body.parent-portal {
 .parent-record-tabs a {
   align-items: center;
   background: #f7f9fc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 10px;
   color: #172033;
   display: flex;
@@ -438,7 +438,7 @@ body.parent-portal {
 }
 .parent-record-panel {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 16px;
   margin-top: 20px;
   padding: 24px;
@@ -471,7 +471,7 @@ body.parent-portal {
 }
 .parent-record-filters select {
   background: #fff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 8px;
   color: #172033;
   font: inherit;
@@ -496,7 +496,7 @@ body.parent-portal {
 }
 .parent-record-content th,
 .parent-record-content td {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 12px 10px;
   text-align: left;
   vertical-align: top;
@@ -568,7 +568,7 @@ body.parent-portal {
 .parent-form input,
 .parent-form select {
   background: white;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 9px;
   color: #172033;
   font: inherit;
@@ -581,7 +581,7 @@ body.parent-portal {
 .parent-child-card button:focus-visible,
 .parent-primary-button:focus-visible,
 .parent-signout:focus-visible {
-  outline: 1px solid rgb(37 99 235 / 30%);
+  outline: 0.5px solid rgb(37 99 235 / 30%);
   outline-offset: 2px;
 }
 .parent-form-hint {
@@ -654,7 +654,7 @@ body.parent-portal {
 .parent-portal .selected-student-panel,
 .parent-portal .parent-form,
 .parent-portal .parent-record-panel {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 0;
 }
 .parent-portal .parent-form {
@@ -680,7 +680,7 @@ body.parent-portal {
 .parent-portal .parent-form input,
 .parent-portal .parent-form select,
 .parent-portal .parent-record-filters select {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 0;
   color: #0f172a;
   font-size: 13px;
@@ -691,7 +691,7 @@ body.parent-portal {
 .parent-portal .parent-form select:focus,
 .parent-portal .parent-record-filters select:focus {
   border-color: #2563eb;
-  outline: 2px solid rgb(37 99 235 / 20%);
+  outline: 0.5px solid rgb(37 99 235 / 20%);
 }
 .parent-portal .parent-form-hint {
   color: #64748b;
@@ -819,7 +819,7 @@ body.parent-portal {
 
 .parent-stat-card {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 10px;
   padding: 16px 18px;
   display: flex;
@@ -866,7 +866,7 @@ body.parent-portal {
 
 .parent-profile-header-card {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 24px;
   margin-bottom: 24px;
 }
@@ -892,7 +892,7 @@ body.parent-portal {
   font-weight: 700;
   font-size: 1.5rem;
   overflow: hidden;
-  border-top: 2px solid rgb(219, 215, 215);
+  border-top: 0.5px solid rgb(219, 215, 215);
 }
 
 .parent-avatar {
@@ -912,13 +912,6 @@ body.parent-portal {
   margin-bottom: 4px;
 }
 
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-  line-height: 1.25;
-}
-
 .parent-subtitle {
   font-size: 0.875rem;
   color: #64748b;
@@ -930,7 +923,7 @@ body.parent-portal {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   padding-top: 16px;
-  border-top: 2px solid rgb(219, 215, 215);
+  border-top: 0.5px solid rgb(219, 215, 215);
 }
 
 .contact-pill {
@@ -938,7 +931,7 @@ body.parent-portal {
   align-items: center;
   gap: 12px;
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 10px 14px;
 }
 
@@ -947,7 +940,7 @@ body.parent-portal {
   color: #2563eb;
   background: #ffffff;
   padding: 8px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .pill-label {
@@ -969,7 +962,7 @@ body.parent-portal {
 .parent-profile-actions {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 2px solid rgb(219, 215, 215);
+  border-top: 0.5px solid rgb(219, 215, 215);
 }
 
 .btn-change-profile {
