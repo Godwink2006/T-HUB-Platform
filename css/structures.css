@@ -72,6 +72,7 @@ body {
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 15px;
   margin: 25px 0;
 }
@@ -517,14 +518,8 @@ tr {
   border: 2px solid rgb(219, 215, 215);
 }
 
-.view-structure-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-}
-
-  border: 1px solid rgb(219, 215, 215);
+.view-structure-modal-header button {
+  cursor: pointer;
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -533,262 +528,108 @@ tr {
   font-size: 22px;
 }
 
+.view-structure-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
 @media screen and (max-width: 768px) {
-  .confirm-icon {
-    padding: 10px;
-    border-radius: 10px;
-  }
-
-  .structures-status-active {
-    border-radius: 10px;
-  }
-
-  .structures-status-inactive {
-    border-radius: 10px;
-  }
-
-  .structures-actions-btn {
-    border-radius: 10px;
-  }
-
-  .confirm-modal {
-    display: flex;
-    flex-direction: column;
-    max-width: 350px;
-    height: 290px;
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
-  }
-
-  body {
-    background: rgb(231, 226, 226);
-  }
-
-  .topbar h1,
-  .topbar p {
-    grid-column: 1 / -1;
-    margin: 0;
+  .structures-main-content {
+    padding: 16px;
   }
 
   .topbar {
-    align-items: center !important;
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    gap: 10px 12px !important;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
   }
 
   .topbar h1 {
-    font-size: 24px;
-    color: #1f2937;
+    font-size: 26px;
   }
 
   .topbar p {
-    color: #6b7280;
-    margin-top: 2px;
-    font-size: 13px;
-  }
-
-  .top-right {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 10px !important;
-    width: 100% !important;
+    font-size: 14px;
   }
 
   .back-academic-settings-btn {
-    grid-column: 1;
-    width: auto !important;
-    height: 40px !important;
-    padding: 0 16px;
-    display: inline-flex;
-    align-items: center;
+    width: auto;
+    min-height: 40px;
     justify-content: center;
-    cursor: pointer;
-    border: 1px solid rgb(219, 215, 215);
-    background: #1f2937;
-    color: #f9fafb;
-    font-size: 13px;
-    white-space: nowrap;
-    border-radius: 10px;
+    gap: 8px;
   }
 
-  .add-structures-btn,
-  .add-structure-btn {
-    grid-column: 2;
-    background: #15803d;
-    color: #ffffff;
-    border: 2px solid #14532d;
-    flex: 1 !important;
-    height: 40px !important;
-    padding: 0 16px;
-    display: inline-flex;
-    align-items: center;
+  .add-structures-btn {
+    width: 100%;
+    min-height: 44px;
     justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .toolbar {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    margin: 10px 0;
-    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 16px 0;
   }
 
   .toolbar input,
-  .toolbar select {
-    height: 40px;
-    border: 1.5px solid rgb(219, 215, 215);
-    padding: 0 8px;
-    outline: none;
-    background: #ffffff;
-    font-size: 12px;
-    flex: 1;
+  .toolbar select,
+  .toolbar input {
+    width: 100%;
     min-width: 0;
-    border-radius: 10px;
+    height: 44px;
+    padding: 0 12px;
+    border-width: 1px;
+    border-radius: 8px;
   }
 
-  .structures-table-card {
-    background: #ffffff;
+  .toolbar input {
+    grid-column: 1 / -1;
+  }
+
+  .structures-table-card,
+  .structure-table-card,
+  .editstructure-table-card {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    width: 100%;
   }
 
-  .structure-table-card {
-    background: #ffffff;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 500px;
-  }
-
-  thead {
-    background: #f8fafc;
-    border: 1.5px solid rgb(219, 215, 215);
-  }
-
-  th {
-    padding: 8px 10px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    border: 1.5px solid rgb(219, 215, 215);
-    white-space: nowrap;
-  }
-
-  th,
-  td {
-    padding: 12px 14px !important;
-    font-size: 14px !important;
-  }
-
-  td {
-    padding: 8px 10px;
-    font-size: 12px;
-    border: 1.5px solid rgb(219, 215, 215);
-    white-space: nowrap;
-  }
-
-  tr {
-    border: 1.5px solid rgb(219, 215, 215);
+  .structure-table-card table,
+  .editstructure-table-card table {
+    min-width: 420px;
   }
 
   .structure-modal-content,
-  .editstructure-modal-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 650px;
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
-  }
-
-  .confirm-modal {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 350px;
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
-  }
-
+  .editstructure-modal-content,
+  .view-structure-modal-content,
   .addItem-modal-content {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 350px;
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
+    width: calc(100% - 32px);
+    max-width: 560px;
+    height: auto;
+    max-height: 90dvh;
+    border-radius: 12px;
     overflow: hidden;
   }
 
+  .structure-modal-content,
+  .editstructure-modal-content,
   .view-structure-modal-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-    height: 550px;
-    max-height: 85vh;
-    background: #ffffff;
-    border-radius: 10px;
-    animation: modalShow 0.25s ease;
-    overflow: hidden;
-  }
-
-  @keyframes modalShow {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    min-height: min(560px, 90dvh);
   }
 
   .structure-modal-header,
   .view-structure-modal-header,
   .editstructure-modal-header,
   .addItem-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
+    flex: 0 0 auto;
+    padding: 14px 16px;
+    border-width: 0 0 1px;
   }
 
   .structure-modal-header h2,
@@ -799,109 +640,174 @@ tr {
   }
 
   .structure-modal-header button,
+  .view-structure-modal-header button,
   .editstructure-modal-header button,
-  .addItem-modal-header button,
-    cursor: pointer;
-    color: #f9fafb;
-    border: none;
-    height: 34px;
-    border-radius: 10px !important;
-    width: 34px;
-    font-size: 16px;
-    background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
+  .addItem-modal-header button {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    font-size: 18px;
   }
 
   .structure-modal-body,
   .view-structure-body,
   .editstructure-modal-body,
   .addItem-modal-body {
-    padding: 20px;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 16px;
     overflow-y: auto;
-    flex: 1;
+  }
+
+  .form-grid,
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 11px 12px;
+    border-width: 1px;
+    border-radius: 8px;
+  }
+
+  .add-structure-btn {
+    min-height: 42px;
+    justify-content: center;
+    border-radius: 8px;
   }
 
   .view-structure-modal-footer,
   .editstructure-modal-footer,
   .structure-modal-footer,
   .addItem-modal-footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-top: 1px solid rgb(219, 215, 215);
   }
 
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .view-structure-modal-footer .cancel-btn,
+  .view-structure-modal-footer .save-btn,
+  .editstructure-modal-footer .cancel-btn,
+  .editstructure-modal-footer .save-btn,
+  .structure-modal-footer .cancel-btn,
+  .structure-modal-footer .save-btn,
+  .addItem-modal-footer .cancel-btn,
+  .addItem-modal-footer .save-btn {
+    flex: 1 1 120px;
+    min-height: 42px;
+    padding: 10px 14px;
+    border-radius: 8px;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .structures-table-card {
+    background: transparent;
+    overflow: visible;
   }
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .form-group label {
-    margin-bottom: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
+  .structures-table-card table,
+  .structures-table-card tbody,
+  .structures-table-card tr,
+  .structures-table-card td {
+    display: block;
     width: 100%;
-    padding: 10px;
-    border: 1.5px solid rgb(219, 215, 215);
-    outline: none;
-    font-size: 13px;
+  }
+
+  .structures-table-card thead {
+    display: none;
+  }
+
+  .structures-table-card tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .structures-table-card tr {
+    border: 1px solid #dbe1ea;
     border-radius: 10px;
+    background: #ffffff;
+    overflow: hidden;
   }
 
-  .form-group textarea {
-    resize: none;
-  }
-
-  .full-width {
-    grid-column: 1 / -1;
-  }
-
-  .cancel-btn,
-  .save-btn {
-    flex: 1;
-    padding: 10px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
+  .structures-table-card td {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 0;
+    border-bottom: 1px solid #edf0f4;
+    font-size: 14px;
+    text-align: right;
+    white-space: normal;
   }
 
-  .edit-btn {
-    flex: 1;
-    padding: 10px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
-    justify-content: space-between;
+  .structures-table-card td::before {
+    content: attr(data-label);
+    flex: 0 0 42%;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
   }
 
-  .cancel-btn {
-    background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
-    color: #f9fafb;
+  .structures-table-card td:last-child {
+    border-bottom: 0;
   }
 
-  .save-btn {
-    background: #2563eb;
-    color: #ffffff;
+  .structures-table-card td[colspan] {
+    display: block;
+    padding: 28px 16px !important;
+    text-align: center;
+  }
+
+  .structures-table-card td[colspan]::before {
+    display: none;
+  }
+
+  .structures-actions-btn {
+    margin-right: 4px;
+    border-radius: 8px;
+  }
+
+  .structures-status-active,
+  .structures-status-inactive {
+    display: inline-block;
+    padding: 7px 10px;
+    border-radius: 999px;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  .structures-main-content {
+    padding: 12px;
+  }
+
+  .topbar h1 {
+    font-size: 23px;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar input {
+    grid-column: auto;
+  }
+
+  .structure-modal-content,
+  .editstructure-modal-content,
+  .view-structure-modal-content,
+  .addItem-modal-content {
+    width: calc(100% - 20px);
   }
 }

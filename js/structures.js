@@ -503,16 +503,16 @@ function renderFeeStructuresTable(structures) {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-     <td>${escapeHTML(className || "-")}</td>
-<td>${escapeHTML(academicYear || "-")}</td>
-<td>${escapeHTML(termName || "-")}</td>
-<td>$${Number(struct.total_amount || 0).toFixed(2)}</td>
-<td>
+     <td data-label="Class">${escapeHTML(className || "-")}</td>
+<td data-label="Academic Year">${escapeHTML(academicYear || "-")}</td>
+<td data-label="Semester">${escapeHTML(termName || "-")}</td>
+<td data-label="Total Fees">$${Number(struct.total_amount || 0).toFixed(2)}</td>
+<td data-label="Status">
   <span class="${statusClass}">${statusText}</span>
 </td>
-<td>${formatDateTime(struct.created_at)}</td>
-<td>${formatDateTime(struct.updated_at)}</td>
-<td>
+<td data-label="Created At">${formatDateTime(struct.created_at)}</td>
+<td data-label="Updated At">${formatDateTime(struct.updated_at)}</td>
+<td data-label="Actions">
   <button class="structures-actions-btn view" data-id="${struct.id}" title="View">
     <i class="fa-solid fa-eye"></i>
   </button>
