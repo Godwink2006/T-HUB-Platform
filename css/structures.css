@@ -541,10 +541,14 @@ tr {
   }
 
   .topbar {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 16px;
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 12px;
     margin-bottom: 20px;
+  }
+
+  .topbar > div {
+    min-width: 0;
   }
 
   .topbar h1 {
@@ -563,10 +567,14 @@ tr {
   }
 
   .add-structures-btn {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
     min-height: 44px;
+    padding: 0 14px;
     justify-content: center;
     border-radius: 8px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
   .toolbar {
@@ -577,18 +585,13 @@ tr {
   }
 
   .toolbar input,
-  .toolbar select,
-  .toolbar input {
+  .toolbar select {
     width: 100%;
     min-width: 0;
     height: 44px;
     padding: 0 12px;
     border-width: 1px;
     border-radius: 8px;
-  }
-
-  .toolbar input {
-    grid-column: 1 / -1;
   }
 
   .structures-table-card,
@@ -601,6 +604,19 @@ tr {
   .structure-table-card table,
   .editstructure-table-card table {
     min-width: 420px;
+  }
+
+  .structures-table-card table {
+    min-width: 760px;
+  }
+
+  .structures-actions-btn,
+  .back-academic-settings-btn,
+  .add-structures-btn,
+  .add-structure-btn,
+  .cancel-btn,
+  .save-btn {
+    border-radius: 8px;
   }
 
   .structure-modal-content,
@@ -707,86 +723,6 @@ tr {
   }
 }
 
-@media screen and (max-width: 640px) {
-  .structures-table-card {
-    background: transparent;
-    overflow: visible;
-  }
-
-  .structures-table-card table,
-  .structures-table-card tbody,
-  .structures-table-card tr,
-  .structures-table-card td {
-    display: block;
-    width: 100%;
-  }
-
-  .structures-table-card thead {
-    display: none;
-  }
-
-  .structures-table-card tbody {
-    display: grid;
-    gap: 12px;
-  }
-
-  .structures-table-card tr {
-    border: 1px solid #dbe1ea;
-    border-radius: 10px;
-    background: #ffffff;
-    overflow: hidden;
-  }
-
-  .structures-table-card td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    min-height: 44px;
-    padding: 10px 12px;
-    border: 0;
-    border-bottom: 1px solid #edf0f4;
-    font-size: 14px;
-    text-align: right;
-    white-space: normal;
-  }
-
-  .structures-table-card td::before {
-    content: attr(data-label);
-    flex: 0 0 42%;
-    color: #6b7280;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: left;
-  }
-
-  .structures-table-card td:last-child {
-    border-bottom: 0;
-  }
-
-  .structures-table-card td[colspan] {
-    display: block;
-    padding: 28px 16px !important;
-    text-align: center;
-  }
-
-  .structures-table-card td[colspan]::before {
-    display: none;
-  }
-
-  .structures-actions-btn {
-    margin-right: 4px;
-    border-radius: 8px;
-  }
-
-  .structures-status-active,
-  .structures-status-inactive {
-    display: inline-block;
-    padding: 7px 10px;
-    border-radius: 999px;
-  }
-}
-
 @media screen and (max-width: 420px) {
   .structures-main-content {
     padding: 12px;
@@ -794,14 +730,6 @@ tr {
 
   .topbar h1 {
     font-size: 23px;
-  }
-
-  .toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar input {
-    grid-column: auto;
   }
 
   .structure-modal-content,
