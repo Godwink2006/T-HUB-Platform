@@ -34,7 +34,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .enterGrade-modal-header h2 {
@@ -43,7 +43,7 @@
 
 .enterGrade-modal-header button {
   cursor: pointer;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -93,7 +93,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .editGrade-modal-header h2 {
@@ -102,7 +102,7 @@
 
 .editGrade-modal-header button {
   cursor: pointer;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -170,7 +170,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
 }
 
 .back-grades-btn {
@@ -181,7 +181,7 @@ body {
   align-items: center;
   cursor: pointer;
   margin-top: 5px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   width: 50%;
@@ -198,7 +198,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -220,7 +220,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 th {
@@ -228,7 +228,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -236,7 +236,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .badge {
@@ -347,7 +347,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .grade-modal-header h2 {
@@ -356,7 +356,7 @@ tr {
 
 .grade-modal-header button {
   cursor: pointer;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -393,7 +393,7 @@ tr {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -416,7 +416,7 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   cursor: pointer;
@@ -485,7 +485,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .view-modal-footer {
@@ -497,7 +497,7 @@ tr {
 
 .view-grade-modal-header button {
   cursor: pointer;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -550,7 +550,7 @@ tr {
     flex: 1;
     min-height: 120px;
     overflow-y: auto;
-    border: 2px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     margin-top: 10px;
   }
 
@@ -558,18 +558,10 @@ tr {
     flex-direction: column;
   }
 
-  .grades-main-content {
-    width: 100%;
-    min-width: 0;
-    min-height: 100vh;
-    padding: 70px 12px 20px;
-    margin-left: 0 !important;
-  }
-
   .topbar {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
     gap: 12px !important;
     margin-bottom: 18px;
   }
@@ -601,7 +593,7 @@ tr {
   }
 
   .add-grades-btn {
-    width: 100%;
+    width: auto;
     flex: 0 0 auto !important;
     height: 40px !important;
     padding: 0 16px;
@@ -612,10 +604,14 @@ tr {
     cursor: pointer;
     background: #15803d;
     color: #ffffff;
-    border: 2px solid #14532d;
+    border: 0.5px solid #14532d;
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  .badge {
     border-radius: 10px;
   }
 
@@ -627,7 +623,7 @@ tr {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border: 1px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     background: #1f2937;
     color: #f9fafb;
     font-size: 13px;
@@ -648,7 +644,7 @@ tr {
   .toolbar input,
   .toolbar select {
     height: 40px;
-    border: 2px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     padding: 0 10px;
     font-size: 12px;
     min-width: 0;
@@ -702,7 +698,7 @@ tr {
   .grade-modal-header,
   .view-grade-modal-header {
     padding: 14px 18px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
+    border-bottom: 0.5px solid rgb(219, 215, 215);
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
   }
@@ -739,7 +735,7 @@ tr {
     align-items: center;
     gap: 12px;
     padding: 14px 18px;
-    border-top: 1.5px solid rgb(219, 215, 215);
+    border-top: 0.5px solid rgb(219, 215, 215);
     margin-top: 0;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
@@ -760,7 +756,7 @@ tr {
   .form-group input,
   .form-group select,
   .form-group textarea {
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     font-size: 13px;
     border-radius: 10px;
     padding: 10px 12px;
@@ -809,10 +805,6 @@ tr {
 }
 
 @media screen and (max-width: 380px) {
-  .grades-main-content {
-    padding-right: 8px;
-    padding-left: 8px;
-  }
 
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
