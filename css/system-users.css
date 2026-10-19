@@ -53,7 +53,7 @@ body {
 .add-systemUsers-btn {
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
   width: auto;
   height: 48px;
   padding: 0 20px;
@@ -72,7 +72,7 @@ body {
   margin-top: 10px;
   width: 70px;
   justify-content: space-between;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
 }
@@ -86,7 +86,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -108,7 +108,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 th {
@@ -116,7 +116,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -124,7 +124,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .systemUsers-status-inactive,
@@ -198,7 +198,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .systemUser-modal-header h2 {
@@ -213,7 +213,7 @@ tr {
   width: 40px;
   font-size: 22px;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .systemUser-modal-body {
@@ -243,7 +243,7 @@ tr {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -267,7 +267,7 @@ tr {
   padding: 12px 22px;
   border: none;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   cursor: pointer;
   color: #f9fafb;
 }
@@ -363,7 +363,7 @@ tr {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border: 1px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     background: #1f2937;
     color: #f9fafb;
     font-size: 13px;
@@ -383,7 +383,7 @@ tr {
     justify-content: center;
     gap: 6px;
     cursor: pointer;
-    border: 2px solid #14532d;
+    border: 0.5px solid #14532d;
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
@@ -401,7 +401,7 @@ tr {
   .toolbar input,
   .toolbar select {
     height: 40px;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     padding: 0 8px;
     outline: none;
     background: #ffffff;
@@ -426,7 +426,7 @@ tr {
 
   thead {
     background: #f8fafc;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
   }
 
   th {
@@ -435,7 +435,7 @@ tr {
     font-size: 12px;
     font-weight: 600;
     color: #6b7280;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     white-space: nowrap;
   }
 
@@ -448,12 +448,12 @@ tr {
   td {
     padding: 8px 10px;
     font-size: 12px;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     white-space: nowrap;
   }
 
   tr {
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
   }
 
   .systemUsers-status-inactive,
@@ -545,7 +545,7 @@ tr {
     justify-content: space-between;
     align-items: center;
     padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
+    border-bottom: 0.5px solid rgb(219, 215, 215);
   }
 
   .systemUser-modal-header h2 {
@@ -560,7 +560,7 @@ tr {
     width: 34px;
     font-size: 16px;
     background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     border-radius: 10px;
   }
 
@@ -575,7 +575,7 @@ tr {
     justify-content: space-between;
     align-items: center;
     padding: 14px 20px;
-    border-bottom: 1.5px solid rgb(219, 215, 215);
+    border-bottom: 0.5px solid rgb(219, 215, 215);
   }
 
   .edit-systemUser-modal-header h2 {
@@ -590,7 +590,7 @@ tr {
     width: 34px;
     font-size: 16px;
     background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     border-radius: 10px;
   }
 
@@ -607,7 +607,7 @@ tr {
     align-items: center;
     gap: 12px;
     padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
+    border-top: 0.5px solid rgb(219, 215, 215);
   }
 
   .form-grid {
@@ -633,7 +633,7 @@ tr {
   .form-group textarea {
     width: 100%;
     padding: 10px;
-    border: 1.5px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     outline: none;
     font-size: 13px;
     border-radius: 10px;
@@ -654,7 +654,7 @@ tr {
     align-items: center;
     gap: 12px;
     padding: 14px 20px;
-    border-top: 1.5px solid rgb(219, 215, 215);
+    border-top: 0.5px solid rgb(219, 215, 215);
   }
 
   .cancel-btn,
@@ -671,7 +671,7 @@ tr {
 
   .cancel-btn {
     background: #1f2937;
-    border: 1px solid rgb(219, 215, 215);
+    border: 0.5px solid rgb(219, 215, 215);
     color: #f9fafb;
   }
 
@@ -721,7 +721,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .edit-systemUser-modal-header h2 {
@@ -852,14 +852,14 @@ tr {
   gap: 1.25rem;
   padding: 0.75rem;
   background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
 }
 
 .avatar-preview-wrapper {
   width: 70px;
   height: 70px;
   overflow: hidden;
-  border: 2px solid #cbd5e1;
+  border: 0.5px solid #cbd5e1;
   background-color: #ffffff;
   flex-shrink: 0;
   border-radius: 50%;
@@ -887,7 +887,7 @@ tr {
   font-weight: 500;
   background: #15803d;
   color: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 0.5px solid #cbd5e1;
   cursor: pointer;
   transition: all 0.2s ease;
 }
