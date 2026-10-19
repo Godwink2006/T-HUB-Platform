@@ -252,35 +252,86 @@ body.parent-portal {
   display: grid;
   gap: 10px;
 }
+
 .parent-portal .parent-link-row {
   align-items: center;
   border: 0.5px solid #cbd5e1;
   border-radius: 9px;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   justify-content: space-between;
-  padding: 14px;
+  padding: 12px;
+  min-width: 0;
+  box-sizing: border-box;
 }
+
+.parent-portal .parent-link-row > div:not(.parent-student-avatar-stack) {
+  flex: 1;
+  min-width: 0;
+}
+
 .parent-portal .parent-link-row button,
 .parent-link-row strong,
+.parent-link-row small,
 .parent-link-row span {
   display: block;
 }
+
+.parent-link-row strong {
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.parent-link-row small {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 .parent-link-row span {
   color: #60708a;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   margin-top: 4px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
+
 .parent-link-row button {
   background: #b91c1c;
   border: 0;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
+  flex-shrink: 0; 
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  padding: 9px 12px;
+  padding: 8px 12px;
+  white-space: nowrap;
 }
+
+.parent-link-row button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+/* Extra support for tiny mobile screens (< 380px) */
+@media (max-width: 380px) {
+  .parent-portal .parent-link-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .parent-portal .parent-link-row button {
+    width: 100%;
+    margin-top: 6px;
+    padding: 7px 0;
+    text-align: center;
+  }
+}
+
 .parent-link-row button:disabled {
   cursor: wait;
   opacity: 0.6;
