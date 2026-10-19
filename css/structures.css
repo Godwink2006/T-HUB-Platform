@@ -52,7 +52,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
 }
 
 .back-academic-settings-btn {
@@ -63,7 +63,7 @@ body {
   align-items: center;
   cursor: pointer;
   margin-top: 5px;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   width: 25%;
@@ -80,7 +80,7 @@ body {
 .toolbar input,
 .toolbar select {
   height: 48px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 0 15px;
   outline: none;
   background: #ffff;
@@ -102,7 +102,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 th {
@@ -110,7 +110,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -118,7 +118,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .status {
@@ -222,7 +222,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .structure-modal-header h2 {
@@ -231,7 +231,7 @@ tr {
 
 .structure-modal-header button {
   cursor: pointer;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -249,7 +249,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .editstructure-modal-header h2 {
@@ -258,7 +258,7 @@ tr {
 
 .editstructure-modal-header button {
   cursor: pointer;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -294,7 +294,7 @@ tr {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -324,7 +324,7 @@ tr {
 .cancel-btn {
   padding: 12px 22px;
   border: none;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   cursor: pointer;
@@ -348,7 +348,7 @@ tr {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
   margin-top: 10px;
 }
 
@@ -413,7 +413,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .addItem-modal-header h2 {
@@ -422,7 +422,7 @@ tr {
 
 .addItem-modal-header button {
   cursor: pointer;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #1f2937;
   color: #f9fafb;
   border: none;
@@ -515,7 +515,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .view-structure-modal-header button {
@@ -570,7 +570,7 @@ tr {
     width: auto;
     flex: 0 0 auto;
     min-height: 44px;
-    margin-top: 6px;
+    margin-top: 10px;
     padding: 0 14px;
     justify-content: center;
     border-radius: 8px;
@@ -608,13 +608,13 @@ tr {
   }
 
   .structures-table-card table {
-    min-width: 700px;
+    min-width: 660px;
   }
 
   .structures-table-card th,
   .structures-table-card td {
-    padding: 12px;
-    font-size: 13px;
+    padding: 10px;
+    font-size: 12px;
   }
 
   .structures-actions-btn,
@@ -627,7 +627,7 @@ tr {
   }
 
   .structures-status-active {
-    border-radius: 999px;
+    border-radius: 10px;
   }
 
   .structure-modal-content,
@@ -716,7 +716,7 @@ tr {
     gap: 10px;
     margin-top: 20px;
     padding: 14px 16px;
-    border-top: 1px solid rgb(219, 215, 215);
+    border-top: 0.5px solid rgb(219, 215, 215);
   }
 
   .view-structure-modal-footer .cancel-btn,
