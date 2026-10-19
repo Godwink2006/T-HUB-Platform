@@ -570,6 +570,7 @@ tr {
     width: auto;
     flex: 0 0 auto;
     min-height: 44px;
+    margin-top: 6px;
     padding: 0 14px;
     justify-content: center;
     border-radius: 8px;
@@ -607,7 +608,13 @@ tr {
   }
 
   .structures-table-card table {
-    min-width: 760px;
+    min-width: 700px;
+  }
+
+  .structures-table-card th,
+  .structures-table-card td {
+    padding: 12px;
+    font-size: 13px;
   }
 
   .structures-actions-btn,
@@ -617,6 +624,10 @@ tr {
   .cancel-btn,
   .save-btn {
     border-radius: 8px;
+  }
+
+  .structures-status-active {
+    border-radius: 999px;
   }
 
   .structure-modal-content,
