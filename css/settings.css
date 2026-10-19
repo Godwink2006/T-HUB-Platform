@@ -109,7 +109,7 @@
 .setting-card {
   background: #ffff;
   padding: 20px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .setting-card h2 {
@@ -198,7 +198,7 @@ body.settings-modal-open {
 .clear-data-card {
   width: min(100%, 460px);
   padding: 28px;
-  border: 1px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
   background: #fff;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
 }
@@ -237,7 +237,7 @@ body.settings-modal-open {
 .clear-data-actions button {
   min-height: 42px;
   padding: 10px 14px;
-  border: 1px solid transparent;
+  border: 0.5px solid transparent;
   cursor: pointer;
   font: inherit;
   font-weight: 600;
