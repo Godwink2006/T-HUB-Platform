@@ -35,7 +35,7 @@
   gap: 8px;
   background-color: #ffffff;
   padding: 12px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   margin-bottom: 24px;
 }
 
@@ -63,7 +63,7 @@
   justify-content: space-between;
   color: #ffff;
   background: #1f2937;
-  border: 1px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .grades-container {
@@ -97,12 +97,12 @@
   color: #4b5563;
   font-weight: 600;
   padding: 10px 12px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .table td {
   padding: 12px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #1f2937;
 }
 
@@ -117,9 +117,6 @@
 .score-value {
   font-weight: 700;
   color: #059669;
-}
-
-  border-radius: 10px;
 }
 
 .max-marks {
@@ -192,7 +189,7 @@
 
 .stat-card {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   border-radius: 10px;
   padding: 16px 18px;
   display: flex;

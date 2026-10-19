@@ -63,7 +63,7 @@ p.subtitle {
   gap: 12px;
   background-color: #ffffff;
   padding: 16px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   margin-bottom: 24px;
 }
 
@@ -86,7 +86,7 @@ p.subtitle {
 .toolbar select {
   width: 100%;
   padding: 10px 14px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   font-size: 0.875rem;
   color: #374151;
   background-color: #ffffff;
@@ -120,7 +120,7 @@ p.subtitle {
 
 .history-empty {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 40px 24px;
   text-align: center;
 }
@@ -149,7 +149,7 @@ p.subtitle {
 
 .transfer-history-card {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 16px;
 }
 
@@ -186,7 +186,7 @@ p.subtitle {
   color: #334155;
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
 }
 
 .transfer-source {
@@ -224,15 +224,15 @@ p.subtitle {
   color: #475569;
   font-size: 11px;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
 }
 
 .history-record-list {
-  border-top: 2px solid rgb(219, 215, 215);
+  border-top: 0.5px solid rgb(219, 215, 215);
 }
 
 .history-record {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 0.5px solid #e2e8f0;
 }
 
 .history-record:last-child {
@@ -262,7 +262,7 @@ p.subtitle {
   height: 24px;
   display: grid;
   place-items: center;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #475569;
   font-size: 16px;
   background: #fff;
@@ -307,7 +307,7 @@ p.subtitle {
 .history-field {
   min-width: 0;
   padding: 12px 14px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   background: #f8fafc;
 }
 
@@ -327,7 +327,7 @@ p.subtitle {
 
 .fee-items {
   margin-top: 14px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   overflow: hidden;
 }
 
@@ -345,7 +345,7 @@ p.subtitle {
   justify-content: space-between;
   gap: 14px;
   padding: 10px 13px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 0.5px solid #e2e8f0;
   font-size: 13px;
   background: #fff;
 }
@@ -419,7 +419,7 @@ p.subtitle {
 
 .card-section {
   background: #ffffff;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -442,7 +442,7 @@ p.subtitle {
   color: #475569;
   font-size: 11px;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
 }
 .history-table-wrap {
   overflow-x: auto;
@@ -458,12 +458,12 @@ p.subtitle {
   color: #1e293b;
   font-weight: 600;
   padding: 10px 12px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   white-space: nowrap;
 }
 .history-table td {
   padding: 12px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   color: #1e293b;
   vertical-align: top;
 }
