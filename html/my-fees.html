@@ -89,25 +89,35 @@
         <div class="filter-group" style="flex: 0 0 100%; min-width: 0">
           <select
             id="filterTerm"
+            aria-label="Filter by semester"
             class="form-control"
             style="width: 100%; padding: 8px 12px; border-radius: 6px"
           >
             <option value="">All Semesters</option>
+            <option value="1">1st Semester</option>
+            <option value="2">2nd Semester</option>
           </select>
         </div>
+      </div>
+
+      <div class="fees-filter-actions">
+        <button id="applyStudentFeeFilters" type="button" class="fees-filter-button">
+          <i class="fa-solid fa-filter" aria-hidden="true"></i>
+          View fees
+        </button>
       </div>
 
       <div class="card">
         <h2>Fee Structures & Balances</h2>
         <div id="studentFeesContainer">
-          <div class="empty-state">Loading your fee records...</div>
+          <div class="empty-state">Choose your filters, then select View fees.</div>
         </div>
       </div>
 
       <div class="card">
         <h2>Payment Transaction History</h2>
         <div id="paymentTransactionsContainer">
-          <div class="empty-state">Loading your payment history...</div>
+          <div class="empty-state">Payment history will appear with your selected fee records.</div>
         </div>
       </div>
     </div>

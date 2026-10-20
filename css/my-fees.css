@@ -34,6 +34,38 @@
   width: 100%;
 }
 
+.fees-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: -12px 0 24px;
+}
+
+.fees-filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fees-filter-button:hover {
+  background: #1d4ed8;
+}
+
+.fees-filter-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 body {
   background-color: #f8fafc;
   color: #1e293b;
@@ -198,5 +230,9 @@ select {
   .card,
   .toolbar {
     border-radius: 10px;
+  }
+
+  .fees-filter-button {
+    width: 100%;
   }
 }
