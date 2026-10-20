@@ -47,7 +47,7 @@
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
-  border-bottom: 2px solid rgb(219, 215, 215);
+  border-bottom: 0.5px solid rgb(219, 215, 215);
   padding-bottom: 12px;
 }
 
@@ -68,7 +68,7 @@
   align-items: center;
   cursor: pointer;
   margin-top: 12px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   width: 70px;
   justify-content: space-between;
   background: #1f2937;
@@ -83,7 +83,7 @@
 
 .notifications-card-list {
   background: white;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   overflow: hidden;
   margin-bottom: 5px;
 }

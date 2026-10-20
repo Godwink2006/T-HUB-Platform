@@ -26,14 +26,18 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <header class="topbar">
@@ -92,10 +96,18 @@
           <option value="">All classes</option>
         </select>
       </div>
-      <button id="clearEnrollmentFilters" type="button" class="clear-filters-btn">
+      <button
+        id="clearEnrollmentFilters"
+        type="button"
+        class="clear-filters-btn"
+      >
         Clear filters
       </button>
-      <span id="enrollmentResultCount" class="enrollment-result-count" aria-live="polite"></span>
+      <span
+        id="enrollmentResultCount"
+        class="enrollment-result-count"
+        aria-live="polite"
+      ></span>
     </section>
 
     <div class="table-container">
@@ -110,9 +122,7 @@
             <th>Status</th>
           </tr>
         </thead>
-        <tbody id="studentTableBody">
-
-        </tbody>
+        <tbody id="studentTableBody"></tbody>
       </table>
     </div>
 
@@ -198,7 +208,7 @@
             "
           >
             <em>Note:</em> Does not apply to students coming from classes below
-            Grade 9 going to Grade 10+. Classes 10 and above require a user
+            Grade 9 going to Grade 10. Classes 10 and above require a user
             account—please use the
             <b>Promote Grade 9 to 10 (Create User)</b> button instead.
           </p>
@@ -257,7 +267,7 @@
 
       <div class="tooltip-container">
         <button id="btnPromoteGrade9To10" class="btn btn-primary">
-          Promote Grade 9 to 10 (Create User)
+          Promote Grade 9 to 10 2nd semester (Create User)
         </button>
         <div class="tooltip-card">
           <p style="margin: 0 0 5px 0; font-weight: 600; color: #000">
@@ -277,7 +287,35 @@
             "
           >
             <em>Note:</em> Does not apply to students coming from classes below
-            Grade 9 going to Grade 10+. Classes 10 and above require a user
+            Grade 9 going to Grade 10. Classes 10 and above require a user
+            account—please use this button instead.
+          </p>
+        </div>
+      </div>
+
+      <div class="tooltip-container">
+        <button id="btnPromoteGrade9To10yearly" class="btn btn-primary">
+          Promote Grade 9 to 10 yearly (Create User)
+        </button>
+        <div class="tooltip-card">
+          <p style="margin: 0 0 5px 0; font-weight: 600; color: #000">
+            📌 Grade 9 to 10 yearly Promotion Guide
+          </p>
+          <p style="margin: 0 0 6px 0">
+            This will promote this student to the next class and next academic
+            year and 1st semester with the fee structure.
+          </p>
+          <p
+            style="
+              margin: 0;
+              font-size: 11px;
+              color: grey;
+              border-top: 0.5px solid rgb(219, 215, 215);
+              padding-top: 4px;
+            "
+          >
+            <em>Note:</em> Does not apply to students coming from classes below
+            Grade 9 going to Grade 10. Classes 10 and above require a user
             account—please use this button instead.
           </p>
         </div>
@@ -287,9 +325,7 @@
     <div id="actionModal" class="modal-overlay">
       <div class="modal-content">
         <h3 id="modalTitle">Action Title</h3>
-        <div id="modalBody" style="margin-top: 12px">
-
-        </div>
+        <div id="modalBody" style="margin-top: 12px"></div>
         <div
           style="
             margin-top: 20px;
@@ -314,6 +350,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/enrollment.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>

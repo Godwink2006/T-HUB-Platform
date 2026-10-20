@@ -164,7 +164,7 @@ function renderParentLinks(query = "") {
       studentAvatar.alt = link.student_name || "Student";
       studentAvatar.title = `Student: ${link.student_name || "Student"}`;
       studentAvatar.style.cssText =
-        "position: absolute; bottom: -2px; right: -2px; width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); background-color: #f1f5f9;";
+        "position: absolute; bottom: -2px; right: -2px; width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 0.5px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); background-color: #f1f5f9;";
 
       avatarStack.append(parentAvatar, studentAvatar);
 

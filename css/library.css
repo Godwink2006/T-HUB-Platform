@@ -149,7 +149,7 @@ body {
   cursor: pointer;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #14532d;
+  border: 0.5px solid #14532d;
 }
 
 .toolbar {
@@ -204,7 +204,7 @@ table {
 
 thead {
   background: #f8fafc;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 th {
@@ -212,7 +212,7 @@ th {
   text-align: left;
   font-size: 14px;
   color: #6b7280;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 td {
@@ -220,7 +220,7 @@ td {
 }
 
 tr {
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .books-actions-btn {
@@ -270,7 +270,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .book-modal-header h2 {
@@ -315,7 +315,7 @@ tr {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
   outline: none;
   font-size: 15px;
 }
@@ -406,7 +406,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .view-modal-footer {
@@ -471,7 +471,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .edit-book-modal-header h2 {
@@ -548,7 +548,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .addBook-modal-header h2 {
@@ -606,7 +606,7 @@ tr {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border: 2px solid rgb(219, 215, 215);
+  border: 0.5px solid rgb(219, 215, 215);
 }
 
 .editBook-modal-header h2 {
@@ -666,14 +666,14 @@ tr {
   gap: 1.25rem;
   padding: 0.75rem;
   background-color: #f8fafc;
-  border: 2px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
 }
 
 .avatar-preview-wrapper {
   width: 70px;
   height: 70px;
   overflow: hidden;
-  border: 2px solid #cbd5e1;
+  border: 0.5px solid #cbd5e1;
   background-color: #ffffff;
   flex-shrink: 0;
   border-radius: 50%;
@@ -701,7 +701,7 @@ tr {
   font-weight: 500;
   background: #15803d;
   color: #ffffff;
-  border: 2px solid #cbd5e1;
+  border: 0.5px solid #cbd5e1;
   cursor: pointer;
   transition: all 0.2s ease;
 }

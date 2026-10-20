@@ -567,7 +567,7 @@ async function loadRosterIntoModal(classId) {
           </span>
         </td>
         <td style="padding: 10px 12px;">
-          <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;">
+          <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 0.5px solid rgb(219, 215, 215); width: 100%;">
             <option value="present">Present</option>
             <option value="absent">Absent</option>
           </select>

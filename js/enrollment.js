@@ -177,8 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await navigator.clipboard.writeText(text);
         return;
       }
-    } catch {
-    }
+    } catch {}
 
     const fallback = document.createElement("textarea");
     fallback.value = text;
@@ -224,7 +223,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   async function getTransferCodeHash() {
-    const rawCode = (document.getElementById("incomingTransferCode")?.value || "")
+    const rawCode = (
+      document.getElementById("incomingTransferCode")?.value || ""
+    )
       .replace(/[-\s]/g, "")
       .toUpperCase();
     if (!/^[0-9A-F]{32}$/.test(rawCode)) {
@@ -241,8 +242,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadTransferTargetOptions(client) {
-    const { data: { user }, error: authError } = await client.auth.getUser();
-    if (authError || !user) throw new Error("Your session has expired. Sign in again.");
+    const {
+      data: { user },
+      error: authError,
+    } = await client.auth.getUser();
+    if (authError || !user)
+      throw new Error("Your session has expired. Sign in again.");
 
     const { data: profile, error: profileError } = await client
       .from("profiles")
@@ -250,22 +255,47 @@ document.addEventListener("DOMContentLoaded", () => {
       .eq("id", user.id)
       .single();
     if (profileError) throw profileError;
-    if (profile.role !== "admin" || String(profile.status).toLowerCase() !== "active") {
-      throw new Error("Only an active school administrator can receive a transfer.");
+    if (
+      profile.role !== "admin" ||
+      String(profile.status).toLowerCase() !== "active"
+    ) {
+      throw new Error(
+        "Only an active school administrator can receive a transfer.",
+      );
     }
-    if (!profile.school_id) throw new Error("Your admin profile is not linked to a school.");
+    if (!profile.school_id)
+      throw new Error("Your admin profile is not linked to a school.");
 
-    const [classesResult, yearsResult, termsResult, feesResult] = await Promise.all([
-      client.from("classes").select("id, name, status, capacity")
-        .eq("school_id", profile.school_id).ilike("status", "active"),
-      client.from("academic_years").select("id, year_label, status")
-        .eq("school_id", profile.school_id).ilike("status", "active"),
-      client.from("terms").select("id, name, academic_year_id")
-        .eq("school_id", profile.school_id),
-      client.from("fee_structures").select("id, class_id, academic_year_id, term_id, total_amount, status")
-        .eq("school_id", profile.school_id).ilike("status", "active"),
-    ]);
-    for (const result of [classesResult, yearsResult, termsResult, feesResult]) {
+    const [classesResult, yearsResult, termsResult, feesResult] =
+      await Promise.all([
+        client
+          .from("classes")
+          .select("id, name, status, capacity")
+          .eq("school_id", profile.school_id)
+          .ilike("status", "active"),
+        client
+          .from("academic_years")
+          .select("id, year_label, status")
+          .eq("school_id", profile.school_id)
+          .ilike("status", "active"),
+        client
+          .from("terms")
+          .select("id, name, academic_year_id")
+          .eq("school_id", profile.school_id),
+        client
+          .from("fee_structures")
+          .select(
+            "id, class_id, academic_year_id, term_id, total_amount, status",
+          )
+          .eq("school_id", profile.school_id)
+          .ilike("status", "active"),
+      ]);
+    for (const result of [
+      classesResult,
+      yearsResult,
+      termsResult,
+      feesResult,
+    ]) {
       if (result.error) throw result.error;
     }
     return {
@@ -286,18 +316,25 @@ document.addEventListener("DOMContentLoaded", () => {
     modalConfirm.textContent = "Checking...";
     try {
       const codeHash = await getTransferCodeHash();
-      const [{ data: preview, error: previewError }, targetOptions] = await Promise.all([
-        client.rpc("preview_student_transfer", { p_code_hash: codeHash }),
-        loadTransferTargetOptions(client),
-      ]);
+      const [{ data: preview, error: previewError }, targetOptions] =
+        await Promise.all([
+          client.rpc("preview_student_transfer", { p_code_hash: codeHash }),
+          loadTransferTargetOptions(client),
+        ]);
       if (previewError) throw previewError;
 
-      const classOptions = targetOptions.classes.map((item) =>
-        `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`,
-      ).join("");
-      const yearOptions = targetOptions.years.map((item) =>
-        `<option value="${escapeHtml(item.id)}">${escapeHtml(item.year_label)}</option>`,
-      ).join("");
+      const classOptions = targetOptions.classes
+        .map(
+          (item) =>
+            `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`,
+        )
+        .join("");
+      const yearOptions = targetOptions.years
+        .map(
+          (item) =>
+            `<option value="${escapeHtml(item.id)}">${escapeHtml(item.year_label)}</option>`,
+        )
+        .join("");
       previewContainer.innerHTML = `
         <div class="incoming-transfer-student-card">
           <strong>${escapeHtml(preview.student_name || "Student")}</strong>
@@ -325,51 +362,77 @@ document.addEventListener("DOMContentLoaded", () => {
         const yearId = document.getElementById("transferTargetYear").value;
         const termSelect = document.getElementById("transferTargetTerm");
         const feeSelect = document.getElementById("transferTargetFee");
-        const terms = targetOptions.terms.filter((term) => String(term.academic_year_id) === yearId);
-        termSelect.innerHTML = `<option value="">Select term</option>${terms.map((term) =>
-          `<option value="${escapeHtml(term.id)}">${escapeHtml(term.name)}</option>`,
-        ).join("")}`;
-        feeSelect.innerHTML = '<option value="">Choose class, year, and term first</option>';
+        const terms = targetOptions.terms.filter(
+          (term) => String(term.academic_year_id) === yearId,
+        );
+        termSelect.innerHTML = `<option value="">Select term</option>${terms
+          .map(
+            (term) =>
+              `<option value="${escapeHtml(term.id)}">${escapeHtml(term.name)}</option>`,
+          )
+          .join("")}`;
+        feeSelect.innerHTML =
+          '<option value="">Choose class, year, and term first</option>';
       };
       const refreshFees = () => {
         const classId = document.getElementById("transferTargetClass").value;
         const yearId = document.getElementById("transferTargetYear").value;
         const termId = document.getElementById("transferTargetTerm").value;
         const feeSelect = document.getElementById("transferTargetFee");
-        const fees = targetOptions.fees.filter((fee) =>
-          String(fee.class_id) === classId &&
-          String(fee.academic_year_id) === yearId &&
-          String(fee.term_id) === termId,
+        const fees = targetOptions.fees.filter(
+          (fee) =>
+            String(fee.class_id) === classId &&
+            String(fee.academic_year_id) === yearId &&
+            String(fee.term_id) === termId,
         );
-        feeSelect.innerHTML = `<option value="">Select fee structure</option>${fees.map((fee) =>
-          `<option value="${escapeHtml(fee.id)}">Total: ${escapeHtml(fee.total_amount)}</option>`,
-        ).join("")}`;
+        feeSelect.innerHTML = `<option value="">Select fee structure</option>${fees
+          .map(
+            (fee) =>
+              `<option value="${escapeHtml(fee.id)}">Total: ${escapeHtml(fee.total_amount)}</option>`,
+          )
+          .join("")}`;
       };
-      document.getElementById("transferTargetClass").addEventListener("change", refreshFees);
-      document.getElementById("transferTargetYear").addEventListener("change", refreshTermsAndFees);
-      document.getElementById("transferTargetTerm").addEventListener("change", refreshFees);
+      document
+        .getElementById("transferTargetClass")
+        .addEventListener("change", refreshFees);
+      document
+        .getElementById("transferTargetYear")
+        .addEventListener("change", refreshTermsAndFees);
+      document
+        .getElementById("transferTargetTerm")
+        .addEventListener("change", refreshFees);
 
       modalConfirm.textContent = "Accept transfer";
-      modalConfirm.onclick = () => acceptIncomingTransfer(codeHash, targetOptions.schoolId);
+      modalConfirm.onclick = () =>
+        acceptIncomingTransfer(codeHash, targetOptions.schoolId);
     } catch (err) {
-      previewContainer.textContent = err.message || "Could not validate this transfer code.";
+      previewContainer.textContent =
+        err.message || "Could not validate this transfer code.";
     } finally {
       modalConfirm.disabled = false;
-      if (modalConfirm.textContent === "Checking...") modalConfirm.textContent = "Preview code";
+      if (modalConfirm.textContent === "Checking...")
+        modalConfirm.textContent = "Preview code";
     }
   }
 
   async function acceptIncomingTransfer(codeHash) {
     const values = {
       p_code_hash: codeHash,
-      p_target_student_code: document.getElementById("transferTargetStudentCode")?.value.trim(),
+      p_target_student_code: document
+        .getElementById("transferTargetStudentCode")
+        ?.value.trim(),
       p_target_class_id: document.getElementById("transferTargetClass")?.value,
-      p_target_academic_year_id: document.getElementById("transferTargetYear")?.value,
+      p_target_academic_year_id:
+        document.getElementById("transferTargetYear")?.value,
       p_target_term_id: document.getElementById("transferTargetTerm")?.value,
-      p_target_fee_structure_id: document.getElementById("transferTargetFee")?.value,
+      p_target_fee_structure_id:
+        document.getElementById("transferTargetFee")?.value,
     };
     if (Object.values(values).some((value) => !value)) {
-      showToast("Enter a student ID and choose the target class, academic year, term, and fee structure.", "info");
+      showToast(
+        "Enter a student ID and choose the target class, academic year, term, and fee structure.",
+        "info",
+      );
       return;
     }
     if (values.p_target_student_code.length > 64) {
@@ -387,13 +450,22 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       if (error) throw error;
       closeModal();
-      showToast(`${data.student_name} was transferred successfully with student ID ${data.target_student_code}.`, "success");
+      showToast(
+        `${data.student_name} was transferred successfully with student ID ${data.target_student_code}.`,
+        "success",
+      );
       if (typeof loadStudentEnrollments === "function") {
         try {
           await loadStudentEnrollments();
         } catch (refreshError) {
-          console.error("Transfer completed, but enrollments could not be refreshed:", refreshError);
-          showToast("Transfer completed. Refresh the page to update the enrollment list.", "info");
+          console.error(
+            "Transfer completed, but enrollments could not be refreshed:",
+            refreshError,
+          );
+          showToast(
+            "Transfer completed. Refresh the page to update the enrollment list.",
+            "info",
+          );
         }
       }
     } catch (err) {
@@ -409,13 +481,19 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", async () => {
       const enrollmentIds = [...new Set(selectedEnrollmentIds.map(String))];
       if (enrollmentIds.length !== 1) {
-        showToast("Select exactly one student enrollment to generate a transfer code.", "info");
+        showToast(
+          "Select exactly one student enrollment to generate a transfer code.",
+          "info",
+        );
         return;
       }
 
       const client = window.supabaseClient;
       if (!client) {
-        showToast("The database client is not ready. Refresh and try again.", "error");
+        showToast(
+          "The database client is not ready. Refresh and try again.",
+          "error",
+        );
         return;
       }
 
@@ -434,18 +512,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (enrollmentError) throw enrollmentError;
         if (!enrollment?.student_id || !enrollment?.school_id) {
-          throw new Error("Could not verify this enrollment's school and student.");
+          throw new Error(
+            "Could not verify this enrollment's school and student.",
+          );
         }
 
         if (!window.crypto?.getRandomValues || !window.crypto?.subtle) {
-          throw new Error("Secure code generation is unavailable in this browser.");
+          throw new Error(
+            "Secure code generation is unavailable in this browser.",
+          );
         }
 
         const randomBytes = new Uint8Array(16);
         window.crypto.getRandomValues(randomBytes);
         const rawCode = Array.from(randomBytes, (byte) =>
           byte.toString(16).padStart(2, "0"),
-        ).join("").toUpperCase();
+        )
+          .join("")
+          .toUpperCase();
         const transferCode = rawCode.match(/.{1,8}/g).join("-");
         const digest = await window.crypto.subtle.digest(
           "SHA-256",
@@ -475,20 +559,26 @@ document.addEventListener("DOMContentLoaded", () => {
           <p class="transfer-code-expiry">Expires: ${escapeHtml(expiry)}</p>
           <p class="transfer-code-note">Generating a new code for this student invalidates their previous unused code.</p>
         `;
-        document.getElementById("generatedTransferCode").textContent = transferCode;
-        document.getElementById("copyTransferCode").addEventListener("click", async (event) => {
-          const copyButton = event.currentTarget;
-          copyButton.disabled = true;
-          try {
-            await copyTextToClipboard(transferCode);
-            copyButton.textContent = "Copied";
-            showToast("Transfer code copied to clipboard.", "success");
-          } catch {
-            showToast("Copy failed. Select and copy the code manually.", "error");
-          } finally {
-            copyButton.disabled = false;
-          }
-        });
+        document.getElementById("generatedTransferCode").textContent =
+          transferCode;
+        document
+          .getElementById("copyTransferCode")
+          .addEventListener("click", async (event) => {
+            const copyButton = event.currentTarget;
+            copyButton.disabled = true;
+            try {
+              await copyTextToClipboard(transferCode);
+              copyButton.textContent = "Copied";
+              showToast("Transfer code copied to clipboard.", "success");
+            } catch {
+              showToast(
+                "Copy failed. Select and copy the code manually.",
+                "error",
+              );
+            } finally {
+              copyButton.disabled = false;
+            }
+          });
         modalConfirm.style.display = "none";
         modalCancel.textContent = "Close";
         openModal();
@@ -883,6 +973,531 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function executeGrade9To10YearlyPromotion({
+    enrollmentIds,
+    targetAcademicYearId,
+    targetClassId,
+    feeStructureId,
+    email,
+    password,
+    phone,
+  }) {
+    try {
+      const client = window.supabaseClient || supabaseClient;
+      if (!client) throw new Error("Supabase client is not available.");
+
+      if (!Array.isArray(enrollmentIds) || enrollmentIds.length !== 1) {
+        throw new Error("Select one Grade 9 student at a time.");
+      }
+
+      if (!targetAcademicYearId || !targetClassId || !feeStructureId) {
+        throw new Error("Target year, class, and fee structure are required.");
+      }
+
+      if (!email || !password || password.length < 12) {
+        throw new Error(
+          "Enter a valid email and a password of at least 12 characters.",
+        );
+      }
+
+      const { data, error } = await client.functions.invoke(
+        "promote-grade9-to-10-yearly",
+        {
+          body: {
+            enrollment_ids: enrollmentIds,
+            target_academic_year_id: targetAcademicYearId,
+            target_class_id: targetClassId,
+            fee_structure_id: feeStructureId,
+            email,
+            password,
+            phone_number: phone || null,
+          },
+        },
+      );
+
+      if (error) {
+        let message = data?.message;
+
+        try {
+          const responseText = await error.context?.text();
+          if (responseText)
+            message = JSON.parse(responseText).message || message;
+        } catch {
+          // Fall back to the SDK error below.
+        }
+
+        throw new Error(message || error.message || "Promotion failed.");
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Yearly promotion failed.");
+      }
+
+      showToast(
+        "Student promoted to Grade 10 for the new academic year.",
+        "success",
+      );
+
+      if (typeof loadStudentEnrollments === "function") {
+        loadStudentEnrollments();
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Yearly Grade 9 to 10 promotion failed:", error);
+      showToast(`Promotion failed: ${error.message}`, "error");
+      return false;
+    }
+  }
+
+  document
+    .getElementById("btnPromoteGrade9To10yearly")
+    ?.addEventListener("click", async () => {
+      const selectedIds = [
+        ...new Set((selectedEnrollmentIds || []).map(String)),
+      ];
+
+      if (selectedIds.length === 0) {
+        showToast("Please select a Grade 9 enrollment.", "info");
+        return;
+      }
+
+      if (selectedIds.length !== 1) {
+        showToast(
+          "Please select one student at a time so each student can receive their own login credentials.",
+          "info",
+        );
+        return;
+      }
+
+      const client = window.supabaseClient || supabaseClient;
+      if (!client) {
+        showToast("Supabase client is not available.", "error");
+        return;
+      }
+
+      modalTitle.textContent =
+        "Promote Grade 9 to Grade 10 (New Academic Year)";
+      modalBody.innerHTML =
+        "<p>Loading the selected student and available target years...</p>";
+      modalConfirm.style.display = "none";
+      openModal();
+
+      try {
+        let schoolId = window.currentSchoolId;
+
+        if (!schoolId) {
+          const {
+            data: { user },
+            error: userError,
+          } = await client.auth.getUser();
+
+          if (userError) throw userError;
+          if (!user)
+            throw new Error("Your session has expired. Please sign in again.");
+
+          const { data: profile, error: profileError } = await client
+            .from("profiles")
+            .select("school_id")
+            .eq("id", user.id)
+            .single();
+
+          if (profileError) throw profileError;
+          schoolId = profile?.school_id;
+        }
+
+        if (!schoolId) {
+          throw new Error("Could not determine the active school.");
+        }
+
+        const { data: activeYear, error: yearError } = await client
+          .from("academic_years")
+          .select("id, year_label")
+          .eq("school_id", schoolId)
+          .ilike("status", "active")
+          .maybeSingle();
+
+        if (yearError) throw yearError;
+        if (!activeYear) {
+          throw new Error("No active academic year was found for this school.");
+        }
+
+        const { data: activeTerms, error: activeTermsError } = await client
+          .from("terms")
+          .select("id, name")
+          .eq("school_id", schoolId)
+          .eq("academic_year_id", activeYear.id);
+
+        if (activeTermsError) throw activeTermsError;
+
+        const matchesTerm = (name, termNumber) => {
+          const pattern =
+            termNumber === 1
+              ? /\b(?:1(?:st)?|first|term\s*1|semester\s*1|one|i)\b/i
+              : /\b(?:2(?:nd)?|second|term\s*2|semester\s*2|two|ii)\b/i;
+
+          return pattern.test(name || "");
+        };
+
+        const activeSecondTerms = (activeTerms || []).filter((term) =>
+          matchesTerm(term.name, 2),
+        );
+
+        if (activeSecondTerms.length !== 1) {
+          throw new Error(
+            "The active academic year must have exactly one second term.",
+          );
+        }
+
+        const sourceSecondTermId = activeSecondTerms[0].id;
+
+        const { data: sourceRows, error: sourceError } = await client
+          .from("student_enrollments")
+          .select(
+            "id, student_id, school_id, academic_year_id, term_id, classes(name)",
+          )
+          .in("id", selectedIds);
+
+        if (sourceError) throw sourceError;
+        if (!sourceRows || sourceRows.length !== 1) {
+          throw new Error("Could not find the selected enrollment.");
+        }
+
+        const sourceEnrollment = sourceRows[0];
+        const sourceClassName = sourceEnrollment.classes?.name || "";
+        const sourceGrade = Number(sourceClassName.match(/\d+/)?.[0]);
+
+        if (String(sourceEnrollment.school_id) !== String(schoolId)) {
+          throw new Error(
+            "The selected student does not belong to this school.",
+          );
+        }
+        if (
+          String(sourceEnrollment.academic_year_id) !== String(activeYear.id)
+        ) {
+          throw new Error(
+            "Select a student enrolled in the active academic year.",
+          );
+        }
+        if (String(sourceEnrollment.term_id) !== String(sourceSecondTermId)) {
+          throw new Error(
+            "Select a student enrolled in the active year's second term.",
+          );
+        }
+        if (sourceGrade !== 9) {
+          throw new Error("The selected student is not in Grade 9.");
+        }
+
+        const { data: years, error: yearsError } = await client
+          .from("academic_years")
+          .select("id, year_label, status")
+          .eq("school_id", schoolId)
+          .order("year_label", { ascending: false });
+
+        if (yearsError) throw yearsError;
+
+        const { data: allTerms, error: termsError } = await client
+          .from("terms")
+          .select("id, name, academic_year_id")
+          .eq("school_id", schoolId);
+
+        if (termsError) throw termsError;
+
+        const targetYears = (years || [])
+          .filter((year) => String(year.id) !== String(activeYear.id))
+          .map((year) => {
+            const firstTerms = (allTerms || []).filter(
+              (term) =>
+                String(term.academic_year_id) === String(year.id) &&
+                matchesTerm(term.name, 1),
+            );
+
+            return firstTerms.length === 1
+              ? { ...year, firstTermId: firstTerms[0].id }
+              : null;
+          })
+          .filter(Boolean);
+
+        if (!targetYears.length) {
+          throw new Error(
+            "No other academic year with exactly one first term is available.",
+          );
+        }
+
+        const { data: allClasses, error: classesError } = await client
+          .from("classes")
+          .select("id, name, capacity")
+          .eq("school_id", schoolId)
+          .ilike("status", "active");
+
+        if (classesError) throw classesError;
+
+        const targetClasses = (allClasses || []).filter((schoolClass) => {
+          const gradeNumber = Number(schoolClass.name?.match(/\d+/)?.[0]);
+          return gradeNumber === 10;
+        });
+
+        if (!targetClasses.length) {
+          throw new Error(
+            "No active Grade 10 classes were found for this school.",
+          );
+        }
+
+        const targetFirstTermIds = targetYears.map((year) => year.firstTermId);
+
+        const { data: feeStructures, error: feesError } = await client
+          .from("fee_structures")
+          .select(
+            "id, total_amount, class_id, academic_year_id, term_id, classes(name), terms(name)",
+          )
+          .eq("school_id", schoolId)
+          .ilike("status", "active")
+          .in("term_id", targetFirstTermIds);
+
+        if (feesError) throw feesError;
+
+        modalBody.innerHTML = `
+        <p style="margin-bottom: 15px; color: #555;">
+          Promote <b>${escapeHtml(sourceClassName)}</b> enrollment from
+          <b>${escapeHtml(activeYear.year_label)}</b> into Grade 10 in the
+          target academic year's first term.
+        </p>
+
+        <div style="margin-bottom: 15px;">
+          <label for="yearlyTargetYearSelect"><b>Target Academic Year:</b></label>
+          <select id="yearlyTargetYearSelect" class="form-control">
+            <option value="">-- Select Target Academic Year --</option>
+            ${targetYears
+              .map(
+                (year) => `
+                  <option value="${escapeHtml(year.id)}">
+                    ${escapeHtml(year.year_label)}
+                  </option>
+                `,
+              )
+              .join("")}
+          </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="yearlyTargetClassSelect"><b>Target Grade 10 Class:</b></label>
+          <select id="yearlyTargetClassSelect" class="form-control">
+            <option value="">-- Select Target Class --</option>
+            ${targetClasses
+              .map(
+                (schoolClass) => `
+                  <option
+                    value="${escapeHtml(schoolClass.id)}"
+                    data-capacity="${Number(schoolClass.capacity) || 0}"
+                  >
+                    ${escapeHtml(schoolClass.name)}
+                  </option>
+                `,
+              )
+              .join("")}
+          </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="yearlyTargetFeeSelect"><b>First-Term Fee Structure:</b></label>
+          <select id="yearlyTargetFeeSelect" class="form-control" disabled>
+            <option value="">-- Select Year and Class First --</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="yearlyStudentEmail"><b>Student Email:</b></label>
+          <input
+            type="email"
+            id="yearlyStudentEmail"
+            class="form-control"
+            placeholder="student@school.com"
+            autocomplete="off"
+          />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="yearlyStudentPassword"><b>Temporary Password:</b></label>
+          <input
+            type="password"
+            id="yearlyStudentPassword"
+            class="form-control"
+            placeholder="At least 12 characters"
+            minlength="12"
+            autocomplete="new-password"
+          />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label for="yearlyStudentPhone"><b>Phone Number (optional):</b></label>
+          <input
+            type="tel"
+            id="yearlyStudentPhone"
+            class="form-control"
+            placeholder="Phone number"
+          />
+        </div>
+
+        <div
+          id="yearlyCapacityMessage"
+          role="status"
+          aria-live="polite"
+          style="font-size: 13px; margin-top: 5px;"
+        ></div>
+      `;
+
+        const yearSelect = document.getElementById("yearlyTargetYearSelect");
+        const classSelect = document.getElementById("yearlyTargetClassSelect");
+        const feeSelect = document.getElementById("yearlyTargetFeeSelect");
+        const capacityMessage = document.getElementById(
+          "yearlyCapacityMessage",
+        );
+
+        const updateTargetOptions = async () => {
+          const targetYearId = yearSelect.value;
+          const targetClassId = classSelect.value;
+
+          feeSelect.innerHTML =
+            '<option value="">-- Select Year and Class First --</option>';
+          feeSelect.disabled = true;
+          capacityMessage.textContent = "";
+
+          if (!targetYearId || !targetClassId) return;
+
+          const targetYear = targetYears.find(
+            (year) => String(year.id) === String(targetYearId),
+          );
+          if (!targetYear) return;
+
+          const matchingFees = (feeStructures || []).filter(
+            (fee) =>
+              String(fee.academic_year_id) === String(targetYearId) &&
+              String(fee.term_id) === String(targetYear.firstTermId) &&
+              String(fee.class_id) === String(targetClassId),
+          );
+
+          if (matchingFees.length !== 1) {
+            feeSelect.innerHTML =
+              '<option value="">-- Need exactly one active fee structure for this year, class, and first term --</option>';
+          } else {
+            const fee = matchingFees[0];
+            feeSelect.innerHTML = `
+            <option value="${escapeHtml(fee.id)}">
+              ${escapeHtml(fee.classes?.name || "Grade 10")}
+              — ${escapeHtml(fee.terms?.name || "First term")}
+              — Total: $${Number(fee.total_amount) || 0}
+            </option>
+          `;
+            feeSelect.disabled = false;
+          }
+
+          const { count, error: countError } = await client
+            .from("student_enrollments")
+            .select("*", { count: "exact", head: true })
+            .eq("school_id", schoolId)
+            .eq("class_id", targetClassId)
+            .eq("academic_year_id", targetYearId)
+            .eq("term_id", targetYear.firstTermId);
+
+          const selectedClass = classSelect.selectedOptions[0];
+          const capacity = Number(selectedClass?.dataset.capacity) || 0;
+
+          if (countError) {
+            capacityMessage.textContent =
+              "Could not check class capacity now. It must be verified when saving.";
+            capacityMessage.style.color = "#9a6700";
+          } else if (capacity > 0 && (count || 0) + 1 > capacity) {
+            capacityMessage.textContent = `This class would exceed capacity (${(count || 0) + 1}/${capacity}).`;
+            capacityMessage.style.color = "#b42318";
+          } else if (capacity > 0) {
+            capacityMessage.textContent = `Class occupancy after promotion: ${(count || 0) + 1}/${capacity}.`;
+            capacityMessage.style.color = "#16803c";
+          } else {
+            capacityMessage.textContent = `Current target-year enrollment: ${count || 0}. No capacity limit is set.`;
+            capacityMessage.style.color = "#555";
+          }
+        };
+
+        yearSelect.addEventListener("change", updateTargetOptions);
+        classSelect.addEventListener("change", updateTargetOptions);
+
+        modalConfirm.style.display = "inline-block";
+        modalConfirm.disabled = false;
+
+        modalConfirm.onclick = async () => {
+          const targetYearId = yearSelect.value;
+          const targetClassId = classSelect.value;
+          const feeStructureId = feeSelect.value;
+          const email = document
+            .getElementById("yearlyStudentEmail")
+            .value.trim();
+          const password = document.getElementById(
+            "yearlyStudentPassword",
+          ).value;
+          const phone =
+            document.getElementById("yearlyStudentPhone").value.trim() || null;
+
+          if (
+            !targetYearId ||
+            !targetClassId ||
+            !feeStructureId ||
+            !email ||
+            !password
+          ) {
+            showToast(
+              "Select the target year, class, and fee structure, then enter the student's email and password.",
+              "info",
+            );
+            return;
+          }
+
+          if (password.length < 12) {
+            showToast(
+              "The temporary password must be at least 12 characters.",
+              "info",
+            );
+            return;
+          }
+
+          const originalText = modalConfirm.textContent;
+          modalConfirm.disabled = true;
+          modalConfirm.textContent = "Promoting...";
+          modalConfirm.setAttribute("aria-busy", "true");
+
+          try {
+            const promoted = await executeGrade9To10YearlyPromotion({
+              enrollmentIds: [sourceEnrollment.id],
+              targetAcademicYearId: targetYearId,
+              targetClassId,
+              feeStructureId,
+              email,
+              password,
+              phone,
+            });
+
+            if (promoted) closeModal();
+          } catch (error) {
+            console.error("Yearly Grade 9 to 10 promotion failed:", error);
+            showToast(error.message || "Yearly promotion failed.", "error");
+          } finally {
+            modalConfirm.disabled = false;
+            modalConfirm.textContent = originalText;
+            modalConfirm.removeAttribute("aria-busy");
+          }
+        };
+      } catch (error) {
+        console.error(
+          "Could not set up yearly Grade 9 to 10 promotion:",
+          error,
+        );
+        modalBody.innerHTML = `
+        <p style="color: #b42318;">
+          ${escapeHtml(error.message || "Could not load promotion options.")}
+        </p>
+      `;
+      }
+    });
+
   document
     .getElementById("btnPromoteStudents")
     ?.addEventListener("click", async () => {
@@ -1232,7 +1847,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let schoolId = window.currentSchoolId;
         if (!schoolId) {
-          const { data: { user }, error: userError } = await client.auth.getUser();
+          const {
+            data: { user },
+            error: userError,
+          } = await client.auth.getUser();
           if (userError) throw userError;
           if (user) {
             const { data: profile, error: profileError } = await client
@@ -1244,31 +1862,48 @@ document.addEventListener("DOMContentLoaded", () => {
             schoolId = profile?.school_id;
           }
         }
-        if (!schoolId) throw new Error("Active school could not be determined.");
+        if (!schoolId)
+          throw new Error("Active school could not be determined.");
 
-        const uniqueEnrollmentIds = [...new Set(selectedEnrollmentIds.map(String))];
+        const uniqueEnrollmentIds = [
+          ...new Set(selectedEnrollmentIds.map(String)),
+        ];
         if (uniqueEnrollmentIds.length !== selectedEnrollmentIds.length) {
-          throw new Error("The selection contains duplicate enrollment records.");
+          throw new Error(
+            "The selection contains duplicate enrollment records.",
+          );
         }
 
         const { data: sourceRows, error: sourceError } = await client
           .from("student_enrollments")
-          .select("id, student_id, school_id, academic_year_id, class_id, classes(name)")
+          .select(
+            "id, student_id, school_id, academic_year_id, class_id, classes(name)",
+          )
           .in("id", uniqueEnrollmentIds);
         if (sourceError) throw sourceError;
         if (!sourceRows || sourceRows.length !== uniqueEnrollmentIds.length) {
-          throw new Error("Some selected enrollment records could not be found.");
+          throw new Error(
+            "Some selected enrollment records could not be found.",
+          );
         }
-        if (sourceRows.some((row) => String(row.school_id) !== String(schoolId))) {
+        if (
+          sourceRows.some((row) => String(row.school_id) !== String(schoolId))
+        ) {
           throw new Error("All selected students must belong to your school.");
         }
         if (new Set(sourceRows.map((row) => String(row.class_id))).size !== 1) {
           throw new Error("Select students from one source class at a time.");
         }
-        if (new Set(sourceRows.map((row) => String(row.academic_year_id))).size !== 1) {
+        if (
+          new Set(sourceRows.map((row) => String(row.academic_year_id)))
+            .size !== 1
+        ) {
           throw new Error("Select students from one academic year at a time.");
         }
-        if (new Set(sourceRows.map((row) => String(row.student_id))).size !== sourceRows.length) {
+        if (
+          new Set(sourceRows.map((row) => String(row.student_id))).size !==
+          sourceRows.length
+        ) {
           throw new Error("A student can appear only once in this promotion.");
         }
 
@@ -1289,8 +1924,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (termErr || !termsData) throw new Error("Could not fetch terms.");
 
         const isFirstTerm = (term) =>
-          /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(term?.name || "");
-        const firstSemesterTermIds = termsData.filter(isFirstTerm).map((term) => term.id);
+          /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(
+            term?.name || "",
+          );
+        const firstSemesterTermIds = termsData
+          .filter(isFirstTerm)
+          .map((term) => term.id);
 
         const { data: classesData, error: classErr } = await client
           .from("classes")
@@ -1424,9 +2063,14 @@ document.addEventListener("DOMContentLoaded", () => {
             .in("term_id", firstSemesterTermIds);
 
           const selectedOption = targetClassSelect.selectedOptions[0];
-          const capacity = parseInt(selectedOption.getAttribute("data-capacity"), 10) || 0;
+          const capacity =
+            parseInt(selectedOption.getAttribute("data-capacity"), 10) || 0;
 
-          if (!countErr && capacity > 0 && count + sourceRows.length > capacity) {
+          if (
+            !countErr &&
+            capacity > 0 &&
+            count + sourceRows.length > capacity
+          ) {
             capacityWarning.textContent = `⚠️ Warning: Target class has reached or exceeded its capacity (${count}/${capacity}).`;
           } else {
             capacityWarning.textContent = `Class occupancy in target year: ${count || 0} / ${capacity} available.`;
@@ -1506,16 +2150,21 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       );
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.message || "The promotion RPC failed.");
+      if (!data?.success)
+        throw new Error(data?.message || "The promotion RPC failed.");
 
-      showToast(`Successfully promoted ${data.student_count ?? enrollmentIds.length} student(s) to the new academic year (1st Semester)!`, "success");
+      showToast(
+        `Successfully promoted ${data.student_count ?? enrollmentIds.length} student(s) to the new academic year (1st Semester)!`,
+        "success",
+      );
       if (typeof loadStudentEnrollments === "function") {
         loadStudentEnrollments();
       }
       return true;
     } catch (err) {
       console.error("Yearly promotion execution failed:", err);
-      const message = err?.message || "Unexpected error while promoting students.";
+      const message =
+        err?.message || "Unexpected error while promoting students.";
       const status = document.getElementById("capacityWarning");
       if (status) status.textContent = `Promotion failed: ${message}`;
       showToast(`Promotion failed: ${message}`, "error");
@@ -1544,7 +2193,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function executeSemesterMove(studentIds, feeStructureId, confirmButton) {
+  async function executeSemesterMove(
+    studentIds,
+    feeStructureId,
+    confirmButton,
+  ) {
     const originalText = confirmButton?.textContent;
     try {
       const client = window.supabaseClient || supabaseClient;
@@ -1563,7 +2216,8 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (rpcError) throw rpcError;
-      if (!data?.success) throw new Error(data?.message || "The semester move failed.");
+      if (!data?.success)
+        throw new Error(data?.message || "The semester move failed.");
 
       showToast(
         `Successfully moved ${data.student_count ?? studentIds.length} student(s) to the 2nd semester!`,
@@ -1614,7 +2268,8 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (rpcError) throw rpcError;
-      if (!data?.success) throw new Error(data?.message || "The academic-year move failed.");
+      if (!data?.success)
+        throw new Error(data?.message || "The academic-year move failed.");
 
       showToast(
         `Successfully moved ${data.student_count ?? studentIds.length} student(s) to the new academic year!`,
@@ -1658,7 +2313,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let schoolId = window.currentSchoolId;
         if (!schoolId) {
-          const { data: { user }, error: userError } = await client.auth.getUser();
+          const {
+            data: { user },
+            error: userError,
+          } = await client.auth.getUser();
           if (userError) throw userError;
           if (user) {
             const { data: profile, error: profileError } = await client
@@ -1670,27 +2328,50 @@ document.addEventListener("DOMContentLoaded", () => {
             schoolId = profile?.school_id;
           }
         }
-        if (!schoolId) throw new Error("Active school could not be determined.");
+        if (!schoolId)
+          throw new Error("Active school could not be determined.");
 
         const { data: currentEnrollments, error: enrollErr } = await client
           .from("student_enrollments")
-          .select("id, school_id, academic_year_id, term_id, student_id, class_id, classes(name)")
+          .select(
+            "id, school_id, academic_year_id, term_id, student_id, class_id, classes(name)",
+          )
           .in("id", enrollmentIds);
         if (enrollErr) throw enrollErr;
-        if (!currentEnrollments || currentEnrollments.length !== enrollmentIds.length) {
-          throw new Error("Some selected enrollment records could not be found.");
+        if (
+          !currentEnrollments ||
+          currentEnrollments.length !== enrollmentIds.length
+        ) {
+          throw new Error(
+            "Some selected enrollment records could not be found.",
+          );
         }
-        if (currentEnrollments.some((row) => String(row.school_id) !== String(schoolId))) {
+        if (
+          currentEnrollments.some(
+            (row) => String(row.school_id) !== String(schoolId),
+          )
+        ) {
           throw new Error("All selected students must belong to your school.");
         }
-        if (new Set(currentEnrollments.map((row) => String(row.class_id))).size !== 1) {
+        if (
+          new Set(currentEnrollments.map((row) => String(row.class_id)))
+            .size !== 1
+        ) {
           throw new Error("Select students from one class at a time.");
         }
-        if (new Set(currentEnrollments.map((row) => String(row.academic_year_id))).size !== 1) {
+        if (
+          new Set(currentEnrollments.map((row) => String(row.academic_year_id)))
+            .size !== 1
+        ) {
           throw new Error("Select students from one academic year at a time.");
         }
-        if (new Set(currentEnrollments.map((row) => String(row.student_id))).size !== currentEnrollments.length) {
-          throw new Error("A student can appear only once in this semester move.");
+        if (
+          new Set(currentEnrollments.map((row) => String(row.student_id)))
+            .size !== currentEnrollments.length
+        ) {
+          throw new Error(
+            "A student can appear only once in this semester move.",
+          );
         }
         const sourceYearId = currentEnrollments[0].academic_year_id;
         const { data: yearTerms, error: termsError } = await client
@@ -1699,22 +2380,38 @@ document.addEventListener("DOMContentLoaded", () => {
           .eq("school_id", schoolId)
           .eq("academic_year_id", sourceYearId);
         if (termsError) throw termsError;
-        const isFirstTerm = (term) => /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(term?.name || "");
-        const isSecondTerm = (term) => /(^|[^a-z0-9])(2(nd)?|second|two|ii)([^a-z0-9]|$)/i.test(term?.name || "");
+        const isFirstTerm = (term) =>
+          /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(
+            term?.name || "",
+          );
+        const isSecondTerm = (term) =>
+          /(^|[^a-z0-9])(2(nd)?|second|two|ii)([^a-z0-9]|$)/i.test(
+            term?.name || "",
+          );
         const firstTerms = (yearTerms || []).filter(isFirstTerm);
         const secondTerms = (yearTerms || []).filter(isSecondTerm);
         if (firstTerms.length !== 1 || secondTerms.length !== 1) {
-          throw new Error("The source academic year must have exactly one first and one second term.");
+          throw new Error(
+            "The source academic year must have exactly one first and one second term.",
+          );
         }
-        if (currentEnrollments.some((row) => String(row.term_id) !== String(firstTerms[0].id))) {
-          throw new Error("Select students enrolled in the first term of the same academic year.");
+        if (
+          currentEnrollments.some(
+            (row) => String(row.term_id) !== String(firstTerms[0].id),
+          )
+        ) {
+          throw new Error(
+            "Select students enrolled in the first term of the same academic year.",
+          );
         }
         const studentIds = currentEnrollments.map((row) => row.student_id);
 
         const classId = currentEnrollments[0].class_id;
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
-          .select("id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)")
+          .select(
+            "id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)",
+          )
           .eq("school_id", schoolId)
           .eq("class_id", classId)
           .eq("academic_year_id", sourceYearId)
@@ -1743,7 +2440,11 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("Please select a fee structure.", "info");
             return;
           }
-          const succeeded = await executeSemesterMove(studentIds, feeId, modalConfirm);
+          const succeeded = await executeSemesterMove(
+            studentIds,
+            feeId,
+            modalConfirm,
+          );
           if (succeeded) closeModal();
         };
       } catch (err) {
@@ -1774,7 +2475,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let schoolId = window.currentSchoolId;
         if (!schoolId) {
-          const { data: { user }, error: userError } = await client.auth.getUser();
+          const {
+            data: { user },
+            error: userError,
+          } = await client.auth.getUser();
           if (userError) throw userError;
           if (user) {
             const { data: profile, error: profileError } = await client
@@ -1786,33 +2490,59 @@ document.addEventListener("DOMContentLoaded", () => {
             schoolId = profile?.school_id;
           }
         }
-        if (!schoolId) throw new Error("Active school could not be determined.");
+        if (!schoolId)
+          throw new Error("Active school could not be determined.");
 
         const { data: currentEnrollments, error: enrollErr } = await client
           .from("student_enrollments")
-          .select("id, school_id, academic_year_id, student_id, class_id, classes(name)")
+          .select(
+            "id, school_id, academic_year_id, student_id, class_id, classes(name)",
+          )
           .in("id", enrollmentIds);
         if (enrollErr) throw enrollErr;
-        if (!currentEnrollments || currentEnrollments.length !== enrollmentIds.length) {
-          throw new Error("Some selected enrollment records could not be found.");
+        if (
+          !currentEnrollments ||
+          currentEnrollments.length !== enrollmentIds.length
+        ) {
+          throw new Error(
+            "Some selected enrollment records could not be found.",
+          );
         }
-        if (currentEnrollments.some((row) => String(row.school_id) !== String(schoolId))) {
+        if (
+          currentEnrollments.some(
+            (row) => String(row.school_id) !== String(schoolId),
+          )
+        ) {
           throw new Error("All selected students must belong to your school.");
         }
-        if (new Set(currentEnrollments.map((row) => String(row.class_id))).size !== 1) {
+        if (
+          new Set(currentEnrollments.map((row) => String(row.class_id)))
+            .size !== 1
+        ) {
           throw new Error("Select students from one source class at a time.");
         }
-        if (new Set(currentEnrollments.map((row) => String(row.academic_year_id))).size !== 1) {
-          throw new Error("Select students from one source academic year at a time.");
+        if (
+          new Set(currentEnrollments.map((row) => String(row.academic_year_id)))
+            .size !== 1
+        ) {
+          throw new Error(
+            "Select students from one source academic year at a time.",
+          );
         }
-        if (new Set(currentEnrollments.map((row) => String(row.student_id))).size !== currentEnrollments.length) {
+        if (
+          new Set(currentEnrollments.map((row) => String(row.student_id)))
+            .size !== currentEnrollments.length
+        ) {
           throw new Error("A student can appear only once in this rollover.");
         }
 
         const oldAcademicYearId = currentEnrollments[0].academic_year_id;
         const studentIds = currentEnrollments.map((row) => row.student_id);
 
-        const [{ data: academicYears, error: yearsError }, { data: terms, error: termsError }] = await Promise.all([
+        const [
+          { data: academicYears, error: yearsError },
+          { data: terms, error: termsError },
+        ] = await Promise.all([
           client
             .from("academic_years")
             .select("id, year_label")
@@ -1828,13 +2558,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!academicYears || academicYears.length === 0)
           throw new Error("No academic years found.");
         const schoolTerms = terms || [];
-        const isFirstTerm = (term) => /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(term?.name || "");
-        const eligibleYears = academicYears.filter((year) =>
-          String(year.id) !== String(oldAcademicYearId) &&
-          schoolTerms.filter((term) => String(term.academic_year_id) === String(year.id) && isFirstTerm(term)).length === 1,
+        const isFirstTerm = (term) =>
+          /(^|[^a-z0-9])(1(st)?|first|one|i)([^a-z0-9]|$)/i.test(
+            term?.name || "",
+          );
+        const eligibleYears = academicYears.filter(
+          (year) =>
+            String(year.id) !== String(oldAcademicYearId) &&
+            schoolTerms.filter(
+              (term) =>
+                String(term.academic_year_id) === String(year.id) &&
+                isFirstTerm(term),
+            ).length === 1,
         );
         if (eligibleYears.length === 0) {
-          throw new Error("No other school academic year with exactly one first term is available.");
+          throw new Error(
+            "No other school academic year with exactly one first term is available.",
+          );
         }
 
         modalConfirm.style.display = "inline-block";
@@ -1859,10 +2599,15 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
           const targetTerms = schoolTerms.filter(
-            (term) => String(term.academic_year_id) === String(newAcademicYearId) && isFirstTerm(term),
+            (term) =>
+              String(term.academic_year_id) === String(newAcademicYearId) &&
+              isFirstTerm(term),
           );
           if (targetTerms.length !== 1) {
-            showToast("The target academic year must have exactly one first term.", "error");
+            showToast(
+              "The target academic year must have exactly one first term.",
+              "error",
+            );
             return;
           }
           const succeeded = await executeNewYearMove(
@@ -1923,13 +2668,16 @@ async function loadStudentEnrollments() {
       return;
     }
 
-    const studentIds = [...new Set(enrollments.map((enr) => enr.student_id).filter(Boolean))];
+    const studentIds = [
+      ...new Set(enrollments.map((enr) => enr.student_id).filter(Boolean)),
+    ];
     const studentCodesById = new Map();
     if (studentIds.length) {
-      const { data: studentRows, error: studentRowsError } = await supabaseClient
-        .from("students")
-        .select("id, student_id")
-        .in("id", studentIds);
+      const { data: studentRows, error: studentRowsError } =
+        await supabaseClient
+          .from("students")
+          .select("id, student_id")
+          .in("id", studentIds);
       if (studentRowsError) {
         console.warn("Could not load current student IDs:", studentRowsError);
       } else {
@@ -1970,7 +2718,9 @@ async function loadStudentEnrollments() {
           enr.profiles?.photo_url || window.DEFAULT_PROFILE_AVATAR || "",
         );
         const studentCode =
-          enr.student_code_snapshot || studentCodesById.get(enr.student_id) || "";
+          enr.student_code_snapshot ||
+          studentCodesById.get(enr.student_id) ||
+          "";
         const enrollmentStatus = enr.enrollment_status || "Normal";
         const className = enr.classes?.name || "N/A";
         const academicYearName = enr.academic_years?.year_label || "N/A";

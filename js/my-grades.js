@@ -374,7 +374,7 @@ async function loadStudentGrades(authUserId) {
     let html = statsHtml;
     grouped.forEach((items, subName) => {
       html += `
-        <div class="card" style="margin-bottom: 20px; background: #fff; border: 2px solid rgb(219, 215, 215); padding: 16px;">
+        <div class="card" style="margin-bottom: 20px; background: #fff; border: 0.5px solid rgb(219, 215, 215); padding: 16px;">
           <h3>${subName}</h3>
           <div class="table-responsive">
             <table class="table" style="width: 100%; border-collapse: collapse; min-width: 320px;">
