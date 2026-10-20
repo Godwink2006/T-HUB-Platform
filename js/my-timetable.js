@@ -213,11 +213,6 @@ async function loadStudentClassSchedule(classId, schoolId) {
   }
 
   allCurrentLessons = formattedLessons;
-
-  renderScheduleCards(
-    formattedLessons.filter((l) => !l.is_break),
-    "student",
-  );
 }
 
 async function loadTeacherPersonalSchedule(teacherId) {
@@ -261,8 +256,6 @@ async function loadTeacherPersonalSchedule(teacherId) {
   });
 
   allCurrentLessons = formattedLessons;
-
-  renderScheduleCards(formattedLessons, "teacher");
 }
 
 function renderScheduleCards(lessons, roleContext) {
@@ -384,21 +377,36 @@ async function setupTimetableFilters(schoolId) {
       daySelect.appendChild(opt);
     });
   }
-  if (daySelect) {
-    daySelect.removeEventListener("change", applyTimetableFilters);
-    daySelect.addEventListener("change", applyTimetableFilters);
+  const applyButton = document.getElementById("applyMyTimetableFilters");
+  if (applyButton) {
+    applyButton.removeEventListener("click", applyTimetableFilters);
+    applyButton.addEventListener("click", applyTimetableFilters);
+  }
+
+  if (allCurrentLessons.length) {
+    const container = document.getElementById("timetableCardsGrid");
+    if (container) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+          <p>Choose a day, then select View timetable.</p>
+        </div>`;
+    }
   }
 }
 
 function applyTimetableFilters() {
   const selectedDay = document.getElementById("filterTimetableDays")?.value;
 
-  let filtered = [...allCurrentLessons];
+  let filtered = allCurrentLessons.filter(
+    (lesson) => currentUserRole !== "student" || !lesson.is_break,
+  );
 
   if (selectedDay) {
     filtered = filtered.filter(
       (lesson) =>
-        lesson.day_of_week?.toLowerCase() === selectedDay.toLowerCase(),
+        lesson.day_of_week?.toLowerCase() === selectedDay.toLowerCase() ||
+        lesson.day_of_week?.toLowerCase() === "all",
     );
   }
 

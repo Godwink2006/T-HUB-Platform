@@ -199,8 +199,13 @@
 
   .day-card,
   .back-academic-settings-btn,
-  .topbar-filters .form-control {
+  .topbar-filters .form-control,
+  .my-timetable-filter-button {
     border-radius: 10px;
+  }
+
+  .my-timetable-filter-button {
+    width: 100%;
   }
 
   .lesson-card-item {
@@ -226,9 +231,14 @@
 
 .topbar-filters {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
+}
+
+.topbar-filters > div {
+  flex: 1 1 180px;
 }
 
 .topbar-filters .form-control {
@@ -237,4 +247,25 @@
   background-color: #ffffff;
   color: #374151;
   font-size: 0.9rem;
+}
+
+.my-timetable-filter-button {
+  align-items: center;
+  background: #2563eb;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 16px;
+}
+
+.my-timetable-filter-button:hover {
+  background: #1d4ed8;
 }

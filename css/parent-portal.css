@@ -515,10 +515,14 @@ body.parent-portal {
   margin: 0;
 }
 .parent-record-filters {
+  align-items: end;
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   margin-bottom: 20px;
+}
+.parent-record-filters[hidden] {
+  display: none !important;
 }
 .parent-record-filters label {
   color: #60708a;
@@ -540,17 +544,26 @@ body.parent-portal {
   width: 100%;
 }
 
+.parent-portal .parent-record-filters select {
+  border-radius: 8px;
+  min-height: 44px;
+}
+
 .parent-record-filter-actions {
-  align-items: flex-end;
   display: flex;
   grid-column: 1 / -1;
   justify-content: flex-end;
+  margin-top: 2px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .parent-record-filter-button {
   align-items: center;
+  appearance: none;
   background: #2563eb;
   border: 0;
+  border-radius: 8px;
   color: #fff;
   cursor: pointer;
   display: inline-flex;
@@ -561,10 +574,16 @@ body.parent-portal {
   justify-content: center;
   min-height: 40px;
   padding: 9px 16px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .parent-record-filter-button:hover {
   background: #1d4ed8;
+}
+
+.parent-record-filter-button:focus-visible {
+  outline: 2px solid rgb(37 99 235 / 35%);
+  outline-offset: 2px;
 }
 
 .parent-record-content {
@@ -780,6 +799,10 @@ body.parent-portal {
 .parent-portal .parent-record-filters select:focus {
   border-color: #2563eb;
   outline: 0.5px solid rgb(37 99 235 / 20%);
+}
+.parent-portal .parent-record-filters select {
+  border-radius: 8px;
+  min-height: 44px;
 }
 .parent-portal .parent-form-hint {
   color: #64748b;
