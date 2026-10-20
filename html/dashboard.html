@@ -39,7 +39,19 @@
     <meta name="theme-color" content="#2563eb" />
       <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
-  <body>
+  <body class="dashboard-auth-checking">
+    <div
+      id="dashboardAuthLoading"
+      class="dashboard-auth-loading"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <div class="dashboard-auth-loading__content">
+        <span class="dashboard-auth-loading__spinner" aria-hidden="true"></span>
+        <p id="dashboardAuthLoadingMessage">Checking your access…</p>
+      </div>
+    </div>
     <div class="dashboard-container">
       <button
         class="menu-toggle"

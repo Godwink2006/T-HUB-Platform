@@ -9,6 +9,72 @@ body {
   background: rgb(231, 226, 226);
 }
 
+body.dashboard-auth-checking {
+  background: #fff;
+}
+
+body.dashboard-auth-checking .dashboard-container {
+  visibility: hidden;
+}
+
+.dashboard-auth-loading {
+  display: none;
+}
+
+body.dashboard-auth-checking .dashboard-auth-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #fff;
+  color: #475569;
+  text-align: center;
+}
+
+.dashboard-auth-loading__content {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.dashboard-auth-loading__content p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.dashboard-auth-loading__spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: dashboard-auth-spin 0.8s linear infinite;
+}
+
+.dashboard-auth-loading__retry {
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+@keyframes dashboard-auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-auth-loading__spinner {
+    animation-duration: 1.8s;
+  }
+}
+
 .dashboard-container {
   display: flex;
 }

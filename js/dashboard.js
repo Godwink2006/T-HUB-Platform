@@ -216,6 +216,25 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+function finishDashboardAccessCheck() {
+  document.body.classList.remove("dashboard-auth-checking");
+  document.getElementById("dashboardAuthLoading")?.remove();
+}
+
+function showDashboardAccessCheckError() {
+  const loadingScreen = document.getElementById("dashboardAuthLoading");
+  if (!loadingScreen) return;
+
+  loadingScreen.innerHTML = `
+    <div class="dashboard-auth-loading__content">
+      <p role="alert">We couldn’t verify your access. Check your connection and try again.</p>
+      <button class="dashboard-auth-loading__retry" type="button" onclick="window.location.reload()">
+        Try again
+      </button>
+    </div>
+  `;
+}
+
 async function loadDashboardAnnouncements() {
   const previewContainer = document.querySelector(".announcement-preview");
   const openAnnouncementBtn = document.getElementById("openAnnouncementModal");
@@ -260,6 +279,9 @@ async function loadDashboardAnnouncements() {
       window.location.replace("/html/parent-dashboard.html");
       return;
     }
+
+    if (!profile.role) throw new Error("User role is missing from profile.");
+    finishDashboardAccessCheck();
 
     loadDashboardStats(profile.school_id);
 
@@ -354,6 +376,7 @@ async function loadDashboardAnnouncements() {
       .join("");
   } catch (err) {
     console.error("Error loading announcements:", err);
+    showDashboardAccessCheckError();
   }
 }
 
