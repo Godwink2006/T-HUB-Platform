@@ -160,6 +160,37 @@
   flex: 1;
 }
 
+.filters-container {
+  flex: 1 1 100%;
+}
+
+.attendance-filter-actions {
+  display: flex;
+  flex: 0 0 100%;
+  justify-content: flex-end;
+}
+
+.attendance-filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.attendance-filter-button:hover {
+  background: #1d4ed8;
+}
+
 .history-card {
   background: #ffffff;
   border: 0.5px solid #dbd7d7;
@@ -253,6 +284,11 @@ th {
   .toolbar select {
     border-radius: 10px;
     padding: 10px;
+  }
+
+  .attendance-filter-actions,
+  .attendance-filter-button {
+    width: 100%;
   }
 
   .history-card,

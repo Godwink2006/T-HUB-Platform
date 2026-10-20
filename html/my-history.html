@@ -80,6 +80,8 @@
           <span>Semester</span>
           <select id="historyTermFilter">
             <option value="">All semesters</option>
+            <option value="1">1st Semester</option>
+            <option value="2">2nd Semester</option>
           </select>
         </label>
         <label>
@@ -92,6 +94,12 @@
             <option value="grade">Grades</option>
           </select>
         </label>
+        <div class="history-filter-actions">
+          <button id="applyHistoryFilters" type="button" class="history-filter-button">
+            <i class="fa-solid fa-filter" aria-hidden="true"></i>
+            View history
+          </button>
+        </div>
         <p
           id="historyResultCount"
           class="history-result-count"

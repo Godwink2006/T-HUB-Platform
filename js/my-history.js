@@ -32,7 +32,9 @@ async function loadMyTransferHistory() {
     myHistoryRows = flattenHistoryRows(myTransferHistory);
     bindHistoryFilters();
     buildHistoryFilters();
-    renderHistoryTables();
+    if (container) {
+      container.innerHTML = '<p class="history-state">Choose your filters, then select View history.</p>';
+    }
   } catch (error) {
     console.error("Could not load transfer history:", error);
     container.innerHTML =
@@ -215,22 +217,10 @@ function getHistoryContext(snapshot, schoolId, schoolName) {
 }
 
 function bindHistoryFilters() {
-  [
-    "historySearch",
-    "historySchoolFilter",
-    "historyYearFilter",
-    "historyClassFilter",
-    "historyTermFilter",
-    "historyTypeFilter",
-  ].forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el || el.dataset.bound === "1") return;
-    el.dataset.bound = "1";
-    el.addEventListener(id === "historySearch" ? "input" : "change", () => {
-      buildHistoryFilters();
-      renderHistoryTables();
-    });
-  });
+  const button = document.getElementById("applyHistoryFilters");
+  if (!button || button.dataset.bound === "1") return;
+  button.dataset.bound = "1";
+  button.addEventListener("click", renderHistoryTables);
 }
 
 function clearHistoryFilters() {
@@ -251,34 +241,31 @@ function clearHistoryFilters() {
 }
 
 function buildHistoryFilters() {
-  const active = getHistoryFilterValues();
-  const matchesExcept = (exceptKey) =>
-    myHistoryRows.filter((row) => rowMatchesFilters(row, active, exceptKey));
-
   fillHistorySelect(
     "historySchoolFilter",
-    collectOptions(matchesExcept("schoolId"), "schoolId", "schoolName"),
+    collectOptions(myHistoryRows, "schoolId", "schoolName"),
     "All schools",
-    active.schoolId,
+    document.getElementById("historySchoolFilter")?.value || "",
   );
   fillHistorySelect(
     "historyYearFilter",
-    collectOptions(matchesExcept("yearId"), "yearId", "yearName"),
+    collectOptions(myHistoryRows, "yearId", "yearName"),
     "All academic years",
-    active.yearId,
+    document.getElementById("historyYearFilter")?.value || "",
   );
   fillHistorySelect(
     "historyClassFilter",
-    collectOptions(matchesExcept("classId"), "classId", "className"),
+    collectOptions(myHistoryRows, "classId", "className"),
     "All classes",
-    active.classId,
+    document.getElementById("historyClassFilter")?.value || "",
   );
-  fillHistorySelect(
-    "historyTermFilter",
-    collectOptions(matchesExcept("termId"), "termId", "termName"),
-    "All semesters",
-    active.termId,
-  );
+  const termSelect = document.getElementById("historyTermFilter");
+  if (termSelect) {
+    termSelect.innerHTML = `
+      <option value="">All semesters</option>
+      <option value="1">1st Semester</option>
+      <option value="2">2nd Semester</option>`;
+  }
 }
 
 function collectOptions(rows, idKey, labelKey) {
@@ -317,28 +304,23 @@ function getHistoryFilterValues() {
     schoolId: document.getElementById("historySchoolFilter")?.value || "",
     yearId: document.getElementById("historyYearFilter")?.value || "",
     classId: document.getElementById("historyClassFilter")?.value || "",
-    termId: document.getElementById("historyTermFilter")?.value || "",
+    semesterNumber: Number(document.getElementById("historyTermFilter")?.value || 0),
     type: document.getElementById("historyTypeFilter")?.value || "",
   };
 }
 
-function rowMatchesFilters(row, filters, exceptKey = null) {
-  if (
-    exceptKey !== "schoolId" &&
-    filters.schoolId &&
-    row.schoolId !== filters.schoolId
-  )
-    return false;
-  if (exceptKey !== "yearId" && filters.yearId && row.yearId !== filters.yearId)
-    return false;
-  if (
-    exceptKey !== "classId" &&
-    filters.classId &&
-    row.classId !== filters.classId
-  )
-    return false;
-  if (exceptKey !== "termId" && filters.termId && row.termId !== filters.termId)
-    return false;
+function getSemesterNumber(termName) {
+  const name = String(termName || "");
+  if (/\b(?:1(?:st)?|first|term\s*1|semester\s*1|one|i)\b/i.test(name)) return 1;
+  if (/\b(?:2(?:nd)?|second|term\s*2|semester\s*2|two|ii)\b/i.test(name)) return 2;
+  return null;
+}
+
+function rowMatchesFilters(row, filters) {
+  if (filters.schoolId && row.schoolId !== filters.schoolId) return false;
+  if (filters.yearId && row.yearId !== filters.yearId) return false;
+  if (filters.classId && row.classId !== filters.classId) return false;
+  if (filters.semesterNumber && getSemesterNumber(row.termName) !== filters.semesterNumber) return false;
   if (filters.type && row.type !== filters.type) return false;
 
   if (filters.search) {
