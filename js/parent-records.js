@@ -139,20 +139,21 @@ async function initializeParentRecords() {
     await loadParentRecordData(client, selectedStudentId, student);
     document.getElementById("recordFilters").hidden = false;
     buildParentRecordFilters();
-    [
-      "recordSchoolFilter",
-      "recordYearFilter",
-      "recordClassFilter",
-      "recordTermFilter",
-      "recordPeriodFilter",
-      "recordSubjectFilter",
-      "recordDayFilter",
-    ].forEach((id) => {
-      document
-        .getElementById(id)
-        ?.addEventListener("change", renderParentRecords);
-    });
-    renderParentRecords();
+    const applyFiltersButton = document.getElementById(
+      "applyParentRecordFilters",
+    );
+    const actionLabel = parentRecordState.view === "timetable"
+      ? "View timetable"
+      : `View ${parentRecordState.view === "fees" ? "fees and payments" : parentRecordState.view}`;
+    if (applyFiltersButton) {
+      applyFiltersButton.innerHTML = `<i class="fa-solid fa-filter" aria-hidden="true"></i> ${parentEscape(actionLabel)}`;
+      applyFiltersButton.addEventListener("click", renderParentRecords);
+    }
+    const prompt = parentRecordState.view === "timetable"
+      ? "Choose a day if you want to narrow the timetable, then select View timetable."
+      : `Choose your filters, then select ${actionLabel}.`;
+    content.setAttribute("aria-busy", "false");
+    content.innerHTML = `<p class="parent-state">${parentEscape(prompt)}</p>`;
   } catch (error) {
     showParentRecordsMessage(
       "Unable to load student records at this time. Please try again later or contact school administration.",
@@ -542,7 +543,6 @@ function buildParentRecordFilters() {
     ["recordSchoolFilter", "schoolId", "schoolName", "All schools"],
     ["recordYearFilter", "yearId", "yearName", "All academic years"],
     ["recordClassFilter", "classId", "className", "All classes"],
-    ["recordTermFilter", "termId", "termName", "All semesters"],
   ];
   if (type === "grades") {
     filterSets.push([
@@ -559,6 +559,13 @@ function buildParentRecordFilters() {
       "subjectName",
       "All subjects",
     ]);
+  const termSelect = document.getElementById("recordTermFilter");
+  if (termSelect) {
+    termSelect.innerHTML = `
+      <option value="">All semesters</option>
+      <option value="1">1st Semester</option>
+      <option value="2">2nd Semester</option>`;
+  }
   filterSets.forEach(([selectId, idKey, labelKey, defaultLabel]) => {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -602,7 +609,7 @@ function renderParentRecords() {
     schoolId: document.getElementById("recordSchoolFilter").value,
     yearId: document.getElementById("recordYearFilter").value,
     classId: document.getElementById("recordClassFilter").value,
-    termId: document.getElementById("recordTermFilter").value,
+    semesterNumber: Number(document.getElementById("recordTermFilter").value || 0),
     periodId:
       type === "grades"
         ? document.getElementById("recordPeriodFilter").value
@@ -730,8 +737,21 @@ function renderParentTimetable() {
 
 function matchesParentRecordFilters(context, filters) {
   return Object.entries(filters).every(
-    ([key, value]) => !value || String(context[key] || "") === value,
+    ([key, value]) => {
+      if (!value) return true;
+      if (key === "semesterNumber") {
+        return getParentSemesterNumber(context.termName) === value;
+      }
+      return String(context[key] || "") === value;
+    },
   );
+}
+
+function getParentSemesterNumber(termName) {
+  const name = String(termName || "");
+  if (/\b(?:1(?:st)?|first|term\s*1|semester\s*1|one|i)\b/i.test(name)) return 1;
+  if (/\b(?:2(?:nd)?|second|term\s*2|semester\s*2|two|ii)\b/i.test(name)) return 2;
+  return null;
 }
 
 function parentStatusClass(status) {

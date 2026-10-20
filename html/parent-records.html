@@ -121,6 +121,8 @@
           <label id="recordTermFilterField"
             >Semester<select id="recordTermFilter">
               <option value="">All semesters</option>
+              <option value="1">1st Semester</option>
+              <option value="2">2nd Semester</option>
             </select></label
           >
           <label id="recordPeriodFilterField" hidden
@@ -138,6 +140,12 @@
               <option value="">All days</option>
             </select></label
           >
+          <div class="parent-record-filter-actions">
+            <button id="applyParentRecordFilters" type="button" class="parent-record-filter-button">
+              <i class="fa-solid fa-filter" aria-hidden="true"></i>
+              View records
+            </button>
+          </div>
         </div>
         <div
           id="parentRecordsContent"

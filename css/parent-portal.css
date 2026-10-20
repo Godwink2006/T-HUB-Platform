@@ -540,6 +540,33 @@ body.parent-portal {
   width: 100%;
 }
 
+.parent-record-filter-actions {
+  align-items: flex-end;
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+.parent-record-filter-button {
+  align-items: center;
+  background: #2563eb;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 16px;
+}
+
+.parent-record-filter-button:hover {
+  background: #1d4ed8;
+}
+
 .parent-record-content {
   width: 100%;
 }
@@ -826,6 +853,10 @@ body.parent-portal {
   .contact-pill i,
   .btn-change-profile {
     border-radius: 10px;
+  }
+  .parent-record-filter-button {
+    border-radius: 10px;
+    width: 100%;
   }
   .parent-portal .parent-child-card,
   .parent-portal .parent-record-link,
