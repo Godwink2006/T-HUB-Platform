@@ -157,12 +157,32 @@
         </div>
       </section>
     </main>
+    <dialog
+      id="parentSignOutDialog"
+      class="parent-signout-dialog"
+      aria-labelledby="parentSignOutTitle"
+      aria-describedby="parentSignOutDescription"
+    >
+      <div class="parent-signout-dialog-content">
+        <span class="parent-signout-dialog-icon" aria-hidden="true">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </span>
+        <h2 id="parentSignOutTitle">Sign out?</h2>
+        <p id="parentSignOutDescription">Are you sure you want to sign out of the Family Portal?</p>
+        <p id="parentSignOutMessage" class="parent-signout-dialog-message" aria-live="polite"></p>
+        <div class="parent-signout-dialog-actions">
+          <button id="cancelParentSignOut" class="parent-signout-cancel" type="button">Stay signed in</button>
+          <button id="confirmParentSignOut" class="parent-signout-confirm" type="button">Sign out</button>
+        </div>
+      </div>
+    </dialog>
     <script
       src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"
       crossorigin="anonymous"
     ></script>
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
+    <script src="/js/parent-portal.js"></script>
     <script src="/js/parent-records.js"></script>
       <script src="/js/app-icons.js"></script>
   </body>

@@ -8,14 +8,6 @@ async function loadParentDashboard() {
   const client = window.supabaseClient;
   if (!container || !client) return;
 
-  document
-    .getElementById("parentSignOut")
-    ?.addEventListener("click", async () => {
-      await client.auth.signOut();
-      sessionStorage.removeItem(selectedParentStudentStorageKey);
-      window.location.replace("/index.html");
-    });
-
   try {
     const {
       data: { user },

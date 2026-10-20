@@ -47,15 +47,6 @@ async function initializeParentRecords() {
     timetable: "Class timetable",
   }[parentRecordState.view];
 
-  document
-    .getElementById("parentSignOut")
-    ?.addEventListener("click", async () => {
-      window.clearAuthContext?.();
-      await client.auth.signOut();
-      sessionStorage.removeItem(parentRecordStorageKey);
-      window.location.replace("/index.html");
-    });
-
   try {
     const authCtx =
       typeof window.getAuthContext === "function"
