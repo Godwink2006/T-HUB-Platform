@@ -14,6 +14,7 @@
     />
     <title>High School Management System</title>
     <link rel="stylesheet" href="/css/audit-logs.css" />
+    <link rel="stylesheet" href="/css/utils.css" />
     <link rel="preconnect" href="https://fontsgoogleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -40,7 +41,7 @@
         <header class="topbar">
           <div>
             <h1>Audit Logs</h1>
-            <p>View audit logs.</p>
+            <p>Review recorded changes made in your school.</p>
 
             <button
               onclick="window.location.href = 'settings.html'"
@@ -53,29 +54,71 @@
         </header>
 
         <section class="toolbar">
-          <input type="text" placeholder="Search audit logs..." />
+          <label class="audit-filter">
+            <span>Search description</span>
+            <input id="auditSearchInput" type="search" placeholder="Search descriptions..." />
+          </label>
 
-          <select>
-            <option>User</option>
-          </select>
+          <label class="audit-filter">
+            <span>User</span>
+            <input id="auditUserInput" type="search" placeholder="Filter by user name..." />
+          </label>
 
-          <select>
-            <option>Module</option>
-          </select>
+          <label class="audit-filter">
+            <span>Module</span>
+            <select id="auditModuleFilter">
+              <option value="">All modules</option>
+              <option value="Accounts">Accounts</option>
+              <option value="School Settings">School Settings</option>
+              <option value="Academics">Academics</option>
+              <option value="Announcements">Announcements</option>
+              <option value="Assessments">Assessments</option>
+              <option value="Students">Students</option>
+              <option value="Enrollment">Enrollment</option>
+              <option value="Grades">Grades</option>
+              <option value="Attendance">Attendance</option>
+              <option value="Finance">Finance</option>
+              <option value="Library">Library</option>
+              <option value="Notifications">Notifications</option>
+              <option value="Parents">Parents</option>
+              <option value="Staff">Staff</option>
+              <option value="Transfers">Transfers</option>
+              <option value="Timetable">Timetable</option>
+              <option value="Billing">Billing</option>
+            </select>
+          </label>
 
-          <select>
-            <option>Action</option>
-            <option>Create</option>
-            <option>Update</option>
-          </select>
+          <label class="audit-filter">
+            <span>Action</span>
+            <select id="auditActionFilter">
+              <option value="">All actions</option>
+              <option value="INSERT">Create</option>
+              <option value="UPDATE">Update</option>
+              <option value="DELETE">Delete</option>
+              <option value="PROMOTE">Promote</option>
+              <option value="TRANSFER">Transfer</option>
+              <option value="PAYMENT">Payment</option>
+            </select>
+          </label>
 
-          <select>
-            <option>Date</option>
-          </select>
+          <label class="audit-filter">
+            <span>From</span>
+            <input id="auditDateFrom" type="date" />
+          </label>
+
+          <label class="audit-filter">
+            <span>To</span>
+            <input id="auditDateTo" type="date" />
+          </label>
+
+          <button id="clearAuditFilters" class="audit-clear-btn" type="button">
+            Clear filters
+          </button>
         </section>
 
         <section class="audit-logs-table-card">
-          <table>
+          <div class="audit-table-scroll">
+            <table>
             <thead>
               <tr>
                 <th>Date</th>
@@ -86,31 +129,34 @@
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>01 Aug 2026</td>
-                <td>John Doe</td>
-                <td>Students</td>
-                <td>Create</td>
-
-                <td>Created student ST-0001</td>
-              </tr>
-
-              <tr>
-                <td>01 Aug 2026</td>
-                <td>Mary Smith</td>
-                <td>Finance</td>
-                <td>Payment</td>
-
-                <td>Recorded payment for ST-0001</td>
-              </tr>
-            </tbody>
-          </table>
+              <tbody id="auditLogsTableBody">
+                <tr><td colspan="5" class="audit-table-message">Loading audit logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="audit-pagination">
+            <label for="auditPageSize">Rows per page</label>
+            <select id="auditPageSize">
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span id="auditPageSummary" aria-live="polite">Loading…</span>
+            <div class="audit-page-buttons">
+              <button id="auditPreviousPage" type="button" aria-label="Previous page">Previous</button>
+              <button id="auditNextPage" type="button" aria-label="Next page">Next</button>
+            </div>
+          </footer>
         </section>
       </main>
     </div>
 
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
+    <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/audit-logs.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>
