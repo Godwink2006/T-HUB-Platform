@@ -52,11 +52,6 @@ body {
   cursor: pointer;
 }
 
-.back-audit-logs-btn:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
-}
-
 .toolbar {
   display: grid;
   grid-template-columns:
@@ -111,10 +106,6 @@ body {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-}
-
-.audit-clear-btn:hover {
-  background: #eef2f7;
 }
 
 .audit-logs-table-card {
