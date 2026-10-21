@@ -218,10 +218,39 @@ body {
 }
 
 .audit-row-details summary {
+  display: inline-flex;
+  align-items: center;
   width: fit-content;
-  color: #2563eb;
+  min-height: 28px;
+  margin-top: 2px;
+  padding: 4px 9px;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11px;
   cursor: pointer;
   font-weight: 600;
+  list-style: none;
+}
+
+.audit-row-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.audit-row-details summary::before {
+  content: "▸";
+  margin-right: 6px;
+  transition: transform 0.15s ease;
+}
+
+.audit-row-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.audit-row-details summary:hover {
+  border-color: #bfdbfe;
+  background: #dbeafe;
 }
 
 .audit-entity {
