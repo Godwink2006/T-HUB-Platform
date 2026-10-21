@@ -141,13 +141,16 @@ async function handleUpdateProfile(event) {
       const file = fileInput.files[0];
       const compressedBlob = await compressImageToBlob(file, 800, 0.7);
 
-      const filePath = `${user.id}/avatar.jpg`;
+      const versionId =
+        globalThis.crypto?.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const filePath = `${user.id}/${versionId}.jpg`;
 
       const { error: uploadError } = await supabaseClient.storage
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
-          upsert: true,
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;

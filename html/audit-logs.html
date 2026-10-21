@@ -26,14 +26,18 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <div class="audit-log-container">
@@ -56,12 +60,20 @@
         <section class="toolbar">
           <label class="audit-filter">
             <span>Search description</span>
-            <input id="auditSearchInput" type="search" placeholder="Search descriptions..." />
+            <input
+              id="auditSearchInput"
+              type="search"
+              placeholder="Search descriptions..."
+            />
           </label>
 
           <label class="audit-filter">
             <span>User</span>
-            <input id="auditUserInput" type="search" placeholder="Filter by user name..." />
+            <input
+              id="auditUserInput"
+              type="search"
+              placeholder="Filter by user name..."
+            />
           </label>
 
           <label class="audit-filter">
@@ -69,7 +81,7 @@
             <select id="auditModuleFilter">
               <option value="">All modules</option>
               <option value="Accounts">Accounts</option>
-              <option value="School Settings">School Settings</option>
+              <option value="School Settings">Schools</option>
               <option value="Academics">Academics</option>
               <option value="Announcements">Announcements</option>
               <option value="Assessments">Assessments</option>
@@ -119,18 +131,22 @@
         <section class="audit-logs-table-card">
           <div class="audit-table-scroll">
             <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>User</th>
-                <th>Module</th>
-                <th>Actions</th>
-                <th>Description</th>
-              </tr>
-            </thead>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Module</th>
+                  <th>Actions</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
 
               <tbody id="auditLogsTableBody">
-                <tr><td colspan="5" class="audit-table-message">Loading audit logs...</td></tr>
+                <tr>
+                  <td colspan="5" class="audit-table-message">
+                    Loading audit logs...
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -143,8 +159,16 @@
             </select>
             <span id="auditPageSummary" aria-live="polite">Loading…</span>
             <div class="audit-page-buttons">
-              <button id="auditPreviousPage" type="button" aria-label="Previous page">Previous</button>
-              <button id="auditNextPage" type="button" aria-label="Next page">Next</button>
+              <button
+                id="auditPreviousPage"
+                type="button"
+                aria-label="Previous page"
+              >
+                Previous
+              </button>
+              <button id="auditNextPage" type="button" aria-label="Next page">
+                Next
+              </button>
             </div>
           </footer>
         </section>

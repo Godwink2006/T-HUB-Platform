@@ -56,83 +56,142 @@ async function loadAuditDisplayLookups(rows) {
     ["fee_structure_item_id", "fee_structure_items", "id, fee_name"],
   ];
 
-  await Promise.all(lookups.map(async ([key, table, columns]) => {
-    const ids = collectAuditReferenceIds(rows, key);
-    if (!ids.length) return;
-    try {
-      const { data, error } = await client
-        .from(table)
-        .select(columns)
-        .eq("school_id", schoolId)
-        .in("id", ids);
-      if (error) throw error;
-      auditLogState.lookups.set(key, new Map((data || []).map((row) => [row.id, lookupLabel(table, row)])));
-    } catch (error) {
-      console.warn(`Could not load ${table} audit display names:`, error.message);
-    }
-  }));
+  await Promise.all(
+    lookups.map(async ([key, table, columns]) => {
+      const ids = collectAuditReferenceIds(rows, key);
+      if (!ids.length) return;
+      try {
+        const { data, error } = await client
+          .from(table)
+          .select(columns)
+          .eq("school_id", schoolId)
+          .in("id", ids);
+        if (error) throw error;
+        auditLogState.lookups.set(
+          key,
+          new Map((data || []).map((row) => [row.id, lookupLabel(table, row)])),
+        );
+      } catch (error) {
+        console.warn(
+          `Could not load ${table} audit display names:`,
+          error.message,
+        );
+      }
+    }),
+  );
 
   const feeStructureIds = collectAuditReferenceIds(rows, "fee_structure_id");
-  if (feeStructureIds.length) try {
-    const { data, error } = await client
-      .from("fee_structures")
-      .select("id, classes(name), terms(name), academic_years(year_label)")
-      .eq("school_id", schoolId)
-      .in("id", feeStructureIds);
-    if (error) throw error;
-    auditLogState.lookups.set("fee_structure_id", new Map((data || []).map((row) => [
-      row.id,
-      [row.classes?.name, row.academic_years?.year_label, row.terms?.name].filter(Boolean).join(" · ") || "Fee structure",
-    ])));
-  } catch (error) {
-    console.warn("Could not load fee structure audit display names:", error.message);
-  }
+  if (feeStructureIds.length)
+    try {
+      const { data, error } = await client
+        .from("fee_structures")
+        .select("id, classes(name), terms(name), academic_years(year_label)")
+        .eq("school_id", schoolId)
+        .in("id", feeStructureIds);
+      if (error) throw error;
+      auditLogState.lookups.set(
+        "fee_structure_id",
+        new Map(
+          (data || []).map((row) => [
+            row.id,
+            [row.classes?.name, row.academic_years?.year_label, row.terms?.name]
+              .filter(Boolean)
+              .join(" · ") || "Fee structure",
+          ]),
+        ),
+      );
+    } catch (error) {
+      console.warn(
+        "Could not load fee structure audit display names:",
+        error.message,
+      );
+    }
 
-  const profileIds = [...new Set([
-    ...collectAuditReferenceIds(rows, "parent_id"),
-    ...collectAuditReferenceIds(rows, "profile_id"),
-    ...collectAuditReferenceIds(rows, "borrower_id"),
-  ])];
-  if (profileIds.length) try {
-    const { data, error } = await client
-      .from("profiles")
-      .select("id, full_name, email")
-      .eq("school_id", schoolId)
-      .in("id", profileIds);
-    if (error) throw error;
-    auditLogState.lookups.set("profile_id", new Map((data || []).map((row) => [row.id, row.full_name || row.email || "School user"])));
-  } catch (error) {
-    console.warn("Could not load profile audit display names:", error.message);
-  }
+  const profileIds = [
+    ...new Set([
+      ...collectAuditReferenceIds(rows, "parent_id"),
+      ...collectAuditReferenceIds(rows, "profile_id"),
+      ...collectAuditReferenceIds(rows, "borrower_id"),
+    ]),
+  ];
+  if (profileIds.length)
+    try {
+      const { data, error } = await client
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("school_id", schoolId)
+        .in("id", profileIds);
+      if (error) throw error;
+      auditLogState.lookups.set(
+        "profile_id",
+        new Map(
+          (data || []).map((row) => [
+            row.id,
+            row.full_name || row.email || "School user",
+          ]),
+        ),
+      );
+    } catch (error) {
+      console.warn(
+        "Could not load profile audit display names:",
+        error.message,
+      );
+    }
 
   const teacherIds = collectAuditReferenceIds(rows, "teacher_id");
-  if (teacherIds.length) try {
-    const { data, error } = await client
-      .from("teachers")
-      .select("id, profiles(full_name)")
-      .eq("school_id", schoolId)
-      .in("id", teacherIds);
-    if (error) throw error;
-    auditLogState.lookups.set("teacher_id", new Map((data || []).map((row) => [row.id, row.profiles?.full_name || "Teacher"])));
-  } catch (error) {
-    console.warn("Could not load teacher audit display names:", error.message);
-  }
+  if (teacherIds.length)
+    try {
+      const { data, error } = await client
+        .from("teachers")
+        .select("id, profiles(full_name)")
+        .eq("school_id", schoolId)
+        .in("id", teacherIds);
+      if (error) throw error;
+      auditLogState.lookups.set(
+        "teacher_id",
+        new Map(
+          (data || []).map((row) => [
+            row.id,
+            row.profiles?.full_name || "Teacher",
+          ]),
+        ),
+      );
+    } catch (error) {
+      console.warn(
+        "Could not load teacher audit display names:",
+        error.message,
+      );
+    }
 
   const studentIds = collectAuditReferenceIds(rows, "student_id");
-  if (studentIds.length) try {
-    const { data, error } = await client
-      .from("students")
-      .select("id, student_id, profiles(full_name)")
-      .eq("school_id", schoolId)
-      .in("id", studentIds);
-    if (error) throw error;
-    auditLogState.lookups.set("student_id", new Map((data || []).map((row) => [
-      row.id,
-      [row.profiles?.full_name, row.student_id ? `(${row.student_id})` : ""].filter(Boolean).join(" ") || "Student",
-    ])));
-  } catch (error) {
-    console.warn("Could not load student audit display names:", error.message);
-  }
+  if (studentIds.length)
+    try {
+      const { data, error } = await client
+        .from("students")
+        .select("id, student_id, profiles(full_name)")
+        .eq("school_id", schoolId)
+        .in("id", studentIds);
+      if (error) throw error;
+      auditLogState.lookups.set(
+        "student_id",
+        new Map(
+          (data || []).map((row) => [
+            row.id,
+            [
+              row.profiles?.full_name,
+              row.student_id ? `(${row.student_id})` : "",
+            ]
+              .filter(Boolean)
+              .join(" ") || "Student",
+          ]),
+        ),
+      );
+    } catch (error) {
+      console.warn(
+        "Could not load student audit display names:",
+        error.message,
+      );
+    }
 }
 
 function collectAuditReferenceIds(rows, fieldName) {
@@ -192,22 +251,26 @@ function bindAuditLogFilters() {
     loadAuditLogs();
   });
 
-  document.getElementById("clearAuditFilters")?.addEventListener("click", () => {
-    if (searchInput) searchInput.value = "";
-    if (userInput) userInput.value = "";
-    if (moduleFilter) moduleFilter.value = "";
-    if (actionFilter) actionFilter.value = "";
-    if (dateFrom) dateFrom.value = "";
-    if (dateTo) dateTo.value = "";
-    auditLogState.page = 0;
-    loadAuditLogs();
-  });
+  document
+    .getElementById("clearAuditFilters")
+    ?.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      if (userInput) userInput.value = "";
+      if (moduleFilter) moduleFilter.value = "";
+      if (actionFilter) actionFilter.value = "";
+      if (dateFrom) dateFrom.value = "";
+      if (dateTo) dateTo.value = "";
+      auditLogState.page = 0;
+      loadAuditLogs();
+    });
 
-  document.getElementById("auditPreviousPage")?.addEventListener("click", () => {
-    if (auditLogState.page <= 0) return;
-    auditLogState.page -= 1;
-    loadAuditLogs();
-  });
+  document
+    .getElementById("auditPreviousPage")
+    ?.addEventListener("click", () => {
+      if (auditLogState.page <= 0) return;
+      auditLogState.page -= 1;
+      loadAuditLogs();
+    });
 
   document.getElementById("auditNextPage")?.addEventListener("click", () => {
     auditLogState.page += 1;
@@ -221,10 +284,8 @@ async function loadAuditLogs() {
   const requestId = ++auditLogState.requestId;
   const fromValue = document.getElementById("auditDateFrom")?.value;
   const toValue = document.getElementById("auditDateTo")?.value;
-  const searchValue = document
-    .getElementById("auditSearchInput")?.value.trim();
-  const userValue = document
-    .getElementById("auditUserInput")?.value.trim();
+  const searchValue = document.getElementById("auditSearchInput")?.value.trim();
+  const userValue = document.getElementById("auditUserInput")?.value.trim();
 
   if (fromValue && toValue && fromValue > toValue) {
     renderAuditLogError("The start date must be on or before the end date.");
@@ -275,7 +336,10 @@ async function loadAuditLogs() {
     if (error) throw error;
 
     const totalCount = count || 0;
-    const pageCount = Math.max(1, Math.ceil(totalCount / auditLogState.pageSize));
+    const pageCount = Math.max(
+      1,
+      Math.ceil(totalCount / auditLogState.pageSize),
+    );
 
     if (auditLogState.page >= pageCount) {
       auditLogState.page = pageCount - 1;
@@ -380,9 +444,18 @@ function renderAuditLogDetails(row) {
 }
 
 const AUDIT_HIDDEN_FIELDS = new Set([
-  "id", "school_id", "created_at", "updated_at", "deleted_at",
-  "actor_id", "user_id", "password", "password_hash", "access_token",
-  "refresh_token", "reset_token",
+  "id",
+  "school_id",
+  "created_at",
+  "updated_at",
+  "deleted_at",
+  "actor_id",
+  "user_id",
+  "password",
+  "password_hash",
+  "access_token",
+  "refresh_token",
+  "reset_token",
 ]);
 
 const AUDIT_FIELD_LABELS = {
@@ -394,6 +467,8 @@ const AUDIT_FIELD_LABELS = {
   subject_id: "Subject",
   teacher_id: "Teacher",
   profile_id: "Account",
+  photo_url: "Profile photo",
+  avatar_url: "Avatar",
   parent_id: "Parent",
   borrower_id: "Borrower",
   assessment_id: "Assessment",
@@ -413,6 +488,7 @@ function readableAuditFields(data) {
   return Object.entries(data)
     .filter(([key]) => !AUDIT_HIDDEN_FIELDS.has(key.toLowerCase()))
     .map(([key, value]) => ({
+      key,
       label: AUDIT_FIELD_LABELS[key] || humanizeAuditField(key),
       value: formatAuditFieldValue(key, value),
     }))
@@ -420,10 +496,51 @@ function readableAuditFields(data) {
 }
 
 function renderReadableAuditFields(fields, emptyMessage) {
-  if (!fields.length) return `<p class="audit-empty-details">${escapeAuditHtml(emptyMessage)}</p>`;
-  return `<dl class="audit-readable-fields">${fields.map(({ label, value }) => `
-    <div><dt>${escapeAuditHtml(label)}</dt><dd>${escapeAuditHtml(value)}</dd></div>
-  `).join("")}</dl>`;
+  if (!fields.length)
+    return `<p class="audit-empty-details">${escapeAuditHtml(emptyMessage)}</p>`;
+  return `<dl class="audit-readable-fields">${fields
+    .map(
+      ({ key, label, value }) => `
+    <div><dt>${escapeAuditHtml(label)}</dt><dd>${renderAuditFieldValue(key, value)}</dd></div>
+  `,
+    )
+    .join("")}</dl>`;
+}
+
+function renderAuditFieldValue(key, value) {
+  if (
+    ["logo_url", "photo_url", "avatar_url"].includes(key) &&
+    value &&
+    value !== "Empty"
+  ) {
+    const url = getSafeAuditLogoUrl(value);
+    if (url) {
+      const safeUrl = escapeAuditHtml(url);
+      const alt = key === "logo_url" ? "School logo" : "Profile photo";
+      return `<span class="audit-image-preview-wrap"><img class="audit-image-preview" src="${safeUrl}" alt="${alt}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="audit-image-fallback" hidden>Image preview unavailable</span></span>`;
+    }
+    const label = key === "logo_url" ? "logo" : "profile photo";
+    return `<span>${escapeAuditHtml(value === "Empty" ? `No ${label}` : `${label} URL recorded`)}</span>`;
+  }
+  return escapeAuditHtml(value);
+}
+
+function getSafeAuditLogoUrl(value) {
+  try {
+    const url = new URL(value);
+    const supabaseUrl = window.supabaseClient?.supabaseUrl;
+    const trustedOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "";
+    if (
+      url.protocol !== "https:" ||
+      !trustedOrigin ||
+      url.origin !== trustedOrigin ||
+      !url.pathname.startsWith("/storage/v1/object/public/avatars/")
+    )
+      return null;
+    return url.href;
+  } catch {
+    return null;
+  }
 }
 
 function humanizeAuditField(key) {
@@ -436,12 +553,22 @@ function humanizeAuditField(key) {
 function formatAuditFieldValue(key, value) {
   if (value === null || value === undefined || value === "") return "Empty";
   if (Array.isArray(value)) {
-    return value.map((item) => formatAuditFieldValue(key, item)).filter(Boolean).join(", ") || "None";
+    return (
+      value
+        .map((item) => formatAuditFieldValue(key, item))
+        .filter(Boolean)
+        .join(", ") || "None"
+    );
   }
   if (typeof value === "object") {
     const summary = Object.entries(value)
-      .filter(([nestedKey]) => !AUDIT_HIDDEN_FIELDS.has(nestedKey.toLowerCase()))
-      .map(([nestedKey, nestedValue]) => `${humanizeAuditField(nestedKey)}: ${formatAuditFieldValue(nestedKey, nestedValue)}`)
+      .filter(
+        ([nestedKey]) => !AUDIT_HIDDEN_FIELDS.has(nestedKey.toLowerCase()),
+      )
+      .map(
+        ([nestedKey, nestedValue]) =>
+          `${humanizeAuditField(nestedKey)}: ${formatAuditFieldValue(nestedKey, nestedValue)}`,
+      )
       .filter(Boolean);
     return summary.join(" · ") || "Details recorded";
   }
@@ -457,17 +584,30 @@ function formatAuditFieldValue(key, value) {
     if (isUuid(raw)) return "Linked record";
   }
   if (isUuid(raw)) return null;
-  if (/^(created_at|updated_at|date|due_date|payment_date|borrowed_at|returned_at)$/i.test(key)) {
+  if (
+    /^(created_at|updated_at|date|due_date|payment_date|borrowed_at|returned_at)$/i.test(
+      key,
+    )
+  ) {
     const date = new Date(raw);
-    if (!Number.isNaN(date.getTime())) return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: raw.includes(":") ? "short" : undefined });
+    if (!Number.isNaN(date.getTime()))
+      return date.toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: raw.includes(":") ? "short" : undefined,
+      });
   }
   if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (/status$/i.test(key)) return raw.replace(/[_-]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  if (/status$/i.test(key))
+    return raw
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
   return raw;
 }
 
 function isUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value));
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value),
+  );
 }
 
 function renderAuditLogError(message) {
@@ -480,8 +620,13 @@ function updateAuditPagination(totalCount) {
   const summary = document.getElementById("auditPageSummary");
   const previousButton = document.getElementById("auditPreviousPage");
   const nextButton = document.getElementById("auditNextPage");
-  const firstRow = totalCount ? auditLogState.page * auditLogState.pageSize + 1 : 0;
-  const lastRow = Math.min((auditLogState.page + 1) * auditLogState.pageSize, totalCount);
+  const firstRow = totalCount
+    ? auditLogState.page * auditLogState.pageSize + 1
+    : 0;
+  const lastRow = Math.min(
+    (auditLogState.page + 1) * auditLogState.pageSize,
+    totalCount,
+  );
   const pageCount = Math.max(1, Math.ceil(totalCount / auditLogState.pageSize));
 
   if (summary) {
@@ -494,22 +639,26 @@ function updateAuditPagination(totalCount) {
 }
 
 function auditActionLabel(action) {
-  return ({
-    INSERT: "Create",
-    UPDATE: "Update",
-    DELETE: "Delete",
-    PROMOTE: "Promote",
-    TRANSFER: "Transfer",
-    PAYMENT: "Payment",
-    LOGIN: "Login",
-    LOGOUT: "Logout",
-  })[action] || action || "—";
+  return (
+    {
+      INSERT: "Create",
+      UPDATE: "Update",
+      DELETE: "Delete",
+      PROMOTE: "Promote",
+      TRANSFER: "Transfer",
+      PAYMENT: "Payment",
+      LOGIN: "Login",
+      LOGOUT: "Logout",
+    }[action] ||
+    action ||
+    "—"
+  );
 }
 
 function auditModuleLabel(module) {
   const canonicalLabels = {
     accounts: "Accounts",
-    "school settings": "School Settings",
+    "school settings": "Schools",
     academics: "Academics",
     announcements: "Announcements",
     assessments: "Assessments",

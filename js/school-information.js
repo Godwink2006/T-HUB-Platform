@@ -323,13 +323,18 @@ async function handleFormSubmit() {
     if (logoFile && existingRecordId) {
       const compressedBlob = await compressImageToBlob(logoFile, 800, 0.7);
 
-      const filePath = `school-logos/${existingRecordId}/logo.jpg`;
+      // Keep each uploaded logo at its own path so audit history can still
+      // display the previous image after a later logo change.
+      const versionId =
+        globalThis.crypto?.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const filePath = `school-logos/${existingRecordId}/${versionId}.jpg`;
 
       const { error: uploadError } = await supabaseClient.storage
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
-          upsert: true,
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;
@@ -387,19 +392,13 @@ async function handleFormSubmit() {
       if (isNewRecord) {
         activityMessage = `School profile initialized: ${savedRecord.school_name || "New School"}`;
       } else if (changedFields.length > 0) {
-
         const formattedFields = changedFields
           .map((f) => f.charAt(0).toUpperCase() + f.slice(1))
           .join(", ");
         activityMessage = `School details updated: ${formattedFields}`;
       }
 
-      await logActivity(
-        schoolId,
-        activityMessage,
-        "purple",
-        "Everyone",
-      );
+      await logActivity(schoolId, activityMessage, "purple", "Everyone");
     }
   } catch (err) {
     console.error("Error saving profile:", err.message);

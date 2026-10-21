@@ -535,7 +535,10 @@ async function handleUpdateUser(event) {
         editSystemButton.textContent = "Compressing photo...";
 
       const compressedBlob = await compressImageToBlob(avatarFile, 800, 0.7);
-      const filePath = `${userId}/avatar.jpg`;
+      const versionId =
+        globalThis.crypto?.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const filePath = `${userId}/${versionId}.jpg`;
 
       if (editSystemButton) editSystemButton.textContent = "Uploading photo...";
 
@@ -543,7 +546,7 @@ async function handleUpdateUser(event) {
         .from("avatars")
         .upload(filePath, compressedBlob, {
           contentType: "image/jpeg",
-          upsert: true,
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;

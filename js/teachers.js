@@ -693,13 +693,16 @@ if (editTeacherForm) {
 
         if (compressedBlob) {
           submitBtn.textContent = "Uploading photo...";
-          const filePath = `${teacherId}/avatar.jpg`;
+          const versionId =
+            globalThis.crypto?.randomUUID?.() ||
+            `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          const filePath = `${teacherId}/${versionId}.jpg`;
 
           const { error: uploadError } = await supabaseClient.storage
             .from("avatars")
             .upload(filePath, compressedBlob, {
               contentType: "image/jpeg",
-              upsert: true,
+              upsert: false,
             });
 
           if (uploadError) throw uploadError;
@@ -795,7 +798,7 @@ async function loadTeachers() {
     departments:department_id ( id, name ),
     profiles:id ( full_name, email, phone_number, status, photo_url )
   `,
-      )
+      );
 
     if (error) throw error;
 

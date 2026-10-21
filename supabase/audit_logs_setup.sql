@@ -101,7 +101,7 @@ begin
         'temporary_password', 'email', 'phone', 'phone_number',
         'address', 'date_of_birth', 'dob', 'national_id',
         'guardian', 'guardian_name', 'medical', 'avatar_url',
-        'photo_url', 'credential', 'credentials'
+        'credential', 'credentials'
       ]::text[]);
       return v_result;
 
