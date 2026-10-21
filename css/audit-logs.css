@@ -313,7 +313,7 @@ body {
   overflow-wrap: anywhere;
 }
 
-.audit-image-preview-wrap {
+.audit-logo-preview-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -324,14 +324,14 @@ body {
   background: #fff;
 }
 
-.audit-image-preview {
+.audit-logo-preview {
   display: block;
   width: 96px;
   height: 56px;
   object-fit: contain;
 }
 
-.audit-image-fallback {
+.audit-logo-fallback {
   color: #64748b;
   font-size: 11px;
 }
@@ -472,7 +472,8 @@ body {
   .audit-action-badge,
   .audit-change-grid section,
   .audit-page-buttons button,
-  .audit-logo-preview-wrap {
+  .audit-logo-preview-wrap,
+  .audit-row-details summary {
     border-radius: 10px;
   }
 }
