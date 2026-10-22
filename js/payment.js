@@ -309,6 +309,8 @@ function initializeFinanceFilters() {
 
 document.addEventListener("DOMContentLoaded", initializeFinanceFilters);
 
+let feeDetailsRequestId = 0;
+
 async function viewFeeDetails(feeId) {
   console.log("Opening fee details for fee.id:", feeId);
   if (!feeId || feeId === "undefined") {
@@ -318,6 +320,27 @@ async function viewFeeDetails(feeId) {
   }
   const modal = document.getElementById("viewPaymentModal");
   if (!modal) return;
+
+  const requestId = ++feeDetailsRequestId;
+  const recordPaymentButton = document.getElementById("addRecordPayment");
+  document.getElementById("modal-student-name").textContent = "Loading student…";
+  document.getElementById("modal-student-id").textContent = "";
+  document.getElementById("modal-academic-year").textContent = "Loading…";
+  document.getElementById("modal-term").textContent = "Loading…";
+  document.getElementById("modal-class").textContent = "Loading…";
+  const studentPhoto = document.getElementById("modal-student-photo");
+  if (studentPhoto) {
+    studentPhoto.src = window.DEFAULT_PROFILE_AVATAR || "";
+  }
+  document.getElementById("modal-fee-summary-tbody").innerHTML =
+    '<tr><td colspan="2">Loading fee details…</td></tr>';
+  document.getElementById("modal-payment-history-tbody").innerHTML =
+    '<tr><td colspan="3">Loading payment history…</td></tr>';
+  if (recordPaymentButton) {
+    recordPaymentButton.removeAttribute("data-fee-id");
+    recordPaymentButton.removeAttribute("data-student-id");
+    recordPaymentButton.disabled = true;
+  }
 
   setFinanceModalVisibility(modal, true);
 
@@ -343,12 +366,6 @@ async function viewFeeDetails(feeId) {
       .single();
 
     if (feeError) throw feeError;
-
-    const recordPaymentBtn = document.getElementById("addRecordPayment");
-    if (recordPaymentBtn) {
-      recordPaymentBtn.setAttribute("data-fee-id", feeId);
-      recordPaymentBtn.setAttribute("data-student-id", fee.student_id);
-    }
 
     let studentRecord = null;
     let enrollmentIdentity = null;
@@ -400,6 +417,14 @@ async function viewFeeDetails(feeId) {
       .order("created_at", { descending: true });
 
     if (txError) throw txError;
+
+    if (requestId !== feeDetailsRequestId) return;
+
+    if (recordPaymentButton) {
+      recordPaymentButton.setAttribute("data-fee-id", feeId);
+      recordPaymentButton.setAttribute("data-student-id", fee.student_id);
+      recordPaymentButton.disabled = false;
+    }
 
     document.getElementById("modal-student-name").textContent =
       studentIdentity.name;
@@ -498,7 +523,16 @@ async function viewFeeDetails(feeId) {
       }
     }
   } catch (err) {
+    if (requestId !== feeDetailsRequestId) return;
     console.error("Error loading fee details:", err.message);
+    document.getElementById("modal-student-name").textContent = "Details unavailable";
+    document.getElementById("modal-academic-year").textContent = "—";
+    document.getElementById("modal-term").textContent = "—";
+    document.getElementById("modal-class").textContent = "—";
+    document.getElementById("modal-fee-summary-tbody").innerHTML =
+      '<tr><td colspan="2">Fee details could not be loaded.</td></tr>';
+    document.getElementById("modal-payment-history-tbody").innerHTML =
+      '<tr><td colspan="3">Payment history could not be loaded.</td></tr>';
     showToast("Could not load payment details.", "error");
   }
 }
