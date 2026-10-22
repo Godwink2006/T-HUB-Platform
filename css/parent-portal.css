@@ -689,6 +689,15 @@ body.parent-portal {
 .parent-record-content td {
   font-size: 0.88rem;
 }
+.parent-record-content .parent-timetable-break {
+  background: #078b18;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-align: center;
+  text-transform: uppercase;
+}
 .parent-record-content .parent-empty {
   color: #60708a;
   padding: 28px 12px;

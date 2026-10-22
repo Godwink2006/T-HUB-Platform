@@ -125,7 +125,7 @@ async function initializeParentRecords() {
       student.profiles?.full_name || "Student",
     );
     document.getElementById("recordStudentDetails").textContent =
-      `Student ID: ${student.student_id || "Not assigned"}`;
+      `Student ID: ${student.student_id || "Not assigned"} · Class: ${student.classes?.name || "Not assigned"} · School: ${student.schools?.school_name || "Not available"}`;
 
     await loadParentRecordData(client, selectedStudentId, student);
     document.getElementById("recordFilters").hidden = false;
@@ -181,7 +181,7 @@ async function loadParentRecordData(
     const { data: lessons, error: lessonsError } = await client
       .from("timetable_lessons")
       .select(
-        "id, day_of_week, is_break, period_id, subject_id, teacher_id, periods:period_id(name,start_time,end_time), subjects:subject_id(name)",
+        "id, day_of_week, is_break, period_id, subject_id, teacher_id, periods:period_id(id,name,start_time,end_time), subjects:subject_id(name)",
       )
       .eq("timetable_id", timetable.id);
     if (lessonsError) throw lessonsError;
@@ -642,84 +642,99 @@ function renderParentTimetable() {
     String(value || "")
       .trim()
       .toLowerCase();
-  const dayRank = (value) => {
-    const index = days.findIndex(
-      (day) => day.toLowerCase() === normalizedDay(value),
-    );
-    return index < 0 ? days.length : index;
-  };
-  const lessons = [...timetableLessons].sort(
-    (a, b) =>
-      dayRank(a.day_of_week) - dayRank(b.day_of_week) ||
-      String(a.periods?.start_time || "").localeCompare(
-        String(b.periods?.start_time || ""),
-      ),
+  // Keep the parent view aligned with the timetable grid used by school staff.
+  // Lessons without a linked period cannot be placed on that grid, so don't
+  // show them as extra rows with missing period/time values.
+  const scheduledLessons = timetableLessons.filter(
+    (lesson) => lesson.period_id && lesson.periods?.id,
+  );
+  const periodsById = new Map();
+  scheduledLessons.forEach((lesson) => {
+    if (!periodsById.has(lesson.periods.id)) {
+      periodsById.set(lesson.periods.id, lesson.periods);
+    }
+  });
+  const periods = [...periodsById.values()].sort((a, b) =>
+    String(a.start_time || "").localeCompare(String(b.start_time || "")),
   );
   const selectedDay = document.getElementById("recordDayFilter")?.value;
-  const filteredLessons = selectedDay
-    ? lessons.filter(
-        (lesson) =>
-          normalizedDay(lesson.day_of_week) === normalizedDay(selectedDay),
-      )
-    : lessons;
+  const visibleDays = selectedDay
+    ? days.filter((day) => normalizedDay(day) === normalizedDay(selectedDay))
+    : days;
 
   const className = student.classes?.name || "Student’s class";
   const yearLabel = timetable.academic_years?.year_label;
   const summary = `<p class="parent-timetable-summary"><strong>${parentEscape(className)}</strong>${yearLabel ? ` · ${parentEscape(yearLabel)}` : ""}</p>`;
 
-  if (!filteredLessons.length) {
+  if (!scheduledLessons.length || !periods.length) {
+    return `${summary}<p class="parent-empty">The active timetable has no lessons assigned to a period yet.</p>`;
+  }
+  if (!visibleDays.length) {
     return `${summary}<p class="parent-empty">No lessons scheduled for ${parentEscape(selectedDay)}.</p>`;
   }
 
-  const rows = filteredLessons
-    .map((lesson) => {
-      const period = lesson.periods || {};
+  const rows = periods
+    .map((period) => {
+      const periodLessons = scheduledLessons.filter(
+        (lesson) => lesson.period_id === period.id,
+      );
+      const breakLesson = periodLessons.find(
+        (lesson) =>
+          lesson.is_break === true ||
+          lesson.is_break === "true" ||
+          normalizedDay(lesson.day_of_week) === "all",
+      );
       const isBreak =
-        lesson.is_break === true ||
-        lesson.is_break === "true" ||
-        (!lesson.subject_id && !lesson.subjects?.name);
-      const subject = isBreak
-        ? period.name || "Break"
-        : lesson.subjects?.name || "Subject to be announced";
+        Boolean(breakLesson) ||
+        String(period.period_type || period.type || "").toLowerCase() ===
+          "break" ||
+        String(period.name || "").toLowerCase().includes("break");
       const time =
         [period.start_time, period.end_time]
           .filter(Boolean)
-          .map((value) => parentEscape(value))
+          .map((value) => parentEscape(String(value).slice(0, 5)))
           .join(" – ") || "-";
 
-      let teacherCell = '<span class="table-muted">—</span>';
-      if (!isBreak && lesson.teacher_id) {
-        const t = parentRecordState.timetableTeachers.get(
-          String(lesson.teacher_id),
-        );
-        if (t?.full_name) {
-          const meta = t.staff_id ? parentEscape(t.staff_id) : null;
-          teacherCell = meta
-            ? `<span class="parent-record-author"><strong>${parentEscape(t.full_name)}</strong><small>${meta}</small></span>`
-            : `<span class="parent-record-author"><strong>${parentEscape(t.full_name)}</strong></span>`;
-        } else {
-          teacherCell = '<span class="table-muted">Assigned</span>';
-        }
+      if (isBreak) {
+        return `<tr class="break-row"><td><strong>${time}</strong></td><td colspan="${visibleDays.length}" class="parent-timetable-break">${parentEscape(breakLesson?.subjects?.name || period.name || "Break")}</td></tr>`;
       }
 
-      return `<tr>
-        <td>${parentEscape(lesson.day_of_week || "-")}</td>
-        <td>${parentEscape(period.name || "-")}</td>
-        <td>${time}</td>
-        <td>${parentEscape(subject)}</td>
-        <td>${teacherCell}</td>
-      </tr>`;
+      const cells = visibleDays
+        .map((day) => {
+          const lesson = periodLessons.find(
+            (item) => normalizedDay(item.day_of_week) === normalizedDay(day),
+          );
+          if (!lesson) return '<td class="table-muted">—</td>';
+
+          let teacherCell = '<span class="table-muted">—</span>';
+          if (lesson.teacher_id) {
+            const teacher = parentRecordState.timetableTeachers.get(
+              String(lesson.teacher_id),
+            );
+            if (teacher?.full_name) {
+              const meta = teacher.staff_id
+                ? `<small>${parentEscape(teacher.staff_id)}</small>`
+                : "";
+              teacherCell = `<span class="parent-record-author"><strong>${parentEscape(teacher.full_name)}</strong>${meta}</span>`;
+            } else {
+              teacherCell = '<span class="table-muted">Assigned</span>';
+            }
+          }
+
+          const subject = lesson.subjects?.name || "Subject to be announced";
+          return `<td><strong>${parentEscape(subject)}</strong><br>${teacherCell}</td>`;
+        })
+        .join("");
+
+      return `<tr><td><strong>${time}</strong></td>${cells}</tr>`;
     })
     .join("");
 
   return `${summary}<div class="parent-table-container"><table>
     <thead>
       <tr>
-        <th>Day</th>
-        <th>Period</th>
         <th>Time</th>
-        <th>Subject</th>
-        <th>Teacher</th>
+        ${visibleDays.map((day) => `<th>${parentEscape(day)}</th>`).join("")}
       </tr>
     </thead>
     <tbody>${rows}</tbody>

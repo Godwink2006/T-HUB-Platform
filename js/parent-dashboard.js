@@ -61,7 +61,9 @@ async function loadParentDashboard() {
 
     const { data: students, error: studentsError } = await client
       .from("students")
-      .select("id, student_id, school_id, profiles(full_name, photo_url)")
+      .select(
+        "id, student_id, school_id, class_id, classes:class_id(name), schools:school_id(school_name), profiles(full_name, photo_url)",
+      )
       .in("id", [...new Set(links.map((link) => link.student_id))]);
     if (studentsError) throw studentsError;
 
@@ -185,6 +187,8 @@ function renderParentChildren(children) {
       <div class="parent-child-info">
         <strong>${escapeParentPortal(child.fullName)}</strong>
         <span>Student ID: ${escapeParentPortal(child.student_id || "Not assigned")}</span>
+        <span>Class: ${escapeParentPortal(child.classes?.name || "Not assigned")}</span>
+        <span>School: ${escapeParentPortal(child.schools?.school_name || "Not available")}</span>
         <span>${escapeParentPortal(child.relationship)}</span>
       </div>
       <button type="button" data-select-student="${escapeParentPortal(child.id)}" aria-pressed="false">Choose student</button>
@@ -226,7 +230,7 @@ function selectParentStudent(student) {
   });
   document.getElementById("selectedStudentName").textContent = student.fullName;
   document.getElementById("selectedStudentDetails").textContent =
-    `Student ID: ${student.student_id || "Not assigned"}`;
+    `Student ID: ${student.student_id || "Not assigned"} · Class: ${student.classes?.name || "Not assigned"} · School: ${student.schools?.school_name || "Not available"}`;
   setParentStudentPhoto(
     document.getElementById("selectedStudentPhoto"),
     student.photoUrl,
