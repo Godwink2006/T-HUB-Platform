@@ -458,7 +458,7 @@ td {
 
 .payments-main-content {
   margin-left: 260px;
-  width: calc(100% - 260px);
+  width: 100%;
   min-height: 100vh;
   padding: 10px;
 }
@@ -507,7 +507,7 @@ body {
 }
 
 .payments-main-content {
-  padding: 30px clamp(18px, 3vw, 42px);
+  padding: 10px;
 }
 
 .topbar {
