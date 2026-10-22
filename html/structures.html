@@ -136,6 +136,15 @@
               </div>
 
               <div class="form-group">
+                <label for="currencyCodeSelect">Currency *</label>
+                <select id="currencyCodeSelect" name="currencyCode" required>
+                  <option value="">Select Currency</option>
+                  <option value="LRD">Liberian Dollar (LD)</option>
+                  <option value="USD">US Dollar (USD)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
                 <label for="statusSelect">Status *</label>
                 <select id="statusSelect" name="status" required>
                   <option value="Active">Active</option>
@@ -237,6 +246,15 @@
                   disabled
                 />
                 <input type="hidden" id="editClassSelect" />
+              </div>
+
+              <div class="form-group">
+                <label for="editCurrencyCodeSelect">Currency *</label>
+                <select id="editCurrencyCodeSelect" required>
+                  <option value="">Select Currency</option>
+                  <option value="LRD">Liberian Dollar (LD)</option>
+                  <option value="USD">US Dollar (USD)</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -394,6 +412,11 @@
               <label>Class</label>
               <p id="viewClass">-</p>
             </div>
+
+            <div class="details-item">
+              <label>Currency</label>
+              <p id="viewCurrency">-</p>
+            </div>
           </div>
 
           <section class="structure-table-card">
@@ -411,7 +434,7 @@
           <div class="form-grid">
             <div class="form-group">
               <h4>Total</h4>
-              <p id="viewTotalAmount">$0.00</p>
+              <p id="viewTotalAmount">-</p>
             </div>
 
             <div class="form-group">

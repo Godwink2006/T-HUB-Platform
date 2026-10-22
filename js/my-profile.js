@@ -238,7 +238,7 @@ function validateProfileInputs(fullName, email, phone) {
     return "Full name must contain between 2 and 4 words.";
   }
 
-  const emailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+  const emailRegex = /^[a-zA-Z0-9._+-]+@gmail\.com$/i;
   if (!email || !emailRegex.test(email)) {
     return "Email must be a valid @gmail.com address.";
   }

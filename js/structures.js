@@ -1,10 +1,41 @@
+const FEE_STRUCTURE_CURRENCIES = Object.freeze({
+  LRD: { label: "Liberian Dollar (LD)", symbol: "LD" },
+  USD: { label: "US Dollar (USD)", symbol: "USD" },
+});
+
+function formatFeeStructureMoney(amount, currencyCode) {
+  const number = Number(amount);
+  const formatted = Number.isFinite(number)
+    ? number.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    : "0.00";
+  const currency = FEE_STRUCTURE_CURRENCIES[currencyCode];
+
+  return currency
+    ? `${currency.symbol} ${formatted}`
+    : `${formatted} (currency not set)`;
+}
+
+function getSelectedStructureCurrency(selectId) {
+  return document.getElementById(selectId)?.value || "";
+}
+
 async function updateFeeStructure(shouldPrint = false) {
   const structureId = document.getElementById("editStructureId")?.value;
   const status = document.getElementById("editStatusSelect")?.value;
+  const currencyCode = getSelectedStructureCurrency("editCurrencyCodeSelect");
 
   if (!structureId) {
     if (typeof showToast === "function")
       showToast("Invalid structure target.", "error");
+    return;
+  }
+
+  if (!FEE_STRUCTURE_CURRENCIES[currencyCode]) {
+    if (typeof showToast === "function")
+      showToast("Please select a valid currency.", "error");
     return;
   }
 
@@ -21,12 +52,18 @@ async function updateFeeStructure(shouldPrint = false) {
 
   const originalStatus =
     document.getElementById("editStructureModal")?.dataset.originalStatus;
+  const originalCurrencyCode =
+    document.getElementById("editStructureModal")?.dataset.originalCurrencyCode;
   const originalItemsJson =
     document.getElementById("editStructureModal")?.dataset.originalItems;
 
   const currentItemsJson = normalizeItems(tempEditFeeItems);
 
-  if (status === originalStatus && currentItemsJson === originalItemsJson) {
+  if (
+    status === originalStatus &&
+    currencyCode === originalCurrencyCode &&
+    currentItemsJson === originalItemsJson
+  ) {
     if (typeof showToast === "function")
       showToast("No changes detected.", "info");
     return;
@@ -59,6 +96,7 @@ async function updateFeeStructure(shouldPrint = false) {
         p_status: status,
         p_total_amount: totalAmount,
         p_items: tempEditFeeItems,
+        p_currency_code: currencyCode,
       },
     );
 
@@ -136,6 +174,10 @@ const feeItemNameInput = document.getElementById("feeItemName");
 const feeItemAmountInput = document.getElementById("feeItemAmount");
 const feeItemsBody = document.getElementById("feeItemsBody");
 const totalFeeAmountEl = document.getElementById("totalFeeAmount");
+const currencyCodeSelect = document.getElementById("currencyCodeSelect");
+const editCurrencyCodeSelect = document.getElementById(
+  "editCurrencyCodeSelect",
+);
 
 function renderTempFeeItems() {
   if (!feeItemsBody) return;
@@ -150,7 +192,12 @@ function renderTempFeeItems() {
         </td>
       </tr>
     `;
-    if (totalFeeAmountEl) totalFeeAmountEl.textContent = "$0.00";
+    if (totalFeeAmountEl) {
+      totalFeeAmountEl.textContent = formatFeeStructureMoney(
+        0,
+        getSelectedStructureCurrency("currencyCodeSelect"),
+      );
+    }
     return;
   }
 
@@ -162,7 +209,12 @@ function renderTempFeeItems() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHTML(item.name || "")}</td>
-      <td>$${Number(item.amount).toFixed(2)}</td>
+      <td>${escapeHTML(
+        formatFeeStructureMoney(
+          item.amount,
+          getSelectedStructureCurrency("currencyCodeSelect"),
+        ),
+      )}</td>
       <td style="text-align: right;">
         <button type="button" class="structures-actions-btn delete-addItem" data-index="${index}">
           <i class="fa-solid fa-trash-can"></i>
@@ -173,9 +225,14 @@ function renderTempFeeItems() {
   });
 
   if (totalFeeAmountEl) {
-    totalFeeAmountEl.textContent = `$${grandTotal.toFixed(2)}`;
+    totalFeeAmountEl.textContent = formatFeeStructureMoney(
+      grandTotal,
+      getSelectedStructureCurrency("currencyCodeSelect"),
+    );
   }
 }
+
+currencyCodeSelect?.addEventListener("change", renderTempFeeItems);
 
 if (addItemForm) {
   addItemForm.addEventListener("submit", (e) => {
@@ -299,10 +356,16 @@ async function saveFeeStructure(shouldPrint = false) {
   const academicYearId = document.getElementById("academicYearSelect")?.value;
   const termId = document.getElementById("semesterSelect")?.value;
   const classId = document.getElementById("classSelect")?.value;
+  const currencyCode = getSelectedStructureCurrency("currencyCodeSelect");
   const status = document.getElementById("statusSelect")?.value || "Active";
 
   if (!academicYearId || !termId || !classId) {
     showToast("Please select Academic Year, Semester, and Class.", "error");
+    return;
+  }
+
+  if (!FEE_STRUCTURE_CURRENCIES[currencyCode]) {
+    showToast("Please select a valid currency.", "error");
     return;
   }
 
@@ -337,6 +400,7 @@ async function saveFeeStructure(shouldPrint = false) {
         p_status: status,
         p_total_amount: totalAmount,
         p_items: tempFeeItems,
+        p_currency_code: currencyCode,
       },
     );
 
@@ -359,7 +423,7 @@ async function saveFeeStructure(shouldPrint = false) {
       semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
     }
 
-    const modal = document.getElementById("createStructureModal");
+    const modal = document.getElementById("structureModal");
     if (modal) modal.style.display = "none";
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   } catch (err) {
@@ -433,6 +497,7 @@ async function loadFeeStructures() {
         `
         id,
         total_amount,
+        currency_code,
         status,
         created_at,
         updated_at,
@@ -506,7 +571,7 @@ function renderFeeStructuresTable(structures) {
      <td data-label="Class">${escapeHTML(className || "-")}</td>
 <td data-label="Academic Year">${escapeHTML(academicYear || "-")}</td>
 <td data-label="Semester">${escapeHTML(termName || "-")}</td>
-<td data-label="Total Fees">$${Number(struct.total_amount || 0).toFixed(2)}</td>
+<td data-label="Total Fees">${escapeHTML(formatFeeStructureMoney(struct.total_amount, struct.currency_code))}</td>
 <td data-label="Status">
   <span class="${statusClass}">${statusText}</span>
 </td>
@@ -544,6 +609,7 @@ async function openViewStructureModal(structureId) {
         `
         id,
         total_amount,
+        currency_code,
         status,
         classes ( name ),
         academic_years ( year_label ),
@@ -569,8 +635,11 @@ async function openViewStructureModal(structureId) {
     document.getElementById("viewAcademicYear").textContent = yearLabel;
     document.getElementById("viewTerm").textContent = termName;
     document.getElementById("viewClass").textContent = className;
+    document.getElementById("viewCurrency").textContent =
+      FEE_STRUCTURE_CURRENCIES[struct.currency_code]?.label ||
+      "Currency not set";
     document.getElementById("viewTotalAmount").textContent =
-      `$${Number(struct.total_amount || 0).toFixed(2)}`;
+      formatFeeStructureMoney(struct.total_amount, struct.currency_code);
 
     const viewStatusEl = document.getElementById("viewStatus");
     if (viewStatusEl) {
@@ -591,7 +660,9 @@ async function openViewStructureModal(structureId) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${escapeHTML(item.fee_name || "")}</td>
-          <td>$${Number(item.amount).toFixed(2)}</td>
+          <td>${escapeHTML(
+            formatFeeStructureMoney(item.amount, struct.currency_code),
+          )}</td>
         `;
         itemsBody.appendChild(tr);
       });
@@ -630,6 +701,7 @@ async function openEditStructureModal(structureId) {
         academic_year_id,
         term_id,
         class_id,
+        currency_code,
         status,
         classes ( name ),
         academic_years ( year_label ),
@@ -653,6 +725,8 @@ async function openEditStructureModal(structureId) {
       struct.terms?.name || "N/A";
     document.getElementById("editClassDisplay").value =
       struct.classes?.name || "N/A";
+    document.getElementById("editCurrencyCodeSelect").value =
+      struct.currency_code || "";
     document.getElementById("editStatusSelect").value = struct.status;
 
     const { data: items, error: itemsErr } = await supabaseClient
@@ -669,6 +743,7 @@ async function openEditStructureModal(structureId) {
     }));
 
     modal.dataset.originalStatus = struct.status;
+    modal.dataset.originalCurrencyCode = struct.currency_code || "";
     modal.dataset.originalItems = normalizeItems(items || []);
 
     renderEditTempFeeItems();
@@ -691,7 +766,12 @@ function renderEditTempFeeItems() {
 
   if (tempEditFeeItems.length === 0) {
     tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888; padding: 12px;">No items added.</td></tr>`;
-    if (totalEl) totalEl.textContent = "$0.00";
+    if (totalEl) {
+      totalEl.textContent = formatFeeStructureMoney(
+        0,
+        getSelectedStructureCurrency("editCurrencyCodeSelect"),
+      );
+    }
     return;
   }
 
@@ -701,7 +781,12 @@ function renderEditTempFeeItems() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHTML(item.name || "")}</td>
-      <td>$${Number(item.amount).toFixed(2)}</td>
+      <td>${escapeHTML(
+        formatFeeStructureMoney(
+          item.amount,
+          getSelectedStructureCurrency("editCurrencyCodeSelect"),
+        ),
+      )}</td>
       <td style="text-align: right;">
         <button type="button" class="structures-actions-btn delete-editItem" data-index="${index}" title="Remove Item">
           <i class="fa-solid fa-trash-can"></i>
@@ -711,8 +796,15 @@ function renderEditTempFeeItems() {
     tbody.appendChild(tr);
   });
 
-  if (totalEl) totalEl.textContent = `$${grandTotal.toFixed(2)}`;
+  if (totalEl) {
+    totalEl.textContent = formatFeeStructureMoney(
+      grandTotal,
+      getSelectedStructureCurrency("editCurrencyCodeSelect"),
+    );
+  }
 }
+
+editCurrencyCodeSelect?.addEventListener("change", renderEditTempFeeItems);
 
 const editFeeItemsBody = document.getElementById("editFeeItemsBody");
 if (editFeeItemsBody) {

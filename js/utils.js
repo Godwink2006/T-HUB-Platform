@@ -207,9 +207,28 @@ function showToast(message, type = "success", duration = 5000) {
     document.body.appendChild(container);
   }
 
+  const messageText = String(message);
+  const existingToast = Array.from(container.children).find(
+    (item) =>
+      item.classList.contains(`toast-${type}`) &&
+      item.textContent === messageText,
+  );
+
+  if (existingToast) {
+    clearTimeout(existingToast.dismissTimer);
+    existingToast.classList.add("show");
+    existingToast.dismissTimer = setTimeout(() => {
+      existingToast.classList.remove("show");
+      existingToast.addEventListener("transitionend", () => existingToast.remove(), {
+        once: true,
+      });
+    }, duration);
+    return existingToast;
+  }
+
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.textContent = message;
+  toast.textContent = messageText;
 
   container.appendChild(toast);
 
@@ -217,10 +236,12 @@ function showToast(message, type = "success", duration = 5000) {
     toast.classList.add("show");
   });
 
-  setTimeout(() => {
+  toast.dismissTimer = setTimeout(() => {
     toast.classList.remove("show");
-    toast.addEventListener("transitionend", () => toast.remove());
+    toast.addEventListener("transitionend", () => toast.remove(), { once: true });
   }, duration);
+
+  return toast;
 }
 
 let _authContextPromise = null;
