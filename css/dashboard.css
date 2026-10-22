@@ -331,7 +331,7 @@ body.dashboard-auth-checking .dashboard-auth-loading {
 .announcement-modal-content {
   overflow: auto;
   width: 100%;
-  max-width: 95%;
+  max-width: 50%;
   background: #ffff;
   animation: modalShow 0.25s ease;
   height: 100%;
@@ -642,7 +642,8 @@ body.dashboard-auth-checking .dashboard-auth-loading {
     border-radius: 10px;
   }
 
-  .date-modal-content {
+  .date-modal-content,
+  .announcement-modal-content {
     max-width: 95%;
     width: 100%;
   }
