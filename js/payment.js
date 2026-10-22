@@ -653,6 +653,13 @@ async function loadFeeItemAllocations(feeId) {
 
     if (feeErr) throw feeErr;
 
+    const { data: transactions, error: transactionsError } = await supabaseClient
+      .from("payment_transactions")
+      .select("payment_allocations(amount, fee_item_id)")
+      .eq("student_fee_id", feeId);
+
+    if (transactionsError) throw transactionsError;
+
     activePaymentCurrencyCode = feeRecord?.currency_code || null;
 
     if (
@@ -666,6 +673,17 @@ async function loadFeeItemAllocations(feeId) {
     }
 
     const items = feeRecord.fee_breakdown;
+    const paidByItemId = new Map();
+    (transactions || []).forEach((transaction) => {
+      (transaction.payment_allocations || []).forEach((allocation) => {
+        const itemId = allocation.fee_item_id;
+        if (!itemId) return;
+        paidByItemId.set(
+          String(itemId),
+          (paidByItemId.get(String(itemId)) || 0) + (Number(allocation.amount) || 0),
+        );
+      });
+    });
 
     container.innerHTML = "";
     items.forEach((item) => {
@@ -675,21 +693,30 @@ async function loadFeeItemAllocations(feeId) {
         "display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;";
 
       const itemName = item.name || item.fee_name || "Fee Item";
+      const itemId = String(item.id || "");
+      const itemAmount = Math.max(0, Number(item.amount) || 0);
+      const amountPaid = Math.min(itemAmount, paidByItemId.get(itemId) || 0);
+      const amountRemaining = Math.max(0, itemAmount - amountPaid);
+      const hasItemId = Boolean(itemId);
 
       itemRow.innerHTML = `
         <div class="item-info">
           <strong>${escapeHTML(itemName)}</strong><br>
-          <small>Amount: ${window.formatSchoolMoney(item.amount, activePaymentCurrencyCode)}</small>
+          <small>Fee: ${window.formatSchoolMoney(itemAmount, activePaymentCurrencyCode)}</small><br>
+          <small>Paid: ${window.formatSchoolMoney(amountPaid, activePaymentCurrencyCode)}</small><br>
+          <small>Remaining: ${window.formatSchoolMoney(amountRemaining, activePaymentCurrencyCode)}</small>
         </div>
         <input
           type="number"
           class="item-payment-input"
-          data-item-id="${escapeHTML(item.id)}"
-          data-max="${Number(item.amount) || 0}"
-          placeholder="0.00"
+          data-item-id="${escapeHTML(itemId)}"
+          data-max="${amountRemaining}"
+          placeholder="${amountRemaining.toFixed(2)}"
           min="0"
-          max="${Number(item.amount) || 0}"
+          max="${amountRemaining}"
           style="width: 120px; padding: 6px;"
+          ${!hasItemId || amountRemaining <= 0 ? "disabled" : ""}
+          aria-label="Payment amount for ${escapeHTML(itemName)}; remaining ${window.formatSchoolMoney(amountRemaining, activePaymentCurrencyCode)}"
         />
       `;
       container.appendChild(itemRow);
