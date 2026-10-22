@@ -31,6 +31,15 @@ const openBookModal = document.getElementById("addBook");
 const closeBookModal = document.getElementById("closeBookModal");
 
 openBookModal?.addEventListener("click", async () => {
+  bookForm?.reset();
+  const addCoverInput = document.getElementById("addAvatarInput");
+  if (addCoverInput) addCoverInput.value = "";
+  const addCoverPreview = document.getElementById("addAvatarPreview");
+  if (addCoverPreview) {
+    addCoverPreview.src = "https://cdn-icons-png.flaticon.com/512/29/29302.png";
+  }
+  const addFileName = document.getElementById("addFileNameDisplay");
+  if (addFileName) addFileName.textContent = "No new file chosen";
   if (bookModal) bookModal.style.display = "flex";
   if (typeof lockBodyScroll === "function") lockBodyScroll();
   if (typeof loadDepartmentDropdown === "function")
@@ -645,10 +654,34 @@ if (editFileInput) {
 }
 
 let currentOriginalBookData = null;
+let editBookRequestId = 0;
 
 async function openEditBookModal(bookId) {
   const editBookModal = document.getElementById("editBookModal");
   if (!editBookModal) return;
+
+  const requestId = ++editBookRequestId;
+  currentOriginalBookData = null;
+  document.getElementById("editBookId").value = "";
+  document.getElementById("editBookCode").textContent = "Loading…";
+  document.getElementById("editBookTitle").value = "";
+  document.getElementById("editBookAuthor").value = "";
+  document.getElementById("editBookDepartment").replaceChildren(
+    new Option("Loading departments…", ""),
+  );
+  document.getElementById("editBookNumberOfCopies").value = "";
+  document.getElementById("editBookShelfLocation").value = "";
+  document.getElementById("editBookDescription").value = "";
+  document.getElementById("editBookStatus").value = "";
+  const editCoverPreview = document.getElementById("editAvatarPreview");
+  if (editCoverPreview) {
+    editCoverPreview.src = "https://cdn-icons-png.flaticon.com/512/29/29302.png";
+  }
+  const editCoverInput = document.getElementById("editAvatarInput");
+  if (editCoverInput) editCoverInput.value = "";
+  if (editFileNameText) editFileNameText.textContent = "No new file chosen";
+  const editSaveButton = document.getElementById("editBook");
+  if (editSaveButton) editSaveButton.disabled = true;
 
   editBookModal.style.display = "flex";
   lockBodyScroll();
@@ -672,6 +705,8 @@ async function openEditBookModal(bookId) {
         .eq("book_id", bookId)
         .eq("status", "borrowed");
     if (borrowingsError) throw borrowingsError;
+
+    if (requestId !== editBookRequestId) return;
 
     currentOriginalBookData = {
       ...book,
@@ -702,7 +737,10 @@ async function openEditBookModal(bookId) {
     if (editFileNameText) {
       editFileNameText.textContent = "No new file chosen";
     }
+    if (editSaveButton) editSaveButton.disabled = false;
   } catch (err) {
+    if (requestId !== editBookRequestId) return;
+    document.getElementById("editBookCode").textContent = "Book details unavailable";
     console.error("Error loading book for editing:", err);
     showToast(err.message || "Failed to load book data.", "error");
   }
@@ -877,11 +915,30 @@ async function handleUpdateBook() {
 }
 
 let currentViewBookId = null;
+let viewBookRequestId = 0;
 
 async function openViewBookModal(bookId) {
+  const requestId = ++viewBookRequestId;
   currentViewBookId = bookId;
   const modal = document.getElementById("viewBookModal");
   if (!modal) return;
+
+  const loadingImage = "https://cdn-icons-png.flaticon.com/512/29/29302.png";
+  const coverImgElement = document.getElementById("viewBookCover");
+  if (coverImgElement) coverImgElement.src = loadingImage;
+  const statusBadge = document.getElementById("viewBookStatus");
+  if (statusBadge) {
+    statusBadge.textContent = "Loading…";
+    statusBadge.className = "view-book-status";
+  }
+  ["viewBookCode", "viewBookTitle", "viewBookAuthor", "viewBookCategory", "viewBookShelf", "viewBookDescription"]
+    .forEach((id) => { document.getElementById(id).textContent = "Loading…"; });
+  ["viewTotalCopies", "viewAvailableCopies", "viewBorrowedCopies"]
+    .forEach((id) => { document.getElementById(id).textContent = "—"; });
+  document.getElementById("viewBorrowHistoryBody").innerHTML =
+    '<tr><td colspan="5" style="text-align:center; padding:15px; color:#666">Loading borrowing history…</td></tr>';
+  document.getElementById("borrowFromViewBtn").disabled = true;
+  document.getElementById("returnBookFromViewBtn").disabled = true;
 
   modal.style.display = "flex";
   if (typeof lockBodyScroll === "function") lockBodyScroll();
@@ -899,15 +956,14 @@ async function openViewBookModal(bookId) {
       .single();
 
     if (bookError) throw bookError;
+    if (requestId !== viewBookRequestId) return;
 
-    const coverImgElement = document.getElementById("viewBookCover");
     if (coverImgElement) {
       coverImgElement.src =
         book.cover_image_url ||
         "https://cdn-icons-png.flaticon.com/512/29/29302.png";
     }
 
-    const statusBadge = document.getElementById("viewBookStatus");
     if (statusBadge) {
       const bookStatus = (book.status || "active").toLowerCase();
       statusBadge.textContent =
@@ -933,11 +989,13 @@ async function openViewBookModal(bookId) {
       .order("created_at", { ascending: false });
 
     if (borrowError) throw borrowError;
+    if (requestId !== viewBookRequestId) return;
 
     const identitySnapshots =
       await window.loadTransferredStudentIdentitySnapshots(
         (borrowings || []).map((record) => record.borrower_id),
       );
+    if (requestId !== viewBookRequestId) return;
 
     const currentlyBorrowed = borrowings
       ? borrowings.filter((r) => r.status === "borrowed").length
@@ -951,6 +1009,8 @@ async function openViewBookModal(bookId) {
     document.getElementById("viewAvailableCopies").textContent = available;
     document.getElementById("viewBorrowedCopies").textContent =
       currentlyBorrowed;
+    document.getElementById("borrowFromViewBtn").disabled = false;
+    document.getElementById("returnBookFromViewBtn").disabled = currentlyBorrowed === 0;
 
     const historyBody = document.getElementById("viewBorrowHistoryBody");
     historyBody.innerHTML = "";
@@ -1004,6 +1064,17 @@ async function openViewBookModal(bookId) {
       historyBody.appendChild(tr);
     });
   } catch (err) {
+    if (requestId !== viewBookRequestId) return;
+    ["viewBookCode", "viewBookTitle", "viewBookAuthor", "viewBookCategory", "viewBookShelf", "viewBookDescription"]
+      .forEach((id) => { document.getElementById(id).textContent = "Details unavailable"; });
+    if (statusBadge) {
+      statusBadge.textContent = "Unavailable";
+      statusBadge.className = "view-book-status";
+    }
+    ["viewTotalCopies", "viewAvailableCopies", "viewBorrowedCopies"]
+      .forEach((id) => { document.getElementById(id).textContent = "—"; });
+    document.getElementById("viewBorrowHistoryBody").innerHTML =
+      '<tr><td colspan="5" style="text-align:center; padding:15px; color:#666">Borrowing history could not be loaded.</td></tr>';
     console.error("Error loading view modal data:", err);
     if (typeof showToast === "function") {
       showToast("Failed to load full book details.", "error");
@@ -1034,17 +1105,34 @@ document
     const borrowModal = document.getElementById("addBorrowModal");
     if (borrowModal) borrowModal.style.display = "flex";
 
+    const requestId = ++borrowerDropdownRequestId;
+    allBorrowerProfiles = [];
+    document.getElementById("borrowForm")?.reset();
+    const borrowerSearch = document.getElementById("studentSearchInput");
+    if (borrowerSearch) borrowerSearch.value = "";
+    const borrowerSelect = document.getElementById("borrowStudentSelect");
+    if (borrowerSelect) {
+      borrowerSelect.replaceChildren(new Option("Loading borrowers…", ""));
+    }
+    const borrowDateDisplay = document.getElementById("borrowDateDisplay");
+    if (borrowDateDisplay) {
+      borrowDateDisplay.textContent = new Date().toLocaleDateString("en-CA");
+    }
+    const saveBorrowButton = document.getElementById("saveBorrowBtn");
+    if (saveBorrowButton) saveBorrowButton.disabled = true;
+
     const hiddenBookIdInput = document.getElementById("borrowBookId");
     if (hiddenBookIdInput) {
       hiddenBookIdInput.value = currentViewBookId;
     }
 
-    await loadBorrowersDropdown();
+    await loadBorrowersDropdown(requestId);
   });
 
 let allBorrowerProfiles = [];
+let borrowerDropdownRequestId = 0;
 
-async function loadBorrowersDropdown() {
+async function loadBorrowersDropdown(requestId = ++borrowerDropdownRequestId) {
   const select = document.getElementById("borrowStudentSelect");
   if (!select) return;
 
@@ -1074,11 +1162,16 @@ async function loadBorrowersDropdown() {
       .order("full_name", { ascending: true });
     if (error) throw error;
 
+    if (requestId !== borrowerDropdownRequestId) return;
+
     allBorrowerProfiles = profiles || [];
+    if (saveBorrowBtn) saveBorrowBtn.disabled = allBorrowerProfiles.length === 0;
     renderBorrowerOptions(
       document.getElementById("studentSearchInput")?.value || "",
     );
   } catch (err) {
+    if (requestId !== borrowerDropdownRequestId) return;
+    select.replaceChildren(new Option("Borrowers could not be loaded", ""));
     console.error("Error loading borrower profiles:", err);
     if (typeof showToast === "function") {
       showToast(err.message || "Could not load borrowers.", "error");
@@ -1121,6 +1214,7 @@ function renderBorrowerOptions(searchTerm = "") {
 
   select.replaceChildren(new Option("Select borrower", ""));
   const profiles = filterBorrowerProfiles(allBorrowerProfiles, searchTerm);
+  if (saveBorrowBtn) saveBorrowBtn.disabled = profiles.length === 0;
   profiles.forEach((profile) => {
     const student = Array.isArray(profile.students)
       ? profile.students[0]
@@ -1242,11 +1336,14 @@ async function handleSaveBorrow() {
 }
 
 let currentActiveBorrowings = [];
+let returnModalRequestId = 0;
 
 async function openReturnModal(bookId) {
   const modal = document.getElementById("returnBorrowModal");
   if (!modal) return;
 
+  const requestId = ++returnModalRequestId;
+  currentActiveBorrowings = [];
   modal.style.display = "flex";
 
   const searchInput = document.getElementById("returnStudentSearchInput");
@@ -1256,6 +1353,9 @@ async function openReturnModal(bookId) {
   const borrowDateDisplay = document.getElementById("displayBorrowDate");
   const returnDateDisplay = document.getElementById("displayReturnDate");
   const recordIdInput = document.getElementById("activeBorrowRecordId");
+  const returnButton = document.getElementById("confirmReturnBtn");
+  if (select) select.replaceChildren(new Option("Loading borrowers…", ""));
+  if (returnButton) returnButton.disabled = true;
 
   const todayStr = new Date().toLocaleDateString("en-CA");
   if (returnDateDisplay) returnDateDisplay.textContent = todayStr;
@@ -1285,9 +1385,12 @@ async function openReturnModal(bookId) {
 
     if (error) throw error;
 
+    if (requestId !== returnModalRequestId) return;
+
     currentActiveBorrowings = activeBorrowings || [];
 
     if (currentActiveBorrowings.length === 0) {
+      if (select) select.replaceChildren(new Option("No active borrowers", ""));
       if (typeof showToast === "function") {
         showToast("No active borrowings found for this book.", "error");
       }
@@ -1297,6 +1400,8 @@ async function openReturnModal(bookId) {
 
     renderBorrowerDropdown(currentActiveBorrowings);
   } catch (err) {
+    if (requestId !== returnModalRequestId) return;
+    if (select) select.replaceChildren(new Option("Borrowers could not be loaded", ""));
     console.error("Error opening return modal:", err);
     if (typeof showToast === "function") {
       showToast("Failed to load return details.", "error");
@@ -1310,6 +1415,9 @@ function renderBorrowerDropdown(borrowings) {
   const recordIdInput = document.getElementById("activeBorrowRecordId");
 
   if (!select) return;
+
+  const returnButton = document.getElementById("confirmReturnBtn");
+  if (returnButton) returnButton.disabled = borrowings.length === 0;
 
   select.innerHTML = '<option value="">Select borrower</option>';
 
