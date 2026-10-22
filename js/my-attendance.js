@@ -97,7 +97,7 @@ async function loadStudentAttendanceData(userId, historyIndex, client) {
         academic_years ( id, year_label ),
         classes ( id, name ),
         subjects ( id, name ),
-        profiles ( id, full_name )
+        profiles:teacher_id ( id, full_name )
       `)
       .in("id", attendanceIds);
 
