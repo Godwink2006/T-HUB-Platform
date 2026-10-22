@@ -124,12 +124,9 @@ window.ReportsCommon = (function () {
     });
   }
 
-  /**
-   * Currency formatter in RWF (e.g. RWF 250,000,000)
-   */
-  function formatCurrency(amount) {
-    const num = Number(amount) || 0;
-    return `RWF ${num.toLocaleString("en-US")}`;
+  /** Format fee amounts using the currency saved on the fee record. */
+  function formatCurrency(amount, currencyCode) {
+    return window.formatSchoolMoney(amount, currencyCode);
   }
 
   /**

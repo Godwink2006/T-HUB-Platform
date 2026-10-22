@@ -9,6 +9,7 @@ const cancelAddRecordPaymentModal = document.getElementById(
 );
 
 let financeFeeRows = [];
+let activePaymentCurrencyCode = null;
 
 function setFinanceModalVisibility(modal, isVisible) {
   if (!modal) return;
@@ -104,6 +105,7 @@ async function loadStudentFees() {
       .select(
         `
         id,
+        currency_code,
         total_fees,
         total_paid,
         balance,
@@ -269,9 +271,9 @@ function renderFinanceFeeRows() {
     row.appendChild(studentCell);
     const cells = [
       className,
-      `USD ${Number(fee.total_fees || 0).toLocaleString()}`,
-      `USD ${Number(fee.total_paid || 0).toLocaleString()}`,
-      `USD ${Number(fee.balance || 0).toLocaleString()}`,
+      window.formatSchoolMoney(fee.total_fees, fee.currency_code),
+      window.formatSchoolMoney(fee.total_paid, fee.currency_code),
+      window.formatSchoolMoney(fee.balance, fee.currency_code),
     ];
     cells.forEach((value) => {
       const cell = document.createElement("td");
@@ -326,6 +328,7 @@ async function viewFeeDetails(feeId) {
       .select(
         `
         id,
+        currency_code,
         total_fees,
         total_paid,
         balance,
@@ -431,15 +434,15 @@ async function viewFeeDetails(feeId) {
       feeSummaryTbody.innerHTML = `
         <tr>
           <td>Total Fees</td>
-          <td>RWF ${Number(fee.total_fees || 0).toLocaleString()}</td>
+          <td>${window.formatSchoolMoney(fee.total_fees, fee.currency_code)}</td>
         </tr>
         <tr>
           <td>Total Paid</td>
-          <td>RWF ${Number(fee.total_paid || 0).toLocaleString()}</td>
+          <td>${window.formatSchoolMoney(fee.total_paid, fee.currency_code)}</td>
         </tr>
         <tr>
           <td>Outstanding Balance</td>
-          <td>RWF ${Number(fee.balance || 0).toLocaleString()}</td>
+          <td>${window.formatSchoolMoney(fee.balance, fee.currency_code)}</td>
         </tr>
         <tr>
           <td>Status</td>
@@ -474,7 +477,7 @@ async function viewFeeDetails(feeId) {
                 alloc.item_name ||
                 alloc.fee_structure_items?.fee_name ||
                 "General Fee";
-              allocationsHtml += `<li><strong>${escapeHTML(itemName)}:</strong> RWF ${Number(alloc.amount || 0).toLocaleString()}</li>`;
+              allocationsHtml += `<li><strong>${escapeHTML(itemName)}:</strong> ${window.formatSchoolMoney(alloc.amount, fee.currency_code)}</li>`;
             });
           } else {
             allocationsHtml += `<li><em>No specific item breakdown</em></li>`;
@@ -485,7 +488,7 @@ async function viewFeeDetails(feeId) {
           row.innerHTML = `
             <td>${formattedDate}</td>
             <td>
-              <div><strong>RWF ${Number(tx.amount || 0).toLocaleString()}</strong></div>
+              <div><strong>${window.formatSchoolMoney(tx.amount, fee.currency_code)}</strong></div>
               ${allocationsHtml}
             </td>
             <td>${tx.payment_method || "Cash"}</td>
@@ -644,11 +647,13 @@ async function loadFeeItemAllocations(feeId) {
 
     const { data: feeRecord, error: feeErr } = await supabaseClient
       .from("student_fees")
-      .select("fee_breakdown")
+      .select("fee_breakdown, currency_code")
       .eq("id", feeId)
       .single();
 
     if (feeErr) throw feeErr;
+
+    activePaymentCurrencyCode = feeRecord?.currency_code || null;
 
     if (
       !feeRecord ||
@@ -674,7 +679,7 @@ async function loadFeeItemAllocations(feeId) {
       itemRow.innerHTML = `
         <div class="item-info">
           <strong>${escapeHTML(itemName)}</strong><br>
-          <small>Amount: RWF ${Number(item.amount || 0).toLocaleString()}</small>
+          <small>Amount: ${window.formatSchoolMoney(item.amount, activePaymentCurrencyCode)}</small>
         </div>
         <input
           type="number"
@@ -707,7 +712,7 @@ function updateAllocationTotal() {
 
     if (val > max) {
       showToast(
-        `Amount cannot exceed the item maximum of RWF ${max.toLocaleString()}`,
+        `Amount cannot exceed the item maximum of ${window.formatSchoolMoney(max, activePaymentCurrencyCode)}`,
         "info",
       );
       input.value = max;
@@ -718,7 +723,7 @@ function updateAllocationTotal() {
   });
 
   document.getElementById("calculated-total-payment").textContent =
-    total.toLocaleString();
+    window.formatSchoolMoney(total, activePaymentCurrencyCode);
 }
 
 function updateResponseTypeTotal() {
@@ -739,7 +744,7 @@ function updateResponseTypeTotal() {
   });
 
   document.getElementById("calculated-total-payment").textContent =
-    total.toFixed(2);
+    window.formatSchoolMoney(total, activePaymentCurrencyCode);
 }
 
 document.addEventListener("DOMContentLoaded", loadStudentFees);

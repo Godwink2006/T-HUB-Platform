@@ -79,6 +79,7 @@ async function populateFilterDropdowns(authUserId, client, historyIndex) {
       .from("student_fees")
       .select(`
         id,
+        currency_code,
         total_fees,
         total_paid,
         balance,
@@ -195,7 +196,7 @@ function renderFeesTable(fees, container) {
           items.forEach((item) => {
             const itemName = item.fee_name || "Fee Item";
             const itemAmount = item.amount || 0;
-            breakdownHtml += `<li>${escapeHTML(itemName)}: <strong>$${Number(itemAmount).toFixed(2)}</strong></li>`;
+            breakdownHtml += `<li>${escapeHTML(itemName)}: <strong>${window.formatSchoolMoney(itemAmount, fee.currency_code)}</strong></li>`;
           });
           breakdownHtml += `</ul>`;
         }
@@ -212,9 +213,9 @@ function renderFeesTable(fees, container) {
         <td><strong>${yearLabel}</strong><br><span style="color: var(--text-muted); font-size: 13px;">${termName}</span></td>
         <td>${className}</td>
         <td>${breakdownHtml}</td>
-        <td class="amount-bold">$${Number(fee.total_fees).toFixed(2)}</td>
-        <td class="amount-paid">$${Number(fee.total_paid).toFixed(2)}</td>
-        <td class="amount-balance">$${Number(fee.balance).toFixed(2)}</td>
+        <td class="amount-bold">${window.formatSchoolMoney(fee.total_fees, fee.currency_code)}</td>
+        <td class="amount-paid">${window.formatSchoolMoney(fee.total_paid, fee.currency_code)}</td>
+        <td class="amount-balance">${window.formatSchoolMoney(fee.balance, fee.currency_code)}</td>
         <td><span class="badge ${statusValue}">${statusDisplay}</span></td>
       </tr>
     `;
@@ -257,8 +258,7 @@ async function loadStudentFeesAndHistory(authUserId, filters = {}, historyIndex)
     renderFeesTable(fees, feesContainer);
 
     const client = window.supabaseClient || supabaseClient;
-    const feeIds = fees.map((fee) => fee.id);
-    await loadFilteredTransactions(authUserId, feeIds, txContainer, client);
+    await loadFilteredTransactions(authUserId, fees, txContainer, client);
   } catch (error) {
     console.error("Unexpected error loading fees and payment history:", error);
     feesContainer.innerHTML = `
@@ -275,11 +275,15 @@ async function loadStudentFeesAndHistory(authUserId, filters = {}, historyIndex)
 }
 async function loadFilteredTransactions(
   authUserId,
-  feeIds,
+  fees,
   txContainer,
   client,
 ) {
   try {
+    const feeIds = fees.map((fee) => fee.id);
+    const currencyByFeeId = new Map(
+      fees.map((fee) => [String(fee.id), fee.currency_code]),
+    );
 
     const { data: transactions, error } = await client
       .from("payment_transactions")
@@ -348,7 +352,7 @@ async function loadFilteredTransactions(
         tx.payment_allocations.forEach((alloc) => {
           const name = alloc.item_name || "Fee Item";
           const amt = alloc.amount || 0;
-          allocationsHtml += `<li>${name}: <strong>$${Number(amt).toFixed(2)}</strong></li>`;
+          allocationsHtml += `<li>${escapeHTML(name)}: <strong>${window.formatSchoolMoney(amt, currencyByFeeId.get(String(tx.student_fee_id)))}</strong></li>`;
         });
         allocationsHtml += `</ul>`;
       }
@@ -359,7 +363,7 @@ async function loadFilteredTransactions(
           <td>${paymentMethod}</td>
           <td><code>${referenceNum}</code></td>
           <td>${allocationsHtml}</td>
-          <td class="amount-paid">$${Number(tx.amount).toFixed(2)}</td>
+          <td class="amount-paid">${window.formatSchoolMoney(tx.amount, currencyByFeeId.get(String(tx.student_fee_id)))}</td>
         </tr>
       `;
     });

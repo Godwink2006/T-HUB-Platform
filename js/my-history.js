@@ -57,7 +57,7 @@ async function enrichStudentHistory(transfers, client) {
   const lookups = await Promise.all([
     loadHistoryLookup(client, "grade", idsByType.get("grade"), `id, student_id, score, created_at, grades!inner(id, status, school_id, academic_year_id, term_id, class_id, subject_id, assessment_id, date_recorded, created_by, classes(id, name), subjects(id, name), terms(id, name), schools:school_id(id, school_name), academic_years(id, year_label), assessments(id, name, maximum_marks), assessment_categories(id, name, marks))`),
     loadHistoryLookup(client, "attendance", idsByType.get("attendance"), `id, status, created_at, student_id, attendance_id, attendance!inner(id, date, school_id, academic_year_id, term_id, class_id, subject_id, period_id, teacher_id, classes(name), academic_years(id, year_label), terms(id, name), subjects(name), periods(name), schools:school_id(id, school_name), profiles:teacher_id(full_name, role, teachers(staff_id)))`),
-    loadHistoryLookup(client, "fee", idsByType.get("fee"), `id, student_id, school_id, total_fees, total_paid, balance, status, fee_breakdown, created_at, class_id, academic_year_id, term_id, classes(id, name), academic_years(id, year_label), terms(id, name)`),
+    loadHistoryLookup(client, "fee", idsByType.get("fee"), `id, student_id, school_id, total_fees, total_paid, balance, currency_code, status, fee_breakdown, created_at, class_id, academic_year_id, term_id, classes(id, name), academic_years(id, year_label), terms(id, name)`),
   ]);
 
   const byType = new Map(lookups.map(({ type, rows }) => [type, new Map(rows.map((row) => [String(row.id), row]))]));
@@ -110,7 +110,7 @@ function historyLabels(type, row) {
     teacher_name: row.attendance?.profiles?.full_name,
   };
   return {
-    total_fees: row.total_fees, total_paid: row.total_paid, balance: row.balance, status: row.status,
+    total_fees: row.total_fees, total_paid: row.total_paid, balance: row.balance, currency_code: row.currency_code, status: row.status,
     fee_breakdown: row.fee_breakdown, class_name: row.classes?.name,
     term_name: row.terms?.name, academic_year: row.academic_years?.year_label,
   };
@@ -156,6 +156,19 @@ function renderTransfer(transfer) {
 function flattenHistoryRows(transfers) {
   const rows = [];
   for (const transfer of transfers) {
+    const transferRecords = Array.isArray(transfer.records)
+      ? transfer.records
+      : [];
+    const feeCurrencyById = new Map(
+      transferRecords
+        .filter((record) => normalizeRecordType(record.record_type) === "fee")
+        .map((record) => {
+          const snapshot = record.record_snapshot || {};
+          const feeId = snapshot.id || record.source_record_id;
+          return [String(feeId || ""), snapshot.currency_code];
+        })
+        .filter(([feeId, currencyCode]) => feeId && currencyCode),
+    );
     const schoolId = String(
       transfer.source_school_id || transfer.source_school_name || "",
     );
@@ -163,14 +176,18 @@ function flattenHistoryRows(transfers) {
     const transferDate = transfer.completed_at || null;
     const studentCode = transfer.source_student_code || "";
 
-    for (const record of Array.isArray(transfer.records)
-      ? transfer.records
-      : []) {
+    for (const record of transferRecords) {
       const type = normalizeRecordType(record.record_type);
-      const snapshot =
+      let snapshot =
         record.record_snapshot && typeof record.record_snapshot === "object"
           ? record.record_snapshot
           : {};
+      if (type === "payment" && !snapshot.currency_code && snapshot.student_fee_id) {
+        snapshot = {
+          ...snapshot,
+          currency_code: feeCurrencyById.get(String(snapshot.student_fee_id)) || null,
+        };
+      }
       const ctx = getHistoryContext(snapshot, schoolId, schoolName);
       rows.push({
         type,
@@ -460,16 +477,16 @@ function renderFeeTable(rows) {
   const body = rows
     .map((row) => {
       const s = row.snapshot;
-      const items = renderFeeItemsInline(s.fee_breakdown);
+      const items = renderFeeItemsInline(s.fee_breakdown, s.currency_code);
       return `<tr>
         <td>${escapeHistoryHtml(row.schoolName || "—")}</td>
         <td>${escapeHistoryHtml(row.yearName || pick(s, ["academic_year", "year_label"]) || "—")}</td>
         <td>${escapeHistoryHtml(row.className || "—")}</td>
         <td>${escapeHistoryHtml(row.termName || pick(s, ["term_name", "term"]) || "—")}</td>
         <td>${items || "—"}</td>
-        <td class="money">${escapeHistoryHtml(formatMoney(s.total_fees))}</td>
-        <td class="money">${escapeHistoryHtml(formatMoney(s.total_paid))}</td>
-        <td class="money">${escapeHistoryHtml(formatMoney(s.balance))}</td>
+        <td class="money">${escapeHistoryHtml(formatMoney(s.total_fees, s.currency_code))}</td>
+        <td class="money">${escapeHistoryHtml(formatMoney(s.total_paid, s.currency_code))}</td>
+        <td class="money">${escapeHistoryHtml(formatMoney(s.balance, s.currency_code))}</td>
         <td><span class="status-pill ${statusClass(s.status)}">${escapeHistoryHtml(s.status || "—")}</span></td>
       </tr>`;
     })
@@ -494,7 +511,7 @@ function renderPaymentTable(rows) {
         <td>${escapeHistoryHtml(s.payment_method || "—")}</td>
         <td>${s.reference_number ? `<code>${escapeHistoryHtml(s.reference_number)}</code>` : "—"}</td>
         <td>${escapeHistoryHtml(s.notes || "—")}</td>
-        <td class="money">${escapeHistoryHtml(formatMoney(s.amount))}</td>
+        <td class="money">${escapeHistoryHtml(formatMoney(s.amount, s.currency_code))}</td>
       </tr>`;
     })
     .join("");
@@ -529,7 +546,7 @@ function renderGenericTable(rows) {
   return `<table class="history-table"><tbody>${body}</tbody></table>`;
 }
 
-function renderFeeItemsInline(value) {
+function renderFeeItemsInline(value, currencyCode) {
   let items = value;
   if (typeof value === "string") {
     try {
@@ -543,7 +560,7 @@ function renderFeeItemsInline(value) {
     .map((item) => {
       if (!item || typeof item !== "object") return "";
       const name = item.fee_name || item.name || "Fee item";
-      return `<li>${escapeHistoryHtml(name)}: <strong>${escapeHistoryHtml(formatMoney(item.amount))}</strong></li>`;
+      return `<li>${escapeHistoryHtml(name)}: <strong>${escapeHistoryHtml(formatMoney(item.amount, currencyCode))}</strong></li>`;
     })
     .join("")}</ul>`;
 }
@@ -641,13 +658,8 @@ function formatHistoryValue(key, value) {
   return String(value);
 }
 
-function formatMoney(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return "—";
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
+function formatMoney(value, currencyCode) {
+  return window.formatSchoolMoney(value, currencyCode);
 }
 
 function formatHistoryDate(value, options = {}) {

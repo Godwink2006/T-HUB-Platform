@@ -1,3 +1,22 @@
+window.formatSchoolMoney = function (amount, currencyCode) {
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount)) return "—";
+
+  const normalizedCode = String(currencyCode || "").trim().toUpperCase();
+  const currencyLabel =
+    normalizedCode === "LRD" || normalizedCode === "LD"
+      ? "LD"
+      : normalizedCode === "USD"
+        ? "USD"
+        : "Currency not set";
+  const formattedAmount = numericAmount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return `${currencyLabel} ${formattedAmount}`;
+};
+
 function renderNavigation(userRole) {
   const isAdmin = userRole === "admin";
   const isAccountant = userRole === "accountant";

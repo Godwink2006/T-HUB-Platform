@@ -208,7 +208,7 @@ async function loadParentRecordData(
       client
         .from("student_fees")
         .select(
-          "id, student_id, school_id, total_fees, total_paid, balance, status, fee_breakdown, created_at, class_id, academic_year_id, term_id, classes(id,name), academic_years(id,year_label), terms(id,name)",
+          "id, student_id, school_id, total_fees, total_paid, balance, currency_code, status, fee_breakdown, created_at, class_id, academic_year_id, term_id, classes(id,name), academic_years(id,year_label), terms(id,name)",
         )
         .eq("student_id", studentId)
         .order("created_at", { ascending: false }),
@@ -761,6 +761,9 @@ function parentStatusClass(status) {
 
 function renderFeesAndPayments(fees) {
   const feeIds = new Set(fees.map((fee) => fee.id));
+  const feeCurrencyById = new Map(
+    fees.map((fee) => [String(fee.id), fee.currency_code]),
+  );
   const payments = parentRecordState.payments.filter((payment) =>
     feeIds.has(payment.student_fee_id),
   );
@@ -768,7 +771,7 @@ function renderFeesAndPayments(fees) {
     .map((fee) => {
       const breakdown = parseBreakdown(fee.fee_breakdown);
       const status = fee.status || "Unpaid";
-      return `<tr><td>${parentEscape(getParentRecordContext(fee, "fees").schoolName || "-")}</td><td>${parentEscape(fee.academic_years?.year_label || "-")}</td><td>${parentEscape(fee.classes?.name || "-")}</td><td>${parentEscape(fee.terms?.name || "-")}</td><td>${breakdown.length ? `<ul>${breakdown.map((item) => `<li>${parentEscape(item.fee_name || "Fee item")}: ${parentMoney(item.amount)}</li>`).join("")}</ul>` : "-"}</td><td class="money">${parentMoney(fee.total_fees)}</td><td class="money">${parentMoney(fee.total_paid)}</td><td class="money">${parentMoney(fee.balance)}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
+      return `<tr><td>${parentEscape(getParentRecordContext(fee, "fees").schoolName || "-")}</td><td>${parentEscape(fee.academic_years?.year_label || "-")}</td><td>${parentEscape(fee.classes?.name || "-")}</td><td>${parentEscape(fee.terms?.name || "-")}</td><td>${breakdown.length ? `<ul>${breakdown.map((item) => `<li>${parentEscape(item.fee_name || "Fee item")}: ${parentMoney(item.amount, fee.currency_code)}</li>`).join("")}</ul>` : "-"}</td><td class="money">${parentMoney(fee.total_fees, fee.currency_code)}</td><td class="money">${parentMoney(fee.total_paid, fee.currency_code)}</td><td class="money">${parentMoney(fee.balance, fee.currency_code)}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
     })
     .join("");
   const paymentRows = payments
@@ -780,12 +783,12 @@ function renderFeesAndPayments(fees) {
         ? `<ul>${allocations
             .map(
               (alloc) =>
-                `<li>${parentEscape(alloc.item_name || "Fee item")}: <strong>${parentMoney(alloc.amount)}</strong></li>`,
+                `<li>${parentEscape(alloc.item_name || "Fee item")}: <strong>${parentMoney(alloc.amount, feeCurrencyById.get(String(payment.student_fee_id)))}</strong></li>`,
             )
             .join("")}</ul>`
         : '<span style="color: #60708a; font-style: italic;">General payment</span>';
 
-      return `<tr><td>${parentDate(payment.created_at)}</td><td>${parentEscape(payment.payment_method || "Cash / Other")}</td><td>${payment.reference_number ? `<code>${parentEscape(payment.reference_number)}</code>` : "-"}</td><td>${allocationsHtml}</td><td>${parentEscape(payment.notes || "-")}</td><td class="money">${parentMoney(payment.amount)}</td></tr>`;
+      return `<tr><td>${parentDate(payment.created_at)}</td><td>${parentEscape(payment.payment_method || "Cash / Other")}</td><td>${payment.reference_number ? `<code>${parentEscape(payment.reference_number)}</code>` : "-"}</td><td>${allocationsHtml}</td><td>${parentEscape(payment.notes || "-")}</td><td class="money">${parentMoney(payment.amount, feeCurrencyById.get(String(payment.student_fee_id)))}</td></tr>`;
     })
     .join("");
   return `<h3>Fee balances</h3><div class="parent-table-container"><table><thead><tr><th>School</th><th>Academic year</th><th>Class</th><th>Semester</th><th>Fee items</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead><tbody>${feeRows}</tbody></table></div><h3>Payment history</h3>${payments.length ? `<div class="parent-table-container"><table><thead><tr><th>Date</th><th>Method</th><th>Reference</th><th>Allocated items</th><th>Note</th><th>Amount</th></tr></thead><tbody>${paymentRows}</tbody></table></div>` : '<p class="parent-empty">No payments are recorded for the selected fees.</p>'}`;
@@ -1018,14 +1021,8 @@ function parseBreakdown(value) {
   }
 }
 
-function parentMoney(value) {
-  const amount = Number(value);
-  return Number.isFinite(amount)
-    ? new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-    : "-";
+function parentMoney(value, currencyCode) {
+  return window.formatSchoolMoney(value, currencyCode);
 }
 
 function parentDate(value) {

@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
         client
           .from("fee_structures")
           .select(
-            "id, class_id, academic_year_id, term_id, total_amount, status",
+            "id, class_id, academic_year_id, term_id, total_amount, currency_code, status",
           )
           .eq("school_id", profile.school_id)
           .ilike("status", "active"),
@@ -388,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
         feeSelect.innerHTML = `<option value="">Select fee structure</option>${fees
           .map(
             (fee) =>
-              `<option value="${escapeHtml(fee.id)}">Total: ${escapeHtml(fee.total_amount)}</option>`,
+              `<option value="${escapeHtml(fee.id)}">Total: ${escapeHtml(window.formatSchoolMoney(fee.total_amount, fee.currency_code))}</option>`,
           )
           .join("")}`;
       };
@@ -752,7 +752,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
           .select(
-            "id, total_amount, class_id, term_id, terms(name), classes(name)",
+            "id, total_amount, currency_code, class_id, term_id, terms(name), classes(name)",
           )
           .eq("status", "Active")
           .eq("school_id", activeSchoolId)
@@ -836,7 +836,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetFeeSelect.innerHTML = matchingFees
               .map(
                 (f) =>
-                  `<option value="${escapeHtml(f.id)}">[${escapeHtml(f.classes?.name || "Class")}] ${escapeHtml(f.terms?.name ?? "Term")} - Total: $${Number(f.total_amount) || 0}</option>`,
+                  `<option value="${escapeHtml(f.id)}">[${escapeHtml(f.classes?.name || "Class")}] ${escapeHtml(f.terms?.name ?? "Term")} - Total: ${window.formatSchoolMoney(f.total_amount, f.currency_code)}</option>`,
               )
               .join("");
             targetFeeSelect.disabled = false;
@@ -1248,7 +1248,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const { data: feeStructures, error: feesError } = await client
           .from("fee_structures")
           .select(
-            "id, total_amount, class_id, academic_year_id, term_id, classes(name), terms(name)",
+            "id, total_amount, currency_code, class_id, academic_year_id, term_id, classes(name), terms(name)",
           )
           .eq("school_id", schoolId)
           .ilike("status", "active")
@@ -1385,7 +1385,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <option value="${escapeHtml(fee.id)}">
               ${escapeHtml(fee.classes?.name || "Grade 10")}
               — ${escapeHtml(fee.terms?.name || "First term")}
-              — Total: $${Number(fee.total_amount) || 0}
+              — Total: ${window.formatSchoolMoney(fee.total_amount, fee.currency_code)}
             </option>
           `;
             feeSelect.disabled = false;
@@ -1651,7 +1651,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
           .select(
-            "id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)",
+            "id, total_amount, currency_code, class_id, academic_year_id, term_id, school_id, status, classes(name)",
           )
           .eq("school_id", activeSchoolId)
           .eq("academic_year_id", activeYear.id)
@@ -1732,7 +1732,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetFeeSelect.innerHTML = `<option value="">-- Select fee structure --</option>${matchingFees
               .map(
                 (fee) =>
-                  `<option value="${escapeHtml(fee.id)}">[${escapeHtml(fee.classes?.name ?? "Class")}] Total: $${Number(fee.total_amount) || 0}</option>`,
+                  `<option value="${escapeHtml(fee.id)}">[${escapeHtml(fee.classes?.name ?? "Class")}] Total: ${window.formatSchoolMoney(fee.total_amount, fee.currency_code)}</option>`,
               )
               .join("")}`;
             targetFeeSelect.disabled = false;
@@ -1944,7 +1944,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const { data, error: feeErr } = await client
             .from("fee_structures")
             .select(
-              "id, total_amount, class_id, academic_year_id, term_id, classes(name)",
+              "id, total_amount, currency_code, class_id, academic_year_id, term_id, classes(name)",
             )
             .eq("school_id", schoolId)
             .in("term_id", firstSemesterTermIds)
@@ -2033,7 +2033,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetFeeSelect.innerHTML = matchingFees
               .map(
                 (f) =>
-                  `<option value="${escapeHtml(f.id)}" data-class="${escapeHtml(f.class_id)}" data-amount="${Number(f.total_amount) || 0}">[${escapeHtml(f.classes?.name ?? "Class")}] Total: $${Number(f.total_amount) || 0}</option>`,
+                  `<option value="${escapeHtml(f.id)}" data-class="${escapeHtml(f.class_id)}" data-amount="${Number(f.total_amount) || 0}">[${escapeHtml(f.classes?.name ?? "Class")}] Total: ${window.formatSchoolMoney(f.total_amount, f.currency_code)}</option>`,
               )
               .join("");
             targetFeeSelect.disabled = false;
@@ -2410,7 +2410,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const { data: feesData, error: feeErr } = await client
           .from("fee_structures")
           .select(
-            "id, total_amount, class_id, academic_year_id, term_id, school_id, status, classes(name)",
+            "id, total_amount, currency_code, class_id, academic_year_id, term_id, school_id, status, classes(name)",
           )
           .eq("school_id", schoolId)
           .eq("class_id", classId)
@@ -2427,7 +2427,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <label for="feeStructureSelect">Select Applicable Fee Structure:</label>
         <select id="feeStructureSelect" class="form-control">
           <option value="">-- Select Fee Structure --</option>
-          ${feesData.map((f) => `<option value="${escapeHtml(f.id)}">[${escapeHtml(f.classes?.name ?? "Class")}] Total: $${Number(f.total_amount) || 0}</option>`).join("")}
+          ${feesData.map((f) => `<option value="${escapeHtml(f.id)}">[${escapeHtml(f.classes?.name ?? "Class")}] Total: ${window.formatSchoolMoney(f.total_amount, f.currency_code)}</option>`).join("")}
         </select>
       </div>
     `;

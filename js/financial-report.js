@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           total_fees,
           total_paid,
           balance,
+          currency_code,
           status,
           student_id,
           class_id,
@@ -140,9 +141,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!fees || fees.length === 0) {
       summaryBody.innerHTML = `
         <tr>
-          <td>${ReportsCommon.formatCurrency(0)}</td>
-          <td>${ReportsCommon.formatCurrency(0)}</td>
-          <td>${ReportsCommon.formatCurrency(0)}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
           <td>0</td>
           <td>0</td>
           <td>0</td>
@@ -159,33 +160,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    let expectedRevenue = 0;
-    let collectedRevenue = 0;
-    let outstandingBalance = 0;
-    let paidCount = 0;
-    let partialCount = 0;
-    let unpaidCount = 0;
+    const totalsByCurrency = new Map();
 
     fees.forEach((f) => {
-      expectedRevenue += Number(f.total_fees) || 0;
-      collectedRevenue += Number(f.total_paid) || 0;
-      outstandingBalance += Number(f.balance) || 0;
+      const currencyCode = String(f.currency_code || "").trim().toUpperCase();
+      if (!totalsByCurrency.has(currencyCode)) {
+        totalsByCurrency.set(currencyCode, {
+          expectedRevenue: 0,
+          collectedRevenue: 0,
+          outstandingBalance: 0,
+          paidCount: 0,
+          partialCount: 0,
+          unpaidCount: 0,
+        });
+      }
+      const totals = totalsByCurrency.get(currencyCode);
+      totals.expectedRevenue += Number(f.total_fees) || 0;
+      totals.collectedRevenue += Number(f.total_paid) || 0;
+      totals.outstandingBalance += Number(f.balance) || 0;
 
       const st = (f.status || "").toLowerCase();
-      if (st === "paid") paidCount++;
-      else if (st === "partial") partialCount++;
-      else unpaidCount++;
+      if (st === "paid") totals.paidCount++;
+      else if (st === "partial") totals.partialCount++;
+      else totals.unpaidCount++;
     });
 
-    summaryBody.innerHTML = `
+    summaryBody.innerHTML = [...totalsByCurrency.entries()]
+      .map(([currencyCode, totals], index) => `
       <tr>
-        <td><strong>${ReportsCommon.formatCurrency(expectedRevenue)}</strong></td>
-        <td><strong style="color: #16a34a;">${ReportsCommon.formatCurrency(collectedRevenue)}</strong></td>
-        <td><strong style="color: #dc2626;">${ReportsCommon.formatCurrency(outstandingBalance)}</strong></td>
-        <td><span class="status-badge paid">${ReportsCommon.formatNumber(paidCount)}</span></td>
-        <td><span class="status-badge partial">${ReportsCommon.formatNumber(partialCount)}</span></td>
-        <td><span class="status-badge unpaid">${ReportsCommon.formatNumber(unpaidCount)}</span></td>
-        <td>
+        <td><strong>${ReportsCommon.formatCurrency(totals.expectedRevenue, currencyCode)}</strong></td>
+        <td><strong style="color: #16a34a;">${ReportsCommon.formatCurrency(totals.collectedRevenue, currencyCode)}</strong></td>
+        <td><strong style="color: #dc2626;">${ReportsCommon.formatCurrency(totals.outstandingBalance, currencyCode)}</strong></td>
+        <td><span class="status-badge paid">${ReportsCommon.formatNumber(totals.paidCount)}</span></td>
+        <td><span class="status-badge partial">${ReportsCommon.formatNumber(totals.partialCount)}</span></td>
+        <td><span class="status-badge unpaid">${ReportsCommon.formatNumber(totals.unpaidCount)}</span></td>
+        <td>${index === 0 ? `
           <button class="financials-record-actions-btn btn-print" title="Print Report" onclick="ReportsCommon.printReport()">
             <i class="fa-solid fa-print"></i> Print
           </button>
@@ -195,9 +204,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           <button class="financials-record-actions-btn btn-excel" title="Export Excel" onclick="window.exportFinancialReport()">
             <i class="fa-solid fa-file-excel"></i> Excel
           </button>
-        </td>
-      </tr>
-    `;
+        ` : ""}</td>
+      </tr>`)
+      .join("");
   }
 
   function renderDetails(fees) {
@@ -218,9 +227,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const studentName = item.studentName || "Unknown Student";
         const className = item.classes?.name || "N/A";
         const termName = item.terms?.name || "N/A";
-        const totalFee = ReportsCommon.formatCurrency(item.total_fees);
-        const totalPaid = ReportsCommon.formatCurrency(item.total_paid);
-        const balance = ReportsCommon.formatCurrency(item.balance);
+        const totalFee = ReportsCommon.formatCurrency(item.total_fees, item.currency_code);
+        const totalPaid = ReportsCommon.formatCurrency(item.total_paid, item.currency_code);
+        const balance = ReportsCommon.formatCurrency(item.balance, item.currency_code);
         const status = (item.status || "unpaid").toLowerCase();
 
         return `
@@ -247,9 +256,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Class",
       "Term",
       "Academic Year",
-      "Expected Fee (RWF)",
-      "Amount Paid (RWF)",
-      "Balance (RWF)",
+      "Currency",
+      "Expected Fee",
+      "Amount Paid",
+      "Balance",
       "Status",
     ];
 
@@ -259,6 +269,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       f.classes?.name || "N/A",
       f.terms?.name || "N/A",
       f.academic_years?.year_label || "N/A",
+      f.currency_code || "",
       f.total_fees || 0,
       f.total_paid || 0,
       f.balance || 0,
