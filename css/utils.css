@@ -37,8 +37,6 @@ tbody tr:hover {
 .sidebar-school-name {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.09);
-  border-left: 4px solid #fbbf24;
-  border-radius: 7px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   font-size: 15px;
   font-weight: 750;
@@ -171,7 +169,8 @@ tbody tr:hover {
     padding-top: 70px;
   }
 
-  .menu li a {
+  .menu li a,
+  .sidebar-school-name {
     border-radius: 10px;
   }
 }
