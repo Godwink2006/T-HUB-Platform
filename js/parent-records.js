@@ -164,30 +164,55 @@ async function loadParentRecordData(
     parentRecordState.timetableTeachers = new Map();
     if (!student?.class_id || !student?.school_id) return;
 
-    const { data: timetable, error: timetableError } = await client
+    const { data: timetables, error: timetableError } = await client
       .from("timetables")
       .select(
-        "id, status, academic_year_id, academic_years:academic_year_id(year_label)",
+        "id, status, academic_year_id, created_at, academic_years:academic_year_id(year_label)",
       )
       .eq("class_id", student.class_id)
       .eq("school_id", student.school_id)
       .ilike("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("created_at", { ascending: false });
     if (timetableError) throw timetableError;
-    if (!timetable) return;
+    if (!timetables?.length) return;
 
-    const { data: lessons, error: lessonsError } = await client
+    const { data: allLessons, error: lessonsError } = await client
       .from("timetable_lessons")
       .select(
-        "id, day_of_week, is_break, period_id, subject_id, teacher_id, periods:period_id(id,name,start_time,end_time), subjects:subject_id(name)",
+        "id, timetable_id, day_of_week, is_break, period_id, subject_id, teacher_id, periods:period_id(id,name,start_time,end_time), subjects:subject_id(name)",
       )
-      .eq("timetable_id", timetable.id);
+      .in("timetable_id", timetables.map((item) => item.id));
     if (lessonsError) throw lessonsError;
 
+    // More than one active timetable can exist for a class. Prefer the one
+    // with the most complete placed schedule; ties retain newest-first order.
+    const completeness = (timetable) => {
+      const lessons = (allLessons || []).filter(
+        (lesson) => lesson.timetable_id === timetable.id,
+      );
+      const placed = lessons.filter(
+        (lesson) => lesson.period_id && lesson.periods?.id,
+      );
+      const periodCount = new Set(placed.map((lesson) => lesson.period_id)).size;
+      const subjectCount = placed.filter((lesson) => lesson.subject_id).length;
+      return [periodCount, placed.length, subjectCount];
+    };
+    const timetable = timetables.reduce((best, candidate) => {
+      const candidateScore = completeness(candidate);
+      const bestScore = completeness(best);
+      for (let index = 0; index < candidateScore.length; index += 1) {
+        if (candidateScore[index] !== bestScore[index]) {
+          return candidateScore[index] > bestScore[index] ? candidate : best;
+        }
+      }
+      return best;
+    });
+    const lessons = (allLessons || []).filter(
+      (lesson) => lesson.timetable_id === timetable.id,
+    );
+
     parentRecordState.timetable = timetable;
-    parentRecordState.timetableLessons = lessons || [];
+    parentRecordState.timetableLessons = lessons;
 
     const { data: teachers, error: teachersError } = await client.rpc(
       "parent_portal_timetable_teacher_names",
