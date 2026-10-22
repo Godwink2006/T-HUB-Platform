@@ -35,13 +35,18 @@ tbody tr:hover {
 }
 
 .sidebar-school-name {
-  color: #cbd5e1;
-  font-size: 13px;
-  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.09);
+  border-left: 4px solid #fbbf24;
+  border-radius: 7px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  font-size: 15px;
+  font-weight: 750;
   line-height: 1.4;
-  margin: 8px 16px 18px;
+  margin: 12px 14px 20px;
+  padding: 11px 12px;
   overflow-wrap: anywhere;
-  text-align: center;
+  text-align: left;
 }
 
 .sidebar-school-name[hidden] {
