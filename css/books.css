@@ -4,6 +4,69 @@
   padding: 10px;
 }
 
+.books-page-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  max-width: 900px;
+  min-height: 200px;
+  margin: 48px auto;
+  padding: 2rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #1e40af;
+  text-align: center;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.books-page-notice[hidden] {
+  display: none;
+}
+
+.books-page-notice[data-type="error"] {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.books-page-notice[data-type="graduated"] {
+  min-height: 260px;
+  border-width: 2px;
+}
+
+.books-notice-content {
+  max-width: 700px;
+}
+
+.books-notice-content p {
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.books-notice-content button {
+  margin-top: 1rem;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.books-pagination-error {
+  width: 100%;
+  color: #991b1b;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
 .catalog-header {
   display: flex;
   justify-content: space-between;

@@ -124,7 +124,12 @@
       </aside>
 
       <main class="students-main-content">
-        <div class="catalog-container">
+        <div id="booksPageNotice" class="books-page-notice" role="status" aria-live="polite">
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          <span>Checking account access…</span>
+        </div>
+
+        <div class="catalog-container" id="booksCatalog" hidden>
 
           <div class="catalog-header">
             <h2>Library Catalog</h2>

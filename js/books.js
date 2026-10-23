@@ -3,6 +3,134 @@ const BOOKS_PAGE_SIZE = 30;
 let booksOffset = 0;
 let booksHasMore = false;
 let booksLoading = false;
+let booksAccessLoading = false;
+let booksGraduatedAccess = false;
+
+function booksErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${code} ${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (status === 401 || code === "pgrst301" || /invalid jwt|session.*expired|refresh token/.test(diagnostic)) {
+    return "Your session has expired. Sign in again, then reopen Books.";
+  }
+  if (/school.{0,30}inactive|inactive.{0,30}school/.test(diagnostic)) {
+    return "This school is inactive. Books are unavailable until the school is reactivated.";
+  }
+  if (code === "42501" || status === 403 || /row-level security|permission denied|not authorized|access denied|insufficient privilege/.test(diagnostic)) {
+    return action === "history"
+      ? "You do not have permission to view this borrowing history. Contact your school administrator if you need access."
+      : "You do not have permission to view the library catalog. Contact your school administrator for help.";
+  }
+  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `${action === "history" ? "Borrowing history" : "Books"} could not be loaded because the connection failed. Check your internet connection and try again.`;
+  }
+  if (code === "pgrst116") return "The account or book information could not be found. Refresh the page and try again.";
+  return action === "history"
+    ? "Your borrowing history could not be loaded. Please try again."
+    : "The library catalog could not be loaded. Please try again.";
+}
+
+function showBooksNotice(message, type = "info", onRetry = null) {
+  const notice = document.getElementById("booksPageNotice");
+  if (!notice) return;
+  notice.replaceChildren();
+  notice.dataset.type = type;
+
+  const icon = document.createElement("i");
+  icon.className = type === "info"
+    ? "fa-solid fa-spinner fa-spin"
+    : type === "graduated"
+      ? "fa-solid fa-graduation-cap"
+      : "fa-solid fa-triangle-exclamation";
+  icon.setAttribute("aria-hidden", "true");
+
+  const content = document.createElement("div");
+  content.className = "books-notice-content";
+  const text = document.createElement("span");
+  text.textContent = message;
+  content.appendChild(text);
+
+  if (onRetry) {
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.textContent = "Try again";
+    retry.addEventListener("click", onRetry, { once: true });
+    content.appendChild(retry);
+  }
+
+  notice.append(icon, content);
+  notice.hidden = false;
+}
+
+function hideBooksNotice() {
+  const notice = document.getElementById("booksPageNotice");
+  if (notice) {
+    notice.hidden = true;
+    notice.replaceChildren();
+    delete notice.dataset.type;
+  }
+}
+
+async function initializeBooksPage() {
+  if (booksAccessLoading) return;
+  booksAccessLoading = true;
+  booksGraduatedAccess = false;
+  const catalog = document.getElementById("booksCatalog");
+  if (catalog) catalog.hidden = true;
+  showBooksNotice("Checking account access…", "info");
+
+  try {
+    if (!window.supabaseClient) throw new Error("The database client is unavailable.");
+    const { data: authData, error: authError } = await window.supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    if (!authData?.user?.id) {
+      const error = new Error("Your session has expired.");
+      error.status = 401;
+      throw error;
+    }
+
+    const { data: profile, error: profileError } = await window.supabaseClient
+      .from("profiles")
+      .select("role, school_id")
+      .eq("id", authData.user.id)
+      .single();
+    if (profileError) throw profileError;
+
+    if (String(profile?.role || "").trim().toLowerCase() === "student") {
+      let enrollmentQuery = window.supabaseClient
+        .from("student_enrollments")
+        .select("enrollment_status")
+        .eq("student_id", authData.user.id);
+      if (profile.school_id) enrollmentQuery = enrollmentQuery.eq("school_id", profile.school_id);
+
+      const { data: enrollments, error: enrollmentError } = await enrollmentQuery;
+      if (enrollmentError) throw enrollmentError;
+      booksGraduatedAccess = (enrollments || []).some((enrollment) =>
+        ["graduated", "transferred", "transfered"].includes(
+          String(enrollment.enrollment_status || "").trim().toLowerCase(),
+        ),
+      );
+    }
+
+    if (booksGraduatedAccess) {
+      showBooksNotice(
+        "Books are unavailable because your enrollment at this school is marked as graduated or transferred. Contact your school administrator if you think this is a mistake.",
+        "graduated",
+      );
+      return;
+    }
+
+    hideBooksNotice();
+    if (catalog) catalog.hidden = false;
+    await loadBookCatalog();
+  } catch (error) {
+    console.error("Could not determine Books page access:", error);
+    showBooksNotice(booksErrorMessage(error), "error", initializeBooksPage);
+  } finally {
+    booksAccessLoading = false;
+  }
+}
 
 async function loadBookCatalog(options = {}) {
   const gridContainer = document.getElementById("bookCardGrid");
@@ -32,6 +160,7 @@ async function loadBookCatalog(options = {}) {
     nextButton.disabled = true;
     nextButton.textContent = "Loading...";
   }
+  hideBooksNotice();
 
   try {
     const { data: page, error } = await window.supabaseClient
@@ -80,11 +209,9 @@ async function loadBookCatalog(options = {}) {
     renderBookCards(filterCatalogBooks(query));
   } catch (err) {
     console.error("Error loading catalog:", err);
-    if (typeof showToast === "function") {
-      showToast(
-        append ? "Could not load more books." : "Failed to load book catalog.",
-        "error",
-      );
+    showBooksNotice(booksErrorMessage(err), "error", () => loadBookCatalog({ append }));
+    if (!append) {
+      gridContainer.replaceChildren();
     }
   } finally {
     booksLoading = false;
@@ -190,10 +317,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("nextBooksPage")
     ?.addEventListener("click", () => loadBookCatalog({ append: true }));
-  loadBookCatalog();
+  initializeBooksPage();
 });
 
 async function openStudentBookHistoryModal(bookId) {
+  if (booksGraduatedAccess) {
+    showToast("Borrowing history is unavailable because your enrollment is marked as graduated or transferred.", "error");
+    return;
+  }
   const studentModal = document.getElementById("studentHistoryModal");
   if (!studentModal) {
     if (typeof showToast === "function") {
@@ -287,10 +418,16 @@ async function openStudentBookHistoryModal(bookId) {
   } catch (err) {
     console.error("Error loading student history:", err);
     if (historyContainer) {
-      historyContainer.innerHTML = `<p style="text-align: center; color: #dc2626; padding: 2rem;">Failed to load your borrowing history.</p>`;
-    }
-    if (typeof showToast === "function") {
-      showToast("Failed to load history.", "error");
+      historyContainer.replaceChildren();
+      const message = document.createElement("p");
+      message.style.cssText = "text-align:center;color:#dc2626;padding:2rem;";
+      message.textContent = booksErrorMessage(err, "history");
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "book-view-details-btn";
+      retry.textContent = "Try again";
+      retry.addEventListener("click", () => openStudentBookHistoryModal(bookId), { once: true });
+      historyContainer.append(message, retry);
     }
   }
 }
