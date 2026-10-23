@@ -7,6 +7,7 @@ const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
 let currentProfileData = null;
+let myProfileDetailsReadOnly = false;
 
 function getMyProfileErrorMessage(error, context = "profile", action = "update") {
   const code = String(error?.code || "").toLowerCase();
@@ -173,6 +174,13 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
 
 async function handleUpdateProfile(event) {
   if (event) event.preventDefault();
+  if (myProfileDetailsReadOnly) {
+      showToast(
+        "Graduated or transferred students cannot edit profile information.",
+        "error",
+      );
+    return;
+  }
 
   let user;
   try {
@@ -501,23 +509,62 @@ document.addEventListener("DOMContentLoaded", async function () {
       return;
     }
 
-    const { data: enrollment, error: dbError } = await supabaseClient
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role, school_id")
+      .eq("id", user.id)
+      .single();
+    if (profileError) throw profileError;
+
+    if (String(profile?.role || "").trim().toLowerCase() !== "student") {
+      saveBtn.style.display = "flex";
+      return;
+    }
+
+    let enrollmentQuery = supabaseClient
       .from("student_enrollments")
-      .select("school_id, enrollment_status")
+      .select("enrollment_status")
       .eq("student_id", user.id);
+    if (profile.school_id) {
+      enrollmentQuery = enrollmentQuery.eq("school_id", profile.school_id);
+    }
+    const { data: enrollment, error: dbError } = await enrollmentQuery;
 
     if (dbError) {
       showMyProfileError(dbError, "enrollment information", "load");
       return;
     }
 
-    const isRestrictedType = (enrollment || []).some(
-      (record) =>
-        record.enrollment_status === "Graduated" ||
-        record.enrollment_status === "Transfered",
+    const isRestrictedType = (enrollment || []).some((record) =>
+      ["graduated", "transferred", "transfered"].includes(
+        String(record.enrollment_status || "").trim().toLowerCase(),
+      ),
     );
 
-    if (!isRestrictedType) {
+    if (isRestrictedType) {
+      myProfileDetailsReadOnly = true;
+      const profileSection = document.getElementById("profileInformationSection");
+      profileSection?.classList.add("graduated-profile-readonly");
+
+      const notice = document.getElementById("profileInformationNotice");
+      if (notice) {
+        notice.textContent =
+          "Your enrollment is marked as graduated or transferred. Profile details are read-only; you can still change your password below.";
+        notice.hidden = false;
+      }
+
+      ["fullName", "emailAddress", "phoneNumber", "myProfilePhoto"].forEach((id) => {
+        const field = document.getElementById(id);
+        if (field) field.disabled = true;
+      });
+      saveBtn.style.display = "none";
+      document
+        .getElementById("resetProfileInfo")
+        ?.style.setProperty("display", "none", "important");
+      document
+        .getElementById("profilePhotoActions")
+        ?.style.setProperty("display", "none", "important");
+    } else {
       saveBtn.style.display = "flex";
     }
   } catch (error) {

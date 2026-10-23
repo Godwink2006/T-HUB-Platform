@@ -567,9 +567,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   else disableFormInputs(form);
 
   if (access.isGraduatedStudent) {
+    const page = document.getElementById("schoolInformationPage");
+    page?.classList.add("graduated-school-access");
+    if (form) {
+      form.style.display = "none";
+      form.classList.add("auth-ready");
+    }
+    if (loader) loader.style.display = "none";
     showSchoolInformationMessage(
-      "Your enrollment is marked as graduated or transferred. You can view school information, but editing controls are unavailable.",
+      "School Information is unavailable because your enrollment is marked as graduated or transferred. Contact your school administrator if you think this is a mistake.",
     );
+    return;
   }
 
   await loadSchoolProfile();

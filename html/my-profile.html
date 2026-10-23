@@ -52,8 +52,14 @@
       </button>
 
       <form id="myProfileForm" class="my-profiles-form">
-        <div class="form-section">
+        <div class="form-section" id="profileInformationSection">
           <h3>Update Profile Information</h3>
+
+          <p
+            id="profileInformationNotice"
+            class="profile-information-notice"
+            hidden
+          ></p>
 
           <div class="avatar-upload-group">
             <div class="avatar-edit-container">
@@ -77,7 +83,7 @@
                   "
                 />
 
-                <div class="avatar-upload-actions">
+                <div class="avatar-upload-actions" id="profilePhotoActions">
                   <label for="myProfilePhoto" class="btn-secondary upload-btn">
                     <i class="bx bx-upload"></i> Change Photo
                   </label>
@@ -128,7 +134,13 @@
           </div>
 
           <div class="form-actions">
-            <button type="reset" class="cancel-btn">Reset</button>
+            <button
+              type="reset"
+              class="cancel-btn"
+              id="resetProfileInfo"
+            >
+              Reset
+            </button>
 
             <form
               id="profileForm"
