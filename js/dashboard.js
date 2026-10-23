@@ -150,6 +150,11 @@ if (saveAnnouncementBtn) {
         error: authError,
       } = await window.supabaseClient.auth.getUser();
       if (authError) throw authError;
+      if (!user) {
+        const error = new Error("Sign in required");
+        error.dashboardMessage = "Your sign-in session has ended. Sign in again to publish announcements.";
+        throw error;
+      }
 
       const { data: profile, error: profileError } = await window.supabaseClient
         .from("profiles")
@@ -157,8 +162,9 @@ if (saveAnnouncementBtn) {
         .eq("id", user.id)
         .single();
 
-      if (profileError || !profile)
-        throw new Error("Could not determine user school.");
+      if (profileError || !profile) {
+        throw profileError || new Error("Could not determine user school.");
+      }
 
       const schoolId = profile.school_id;
 
@@ -202,7 +208,11 @@ if (saveAnnouncementBtn) {
     } catch (err) {
       console.error("Error publishing announcement:", err);
       if (typeof showToast === "function") {
-        showToast(err.message || "Failed to publish announcement.", "error");
+        showToast(
+          err.dashboardMessage ||
+            getDashboardErrorMessage(err, "publish this announcement"),
+          "error",
+        );
       }
     } finally {
       saveAnnouncementBtn.disabled = false;
@@ -226,18 +236,161 @@ function finishDashboardAccessCheck() {
   document.getElementById("dashboardAuthLoading")?.remove();
 }
 
-function showDashboardAccessCheckError() {
+function getDashboardErrorMessage(error, action = "load this dashboard information") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""}`.toLowerCase();
+
+  if (
+    code === "42501" ||
+    status === 401 ||
+    status === 403 ||
+    /row-level security|permission denied|not allowed|insufficient privilege/.test(
+      diagnostic,
+    )
+  ) {
+    return `Your account cannot ${action}. Check that your account is active and belongs to this school, or ask a school administrator for help.`;
+  }
+  if (
+    /failed to fetch|network|fetch error|connection|timeout|timed out/.test(
+      diagnostic,
+    )
+  ) {
+    return `We couldn’t connect to the school database to ${action}. Check your internet connection and try again.`;
+  }
+  if (code === "PGRST116") {
+    return "Your school account profile could not be found. Ask a school administrator to check your account.";
+  }
+  if (code === "22023") {
+    return "That date range is not valid. Choose a valid range and try again.";
+  }
+  if (code === "23505") {
+    return "A record with these details already exists. Refresh the page and try again.";
+  }
+  if (code === "23503") {
+    return "This record is linked to other school information and could not be changed.";
+  }
+  if (code === "23514" || code === "22P02") {
+    return "Some of the information is invalid. Review your entries and try again.";
+  }
+  if (code.startsWith("PGRST") || code.startsWith("42")) {
+    return `The dashboard data needed to ${action} is temporarily unavailable. Refresh the page or contact support if the problem continues.`;
+  }
+  return `We couldn’t ${action}. Please try again. If the problem continues, ask a school administrator for help.`;
+}
+
+function dashboardErrorRequiresSignIn(error) {
+  const diagnostic = `${error?.message || ""} ${error?.code || ""}`.toLowerCase();
+  return Number(error?.status || error?.statusCode || 0) === 401 ||
+    /session.*(expired|missing|invalid)|invalid jwt|refresh token.*(expired|invalid)|sign in required/.test(
+      diagnostic,
+    );
+}
+
+function renderDashboardRetryMessage(container, message, retryLabel, retry) {
+  if (!container) return;
+
+  const wrapper = document.createElement(
+    ["UL", "OL"].includes(container.tagName) ? "li" : "div",
+  );
+  wrapper.className = "dashboard-inline-error";
+  wrapper.setAttribute("role", "alert");
+
+  const text = document.createElement("p");
+  text.textContent = message;
+  wrapper.append(text);
+
+  if (retry) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "dashboard-error-retry";
+    button.textContent = retryLabel || "Try again";
+    button.addEventListener("click", retry, { once: true });
+    wrapper.append(button);
+  }
+
+  container.replaceChildren(wrapper);
+}
+
+function setDashboardMetricError(countId, detailId, error, action) {
+  const count = document.getElementById(countId);
+  const detail = document.getElementById(detailId);
+  if (!count || !detail) return;
+
+  count.textContent = "—";
+  detail.textContent = getDashboardErrorMessage(error, action);
+  detail.classList.add("dashboard-metric-error");
+}
+
+function clearDashboardMetricError(detailId) {
+  document.getElementById(detailId)?.classList.remove("dashboard-metric-error");
+}
+
+async function loadDashboardRecentActivities(schoolId) {
+  const listContainer = document.getElementById("recentActivitiesList");
+  if (!listContainer) return;
+
+  try {
+    const { data, error } = await window.supabaseClient
+      .from("recent_activities")
+      .select("message, dot_color, created_at")
+      .eq("school_id", schoolId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (error) throw error;
+    if (!listContainer.isConnected) return;
+
+    if (!data?.length) {
+      listContainer.innerHTML = `<li class="dashboard-activity-empty">No recent activities found.</li>`;
+      return;
+    }
+
+    listContainer.innerHTML = data
+      .map((activity) => {
+        const color = /^(green|blue|red|yellow|orange)$/.test(activity.dot_color)
+          ? activity.dot_color
+          : "green";
+        return `<li><i class="fas fa-bullhorn dashboard-icon ${color}" aria-hidden="true"></i>${escapeHtml(activity.message || "")}</li>`;
+      })
+      .join("");
+  } catch (error) {
+    console.error("Error loading dashboard activities:", error);
+    renderDashboardRetryMessage(
+      listContainer,
+      getDashboardErrorMessage(error, "load recent activities"),
+      "Retry",
+      () => loadDashboardRecentActivities(schoolId),
+    );
+  }
+}
+
+function showDashboardAccessCheckError(message, retryLabel = "Try again") {
   const loadingScreen = document.getElementById("dashboardAuthLoading");
   if (!loadingScreen) return;
 
-  loadingScreen.innerHTML = `
-    <div class="dashboard-auth-loading__content">
-      <p role="alert">We couldn’t verify your access. Check your connection and try again.</p>
-      <button class="dashboard-auth-loading__retry" type="button" onclick="window.location.reload()">
-        Try again
-      </button>
-    </div>
-  `;
+  const content = document.createElement("div");
+  content.className = "dashboard-auth-loading__content";
+  const text = document.createElement("p");
+  text.setAttribute("role", "alert");
+  text.textContent = message;
+  const retry = document.createElement("button");
+  retry.className = "dashboard-auth-loading__retry";
+  retry.type = "button";
+  retry.textContent = retryLabel;
+  retry.addEventListener(
+    "click",
+    () => {
+      if (retryLabel === "Sign in") {
+        window.location.replace("/index.html");
+      } else {
+        window.location.reload();
+      }
+    },
+    { once: true },
+  );
+  content.append(text, retry);
+  loadingScreen.replaceChildren(content);
 }
 
 async function loadDashboardAnnouncements() {
@@ -263,13 +416,23 @@ async function loadDashboardAnnouncements() {
       </div>
   `;
 
+  let accessVerified = false;
   try {
 
     const {
       data: { user },
       error: authError,
     } = await window.supabaseClient.auth.getUser();
-    if (authError) throw authError;
+    if (authError) {
+      authError.requiresSignIn = dashboardErrorRequiresSignIn(authError);
+      throw authError;
+    }
+    if (!user) {
+      const error = new Error("Sign in required");
+      error.dashboardMessage = "Your sign-in session has ended. Sign in again to view the dashboard.";
+      error.requiresSignIn = true;
+      throw error;
+    }
 
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
@@ -277,21 +440,30 @@ async function loadDashboardAnnouncements() {
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profile)
-      throw new Error("Could not fetch user profile.");
+    if (profileError || !profile) {
+      const error = profileError || new Error("Profile is missing");
+      error.dashboardMessage = getDashboardErrorMessage(
+        error,
+        "verify your school account",
+      );
+      throw error;
+    }
 
     if (profile.role === "parent") {
       window.location.replace("/html/parent-dashboard.html");
       return;
     }
 
-    if (!profile.role) throw new Error("User role is missing from profile.");
+    if (!profile.role) {
+      const error = new Error("Role is missing from profile");
+      error.dashboardMessage = "Your school account is missing a role. Ask a school administrator to check your account.";
+      throw error;
+    }
+    accessVerified = true;
     finishDashboardAccessCheck();
 
     dashboardAnnouncementSchoolId = profile.school_id;
     dashboardCanDeleteAnnouncements = profile.role === "admin";
-
-    loadDashboardStats(profile.school_id);
 
     if (welcomeText) {
       welcomeText.textContent = `Welcome back, ${profile.full_name || "User"}`;
@@ -326,7 +498,13 @@ async function loadDashboardAnnouncements() {
         .or(`expiry_date.is.null,expiry_date.gte.${today}`)
         .order("created_at", { ascending: false });
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      fetchError.dashboardMessage = getDashboardErrorMessage(
+        fetchError,
+        "view announcements for this school",
+      );
+      throw fetchError;
+    }
 
     const filteredAnnouncements = (announcements || []).filter((ann) => {
       if (profile.role === "admin") return true;
@@ -385,7 +563,23 @@ async function loadDashboardAnnouncements() {
       .join("");
   } catch (err) {
     console.error("Error loading announcements:", err);
-    showDashboardAccessCheckError();
+    const message = err.dashboardMessage || getDashboardErrorMessage(
+      err,
+      "load announcements",
+    );
+    if (!accessVerified) {
+      showDashboardAccessCheckError(
+        message,
+        err.requiresSignIn ? "Sign in" : "Try again",
+      );
+    } else {
+      renderDashboardRetryMessage(
+        previewContainer,
+        message,
+        "Retry",
+        loadDashboardAnnouncements,
+      );
+    }
   }
 }
 
@@ -470,13 +664,23 @@ document.querySelector(".announcement-preview")?.addEventListener("click", async
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) throw new Error("Announcement could not be deleted. Refresh and try again.");
+    if (!data) {
+      const notDeletedError = new Error("No announcement was deleted");
+      notDeletedError.dashboardMessage = "This announcement may already be deleted, or your access may have changed. Refresh the dashboard and try again.";
+      throw notDeletedError;
+    }
 
     if (typeof showToast === "function") showToast("Announcement deleted.", "success");
     await loadDashboardAnnouncements();
   } catch (err) {
     console.error("Error deleting announcement:", err);
-    if (typeof showToast === "function") showToast(err.message || "Failed to delete announcement.", "error");
+    if (typeof showToast === "function") {
+      showToast(
+        err.dashboardMessage ||
+          getDashboardErrorMessage(err, "delete this announcement"),
+        "error",
+      );
+    }
     deleteButton.disabled = false;
     deleteButton.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i> Delete';
   }
@@ -526,7 +730,15 @@ async function loadDashboardStats(schoolId) {
         .eq("role", "student");
     if (!dashboardMarker.isConnected) return;
 
-    if (!studentError && studentsData) {
+    if (studentError) {
+      setDashboardMetricError(
+        "totalStudentsCount",
+        "studentSubtext",
+        studentError,
+        "load student totals",
+      );
+    } else if (studentsData) {
+      clearDashboardMetricError("studentSubtext");
       const totalStudents = studentsData.length;
       const activeStudents = studentsData.filter(
         (s) => (s.status || "").toLowerCase() === "active",
@@ -535,10 +747,6 @@ async function loadDashboardStats(schoolId) {
       document.getElementById("totalStudentsCount").textContent = totalStudents;
       document.getElementById("studentSubtext").textContent =
         `${activeStudents} Active / ${totalStudents} Total`;
-    } else {
-      document.getElementById("totalStudentsCount").textContent = "0";
-      document.getElementById("studentSubtext").textContent =
-        "0 Active / 0 Total";
     }
 
     const { data: teachersData, error: teacherError } =
@@ -549,7 +757,15 @@ async function loadDashboardStats(schoolId) {
         .eq("role", "teacher");
     if (!dashboardMarker.isConnected) return;
 
-    if (!teacherError && teachersData) {
+    if (teacherError) {
+      setDashboardMetricError(
+        "totalTeachersCount",
+        "teacherSubtext",
+        teacherError,
+        "load teacher totals",
+      );
+    } else if (teachersData) {
+      clearDashboardMetricError("teacherSubtext");
       const totalTeachers = teachersData.length;
       const activeTeachers = teachersData.filter(
         (t) => (t.status || "").toLowerCase() === "active",
@@ -558,10 +774,6 @@ async function loadDashboardStats(schoolId) {
       document.getElementById("totalTeachersCount").textContent = totalTeachers;
       document.getElementById("teacherSubtext").textContent =
         `${activeTeachers} Active / ${totalTeachers} Total`;
-    } else {
-      document.getElementById("totalTeachersCount").textContent = "0";
-      document.getElementById("teacherSubtext").textContent =
-        "0 Active / 0 Total";
     }
 
     const { data: classesData, error: classError } = await window.supabaseClient
@@ -570,7 +782,15 @@ async function loadDashboardStats(schoolId) {
       .eq("school_id", schoolId);
     if (!dashboardMarker.isConnected) return;
 
-    if (!classError && classesData) {
+    if (classError) {
+      setDashboardMetricError(
+        "totalClassesCount",
+        "classSubtext",
+        classError,
+        "load class totals",
+      );
+    } else if (classesData) {
+      clearDashboardMetricError("classSubtext");
       const totalClasses = classesData.length;
       const activeClasses = classesData.filter(
         (c) => (c.status || "").toLowerCase() === "active",
@@ -579,10 +799,6 @@ async function loadDashboardStats(schoolId) {
       document.getElementById("totalClassesCount").textContent = totalClasses;
       document.getElementById("classSubtext").textContent =
         `${activeClasses} Active / ${totalClasses} Total`;
-    } else {
-      document.getElementById("totalClassesCount").textContent = "0";
-      document.getElementById("classSubtext").textContent =
-        "0 Active / 0 Total";
     }
 
     const today = new Date().toISOString().split("T")[0];
@@ -601,7 +817,18 @@ async function loadDashboardStats(schoolId) {
         .lte("created_at", `${today}T23:59:59`);
     if (!dashboardMarker.isConnected) return;
 
-    if (!attError && attendanceData && attendanceData.length > 0) {
+    if (attError) {
+      setDashboardMetricError(
+        "attendanceCount",
+        "attendanceSubtext",
+        attError,
+        "load today’s attendance summary",
+      );
+      return;
+    }
+
+    clearDashboardMetricError("attendanceSubtext");
+    if (attendanceData && attendanceData.length > 0) {
 
       const submittedRecords = attendanceData.filter(
         (row) => (row.attendance?.status || "").toLowerCase() === "submitted",
@@ -657,6 +884,14 @@ async function loadDashboardStats(schoolId) {
     }
   } catch (err) {
     console.error("Error loading dashboard stats:", err);
+    for (const [countId, detailId, action] of [
+      ["totalStudentsCount", "studentSubtext", "load student totals"],
+      ["totalTeachersCount", "teacherSubtext", "load teacher totals"],
+      ["totalClassesCount", "classSubtext", "load class totals"],
+      ["attendanceCount", "attendanceSubtext", "load today’s attendance summary"],
+    ]) {
+      setDashboardMetricError(countId, detailId, err, action);
+    }
   }
 }
 
@@ -668,7 +903,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       error: authError,
     } = await window.supabaseClient.auth.getUser();
     if (authError || !user) {
-      console.warn("No active user session found.");
+      const message = authError
+        ? getDashboardErrorMessage(authError, "verify your sign-in")
+        : "Your sign-in session has ended. Sign in again to view the dashboard.";
+      showDashboardAccessCheckError(
+        message,
+        !user || dashboardErrorRequiresSignIn(authError) ? "Sign in" : "Try again",
+      );
       return;
     }
 
@@ -679,15 +920,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       .single();
 
     if (profileError || !profile || !profile.school_id) {
-      console.error("Could not determine user school ID.");
+      console.error("Could not determine user school ID:", profileError);
+      showDashboardAccessCheckError(
+        profileError
+          ? getDashboardErrorMessage(profileError, "verify your school account")
+          : "Your account is not linked to a school. Ask a school administrator to check your profile.",
+        "Try again",
+      );
       return;
     }
 
     const schoolId = profile.school_id;
     window.currentSchoolId = schoolId;
 
-    await loadRecentActivities(schoolId);
-    subscribeToRecentActivities(schoolId);
+    await loadDashboardRecentActivities(schoolId);
+    subscribeToRecentActivities(schoolId, profile.role);
 
     loadDashboardStats(schoolId);
     const enrollmentCard = document.getElementById("enrollment-dashboard-card");
@@ -698,6 +945,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateNotificationBadge(user.id);
   } catch (err) {
     console.error("Error loading dashboard data:", err);
+    showDashboardAccessCheckError(
+      getDashboardErrorMessage(err, "load your dashboard"),
+      "Try again",
+    );
   }
 });
 
@@ -713,13 +964,31 @@ async function updateNotificationBadge(userId) {
     const badge = document.getElementById("sidebarNotificationBadge");
     if (!badge) return;
 
+    if (error) {
+      console.error("Error fetching dashboard notifications:", error);
+      badge.textContent = "";
+      badge.style.display = "none";
+      const notificationLink = document.getElementById("navNotifications");
+      if (notificationLink) {
+        notificationLink.title = getDashboardErrorMessage(
+          error,
+          "load the notification count",
+        );
+      }
+      return;
+    }
+
     const unreadCount = count ?? 0;
 
-    if (!error && unreadCount > 0) {
+    if (unreadCount > 0) {
       badge.textContent = unreadCount;
       badge.style.display = "inline-block";
+      const notificationLink = document.getElementById("navNotifications");
+      if (notificationLink) notificationLink.removeAttribute("title");
     } else {
       badge.style.display = "none";
+      const notificationLink = document.getElementById("navNotifications");
+      if (notificationLink) notificationLink.removeAttribute("title");
     }
   } catch (err) {
     console.error("Error fetching notifications:", err);
@@ -735,6 +1004,7 @@ async function loadEnrollmentStats(
     const totalElement = document.getElementById("totalEnrollmentCount");
     const activeElement = document.getElementById("activeEnrollmentCount");
     const genderElement = document.getElementById("genderBreakdownCount");
+    const errorElement = document.getElementById("enrollmentStatsError");
     if (!totalElement || !activeElement || !genderElement) return;
 
     const activeSchoolId = window.currentSchoolId;
@@ -746,8 +1016,14 @@ async function loadEnrollmentStats(
 
     const {
       data: { user },
+      error: authError,
     } = await window.supabaseClient.auth.getUser();
-    if (!user) return;
+    if (authError) throw authError;
+    if (!user) {
+      const error = new Error("Sign in required");
+      error.code = "42501";
+      throw error;
+    }
 
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
@@ -756,7 +1032,7 @@ async function loadEnrollmentStats(
       .single();
 
     if (profileError || !profile) {
-      throw new Error("Could not verify the signed-in user's role.");
+      throw profileError || new Error("Could not verify the signed-in user's role.");
     }
 
     const userRole = profile.role;
@@ -790,8 +1066,27 @@ async function loadEnrollmentStats(
     totalElement.textContent = (stats.total || 0).toLocaleString();
     activeElement.textContent = (stats.active || 0).toLocaleString();
     genderElement.textContent = `${stats.boys || 0} / ${stats.girls || 0}`;
+    if (errorElement) {
+      errorElement.hidden = true;
+      errorElement.textContent = "";
+    }
   } catch (err) {
     console.error("Error loading enrollment stats:", err);
+    const totalElement = document.getElementById("totalEnrollmentCount");
+    const activeElement = document.getElementById("activeEnrollmentCount");
+    const genderElement = document.getElementById("genderBreakdownCount");
+    const errorElement = document.getElementById("enrollmentStatsError");
+    if (!totalElement?.isConnected) return;
+    totalElement.textContent = "—";
+    if (activeElement) activeElement.textContent = "—";
+    if (genderElement) genderElement.textContent = "— / —";
+    if (errorElement) {
+      errorElement.textContent = getDashboardErrorMessage(
+        err,
+        "load enrollment statistics",
+      );
+      errorElement.hidden = false;
+    }
   }
 }
 
