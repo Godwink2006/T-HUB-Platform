@@ -292,7 +292,6 @@ body.dashboard-auth-checking .dashboard-auth-loading {
 .dashboard-error-retry {
   padding: 7px 12px;
   border: 1px solid #2563eb;
-  border-radius: 7px;
   background: #fff;
   color: #1d4ed8;
   font: inherit;
@@ -806,7 +805,8 @@ body.dashboard-auth-checking .dashboard-auth-loading {
   .announcement-item,
   .announcement-delete-btn,
   .announcement-confirm-modal,
-  .announcement-confirm-actions button {
+  .announcement-confirm-actions button,
+  .dashboard-error-retry {
     border-radius: 10px;
   }
 
