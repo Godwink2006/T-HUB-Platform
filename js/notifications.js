@@ -59,7 +59,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span style="font-size: 11px; color: #9ca3af;">${new Date(item.created_at).toLocaleString()}</span>
                     </div>
                 </div>
-                ${!item.is_read ? `<button class="mark-read-single" data-id="${escapeHTML(item.id)}" style="background: none; border: none; color: #2563eb; font-size: 12px; cursor: pointer; font-weight: 500; white-space: nowrap;">Mark as read</button>` : ""}
+                <div class="notification-item-actions">
+                    ${!item.is_read ? `<button class="mark-read-single notification-action-btn" data-id="${escapeHTML(item.id)}">Mark as read</button>` : ""}
+                    <button class="delete-notification notification-action-btn" data-id="${escapeHTML(item.id)}" aria-label="Delete notification" title="Delete notification">
+                      <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
         `,
       )
@@ -72,6 +77,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         await markAsRead(id);
       });
     });
+
+    document.querySelectorAll(".delete-notification").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await deleteNotification(btn.getAttribute("data-id"), btn);
+      });
+    });
+  }
+
+  async function deleteNotification(id, button) {
+    if (!id || !userId) return;
+    button.disabled = true;
+
+    try {
+      const { data, error } = await window.supabaseClient
+        .from("notifications")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
+        .select("id")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error("This notification could not be deleted.");
+
+      notificationsData = notificationsData.filter((item) => item.id !== id);
+      renderNotifications();
+      if (typeof showToast === "function") {
+        showToast("Notification deleted.", "success");
+      }
+    } catch (err) {
+      console.error("Error deleting notification:", err);
+      button.disabled = false;
+      if (typeof showToast === "function") {
+        showToast(err.message || "Could not delete notification.", "error");
+      }
+    }
   }
 
   async function markAsRead(id) {

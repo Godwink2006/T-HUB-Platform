@@ -466,6 +466,33 @@ let libraryBooksOffset = 0;
 let libraryBooksHasMore = false;
 let libraryBooksLoading = false;
 let loadedLibraryBooks = [];
+let canDeleteLibraryBooks = false;
+let pendingLibraryBookDelete = null;
+
+async function loadLibraryDeletePermission() {
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await window.supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    if (!user) return;
+
+    const { data: profile, error } = await window.supabaseClient
+      .from("profiles")
+      .select("role, status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    canDeleteLibraryBooks =
+      String(profile?.role || "").toLowerCase() === "admin" &&
+      String(profile?.status || "").toLowerCase() === "active";
+  } catch (error) {
+    canDeleteLibraryBooks = false;
+    console.error("Could not check library delete permission:", error);
+  }
+}
 
 async function loadBooksTable(options = {}) {
   const tableBody = document.getElementById("booksTableBody");
@@ -556,6 +583,10 @@ async function loadBooksTable(options = {}) {
       }
     }
 
+    // The initial load replaced the body with a loading row. Remove that row
+    // before inserting the first real page; append loads must keep prior rows.
+    if (!append) tableBody.replaceChildren();
+
     visibleBooks.forEach((book) => {
       const tr = document.createElement("tr");
 
@@ -620,6 +651,13 @@ async function loadBooksTable(options = {}) {
           <button class="books-actions-btn view" data-id="${book.id}">
             <i class="fa-solid fa-eye"></i>
           </button>
+          ${
+            canDeleteLibraryBooks
+              ? `<button class="books-actions-btn library-delete-btn" data-id="${book.id}" data-title="${escapeHtml(book.title)}" data-code="${escapeHtml(book.book_code)}" aria-label="Delete ${escapeHtml(book.title)}" title="Delete book">
+                  <i class="fa-solid fa-trash"></i>
+                </button>`
+              : ""
+          }
         </td>
       `;
 
@@ -630,6 +668,15 @@ async function loadBooksTable(options = {}) {
     attachBookActionListeners();
   } catch (err) {
     console.error("Error loading books table:", err);
+    if (!append) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 20px; color: #b91c1c;">
+            Failed to load library inventory: ${escapeHtml(err?.message || "Unknown error")}
+          </td>
+        </tr>
+      `;
+    }
     if (typeof showToast === "function") {
       showToast(
         append ? "Could not load more books." : "Failed to load library inventory.",
@@ -659,6 +706,9 @@ function escapeHtml(str) {
 function attachBookActionListeners() {
   const viewButtons = document.querySelectorAll("#booksTableBody .view");
   const editButtons = document.querySelectorAll("#booksTableBody .edit");
+  const deleteButtons = document.querySelectorAll(
+    "#booksTableBody .library-delete-btn",
+  );
 
   editButtons.forEach((button) => {
     if (button.dataset.listenerAttached === "true") return;
@@ -681,7 +731,88 @@ function attachBookActionListeners() {
       }
     });
   });
+
+  deleteButtons.forEach((button) => {
+    if (button.dataset.listenerAttached === "true") return;
+    button.dataset.listenerAttached = "true";
+    button.addEventListener("click", () => {
+      openLibraryBookDeleteModal({
+        id: button.dataset.id,
+        title: button.dataset.title || "this book",
+        code: button.dataset.code || "",
+      });
+    });
+  });
 }
+
+function openLibraryBookDeleteModal(book) {
+  if (!canDeleteLibraryBooks || !book?.id) return;
+  const modal = document.getElementById("deleteLibraryBookModal");
+  const label = document.getElementById("deleteLibraryBookLabel");
+  if (!modal || !label) return;
+
+  pendingLibraryBookDelete = book;
+  label.textContent = book.code
+    ? `${book.title} (${book.code})`
+    : book.title;
+  modal.style.display = "flex";
+  if (typeof lockBodyScroll === "function") lockBodyScroll();
+  document.getElementById("confirmDeleteLibraryBook")?.focus();
+}
+
+function closeLibraryBookDeleteModal() {
+  const modal = document.getElementById("deleteLibraryBookModal");
+  if (modal) modal.style.display = "none";
+  pendingLibraryBookDelete = null;
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+}
+
+async function deleteLibraryBook() {
+  const book = pendingLibraryBookDelete;
+  const confirmButton = document.getElementById("confirmDeleteLibraryBook");
+  if (!book?.id || !confirmButton || !canDeleteLibraryBooks) return;
+
+  confirmButton.disabled = true;
+  confirmButton.textContent = "Deleting...";
+  try {
+    const { error } = await window.supabaseClient.rpc(
+      "admin_delete_unborrowed_book",
+      { p_book_id: book.id },
+    );
+    if (error) throw error;
+
+    closeLibraryBookDeleteModal();
+    if (typeof showToast === "function") {
+      showToast("Book deleted.", "success");
+    }
+    await loadBooksTable();
+  } catch (error) {
+    console.error("Could not delete library book:", error);
+    if (typeof showToast === "function") {
+      showToast(error?.message || "Could not delete this book.", "error");
+    }
+  } finally {
+    confirmButton.disabled = false;
+    confirmButton.innerHTML = '<i class="fa-solid fa-trash"></i> Delete book';
+  }
+}
+
+document
+  .getElementById("cancelDeleteLibraryBook")
+  ?.addEventListener("click", closeLibraryBookDeleteModal);
+document
+  .getElementById("closeDeleteLibraryBook")
+  ?.addEventListener("click", closeLibraryBookDeleteModal);
+document
+  .getElementById("confirmDeleteLibraryBook")
+  ?.addEventListener("click", deleteLibraryBook);
+document
+  .getElementById("deleteLibraryBookModal")
+  ?.addEventListener("click", (event) => {
+    if (event.target.id === "deleteLibraryBookModal") {
+      closeLibraryBookDeleteModal();
+    }
+  });
 
 const editFileInput = document.getElementById("editAvatarInput");
 const editFileNameText = document.getElementById("fileNameDisplay");
@@ -1609,5 +1740,5 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("nextLibraryBooksPage")
     ?.addEventListener("click", () => loadBooksTable({ append: true }));
-  loadBooksTable();
+  loadLibraryDeletePermission().finally(() => loadBooksTable());
 });

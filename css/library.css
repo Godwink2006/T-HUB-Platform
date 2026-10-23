@@ -267,6 +267,127 @@ tr {
   color: #d97706;
 }
 
+.library-delete-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.library-delete-btn:hover {
+  background: #fecaca;
+}
+
+.library-delete-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(15 23 42 / 48%);
+}
+
+.library-delete-modal-content {
+  display: flex;
+  gap: 16px;
+  width: min(510px, 100%);
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 22%);
+}
+
+.library-delete-modal-icon {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.library-delete-modal-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.library-delete-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.library-delete-modal-heading h2 {
+  margin: 2px 0 10px;
+  color: #172033;
+  font-size: 18px;
+}
+
+.library-delete-modal-heading button {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.library-delete-book-label {
+  margin: 0 0 8px;
+  color: #334155;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+#deleteLibraryBookMessage {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.library-delete-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.library-delete-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.library-delete-modal-actions #confirmDeleteLibraryBook {
+  border-color: #b91c1c;
+  background: #b91c1c;
+  color: #fff;
+}
+
+.library-delete-modal-actions #confirmDeleteLibraryBook:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.library-delete-modal-actions button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .modal-book {
   position: fixed;
   top: 0;

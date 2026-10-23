@@ -180,6 +180,47 @@
       </main>
     </div>
 
+    <div
+      id="deleteLibraryBookModal"
+      class="library-delete-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deleteLibraryBookTitle"
+      aria-describedby="deleteLibraryBookMessage"
+    >
+      <div class="library-delete-modal-content">
+        <div class="library-delete-modal-icon" aria-hidden="true">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="library-delete-modal-copy">
+          <div class="library-delete-modal-heading">
+            <h2 id="deleteLibraryBookTitle">Delete this book?</h2>
+            <button
+              type="button"
+              id="closeDeleteLibraryBook"
+              aria-label="Close confirmation"
+            >
+            </button>
+          </div>
+          <p id="deleteLibraryBookLabel" class="library-delete-book-label"></p>
+          <p id="deleteLibraryBookMessage">
+            This permanently removes the book and its past borrowing records.
+            Books that are currently borrowed or overdue must be returned
+            first.
+          </p>
+          <div class="library-delete-modal-actions">
+            <button type="button" id="cancelDeleteLibraryBook">
+              Cancel
+            </button>
+            <button type="button" id="confirmDeleteLibraryBook">
+              <i class="fa-solid fa-trash"></i>
+              Delete book
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="bookModal" class="modal-book">
       <div class="book-modal-content">
         <div class="book-modal-header">
