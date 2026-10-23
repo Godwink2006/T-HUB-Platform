@@ -193,6 +193,22 @@ form.auth-ready {
   color: #64748b;
 }
 
+.school-information-notice {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.school-information-notice[data-type="error"] {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 .spinner {
   width: 36px;
   height: 36px;

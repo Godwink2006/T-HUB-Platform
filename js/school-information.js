@@ -1,4 +1,5 @@
 let originalSchoolData = {};
+let schoolInformationUser = null;
 
 async function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
@@ -39,29 +40,88 @@ let existingRecordId = null;
 
 async function checkAdminAuth() {
   if (!window.supabaseClient) {
-    return { isAdmin: false, user: null };
+    throw new Error("The database client is unavailable.");
   }
 
-  const {
-    data: { user },
-    error: userError,
-  } = await window.supabaseClient.auth.getUser();
+  const { data, error: userError } = await window.supabaseClient.auth.getUser();
+  if (userError) throw userError;
+  const user = data?.user;
 
-  if (userError || !user) {
-    return { isAdmin: false, user: null };
+  if (!user) {
+    const error = new Error("Your session has expired. Sign in again.");
+    error.status = 401;
+    throw error;
   }
 
   const { data: profile, error: profileError } = await window.supabaseClient
     .from("profiles")
-    .select("role")
+    .select("role, school_id, status")
     .eq("id", user.id)
     .single();
+  if (profileError) throw profileError;
 
-  if (profileError || profile?.role !== "admin") {
-    return { isAdmin: false, user };
+  const role = String(profile?.role || "").trim().toLowerCase();
+  let isGraduatedStudent = false;
+  if (role === "student") {
+    let enrollmentQuery = window.supabaseClient
+      .from("student_enrollments")
+      .select("enrollment_status")
+      .eq("student_id", user.id);
+
+    if (profile.school_id) {
+      enrollmentQuery = enrollmentQuery.eq("school_id", profile.school_id);
+    }
+
+    const { data: enrollments, error: enrollmentError } = await enrollmentQuery;
+    if (enrollmentError) throw enrollmentError;
+    isGraduatedStudent = (enrollments || []).some((enrollment) =>
+      ["graduated", "transferred", "transfered"].includes(
+        String(enrollment.enrollment_status || "").trim().toLowerCase(),
+      ),
+    );
   }
 
-  return { isAdmin: true, user };
+  return {
+    isAdmin: role === "admin" && String(profile?.status || "active").toLowerCase() === "active",
+    isGraduatedStudent,
+    profile,
+    user,
+  };
+}
+
+function showSchoolInformationMessage(message, type = "info") {
+  const notice = document.getElementById("schoolInformationNotice");
+  if (notice) {
+    notice.textContent = message;
+    notice.dataset.type = type;
+    notice.hidden = false;
+  }
+  if (type === "error" && typeof showToast === "function") showToast(message, "error");
+}
+
+function schoolInformationErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""}`.toLowerCase();
+
+  if (status === 401 || /invalid jwt|session.*expired|refresh token/.test(diagnostic)) {
+    return "Your session has expired. Sign in again, then reopen School Information.";
+  }
+  if (/school.{0,30}inactive|inactive.{0,30}school/.test(diagnostic)) {
+    return "This school is inactive. You can view its information, but changes are unavailable until the school is active.";
+  }
+  if (code === "42501" || status === 403 || /row-level security|permission denied|not authorized|access denied/.test(diagnostic)) {
+    return action === "save"
+      ? "School information could not be saved because your account or school does not have permission to make changes."
+      : "You do not have permission to load some school information. Contact your school administrator for help.";
+  }
+  if (/failed to fetch|network|connection|timeout/.test(diagnostic)) {
+    return `Could not connect to ${action === "save" ? "save" : "load"} school information. Check your internet connection and try again.`;
+  }
+  if (code === "pgrst116") return "The requested school information could not be found.";
+  return action === "save"
+    ? "School information could not be saved. Please try again."
+    : "School information could not be loaded. Refresh the page or contact your school administrator.";
 }
 
 function enableFormInputs(form) {
@@ -145,18 +205,20 @@ async function initFormProtection() {
 
 async function loadSchoolProfile() {
   try {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
+    const user = schoolInformationUser;
     if (!user) return;
 
-    const { data: userProfile } = await supabaseClient
+    const { data: userProfile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("school_id")
       .eq("id", user.id)
       .single();
+    if (profileError) throw profileError;
 
-    if (!userProfile?.school_id) return;
+    if (!userProfile?.school_id) {
+      showSchoolInformationMessage("Your account is not linked to a school.", "error");
+      return;
+    }
 
     const { data, error } = await supabaseClient
       .from("schools")
@@ -193,7 +255,8 @@ async function loadSchoolProfile() {
 
     originalSchoolData = { ...data };
   } catch (err) {
-    console.error("Error loading school profile:", err.message);
+    console.error("Error loading school profile:", err);
+    showSchoolInformationMessage(schoolInformationErrorMessage(err), "error");
   }
 }
 
@@ -432,16 +495,7 @@ async function handleFormSubmit() {
       }
     }
 
-    const errorCode = err && typeof err === "object" ? err.code : null;
-    if (errorCode === "PGRST116" || errorCode === "42501") {
-      showToast(
-        "School information was not saved. This school may be inactive or your account may not have permission to update it.",
-        "error",
-      );
-    } else {
-      const detail = err instanceof Error ? err.message : "Please try again.";
-      showToast("Failed to save settings: " + detail, "error");
-    }
+    showSchoolInformationMessage(schoolInformationErrorMessage(err, "save"), "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -500,11 +554,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelector("form");
   const loader = document.getElementById("formLoader");
 
-  const { isAdmin } = await checkAdminAuth();
-  if (isAdmin) {
-    enableFormInputs(form);
-  } else {
-    disableFormInputs(form);
+  let access = { isAdmin: false, isGraduatedStudent: false, user: null };
+  try {
+    access = await checkAdminAuth();
+    schoolInformationUser = access.user;
+  } catch (error) {
+    console.error("Could not determine School Information access:", error);
+    showSchoolInformationMessage(schoolInformationErrorMessage(error), "error");
+  }
+
+  if (access.isAdmin) enableFormInputs(form);
+  else disableFormInputs(form);
+
+  if (access.isGraduatedStudent) {
+    showSchoolInformationMessage(
+      "Your enrollment is marked as graduated or transferred. You can view school information, but editing controls are unavailable.",
+    );
   }
 
   await loadSchoolProfile();
@@ -512,7 +577,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (loader) loader.style.display = "none";
   if (form) form.classList.add("auth-ready");
 
-  if (form && isAdmin) {
+  if (form && access.isAdmin) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       await handleFormSubmit();
