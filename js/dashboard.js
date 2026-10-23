@@ -394,6 +394,7 @@ function closeAnnouncementDeleteConfirmation(confirmed) {
   if (!dialog || !resolveAnnouncementDeleteConfirmation) return;
 
   dialog.hidden = true;
+  document.documentElement.classList.remove("announcement-delete-open");
   unLockBodyScroll();
 
   const resolve = resolveAnnouncementDeleteConfirmation;
@@ -417,6 +418,7 @@ function requestAnnouncementDeleteConfirmation(title) {
     : "This action cannot be undone.";
   announcementDeleteFocusReturn = document.activeElement;
   dialog.hidden = false;
+  document.documentElement.classList.add("announcement-delete-open");
   lockBodyScroll();
   cancelButton.focus();
 

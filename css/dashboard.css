@@ -9,6 +9,16 @@ body {
   background: rgb(231, 226, 226);
 }
 
+html.announcement-delete-open,
+html.announcement-delete-open body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+html.announcement-delete-open .sidebar {
+  overflow: hidden !important;
+}
+
 body.dashboard-auth-checking {
   background: #fff;
 }
