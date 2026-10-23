@@ -145,6 +145,7 @@ if (saveAnnouncementBtn) {
     saveAnnouncementBtn.disabled = true;
     saveAnnouncementBtn.textContent = "Publishing...";
 
+    let schoolId = null;
     try {
       const {
         data: { user },
@@ -167,7 +168,7 @@ if (saveAnnouncementBtn) {
         throw profileError || new Error("Could not determine user school.");
       }
 
-      const schoolId = profile.school_id;
+      schoolId = profile.school_id;
       await ensureDashboardSchoolActiveFor("publish announcements", schoolId);
 
       const { error: insertError } = await window.supabaseClient
@@ -212,7 +213,12 @@ if (saveAnnouncementBtn) {
       if (typeof showToast === "function") {
         showToast(
           err.dashboardMessage ||
-            getDashboardErrorMessage(err, "publish this announcement"),
+            (await getDashboardMutationErrorMessage(
+              err,
+              "publish announcements",
+              schoolId,
+              "publish this announcement",
+            )),
           "error",
         );
       }
@@ -352,9 +358,46 @@ async function ensureDashboardSchoolActiveFor(action, schoolId) {
   if (error) throw error;
   if (schoolIsActive !== true) {
     const inactiveError = new Error("School is inactive");
-    inactiveError.dashboardMessage = `This school is inactive. You can still view dashboard information, but you can’t ${action} until the school is reactivated.`;
+    inactiveError.dashboardMessage = getDashboardInactiveSchoolMessage(action);
     throw inactiveError;
   }
+}
+
+function getDashboardInactiveSchoolMessage(action) {
+  return `This school is inactive. You can still view dashboard information, but you can’t ${action} until the school is reactivated.`;
+}
+
+async function getDashboardMutationErrorMessage(
+  error,
+  action,
+  schoolId,
+  fallbackAction,
+) {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""}`.toLowerCase();
+  const looksLikeRlsDenial =
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege/.test(
+      diagnostic,
+    );
+
+  if (looksLikeRlsDenial && schoolId) {
+    try {
+      const { data: schoolIsActive, error: statusError } =
+        await window.supabaseClient.rpc("is_school_active", {
+          target_school_id: schoolId,
+        });
+      if (!statusError && schoolIsActive === false) {
+        return getDashboardInactiveSchoolMessage(action);
+      }
+    } catch (statusError) {
+      console.warn("Could not verify school status after RLS denied a dashboard action:", statusError);
+    }
+  }
+
+  return getDashboardErrorMessage(error, fallbackAction);
 }
 
 function renderDashboardRetryMessage(container, message, retryLabel, retry) {
@@ -820,7 +863,12 @@ document.querySelector(".announcement-preview")?.addEventListener("click", async
     if (typeof showToast === "function") {
       showToast(
         err.dashboardMessage ||
-          getDashboardErrorMessage(err, "delete this announcement"),
+          (await getDashboardMutationErrorMessage(
+            err,
+            "delete announcements",
+            dashboardAnnouncementSchoolId,
+            "delete this announcement",
+          )),
         "error",
       );
     }
