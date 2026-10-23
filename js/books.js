@@ -77,8 +77,10 @@ async function initializeBooksPage() {
   booksAccessLoading = true;
   booksGraduatedAccess = false;
   const catalog = document.getElementById("booksCatalog");
+  const mainContent = document.querySelector(".students-main-content");
   if (catalog) catalog.hidden = true;
-  showBooksNotice("Checking account access…", "info");
+  mainContent?.classList.add("books-access-checking");
+  hideBooksNotice();
 
   try {
     if (!window.supabaseClient) throw new Error("The database client is unavailable.");
@@ -114,6 +116,7 @@ async function initializeBooksPage() {
     }
 
     if (booksGraduatedAccess) {
+      mainContent?.classList.remove("books-access-checking");
       showBooksNotice(
         "Books are unavailable because your enrollment at this school is marked as graduated or transferred. Contact your school administrator if you think this is a mistake.",
         "graduated",
@@ -121,11 +124,13 @@ async function initializeBooksPage() {
       return;
     }
 
+    mainContent?.classList.remove("books-access-checking");
     hideBooksNotice();
     if (catalog) catalog.hidden = false;
     await loadBookCatalog();
   } catch (error) {
     console.error("Could not determine Books page access:", error);
+    mainContent?.classList.remove("books-access-checking");
     showBooksNotice(booksErrorMessage(error), "error", initializeBooksPage);
   } finally {
     booksAccessLoading = false;

@@ -188,6 +188,29 @@ body {
   cursor: wait;
 }
 
+.students-load-error {
+  padding: 1.5rem !important;
+  color: #991b1b;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.students-retry-btn {
+  margin-top: 0.75rem;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.students-retry-btn:hover {
+  background: #1d4ed8;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

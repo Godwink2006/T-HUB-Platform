@@ -5,6 +5,81 @@ let canDeleteStudents = false;
 let pendingStudentDeleteId = null;
 let studentDeleteTrigger = null;
 
+function studentErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${code} ${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (status === 401 || code === "pgrst301" || /invalid jwt|session.*expired|refresh token/.test(diagnostic)) {
+    return "Your session has expired. Sign in again, then reopen Students.";
+  }
+  if (/school.{0,30}inactive|inactive.{0,30}school/.test(diagnostic)) {
+    return "This school is inactive. Student records can be viewed, but changes are unavailable until the school is reactivated.";
+  }
+  if (code === "42501" || status === 403 || /row-level security|permission denied|not authorized|unauthorized|access denied|insufficient privilege/.test(diagnostic)) {
+    if (action === "load" || action === "view") {
+      return "You do not have permission to view these student records. Contact your school administrator for access.";
+    }
+    if (action === "dropdowns") {
+      return "You do not have permission to load the class and academic year options. Contact your school administrator.";
+    }
+    if (action === "permission") {
+      return "Your access could not be verified. Student deletion is unavailable until an administrator confirms your access.";
+    }
+    return `You do not have permission to ${action} student records. Contact your school administrator.`;
+  }
+  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(diagnostic)) {
+    const operation = {
+      load: "loaded",
+      view: "loaded",
+      dropdowns: "loaded",
+      permission: "verified",
+      create: "created",
+      update: "saved",
+      delete: "deleted",
+    }[action] || "processed";
+    return `Student information could not be ${operation} because the connection failed. Check your internet connection and try again.`;
+  }
+  if (code === "23505" || /duplicate key|already exists|unique constraint/.test(diagnostic)) {
+    return "That student ID or email is already in use. Check the details and try again.";
+  }
+  if (code === "23503" || /foreign key|violates.*constraint/.test(diagnostic)) {
+    return action === "delete"
+      ? "This student could not be deleted because linked records still need attention. Contact your administrator."
+      : "A selected class or academic year is no longer available. Refresh the page and choose an available option.";
+  }
+  if (code === "23514" || code === "22p02" || /invalid input|invalid date|check constraint/.test(diagnostic)) {
+    return "Some student information is invalid. Review the fields and try again.";
+  }
+  if (code === "pgrst116") {
+    return action === "view"
+      ? "This student record could not be found. Refresh the list and try again."
+      : "The requested student record could not be found.";
+  }
+
+  const appMessage = String(error?.message || "").trim();
+  if (appMessage && !/\b(?:postgrest|postgres|sqlstate|row-level security|failed to fetch|permission denied|edge function returned|\b(?:select|insert|update|delete)\b.*\b(?:table|relation)\b)\b/i.test(appMessage)) {
+    return appMessage;
+  }
+  const labels = {
+    load: "Student records could not be loaded. Please try again.",
+    view: "Student details could not be loaded. Please try again.",
+    create: "The student could not be added. Check the information and try again.",
+    update: "Student changes could not be saved. Please try again.",
+    delete: "The student could not be deleted. Please try again.",
+    dropdowns: "Class and academic year options could not be loaded. Check your connection and try again.",
+    permission: "Your access could not be verified. Student deletion is unavailable until access is confirmed.",
+  };
+  return labels[action] || "The request could not be completed. Please try again.";
+}
+
+function showStudentError(error, action = "load") {
+  const message = studentErrorMessage(error, action);
+  console.error(`Students page ${action} error:`, error);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 function renderStudentsTable(studentsToRender) {
   const tableBody = document.getElementById("studentsTableBody");
   if (!tableBody) return;
@@ -367,16 +442,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const {
         data: { user },
-      } = await supabaseClient.auth.getUser();
-      if (!user) return;
+      error: authError,
+    } = await supabaseClient.auth.getUser();
+      if (authError) throw authError;
+      if (!user) {
+        const error = new Error("Your session has expired.");
+        error.status = 401;
+        throw error;
+      }
 
-      const { data: profile } = await supabaseClient
+      const { data: profile, error: profileError } = await supabaseClient
         .from("profiles")
         .select("school_id")
         .eq("id", user.id)
         .single();
+      if (profileError) throw profileError;
 
-      if (!profile || !profile.school_id) return;
+      if (!profile?.school_id) {
+        throw new Error("Your account is not linked to a school. Contact your school administrator.");
+      }
 
       const { data: classes, error } = await supabaseClient
         .from("classes")
@@ -424,7 +508,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     } catch (err) {
-      console.error("Error loading student dropdowns:", err);
+      showStudentError(err, "dropdowns");
     }
   }
 
@@ -698,10 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof hideStudentModal === "function") hideStudentModal();
         if (typeof loadStudentsTable === "function") loadStudentsTable();
       } catch (err) {
-        console.error("Error creating student:", err);
-        if (typeof showToast === "function") {
-          showToast(err.message || "An error occurred.", "error");
-        }
+        showStudentError(err, "create");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -717,7 +798,12 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadStudentDeletePermission() {
   try {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) return;
+    if (authError) throw authError;
+    if (!user) {
+      const error = new Error("Your session has expired.");
+      error.status = 401;
+      throw error;
+    }
 
     const { data: profile, error } = await supabaseClient
       .from("profiles")
@@ -729,7 +815,7 @@ async function loadStudentDeletePermission() {
     canDeleteStudents = profile?.role === "admin";
     if (window.allStudentsCache) filterStudents();
   } catch (error) {
-    console.error("Could not check student deletion access:", error);
+    showStudentError(error, "permission");
   }
 }
 
@@ -811,8 +897,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       await loadStudentsTable();
     } catch (error) {
-      console.error("Student deletion failed:", error);
-      if (typeof showToast === "function") showToast(error.message || "Failed to delete student.", "error");
+      showStudentError(error, "delete");
     } finally {
       confirmButton.disabled = false;
       confirmButton.textContent = "Delete student";
@@ -917,17 +1002,27 @@ async function loadStudentsTable(options = {}) {
     populateClassFilterDropdown();
     filterStudents();
   } catch (err) {
+    const message = studentErrorMessage(err, "load");
     console.error("Error fetching students:", err);
     if (!append) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align: center; color: red; padding: 20px;">
-            Failed to load students: ${escapeHTML(err.message || "Unknown error")}
-          </td>
-        </tr>
-      `;
-    } else if (typeof showToast === "function") {
-      showToast("Could not load more students.", "error");
+      tableBody.replaceChildren();
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 5;
+      cell.className = "students-load-error";
+      const text = document.createElement("p");
+      text.textContent = message;
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "students-retry-btn";
+      retry.textContent = "Try again";
+      retry.addEventListener("click", () => loadStudentsTable(), { once: true });
+      cell.append(text, retry);
+      row.appendChild(cell);
+      tableBody.appendChild(row);
+    } else {
+      if (typeof showToast === "function") showToast(message, "error");
+      nextButton?.removeAttribute("disabled");
     }
   } finally {
     studentsLoading = false;
@@ -958,6 +1053,7 @@ const formatDate = (dateString) => {
 
 async function viewStudent(id) {
   let student = null;
+  let fetchError = null;
 
   try {
     const { data, error } = await supabaseClient
@@ -973,10 +1069,10 @@ async function viewStudent(id) {
       .eq("id", id)
       .single();
 
-    if (!error && data) {
-      student = data;
-    }
+    if (error) throw error;
+    if (data) student = data;
   } catch (err) {
+    fetchError = err;
     console.warn(
       "Could not fetch fresh student from network, checking cache...",
       err,
@@ -989,8 +1085,11 @@ async function viewStudent(id) {
 
   if (!student) {
     console.error("Student not found for ID:", id);
-    showToast("Student record not found.", "error");
+    showToast(studentErrorMessage(fetchError || { code: "PGRST116" }, "view"), "error");
     return;
+  }
+  if (fetchError && typeof showToast === "function") {
+    showToast("Could not refresh this student’s details. Showing the information already loaded.", "info");
   }
 
   const profile = student.profiles || {};
@@ -1074,6 +1173,9 @@ function editStudent(id) {
   const student = (window.allStudentsCache || []).find((s) => s.id === id);
   if (!student) {
     console.error("Student not found for ID:", id);
+    if (typeof showToast === "function") {
+      showToast(studentErrorMessage({ code: "PGRST116" }, "view"), "error");
+    }
     return;
   }
 
@@ -1297,10 +1399,7 @@ document.addEventListener("DOMContentLoaded", () => {
         closeEditStudentModal();
         if (typeof loadStudentsTable === "function") loadStudentsTable();
       } catch (err) {
-        console.error("Error updating student:", err);
-        if (typeof showToast === "function") {
-          showToast(err.message || "An error occurred.", "error");
-        }
+        showStudentError(err, "update");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
