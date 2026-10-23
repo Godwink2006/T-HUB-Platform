@@ -427,6 +427,8 @@ function showDashboardAccessCheckError(message, actionLabel = "Continue to view 
   const loadingScreen = document.getElementById("dashboardAuthLoading");
   if (!loadingScreen) return;
 
+  settleDashboardWidgetsForAccessIssue();
+
   const content = document.createElement("div");
   content.className = "dashboard-auth-loading__content";
   const text = document.createElement("p");
@@ -461,6 +463,53 @@ function showDashboardAccessCheckError(message, actionLabel = "Continue to view 
   document.body.classList.add("dashboard-auth-error-open");
   lockBodyScroll();
   action.focus();
+}
+
+function settleDashboardWidgetsForAccessIssue() {
+  for (const [countId, detailId] of [
+    ["totalStudentsCount", "studentSubtext"],
+    ["totalTeachersCount", "teacherSubtext"],
+    ["totalClassesCount", "classSubtext"],
+    ["attendanceCount", "attendanceSubtext"],
+  ]) {
+    const count = document.getElementById(countId);
+    const detail = document.getElementById(detailId);
+    if (count) count.textContent = "—";
+    if (detail) {
+      detail.textContent = "Unavailable for this account.";
+      detail.classList.add("dashboard-metric-error");
+    }
+  }
+
+  const activities = document.getElementById("recentActivitiesList");
+  if (activities) {
+    const item = document.createElement("li");
+    item.className = "dashboard-activity-empty";
+    item.textContent = "Recent activities are unavailable for this account.";
+    activities.replaceChildren(item);
+  }
+
+  const announcements = document.getElementById("announcementPreviewContainer");
+  if (announcements) {
+    const message = document.createElement("p");
+    message.className = "dashboard-activity-empty";
+    message.textContent = "Announcements are unavailable for this account.";
+    announcements.replaceChildren(message);
+  }
+
+  const enrollmentError = document.getElementById("enrollmentStatsError");
+  if (enrollmentError) {
+    enrollmentError.textContent = "Enrollment statistics are unavailable for this account.";
+    enrollmentError.hidden = false;
+  }
+  for (const id of [
+    "totalEnrollmentCount",
+    "activeEnrollmentCount",
+    "genderBreakdownCount",
+  ]) {
+    const metric = document.getElementById(id);
+    if (metric) metric.textContent = "—";
+  }
 }
 
 async function loadDashboardAnnouncements() {
