@@ -1,6 +1,10 @@
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 
+let canDeleteStudents = false;
+let pendingStudentDeleteId = null;
+let studentDeleteTrigger = null;
+
 function renderStudentsTable(studentsToRender) {
   const tableBody = document.getElementById("studentsTableBody");
   if (!tableBody) return;
@@ -55,6 +59,7 @@ function renderStudentsTable(studentsToRender) {
           <button class="students-actions-btn edit" onclick="editStudent('${student.id}')">
             <i class="fa-solid fa-pen"></i>
           </button>
+          ${canDeleteStudents ? `<button class="students-actions-btn delete" type="button" data-student-id="${escapeHTML(student.id)}" aria-label="Delete ${escapeHTML(profile.full_name || "student")}" title="Delete student"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>` : ""}
         </td>
       </tr>
     `;
@@ -139,6 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (searchInput) searchInput.addEventListener("input", filterStudents);
   if (classFilter) classFilter.addEventListener("change", filterStudents);
   if (statusFilter) statusFilter.addEventListener("change", filterStudents);
+
+  document.getElementById("studentsTableBody")?.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest(".students-actions-btn.delete");
+    if (deleteButton) openStudentDeleteConfirmation(deleteButton.dataset.studentId);
+  });
 });
 
 let cachedClasses = [];
@@ -290,6 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const studentPhotoFileName = document.getElementById("studentPhotoFileName");
 
   loadStudentDropdowns();
+  loadStudentDeletePermission();
 
   document.querySelectorAll(".edit").forEach((button) => {
     button.addEventListener("click", () => {
@@ -701,6 +712,112 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadStudentsTable();
+});
+
+async function loadStudentDeletePermission() {
+  try {
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) return;
+
+    const { data: profile, error } = await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (error) throw error;
+    canDeleteStudents = profile?.role === "admin";
+    if (window.allStudentsCache) filterStudents();
+  } catch (error) {
+    console.error("Could not check student deletion access:", error);
+  }
+}
+
+function openStudentDeleteConfirmation(studentId) {
+  if (!canDeleteStudents) return;
+  const student = (window.allStudentsCache || []).find((item) => item.id === studentId);
+  const dialog = document.getElementById("studentDeleteConfirm");
+  const message = document.getElementById("studentDeleteMessage");
+  const cancelButton = document.getElementById("cancelStudentDelete");
+  if (!student || !dialog || !message || !cancelButton) return;
+
+  const name = student.profiles?.full_name || "this student";
+  const code = student.student_id ? ` (${student.student_id})` : "";
+  message.textContent = `Permanently delete ${name}${code}? This also removes linked attendance, grades, enrollment, fees, payments, parent links, borrowing history, transfer history, and any student login. This cannot be undone.`;
+  studentDeleteTrigger = document.activeElement;
+  pendingStudentDeleteId = studentId;
+  dialog.hidden = false;
+  if (typeof lockBodyScroll === "function") lockBodyScroll();
+  cancelButton.focus();
+}
+
+function closeStudentDeleteConfirmation(restoreFocus = true) {
+  const dialog = document.getElementById("studentDeleteConfirm");
+  if (!dialog) return;
+  dialog.hidden = true;
+  pendingStudentDeleteId = null;
+  if (typeof unLockBodyScroll === "function") unLockBodyScroll();
+  if (restoreFocus && studentDeleteTrigger?.isConnected) studentDeleteTrigger.focus();
+  studentDeleteTrigger = null;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const dialog = document.getElementById("studentDeleteConfirm");
+  const cancelButton = document.getElementById("cancelStudentDelete");
+  const confirmButton = document.getElementById("confirmStudentDelete");
+
+  cancelButton?.addEventListener("click", () => closeStudentDeleteConfirmation());
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) closeStudentDeleteConfirmation();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !dialog?.hidden) closeStudentDeleteConfirmation();
+  });
+
+  confirmButton?.addEventListener("click", async () => {
+    const studentId = pendingStudentDeleteId;
+    if (!canDeleteStudents || !studentId) return;
+
+    confirmButton.disabled = true;
+    confirmButton.textContent = "Deleting...";
+
+    try {
+      const { data, error } = await supabaseClient.functions.invoke("delete-student", {
+        body: { student_id: studentId },
+      });
+
+      if (error) {
+        let message = error.message || "Failed to delete student.";
+        if (error.context) {
+          try {
+            const responseBody = await error.context.json();
+            message = responseBody.message || message;
+            if (Array.isArray(responseBody.blockers) && responseBody.blockers.length) {
+              message += ` ${responseBody.blockers.join(" ")}`;
+            }
+          } catch {
+            // Use the function error message when there is no JSON response.
+          }
+        }
+        throw new Error(message);
+      }
+
+      if (!data?.success) throw new Error(data?.message || "Failed to delete student.");
+
+      closeStudentDeleteConfirmation(false);
+      if (typeof showToast === "function") {
+        const warning = Array.isArray(data.warnings) ? data.warnings.join(" ") : "";
+        showToast(warning || "Student and linked records deleted.", warning ? "error" : "success");
+      }
+      await loadStudentsTable();
+    } catch (error) {
+      console.error("Student deletion failed:", error);
+      if (typeof showToast === "function") showToast(error.message || "Failed to delete student.", "error");
+    } finally {
+      confirmButton.disabled = false;
+      confirmButton.textContent = "Delete student";
+    }
+  });
 });
 
 const STUDENTS_PAGE_SIZE = 30;

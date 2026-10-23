@@ -668,6 +668,34 @@
       </div>
     </div>
 
+    <div
+      id="studentDeleteConfirm"
+      class="student-delete-overlay"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="studentDeleteTitle"
+      aria-describedby="studentDeleteMessage"
+      hidden
+    >
+      <section class="student-delete-modal">
+        <div class="student-delete-icon" aria-hidden="true">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="student-delete-copy">
+          <h2 id="studentDeleteTitle">Permanently delete student?</h2>
+          <p id="studentDeleteMessage"></p>
+        </div>
+        <div class="student-delete-actions">
+          <button id="cancelStudentDelete" class="student-delete-cancel" type="button">
+            Cancel
+          </button>
+          <button id="confirmStudentDelete" class="student-delete-confirm" type="button">
+            Delete student
+          </button>
+        </div>
+      </section>
+    </div>
+
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>

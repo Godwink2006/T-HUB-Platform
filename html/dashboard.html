@@ -545,6 +545,30 @@
       </div>
     </div>
 
+    <div
+      id="announcementDeleteConfirm"
+      class="announcement-confirm-overlay"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="announcementDeleteTitle"
+      aria-describedby="announcementDeleteMessage"
+      hidden
+    >
+      <div class="announcement-confirm-modal">
+        <div class="announcement-confirm-icon" aria-hidden="true">
+          <i class="fa-solid fa-trash"></i>
+        </div>
+        <div class="announcement-confirm-copy">
+          <h2 id="announcementDeleteTitle">Delete announcement?</h2>
+          <p id="announcementDeleteMessage">This action cannot be undone.</p>
+        </div>
+        <div class="announcement-confirm-actions">
+          <button type="button" id="cancelAnnouncementDelete" class="announcement-confirm-cancel">Cancel</button>
+          <button type="button" id="confirmAnnouncementDelete" class="announcement-confirm-delete">Delete</button>
+        </div>
+      </div>
+    </div>
+
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>

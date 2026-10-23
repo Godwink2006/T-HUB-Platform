@@ -2,6 +2,11 @@ const filterBtn = document.querySelector(".filter-btn");
 const filterMenu = document.querySelector(".filter-menu");
 const customDate = document.querySelector(".custom-date");
 
+let dashboardAnnouncementSchoolId = null;
+let dashboardCanDeleteAnnouncements = false;
+let resolveAnnouncementDeleteConfirmation = null;
+let announcementDeleteFocusReturn = null;
+
 const dateRangeModal = document.getElementById("dateRangeModal");
 const closeDateModal = document.getElementById("closeDateModal");
 const cancelDateModal = document.getElementById("cancelDateModal");
@@ -283,6 +288,9 @@ async function loadDashboardAnnouncements() {
     if (!profile.role) throw new Error("User role is missing from profile.");
     finishDashboardAccessCheck();
 
+    dashboardAnnouncementSchoolId = profile.school_id;
+    dashboardCanDeleteAnnouncements = profile.role === "admin";
+
     loadDashboardStats(profile.school_id);
 
     if (welcomeText) {
@@ -369,6 +377,7 @@ async function loadDashboardAnnouncements() {
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; font-size: 0.8rem; color: #64748b; border-top: 0.5px solid rgb(219, 215, 215);">
             <span><i class="fa-solid fa-users" style="margin-right: 4px;"></i> Target: ${escapeHtml(ann.target_audience)}</span>
             <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> ${ann.expiry_date || "No expiry date"}</span>
+            ${dashboardCanDeleteAnnouncements ? `<button type="button" class="announcement-delete-btn" data-announcement-id="${escapeHtml(ann.id)}" aria-label="Delete announcement: ${escapeHtml(ann.title)}"><i class="fa-solid fa-trash" aria-hidden="true"></i> Delete</button>` : ""}
           </div>
         </div>
       `;
@@ -379,6 +388,97 @@ async function loadDashboardAnnouncements() {
     showDashboardAccessCheckError();
   }
 }
+
+function closeAnnouncementDeleteConfirmation(confirmed) {
+  const dialog = document.getElementById("announcementDeleteConfirm");
+  if (!dialog || !resolveAnnouncementDeleteConfirmation) return;
+
+  dialog.hidden = true;
+  unLockBodyScroll();
+
+  const resolve = resolveAnnouncementDeleteConfirmation;
+  resolveAnnouncementDeleteConfirmation = null;
+  resolve(confirmed);
+
+  if (!confirmed && announcementDeleteFocusReturn?.isConnected) {
+    announcementDeleteFocusReturn.focus();
+  }
+  announcementDeleteFocusReturn = null;
+}
+
+function requestAnnouncementDeleteConfirmation(title) {
+  const dialog = document.getElementById("announcementDeleteConfirm");
+  const message = document.getElementById("announcementDeleteMessage");
+  const cancelButton = document.getElementById("cancelAnnouncementDelete");
+  if (!dialog || !message || !cancelButton) return Promise.resolve(false);
+
+  message.textContent = title
+    ? `Delete “${title}”? This action cannot be undone.`
+    : "This action cannot be undone.";
+  announcementDeleteFocusReturn = document.activeElement;
+  dialog.hidden = false;
+  lockBodyScroll();
+  cancelButton.focus();
+
+  return new Promise((resolve) => {
+    resolveAnnouncementDeleteConfirmation = resolve;
+  });
+}
+
+document.getElementById("cancelAnnouncementDelete")?.addEventListener("click", () => {
+  closeAnnouncementDeleteConfirmation(false);
+});
+
+document.getElementById("confirmAnnouncementDelete")?.addEventListener("click", () => {
+  closeAnnouncementDeleteConfirmation(true);
+});
+
+document.getElementById("announcementDeleteConfirm")?.addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeAnnouncementDeleteConfirmation(false);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && resolveAnnouncementDeleteConfirmation) {
+    closeAnnouncementDeleteConfirmation(false);
+  }
+});
+
+document.querySelector(".announcement-preview")?.addEventListener("click", async (event) => {
+  const deleteButton = event.target.closest(".announcement-delete-btn");
+  if (!deleteButton || !dashboardCanDeleteAnnouncements || !dashboardAnnouncementSchoolId) return;
+
+  const announcementId = deleteButton.dataset.announcementId;
+  if (!announcementId) return;
+
+  const confirmed = await requestAnnouncementDeleteConfirmation(
+    deleteButton.closest(".announcement-item")?.querySelector("h4")?.textContent.trim(),
+  );
+  if (!confirmed) return;
+
+  deleteButton.disabled = true;
+  deleteButton.textContent = "Deleting...";
+
+  try {
+    const { data, error } = await window.supabaseClient
+      .from("announcements")
+      .delete()
+      .eq("id", announcementId)
+      .eq("school_id", dashboardAnnouncementSchoolId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error("Announcement could not be deleted. Refresh and try again.");
+
+    if (typeof showToast === "function") showToast("Announcement deleted.", "success");
+    await loadDashboardAnnouncements();
+  } catch (err) {
+    console.error("Error deleting announcement:", err);
+    if (typeof showToast === "function") showToast(err.message || "Failed to delete announcement.", "error");
+    deleteButton.disabled = false;
+    deleteButton.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i> Delete';
+  }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDashboardAnnouncements();
