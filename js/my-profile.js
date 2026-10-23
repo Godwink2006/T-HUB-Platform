@@ -498,6 +498,8 @@ function validatePasswordRequirements(password) {
 document.addEventListener("DOMContentLoaded", async function () {
   const saveBtn = document.getElementById("saveProfileInfo");
   if (!saveBtn) return;
+  const profileSection = document.getElementById("profileInformationSection");
+  profileSection?.classList.remove("profile-information-editable");
 
   try {
     const { data, error: authError } = await supabaseClient.auth.getUser();
@@ -517,6 +519,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (profileError) throw profileError;
 
     if (String(profile?.role || "").trim().toLowerCase() !== "student") {
+      profileSection?.classList.add("profile-information-editable");
       saveBtn.style.display = "flex";
       return;
     }
@@ -565,6 +568,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         .getElementById("profilePhotoActions")
         ?.style.setProperty("display", "none", "important");
     } else {
+      profileSection?.classList.add("profile-information-editable");
       saveBtn.style.display = "flex";
     }
   } catch (error) {

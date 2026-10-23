@@ -14,6 +14,42 @@ window.addEventListener("click", (e) => {
 let academicYears = [];
 let selectedYearId = null;
 
+function academicYearErrorMessage(error, action = "update") {
+  const code = String(error?.code || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${code} ${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school/.test(diagnostic)) {
+    return "This school is inactive, so academic years cannot be changed right now. Contact your school administrator.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(diagnostic)
+  ) {
+    return action === "load"
+      ? "You do not have permission to view academic years. Contact your school administrator."
+      : "You do not have permission to manage academic years. Contact your school administrator.";
+  }
+  if (status === 401 || code === "pgrst301" || /invalid jwt|session.*expired|refresh token/.test(diagnostic)) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `Could not connect to ${action === "load" ? "load" : "save"} academic years. Check your internet connection and try again.`;
+  }
+  if (code === "23505" || /duplicate key|already exists|unique constraint/.test(diagnostic)) {
+    return "This academic year already exists. Choose a different year.";
+  }
+  if (code === "pgrst116") {
+    return "The selected academic year could not be found. Refresh the list and try again.";
+  }
+  return action === "load"
+    ? "Academic years could not be loaded. Please try again."
+    : action === "create"
+      ? "The academic year could not be added. Please try again."
+      : "The academic year could not be updated. Please try again.";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadAcademicYears();
   setupModalListeners();
@@ -22,18 +58,23 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadAcademicYears() {
   renderTableLoading();
 
-  const { data, error } = await supabaseClient
-    .from("academic_years")
-    .select("*")
-    .order("year_label", { ascending: false });
+  try {
+    const { data, error } = await supabaseClient
+      .from("academic_years")
+      .select("*")
+      .order("year_label", { ascending: false });
 
-  if (error) {
-    showToast("Error loading academic years: " + error.message, "error");
-    return;
+    if (error) throw error;
+    academicYears = data || [];
+    renderAcademicYearsTable();
+  } catch (error) {
+    console.error("Academic year load failed:", error);
+    const tbody = document.querySelector(".academic-years-table-card tbody");
+    if (tbody) {
+      const message = academicYearErrorMessage(error, "load");
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 1.5rem;">${escapeHTML(message)}<br><button type="button" onclick="loadAcademicYears()" style="margin-top: .75rem;">Try again</button></td></tr>`;
+    }
   }
-
-  academicYears = data || [];
-  renderAcademicYearsTable();
 }
 
 function renderTableLoading() {
@@ -133,14 +174,7 @@ async function handleAddAcademicYear(event) {
         .update({ status: "Inactive" })
         .eq("status", "Active");
 
-      if (updateErr) {
-        showToast(
-          "Permission denied when setting existing year to Inactive: " +
-            updateErr.message,
-          "error",
-        );
-        return;
-      }
+      if (updateErr) throw updateErr;
     }
 
     const { data, error } = await supabaseClient
@@ -148,28 +182,15 @@ async function handleAddAcademicYear(event) {
       .insert([{ year_label: yearLabel, status }])
       .select();
 
-    if (error) {
-      if (error.code === "23505") {
-        showToast("This Academic Year has already been created.", "error");
-        return;
-      }
-      if (error.code === "42501") {
-        showToast(
-          "You do not have permission to add an academic year.",
-          "error",
-        );
-        return;
-      }
-      showToast(error.message, "error");
-      return;
-    }
+    if (error) throw error;
 
     showToast("Academic Year added successfully!", "success");
     closeModal("academicYearModal");
     form.reset();
     await loadAcademicYears();
   } catch (err) {
-    showToast(err.message || "An unexpected error occurred.", "error");
+    console.error("Academic year creation failed:", err);
+    showToast(academicYearErrorMessage(err, "create"), "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -235,25 +256,20 @@ async function handleEditAcademicYear(event) {
       .eq("id", selectedYearId)
       .select();
 
-    if (error) {
-      if (error.code === "23505") {
-        showToast("This Academic Year has already been created.", "error");
-        return;
-      }
-      showToast("Error updating academic year: " + error.message, "error");
-      return;
-    }
+    if (error) throw error;
 
     if (!data || data.length === 0) {
-      showToast("Permission denied.", "error");
-      return;
+      const noRowsError = new Error("Academic year update returned no rows.");
+      noRowsError.code = "42501";
+      throw noRowsError;
     }
 
     showToast("Academic Year updated successfully!", "success");
     closeModal("editAcademicYearModal");
     await loadAcademicYears();
   } catch (err) {
-    showToast(err.message, "error");
+    console.error("Academic year update failed:", err);
+    showToast(academicYearErrorMessage(err, "update"), "error");
   } finally {
     if (updateBtn) {
       updateBtn.disabled = false;

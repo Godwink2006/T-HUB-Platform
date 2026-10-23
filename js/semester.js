@@ -2,6 +2,42 @@ let terms = [];
 let selectedTermId = null;
 let originalTermData = {};
 
+function semesterErrorMessage(error, action = "update") {
+  const code = String(error?.code || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${code} ${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school/.test(diagnostic)) {
+    return "This school is inactive, so semesters cannot be changed right now. Contact your school administrator.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(diagnostic)
+  ) {
+    return action === "load"
+      ? "You do not have permission to view semesters. Contact your school administrator."
+      : "You do not have permission to manage semesters. Contact your school administrator.";
+  }
+  if (status === 401 || code === "pgrst301" || /invalid jwt|session.*expired|refresh token/.test(diagnostic)) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `Could not connect while ${action === "load" ? "loading" : "saving"} semesters. Check your internet connection and try again.`;
+  }
+  if (code === "23505" || /duplicate key|already exists|unique constraint/.test(diagnostic)) {
+    return "This semester already exists for the selected academic year.";
+  }
+  if (code === "pgrst116") {
+    return "The selected semester could not be found. Refresh the list and try again.";
+  }
+  return action === "load"
+    ? "Semesters could not be loaded. Please try again."
+    : action === "create"
+      ? "The semester could not be added. Please try again."
+      : "The semester could not be updated. Please try again.";
+}
+
 const termModal = document.getElementById("termModal");
 const editTermModal = document.getElementById("editTermModal");
 
@@ -53,23 +89,29 @@ function validateTermDates(
 async function loadTerms() {
   renderTableLoading();
 
-  const { data, error } = await supabaseClient
-    .from("terms")
-    .select(
-      `
+  try {
+    const { data, error } = await supabaseClient
+      .from("terms")
+      .select(
+        `
       *,
       academic_years ( year_label )
     `,
-    )
-    .order("created_at", { ascending: false });
+      )
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    showToast("Error loading semesters: " + error.message, "error");
-    return;
+    if (error) throw error;
+    terms = data || [];
+    renderTermsTable();
+  } catch (error) {
+    console.error("Semester load failed:", error);
+    const tbody = document.querySelector(".terms-table-card tbody");
+    if (tbody) {
+      const message = semesterErrorMessage(error, "load");
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 1.5rem;">${escapeHTML(message)}<br><button type="button" onclick="loadTerms()" style="margin-top: .75rem;">Try again</button></td></tr>`;
+    }
   }
 
-  terms = data || [];
-  renderTermsTable();
 }
 
 function renderTableLoading() {
@@ -241,28 +283,15 @@ async function handleAddTerm(event) {
       ])
       .select();
 
-    if (error) {
-      if (error.code === "23505") {
-        showToast(
-          "This semester already exists for the selected year.",
-          "error",
-        );
-        return;
-      }
-      if (error.code === "42501") {
-        showToast("You do not have permission to add a semester.", "error");
-        return;
-      }
-      showToast(error.message, "error");
-      return;
-    }
+    if (error) throw error;
 
     showToast("Semester added successfully!", "success");
     closeModal("termModal");
     form.reset();
     await loadTerms();
   } catch (err) {
-    showToast(err.message, "error");
+    console.error("Semester creation failed:", err);
+    showToast(semesterErrorMessage(err, "create"), "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -367,21 +396,20 @@ async function handleEditTerm(event) {
       .eq("id", selectedTermId)
       .select();
 
-    if (error) {
-      showToast("Error updating semester: " + error.message, "error");
-      return;
-    }
+    if (error) throw error;
 
     if (!data || data.length === 0) {
-      showToast("Permission denied.", "error");
-      return;
+      const noRowsError = new Error("Semester update returned no rows.");
+      noRowsError.code = "42501";
+      throw noRowsError;
     }
 
     showToast("Semester updated successfully!", "success");
     closeModal("editTermModal");
     await loadTerms();
   } catch (err) {
-    showToast(err.message, "error");
+    console.error("Semester update failed:", err);
+    showToast(semesterErrorMessage(err, "update"), "error");
   } finally {
     if (updateBtn) {
       updateBtn.disabled = false;
@@ -438,43 +466,47 @@ function setupModalListeners() {
 }
 
 async function populateAcademicYearDropdowns() {
-  const { data, error } = await supabaseClient
-    .from("academic_years")
-    .select("id, year_label, status")
-    .order("year_label", { ascending: false });
-
-  if (error) {
-    showToast(
-      "Failed to load academic years for selection: " + error.message,
-      "error",
-    );
-    return;
-  }
-
   const addSelect = document.getElementById("addAcademicYearSelect");
   const editSelect = document.getElementById("editAcademicYearSelect");
 
-  if (!data || data.length === 0) {
-    const emptyOption = `<option value="">No Academic Years Available</option>`;
-    if (addSelect) addSelect.innerHTML = emptyOption;
-    if (editSelect) editSelect.innerHTML = emptyOption;
-    return;
-  }
+  try {
+    const { data, error } = await supabaseClient
+      .from("academic_years")
+      .select("id, year_label, status")
+      .order("year_label", { ascending: false });
 
-  if (addSelect) {
-    const activeYears = data.filter((item) => item.status === "Active");
-    addSelect.innerHTML = activeYears.length
-      ? activeYears
-          .map(
-            (item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.year_label || "")}</option>`,
-          )
-          .join("")
-      : `<option value="">No Active Academic Years Available</option>`;
-  }
+    if (error) throw error;
 
-  if (editSelect && editTermModal?.style.display !== "flex") {
-    editSelect.innerHTML = data
-      .map((item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.year_label || "")}</option>`)
-      .join("");
+    if (!data || data.length === 0) {
+      const emptyOption = `<option value="">No Academic Years Available</option>`;
+      if (addSelect) addSelect.innerHTML = emptyOption;
+      if (editSelect) editSelect.innerHTML = emptyOption;
+      return;
+    }
+
+    if (addSelect) {
+      const activeYears = data.filter((item) => item.status === "Active");
+      addSelect.innerHTML = activeYears.length
+        ? activeYears
+            .map(
+              (item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.year_label || "")}</option>`,
+            )
+            .join("")
+        : `<option value="">No Active Academic Years Available</option>`;
+    }
+
+    if (editSelect && editTermModal?.style.display !== "flex") {
+      editSelect.innerHTML = data
+        .map((item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.year_label || "")}</option>`)
+        .join("");
+    }
+  } catch (error) {
+    console.error("Academic year dropdown load failed:", error);
+    const message = semesterErrorMessage(error, "load");
+    if (addSelect) addSelect.innerHTML = `<option value="">Academic years unavailable</option>`;
+    if (editSelect && editTermModal?.style.display !== "flex") {
+      editSelect.innerHTML = `<option value="">Academic years unavailable</option>`;
+    }
+    showToast(message, "error");
   }
 }

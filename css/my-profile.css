@@ -39,6 +39,21 @@
   font-size: 14px;
 }
 
+#profileInformationSection #profilePhotoActions,
+#profileInformationSection #resetProfileInfo,
+#profileInformationSection #saveProfileInfo {
+  display: none !important;
+}
+
+#profileInformationSection.profile-information-editable #profilePhotoActions {
+  display: flex !important;
+}
+
+#profileInformationSection.profile-information-editable #resetProfileInfo,
+#profileInformationSection.profile-information-editable #saveProfileInfo {
+  display: inline-flex !important;
+}
+
 .graduated-profile-readonly #profilePhotoActions,
 .graduated-profile-readonly #resetProfileInfo,
 .graduated-profile-readonly #saveProfileInfo {
