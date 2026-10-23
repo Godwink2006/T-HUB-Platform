@@ -168,6 +168,7 @@ if (saveAnnouncementBtn) {
       }
 
       const schoolId = profile.school_id;
+      await ensureDashboardSchoolActiveFor("publish announcements", schoolId);
 
       const { error: insertError } = await window.supabaseClient
         .from("announcements")
@@ -303,16 +304,14 @@ async function checkDashboardAvailability(user, profile) {
       return "Your account is inactive. Contact your school administrator to restore access.";
     }
 
-    const { data: schoolIsActive, error: schoolError } =
-      await window.supabaseClient.rpc("is_school_active", {
-        target_school_id: profile.school_id,
-      });
-    if (schoolError) throw schoolError;
-    if (schoolIsActive !== true) {
-      return "This school is currently inactive, so its dashboard data is unavailable. Contact T-HUB support for help.";
-    }
-
     if (String(profile.role || "").trim().toLowerCase() === "student") {
+      const { data: schoolIsActive, error: schoolError } =
+        await window.supabaseClient.rpc("is_school_active", {
+          target_school_id: profile.school_id,
+        });
+      if (schoolError) throw schoolError;
+      if (schoolIsActive !== true) return null;
+
       const { data: enrollments, error: enrollmentError } =
         await window.supabaseClient
           .from("student_enrollments")
@@ -342,6 +341,19 @@ async function checkDashboardAvailability(user, profile) {
       dashboardAvailabilityCheck = null;
     }
     throw error;
+  }
+}
+
+async function ensureDashboardSchoolActiveFor(action, schoolId) {
+  const { data: schoolIsActive, error } = await window.supabaseClient.rpc(
+    "is_school_active",
+    { target_school_id: schoolId },
+  );
+  if (error) throw error;
+  if (schoolIsActive !== true) {
+    const inactiveError = new Error("School is inactive");
+    inactiveError.dashboardMessage = `This school is inactive. You can still view dashboard information, but you can’t ${action} until the school is reactivated.`;
+    throw inactiveError;
   }
 }
 
@@ -781,6 +793,11 @@ document.querySelector(".announcement-preview")?.addEventListener("click", async
   deleteButton.textContent = "Deleting...";
 
   try {
+    await ensureDashboardSchoolActiveFor(
+      "delete announcements",
+      dashboardAnnouncementSchoolId,
+    );
+
     const { data, error } = await window.supabaseClient
       .from("announcements")
       .delete()
