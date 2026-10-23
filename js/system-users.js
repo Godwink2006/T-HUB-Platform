@@ -1,5 +1,74 @@
 const form = document.getElementById("systemUserForm");
 
+function systemUserErrorMessage(error, action = "update") {
+  const code = String(error?.code || error?.error_code || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || error?.context?.status || 0);
+  const diagnostic = `${code} ${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school/.test(diagnostic)) {
+    return "This school is inactive, so system users cannot be changed right now. Contact your school administrator.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    code === "forbidden" ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed|admin only|only admins?|only.*admin|administrator required|requires? admin/.test(diagnostic)
+  ) {
+    return action === "load"
+      ? "You do not have permission to view system users. Contact your school administrator."
+      : "You do not have permission to manage system users. Contact your school administrator.";
+  }
+  if (status === 401 || code === "pgrst301" || /invalid jwt|session.*expired|refresh token/.test(diagnostic)) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|fetch failed|failed to send a request|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `Could not connect to ${action === "load" ? "load" : "save"} system users. Check your internet connection and try again.`;
+  }
+  if (/phone_number|phone number/.test(diagnostic) && /duplicate|already exists|unique|23505/.test(`${code} ${diagnostic}`)) {
+    return "That phone number is already assigned to another user.";
+  }
+  if (code === "23505" || code === "email_exists" || code === "user_already_exists" || /already registered|user already exists|already in use|email.*already exists/.test(diagnostic)) {
+    return "A user with this email address already exists. Use a different email address.";
+  }
+  if (/weak password|password.*too short|password should be at least/.test(diagnostic)) {
+    return "The password does not meet the security requirements. Choose a stronger password and try again.";
+  }
+  if (/file size|payload too large|object.*too large/.test(diagnostic) || status === 413) {
+    return "The photo is too large. Choose a smaller image and try again.";
+  }
+  if (/canvas|compress|image decode|failed to process.*photo/.test(diagnostic)) {
+    return "The photo could not be processed. Choose a different image and try again.";
+  }
+  if (/function.*(not found|unavailable)|deployment.*not found/.test(diagnostic) || status === 404) {
+    return "The user management service is unavailable right now. Contact your administrator.";
+  }
+  return action === "load"
+    ? "System users could not be loaded. Please try again."
+    : action === "create"
+      ? "The user could not be created. Check the details and try again."
+      : "The user could not be updated. Please try again.";
+}
+
+async function getSystemUserErrorMessage(error, action) {
+  if (error?.context && typeof error.context.json === "function") {
+    try {
+      const body = await error.context.json();
+      if (body && typeof body === "object") {
+        error = {
+          code: body.code || body.error_code || error.code,
+          status: body.status || error.status || error.statusCode,
+          message: body.message || body.error || error.message,
+          details: body.details || error.details,
+          hint: body.hint || error.hint,
+        };
+      }
+    } catch (parseError) {
+      // Use the original function error when its response isn't JSON.
+    }
+  }
+  return systemUserErrorMessage(error, action);
+}
+
 function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -72,7 +141,7 @@ function resetAddUserPreview() {
   if (addFileNameText) addFileNameText.textContent = "No file chosen";
 }
 
-form.addEventListener("submit", async (e) => {
+form?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const saveButton = form.querySelector(".save-btn");
@@ -145,18 +214,8 @@ form.addEventListener("submit", async (e) => {
 
     await loadSystemUsers();
   } catch (err) {
-    let message = err.message;
-
-    if (err.context) {
-      try {
-        const errorBody = await err.context.json();
-        if (errorBody?.message) {
-          message = errorBody.message;
-        }
-      } catch (parseError) {}
-    }
-
-    showToast(message, "error");
+    console.error("System user creation failed:", err);
+    showToast(await getSystemUserErrorMessage(err, "create"), "error");
   } finally {
     saveButton.disabled = false;
     saveButton.textContent = "Save";
@@ -180,7 +239,7 @@ const openSystemUserModal = document.getElementById("addSystemUser");
 
 const closeSystemUserModal = document.getElementById("closeSystemUserModal");
 
-openSystemUserModal.addEventListener("click", () => {
+openSystemUserModal?.addEventListener("click", () => {
   systemUserModal.style.display = "flex";
 
   const avatarPreview = document.getElementById("addAvatarPreview");
@@ -196,13 +255,13 @@ openSystemUserModal.addEventListener("click", () => {
   lockBodyScroll();
 });
 
-closeSystemUserModal.addEventListener("click", () => {
+closeSystemUserModal?.addEventListener("click", () => {
   systemUserModal.style.display = "none";
 
   unLockBodyScroll();
 });
 
-cancelSystemUserModal.addEventListener("click", () => {
+cancelSystemUserModal?.addEventListener("click", () => {
   systemUserModal.style.display = "none";
 
   unLockBodyScroll();
@@ -225,13 +284,13 @@ const cancelEditSystemUserModal = document.getElementById(
 const editSystemUserModal = document.getElementById("editSystemUserModal");
 const editSystemUserButtons = document.querySelectorAll(".edit-SystemUser");
 
-closeEditSystemUserModal.addEventListener("click", () => {
+closeEditSystemUserModal?.addEventListener("click", () => {
   editSystemUserModal.style.display = "none";
 
   unLockBodyScroll();
 });
 
-cancelEditSystemUserModal.addEventListener("click", () => {
+cancelEditSystemUserModal?.addEventListener("click", () => {
   editSystemUserModal.style.display = "none";
 
   unLockBodyScroll();
@@ -280,44 +339,41 @@ async function loadSystemUsers() {
   const roleValue = roleFilter ? roleFilter.value.toLowerCase() : "";
   const statusValue = statusFilter ? statusFilter.value.toLowerCase() : "";
 
-  let query = supabaseClient
-    .from("profiles")
-    .select(
-      "id, full_name, email, phone_number, role, status, photo_url, created_at, updated_at",
-    )
-    .in("role", ["librarian", "accountant", "receptionist"]);
+  try {
+    let query = supabaseClient
+      .from("profiles")
+      .select(
+        "id, full_name, email, phone_number, role, status, photo_url, created_at, updated_at",
+      )
+      .in("role", ["librarian", "accountant", "receptionist"]);
 
-  if (searchTerm) {
-    query = query.or(
-      `full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone_number.ilike.%${searchTerm}%`,
-    );
-  }
+    if (searchTerm) {
+      query = query.or(
+        `full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone_number.ilike.%${searchTerm}%`,
+      );
+    }
 
-  if (roleValue && roleValue !== "role") {
-    query = query.ilike("role", roleValue);
-  }
+    if (roleValue && roleValue !== "role") {
+      query = query.ilike("role", roleValue);
+    }
 
-  if (statusValue && statusValue !== "status") {
-    query = query.ilike("status", statusValue);
-  }
+    if (statusValue && statusValue !== "status") {
+      query = query.ilike("status", statusValue);
+    }
 
-  query = query.order("created_at", { ascending: false });
+    query = query.order("created_at", { ascending: false });
 
-  const { data: users, error } = await query;
+    const { data: users, error } = await query;
+    if (error) throw error;
 
-  if (error) {
-    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Failed to load users.</td></tr>`;
-    return;
-  }
+    if (!users || users.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No users found.</td></tr>`;
+      return;
+    }
 
-  if (!users || users.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">No users found.</td></tr>`;
-    return;
-  }
-
-  tableBody.innerHTML = users
-    .map(
-      (user) => `
+    tableBody.innerHTML = users
+      .map(
+        (user) => `
     <tr>
       <td>
         <span class="app-person-cell">
@@ -344,8 +400,13 @@ async function loadSystemUsers() {
       </td>
     </tr>
   `,
-    )
-    .join("");
+      )
+      .join("");
+  } catch (error) {
+    console.error("System users load failed:", error);
+    const message = systemUserErrorMessage(error, "load");
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 1.5rem;">${escapeHTML(message)}<br><button type="button" onclick="loadSystemUsers()" style="margin-top: 0.75rem;">Try again</button></td></tr>`;
+  }
 }
 
 function formatDateTime(isoString) {
@@ -395,59 +456,63 @@ let originalUserData = null;
 async function editUser(userId) {
   targetUserToEdit = userId;
 
-  const { data: user, error } = await supabaseClient
-    .from("profiles")
-    .select("full_name, email, phone_number, role, status, photo_url")
-    .eq("id", userId)
-    .single();
+  try {
+    const { data: user, error } = await supabaseClient
+      .from("profiles")
+      .select("full_name, email, phone_number, role, status, photo_url")
+      .eq("id", userId)
+      .single();
 
-  if (error || !user) {
-    if (typeof showToast === "function") {
-      showToast("Could not load user details.", "error");
+    if (error) throw error;
+    if (!user) {
+      showToast("This user could not be found. Refresh the list and try again.", "error");
+      return;
     }
-    return;
-  }
 
-  const fullNameValue = user.full_name || "";
-  const phoneValue = user.phone_number || "";
-  const statusValue = user.status || "";
-  const roleValue = user.role || "";
-  const photoUrlValue = user.photo_url || null;
+    const fullNameValue = user.full_name || "";
+    const phoneValue = user.phone_number || "";
+    const statusValue = user.status || "";
+    const roleValue = user.role || "";
+    const photoUrlValue = user.photo_url || null;
 
-  const fullNameInput = document.getElementById("editFullName");
-  const phoneInput = document.getElementById("editPhone");
-  const emailInput = document.getElementById("editEmail");
-  const statusInput = document.getElementById("editStatus");
-  const roleInput = document.getElementById("editRole");
+    const fullNameInput = document.getElementById("editFullName");
+    const phoneInput = document.getElementById("editPhone");
+    const emailInput = document.getElementById("editEmail");
+    const statusInput = document.getElementById("editStatus");
+    const roleInput = document.getElementById("editRole");
 
-  if (fullNameInput) fullNameInput.value = fullNameValue;
-  if (phoneInput) phoneInput.value = phoneValue;
-  if (emailInput) emailInput.value = user.email || "";
-  if (statusInput) statusInput.value = statusValue;
-  if (roleInput) roleInput.value = roleValue;
+    if (fullNameInput) fullNameInput.value = fullNameValue;
+    if (phoneInput) phoneInput.value = phoneValue;
+    if (emailInput) emailInput.value = user.email || "";
+    if (statusInput) statusInput.value = statusValue;
+    if (roleInput) roleInput.value = roleValue;
 
-  const avatarPreview = document.getElementById("editAvatarPreview");
-  if (avatarPreview) {
-    avatarPreview.src = photoUrlValue || "assets/default-avatar.png";
-  }
+    const avatarPreview = document.getElementById("editAvatarPreview");
+    if (avatarPreview) {
+      avatarPreview.src = photoUrlValue || "assets/default-avatar.png";
+    }
 
-  const fileInput = document.getElementById("editAvatarInput");
-  const fileNameText = document.getElementById("fileNameDisplay");
-  if (fileInput) fileInput.value = "";
-  if (fileNameText) fileNameText.textContent = "No new file chosen";
+    const fileInput = document.getElementById("editAvatarInput");
+    const fileNameText = document.getElementById("fileNameDisplay");
+    if (fileInput) fileInput.value = "";
+    if (fileNameText) fileNameText.textContent = "No new file chosen";
 
-  originalUserData = {
-    fullName: fullNameValue,
-    phone: phoneValue,
-    role: roleValue,
-    status: statusValue,
-    photoUrl: photoUrlValue,
-  };
+    originalUserData = {
+      fullName: fullNameValue,
+      phone: phoneValue,
+      role: roleValue,
+      status: statusValue,
+      photoUrl: photoUrlValue,
+    };
 
-  const modal = document.getElementById("editSystemUserModal");
-  if (modal) {
-    modal.style.display = "flex";
-    if (typeof lockBodyScroll === "function") lockBodyScroll();
+    const modal = document.getElementById("editSystemUserModal");
+    if (modal) {
+      modal.style.display = "flex";
+      if (typeof lockBodyScroll === "function") lockBodyScroll();
+    }
+  } catch (error) {
+    console.error("Could not load system user details:", error);
+    showToast(await getSystemUserErrorMessage(error, "load"), "error");
   }
 }
 
@@ -521,6 +586,7 @@ async function handleUpdateUser(event) {
   }
 
   const editSystemButton = document.getElementById("updateSystemUserBtn");
+  let uploadedPhotoPath = null;
   if (editSystemButton) {
     editSystemButton.disabled = true;
     editSystemButton.textContent = "Updating...";
@@ -550,6 +616,7 @@ async function handleUpdateUser(event) {
         });
 
       if (uploadError) throw uploadError;
+      uploadedPhotoPath = filePath;
 
       const { data: urlData } = supabaseClient.storage
         .from("avatars")
@@ -574,24 +641,16 @@ async function handleUpdateUser(event) {
       },
     );
 
-    if (error) {
-      let errorMessage = "Failed to update user.";
-
-      if (error.context) {
-        try {
-          const errorBody = await error.context.json();
-          if (errorBody?.message) {
-            errorMessage = errorBody.message;
-          }
-        } catch (e) {}
-      }
-
-      throw new Error(errorMessage);
-    }
+    if (error) throw error;
 
     if (data && data.success === false) {
-      throw new Error(data.message || "Failed to update user.");
+      const functionError = new Error(data.message || "Failed to update user.");
+      functionError.code = data.code || data.error_code;
+      functionError.status = data.status;
+      throw functionError;
     }
+
+    uploadedPhotoPath = null;
 
     showToast(data.message || "User updated successfully!", "success");
 
@@ -603,7 +662,20 @@ async function handleUpdateUser(event) {
     targetUserToEdit = null;
     originalUserData = null;
   } catch (err) {
-    showToast(err.message, "error");
+    if (uploadedPhotoPath) {
+      try {
+        const { error: cleanupError } = await supabaseClient.storage
+          .from("avatars")
+          .remove([uploadedPhotoPath]);
+        if (cleanupError) {
+          console.error("Could not remove unused system user photo:", cleanupError);
+        }
+      } catch (cleanupError) {
+        console.error("Could not remove unused system user photo:", cleanupError);
+      }
+    }
+    console.error("System user update failed:", err);
+    showToast(await getSystemUserErrorMessage(err, "update"), "error");
   } finally {
     if (editSystemButton) {
       editSystemButton.disabled = false;
