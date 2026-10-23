@@ -3,6 +3,12 @@ let activeTermId = null;
 let activeAssessment = null;
 let currentGradeSession = null;
 let currentEditGradeId = null;
+const GRADE_LIST_PAGE_SIZE = 30;
+let gradeListOffset = 0;
+let gradeListHasMore = true;
+let gradeListRenderedCount = 0;
+let gradeListIsLoading = false;
+let gradeListRefreshPending = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   initGradeModalEventListeners();
@@ -611,30 +617,39 @@ async function handleSaveGrades(e) {
   const scoreInputs = document.querySelectorAll(".student-score-input");
   const recordsPayload = [];
   let maxExceeded = false;
+  let invalidScore = false;
 
   scoreInputs.forEach((input) => {
     const studentId = input.dataset.studentId;
     const rawVal = input.value.trim();
+    const score = rawVal === "" ? 0 : Number(rawVal);
 
-    if (rawVal !== "") {
-      const score = Number(rawVal);
-
-      if (
-        currentGradeSession.maxMarks !== null &&
-        score > currentGradeSession.maxMarks
-      ) {
-        maxExceeded = true;
-        input.classList.add("is-invalid");
-      } else {
-        input.classList.remove("is-invalid");
-      }
-
-      recordsPayload.push({
-        student_id: studentId,
-        score: score,
-      });
+    if (!Number.isFinite(score) || score < 0) {
+      invalidScore = true;
+      input.classList.add("is-invalid");
+      return;
     }
+
+    if (
+      currentGradeSession.maxMarks !== null &&
+      score > currentGradeSession.maxMarks
+    ) {
+      maxExceeded = true;
+      input.classList.add("is-invalid");
+    } else {
+      input.classList.remove("is-invalid");
+    }
+
+    recordsPayload.push({
+      student_id: studentId,
+      score,
+    });
   });
+
+  if (invalidScore) {
+    showToast("Scores must be zero or a positive number.", "error");
+    return;
+  }
 
   if (maxExceeded) {
     showToast(
@@ -759,8 +774,6 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
         : null;
 
     const maxAttr = numericMax !== null ? `max="${numericMax}"` : "";
-    const placeholderText =
-      numericMax !== null ? `0 - ${numericMax}` : "Enter grade";
 
     const activeStudentIds = activeStudents.map((student) => student.id);
     const { data: studentProfiles, error: profilesError } = await client
@@ -798,7 +811,9 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
             type="number"
             class="student-score-input"
             data-student-id="${escapeHTML(student.id)}"
-            placeholder="${placeholderText}"
+            value="0"
+            aria-label="Score for ${escapeHTML(displayName)}"
+            title="Enter a score, or leave 0 if no score was earned"
             min="0"
             ${maxAttr}
             step="0.01"
@@ -876,9 +891,32 @@ function renderGradeCreator(profile) {
   return `<span class="grade-creator-cell"><img class="app-person-avatar" src="${escapeGradeHtml(photo)}" alt="" loading="lazy" /><span class="grade-creator-meta"><span class="grade-creator-name">${escapeGradeHtml(profile.full_name || "Unknown")}</span><small>${escapeGradeHtml(label)}</small></span></span>`;
 }
 
-async function loadGradesList() {
+async function loadGradesList(options = {}) {
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
+
+  const append = options?.append === true;
+  const nextButton = document.getElementById("nextGradesPage");
+
+  if (gradeListIsLoading) {
+    if (!append) gradeListRefreshPending = true;
+    return;
+  }
+  if (append && !gradeListHasMore) return;
+
+  if (!append) {
+    gradeListOffset = 0;
+    gradeListHasMore = true;
+    gradeListRenderedCount = 0;
+    tbody.innerHTML = "";
+  }
+
+  gradeListIsLoading = true;
+  if (nextButton) {
+    nextButton.disabled = true;
+    nextButton.hidden = false;
+    nextButton.textContent = "Loading...";
+  }
 
   const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")
     .toLowerCase()
@@ -928,19 +966,29 @@ async function loadGradesList() {
       query = query.eq("category_id", selectedCategory);
     }
 
+    query = query
+      .order("id", { ascending: false })
+      .range(gradeListOffset, gradeListOffset + GRADE_LIST_PAGE_SIZE - 1);
+
     const { data: grades, error } = await query;
 
     if (error) throw error;
 
     if (!grades || grades.length === 0) {
-      tbody.innerHTML = `
-        <tr>
+      gradeListHasMore = false;
+      if (gradeListRenderedCount === 0) {
+        tbody.innerHTML = `
+        <tr data-grade-empty="true">
           <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
             No grade records found.
           </td>
         </tr>`;
+      }
       return;
     }
+
+    gradeListOffset += grades.length;
+    gradeListHasMore = grades.length === GRADE_LIST_PAGE_SIZE;
 
     const filteredGrades = grades.filter((item) => {
       const normalizedStatus = (item.status || "drafted").toLowerCase();
@@ -968,16 +1016,19 @@ async function loadGradesList() {
     });
 
     if (filteredGrades.length === 0) {
-      tbody.innerHTML = `
-        <tr>
+      if (gradeListRenderedCount === 0) {
+        tbody.innerHTML = `
+        <tr data-grade-empty="true">
           <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
-            No grade records found matching filters.
+            No grade records on this page match the selected filters.
           </td>
         </tr>`;
+      }
       return;
     }
 
-    tbody.innerHTML = filteredGrades
+    tbody.querySelector('[data-grade-empty="true"]')?.remove();
+    tbody.insertAdjacentHTML("beforeend", filteredGrades
       .map((item) => {
         const gradeId = item.id || item.grade_id;
 
@@ -1019,13 +1070,32 @@ async function loadGradesList() {
           </tr>
         `;
       })
-      .join("");
+      .join(""));
+    gradeListRenderedCount += filteredGrades.length;
   } catch (err) {
     console.error("Error loading grades list:", err);
+    if (!append && gradeListRenderedCount === 0) {
+      tbody.innerHTML = `
+        <tr data-grade-empty="true">
+          <td colspan="6" style="text-align: center; color: #dc2626; padding: 20px;">
+            Failed to load grades.
+          </td>
+        </tr>`;
+    }
     if (typeof showToast === "function") {
       showToast(`Failed to load grades: ${err.message}`, "error");
     }
-
+  } finally {
+    gradeListIsLoading = false;
+    if (nextButton) {
+      nextButton.hidden = !gradeListHasMore;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
+    if (gradeListRefreshPending) {
+      gradeListRefreshPending = false;
+      loadGradesList();
+    }
   }
 }
 
@@ -1670,6 +1740,7 @@ function initToolbarListeners() {
   const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
   const statusFilter = document.getElementById("gradeToolbarStatusSelect");
   const startDateFilter = document.getElementById("gradeToolbarStartDate");
+  const nextButton = document.getElementById("nextGradesPage");
 
   if (searchInput) searchInput.addEventListener("input", loadGradesList);
   if (classFilter) classFilter.addEventListener("change", loadGradesList);
@@ -1677,4 +1748,7 @@ function initToolbarListeners() {
   if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
   if (statusFilter) statusFilter.addEventListener("change", loadGradesList);
   if (startDateFilter) startDateFilter.addEventListener("change", loadGradesList);
+  if (nextButton) {
+    nextButton.addEventListener("click", () => loadGradesList({ append: true }));
+  }
 }

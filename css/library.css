@@ -185,6 +185,32 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+.library-books-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 28px;
+}
+
+.library-books-pagination button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 24px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.library-books-pagination button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.library-books-pagination button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .book-table-card {
   min-width: 0;
   overflow-x: auto;

@@ -789,7 +789,8 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
   if (loadMoreButton) {
     loadMoreButton.disabled = true;
     loadMoreButton.textContent = "Loading…";
-    loadMoreButton.hidden = !loadMore;
+    loadMoreButton.hidden =
+      !loadMore || !attendanceHasMore || allAttendanceList.length === 0;
   }
 
   try {

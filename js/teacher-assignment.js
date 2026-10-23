@@ -474,19 +474,41 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 let globalAssignmentsData = [];
+const ASSIGNMENTS_PAGE_SIZE = 30;
+let assignmentsOffset = 0;
+let assignmentsHasMore = false;
+let assignmentsLoading = false;
 
-async function loadAssignmentsTable() {
+async function loadAssignmentsTable(options = {}) {
   const tableBody = document.getElementById("assignmentsTableBody");
   if (!tableBody) return;
+  const append = options.append === true;
+  const nextButton = document.getElementById("nextAssignmentsPage");
 
-  tableBody.innerHTML = `
-    <tr>
-      <td colspan="10" style="text-align: center; padding: 2rem; color: #64748b;">
-        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
-        Loading teacher assignments...
-      </td>
-    </tr>
-  `;
+  if (assignmentsLoading || (append && !assignmentsHasMore)) return;
+  assignmentsLoading = true;
+
+  if (!append) {
+    assignmentsOffset = 0;
+    assignmentsHasMore = false;
+    globalAssignmentsData = [];
+    if (nextButton) {
+      nextButton.hidden = true;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="10" style="text-align: center; padding: 2rem; color: #64748b;">
+          <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+          Loading teacher assignments...
+        </td>
+      </tr>
+    `;
+  } else if (nextButton) {
+    nextButton.disabled = true;
+    nextButton.textContent = "Loading...";
+  }
 
   try {
     const { data: assignments, error } = await window.supabaseClient
@@ -510,21 +532,40 @@ async function loadAssignmentsTable() {
         academic_years ( id, year_label )
       `,
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      // Fetch one look-ahead row so Next is shown only when another page exists.
+      .range(assignmentsOffset, assignmentsOffset + ASSIGNMENTS_PAGE_SIZE);
 
     if (error) throw error;
 
-    globalAssignmentsData = assignments || [];
+    const page = assignments || [];
+    const visiblePage = page.slice(0, ASSIGNMENTS_PAGE_SIZE);
+    assignmentsHasMore = page.length > ASSIGNMENTS_PAGE_SIZE;
+    assignmentsOffset += visiblePage.length;
+    globalAssignmentsData = append
+      ? globalAssignmentsData.concat(visiblePage)
+      : visiblePage;
 
     populateFilterDropdowns(globalAssignmentsData);
 
-    renderAssignmentsTable(globalAssignmentsData);
+    filterAssignments();
   } catch (err) {
     console.error("Error fetching assignments:", err.message);
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="10" style="text-align: center; color: red; padding: 20px;">Failed to load assignments data.</td>
-      </tr>`;
+    if (!append) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="10" style="text-align: center; color: red; padding: 20px;">Failed to load assignments data.</td>
+        </tr>`;
+    } else if (typeof showToast === "function") {
+      showToast("Could not load more assignments.", "error");
+    }
+  } finally {
+    assignmentsLoading = false;
+    if (nextButton) {
+      nextButton.hidden = !assignmentsHasMore;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
   }
 }
 
@@ -532,6 +573,9 @@ function populateFilterDropdowns(assignments) {
   const subjectSelect = document.getElementById("filterSubject");
   const classSelect = document.getElementById("filterClass");
   const yearSelect = document.getElementById("filterAcademicYear");
+  const selectedSubject = subjectSelect?.value || "";
+  const selectedClass = classSelect?.value || "";
+  const selectedYear = yearSelect?.value || "";
 
   const subjectsMap = new Map();
   const classesMap = new Map();
@@ -563,6 +607,15 @@ function populateFilterDropdowns(assignments) {
   buildOptions(subjectSelect, subjectsMap, "All Subjects");
   buildOptions(classSelect, classesMap, "All Classes");
   buildOptions(yearSelect, yearsMap, "All Academic Years");
+  if (subjectSelect && subjectsMap.has(selectedSubject)) {
+    subjectSelect.value = selectedSubject;
+  }
+  if (classSelect && classesMap.has(selectedClass)) {
+    classSelect.value = selectedClass;
+  }
+  if (yearSelect && yearsMap.has(selectedYear)) {
+    yearSelect.value = selectedYear;
+  }
 }
 
 function renderAssignmentsTable(assignments) {
@@ -683,6 +736,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const filterClass = document.getElementById("filterClass");
   const filterYear = document.getElementById("filterAcademicYear");
   const filterStatus = document.getElementById("filterStatus");
+  const nextButton = document.getElementById("nextAssignmentsPage");
 
   if (searchInput) searchInput.addEventListener("input", filterAssignments);
   if (filterSubject)
@@ -690,4 +744,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (filterClass) filterClass.addEventListener("change", filterAssignments);
   if (filterYear) filterYear.addEventListener("change", filterAssignments);
   if (filterStatus) filterStatus.addEventListener("change", filterAssignments);
+  if (nextButton) {
+    nextButton.addEventListener("click", () => loadAssignmentsTable({ append: true }));
+  }
 });

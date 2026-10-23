@@ -94,6 +94,32 @@ body {
   overflow: hidden;
 }
 
+.assignment-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 28px;
+}
+
+.assignment-pagination button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 24px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.assignment-pagination button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.assignment-pagination button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

@@ -1,18 +1,40 @@
 let allCatalogBooks = [];
+const BOOKS_PAGE_SIZE = 30;
+let booksOffset = 0;
+let booksHasMore = false;
+let booksLoading = false;
 
-async function loadBookCatalog() {
+async function loadBookCatalog(options = {}) {
   const gridContainer = document.getElementById("bookCardGrid");
   if (!gridContainer) return;
+  const append = options.append === true;
+  const nextButton = document.getElementById("nextBooksPage");
 
-  gridContainer.innerHTML = `
-    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #64748b;">
-      <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem; font-size: 1.2rem;"></i>
-      Loading library catalog...
-    </div>
-  `;
+  if (booksLoading || (append && !booksHasMore)) return;
+  booksLoading = true;
+
+  if (!append) {
+    booksOffset = 0;
+    booksHasMore = false;
+    allCatalogBooks = [];
+    if (nextButton) {
+      nextButton.hidden = true;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
+    gridContainer.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem; font-size: 1.2rem;"></i>
+        Loading library catalog...
+      </div>
+    `;
+  } else if (nextButton) {
+    nextButton.disabled = true;
+    nextButton.textContent = "Loading...";
+  }
 
   try {
-    const { data: books, error } = await window.supabaseClient
+    const { data: page, error } = await window.supabaseClient
       .from("books")
       .select(
         `
@@ -21,29 +43,73 @@ async function loadBookCatalog() {
       `,
       )
       .eq("status", "active")
-      .order("title", { ascending: true });
+      .order("title", { ascending: true })
+      .order("id", { ascending: true })
+      .range(booksOffset, booksOffset + BOOKS_PAGE_SIZE);
 
     if (error) throw error;
 
-    const { data: borrowings, error: borrowingsError } =
-      await window.supabaseClient
+    const books = page || [];
+    const visibleBooks = books.slice(0, BOOKS_PAGE_SIZE);
+    booksHasMore = books.length > BOOKS_PAGE_SIZE;
+
+    if (visibleBooks.length === 0) {
+      if (!append) renderBookCards([]);
+      return;
+    }
+
+    const { data: borrowings, error: borrowingsError } = await window.supabaseClient
         .from("book_borrowings")
         .select("book_id")
-        .eq("status", "borrowed");
+        .eq("status", "borrowed")
+        .in("book_id", visibleBooks.map((book) => book.id));
 
     if (borrowingsError) throw borrowingsError;
 
-    allCatalogBooks = (books || []).map((book) => ({
+    booksOffset += visibleBooks.length;
+    const catalogPage = visibleBooks.map((book) => ({
       ...book,
       available_copies: getAvailableBookCopies(book, borrowings || []),
     }));
-    renderBookCards(allCatalogBooks);
+    allCatalogBooks = append
+      ? allCatalogBooks.concat(catalogPage)
+      : catalogPage;
+    const query = document
+      .getElementById("catalogSearchInput")
+      ?.value.toLowerCase().trim() || "";
+    renderBookCards(filterCatalogBooks(query));
   } catch (err) {
     console.error("Error loading catalog:", err);
     if (typeof showToast === "function") {
-      showToast("Failed to load book catalog.", "error");
+      showToast(
+        append ? "Could not load more books." : "Failed to load book catalog.",
+        "error",
+      );
+    }
+  } finally {
+    booksLoading = false;
+    if (nextButton) {
+      nextButton.hidden = !booksHasMore;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
     }
   }
+}
+
+function filterCatalogBooks(query) {
+  return allCatalogBooks.filter((book) => {
+    const title = (book.title || "").toLowerCase();
+    const author = (book.author || "").toLowerCase();
+    const dept = (book.departments?.name || "").toLowerCase();
+    const code = (book.book_code || "").toLowerCase();
+
+    return (
+      title.includes(query) ||
+      author.includes(query) ||
+      dept.includes(query) ||
+      code.includes(query)
+    );
+  });
 }
 
 function getAvailableBookCopies(book, activeBorrowings) {
@@ -116,26 +182,14 @@ const catalogSearchInput = document.getElementById("catalogSearchInput");
 if (catalogSearchInput) {
   catalogSearchInput.addEventListener("input", (e) => {
     const query = e.target.value.toLowerCase().trim();
-
-    const filtered = allCatalogBooks.filter((book) => {
-      const title = (book.title || "").toLowerCase();
-      const author = (book.author || "").toLowerCase();
-      const dept = (book.departments?.name || "").toLowerCase();
-      const code = (book.book_code || "").toLowerCase();
-
-      return (
-        title.includes(query) ||
-        author.includes(query) ||
-        dept.includes(query) ||
-        code.includes(query)
-      );
-    });
-
-    renderBookCards(filtered);
+    renderBookCards(filterCatalogBooks(query));
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("nextBooksPage")
+    ?.addEventListener("click", () => loadBookCatalog({ append: true }));
   loadBookCatalog();
 });
 

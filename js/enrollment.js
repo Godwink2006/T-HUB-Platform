@@ -2627,17 +2627,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-async function loadStudentEnrollments() {
+const ENROLLMENTS_PAGE_SIZE = 30;
+let enrollmentOffset = 0;
+let enrollmentHasMore = false;
+let enrollmentIsLoading = false;
+let loadedEnrollments = [];
+
+async function loadStudentEnrollments(options = {}) {
   const tbody = document.getElementById("studentTableBody");
   if (!tbody) return;
+  const append = options.append === true;
+  const nextButton = document.getElementById("nextEnrollmentsPage");
 
-  tbody.innerHTML =
-    '<tr><td colspan="6" style="text-align: center;">Loading enrollment records...</td></tr>';
+  if (enrollmentIsLoading || (append && !enrollmentHasMore)) return;
+  enrollmentIsLoading = true;
+
+  if (!append) {
+    enrollmentOffset = 0;
+    enrollmentHasMore = false;
+    loadedEnrollments = [];
+    if (nextButton) {
+      nextButton.hidden = true;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
+    tbody.innerHTML =
+      '<tr><td colspan="6" style="text-align: center;">Loading enrollment records...</td></tr>';
+  } else if (nextButton) {
+    nextButton.disabled = true;
+    nextButton.textContent = "Loading...";
+  }
 
   try {
-    const { data: enrollments, error: enrollError } = await supabaseClient.from(
-      "student_enrollments",
-    ).select(`
+    const { data: page, error: enrollError } = await supabaseClient
+      .from("student_enrollments")
+      .select(`
         id,
         student_id,
         enrollment_status,
@@ -2647,11 +2671,18 @@ async function loadStudentEnrollments() {
         classes (name),
         academic_years (year_label),
         terms (name)
-      `);
+      `)
+      .order("id", { ascending: false })
+      .range(enrollmentOffset, enrollmentOffset + ENROLLMENTS_PAGE_SIZE);
 
     if (enrollError) throw enrollError;
 
-    if (!enrollments || enrollments.length === 0) {
+    const enrollments = page || [];
+    const visibleEnrollments = enrollments.slice(0, ENROLLMENTS_PAGE_SIZE);
+    enrollmentHasMore = enrollments.length > ENROLLMENTS_PAGE_SIZE;
+    enrollmentOffset += visibleEnrollments.length;
+
+    if (!append && visibleEnrollments.length === 0) {
       tbody.innerHTML =
         '<tr><td colspan="6" style="text-align: center;">No enrollments found in the database.</td></tr>';
       [
@@ -2659,9 +2690,7 @@ async function loadStudentEnrollments() {
         ["filterSemester", "All semesters"],
         ["filterStatus", "All statuses"],
         ["filterClass", "All classes"],
-      ].forEach(([id, label]) =>
-        window.populateEnrollmentFilter(id, [], label),
-      );
+      ].forEach(([id, label]) => window.populateEnrollmentFilter(id, [], label));
       const resultCount = document.getElementById("enrollmentResultCount");
       if (resultCount) resultCount.textContent = "0 enrollments";
       window.updateEnrollmentSelectionState();
@@ -2669,7 +2698,7 @@ async function loadStudentEnrollments() {
     }
 
     const studentIds = [
-      ...new Set(enrollments.map((enr) => enr.student_id).filter(Boolean)),
+      ...new Set(visibleEnrollments.map((enr) => enr.student_id).filter(Boolean)),
     ];
     const studentCodesById = new Map();
     if (studentIds.length) {
@@ -2687,28 +2716,32 @@ async function loadStudentEnrollments() {
       }
     }
 
+    loadedEnrollments = append
+      ? loadedEnrollments.concat(visibleEnrollments)
+      : visibleEnrollments;
+
     window.populateEnrollmentFilter(
       "filterAcademicYear",
-      enrollments.map((enr) => enr.academic_years?.year_label || "N/A"),
+      loadedEnrollments.map((enr) => enr.academic_years?.year_label || "N/A"),
       "All academic years",
     );
     window.populateEnrollmentFilter(
       "filterSemester",
-      enrollments.map((enr) => enr.terms?.name || "N/A"),
+      loadedEnrollments.map((enr) => enr.terms?.name || "N/A"),
       "All semesters",
     );
     window.populateEnrollmentFilter(
       "filterStatus",
-      enrollments.map((enr) => enr.enrollment_status || "Normal"),
+      loadedEnrollments.map((enr) => enr.enrollment_status || "Normal"),
       "All statuses",
     );
     window.populateEnrollmentFilter(
       "filterClass",
-      enrollments.map((enr) => enr.classes?.name || "N/A"),
+      loadedEnrollments.map((enr) => enr.classes?.name || "N/A"),
       "All classes",
     );
 
-    const rowsHTML = enrollments
+    const rowsHTML = visibleEnrollments
       .map((enr) => {
         const studentName =
           enr.student_name_snapshot ||
@@ -2764,14 +2797,35 @@ async function loadStudentEnrollments() {
       })
       .join("");
 
-    tbody.innerHTML = rowsHTML;
+    if (append) {
+      tbody.insertAdjacentHTML("beforeend", rowsHTML);
+    } else {
+      tbody.innerHTML = rowsHTML;
+    }
     window.applyEnrollmentFilters();
   } catch (err) {
     console.error("Error loading enrollment table:", err.message);
-    tbody.innerHTML =
-      '<tr><td colspan="6" style="text-align: center; color: red;">Failed to load enrollment data.</td></tr>';
+    if (!append) {
+      tbody.innerHTML =
+        '<tr><td colspan="6" style="text-align: center; color: red;">Failed to load enrollment data.</td></tr>';
+    } else if (typeof showToast === "function") {
+      showToast("Could not load more enrollment records.", "error");
+    }
+  } finally {
+    enrollmentIsLoading = false;
+    if (nextButton) {
+      nextButton.hidden = !enrollmentHasMore;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("nextEnrollmentsPage")
+    ?.addEventListener("click", () => loadStudentEnrollments({ append: true }));
+});
 
 function escapeHtml(str) {
   return String(str)

@@ -10,6 +10,10 @@ const cancelAddRecordPaymentModal = document.getElementById(
 
 let financeFeeRows = [];
 let activePaymentCurrencyCode = null;
+const FINANCE_PAGE_SIZE = 30;
+let financeOffset = 0;
+let financeHasMore = false;
+let financeIsLoading = false;
 
 function setFinanceModalVisibility(modal, isVisible) {
   if (!modal) return;
@@ -87,20 +91,37 @@ window.addEventListener("click", (e) => {
   }
 });
 
-async function loadStudentFees() {
+async function loadStudentFees(options = {}) {
   const tbody = document.getElementById("student-fees-tbody");
   if (!tbody) return;
-  financeFeeRows = [];
+  const append = options.append === true;
+  const nextButton = document.getElementById("nextFinancePage");
 
-  tbody.innerHTML =
-    '<tr><td colspan="7" style="text-align: center; color: grey;"><i class="fas fa-spinner fa-spin" style="color: grey"></i>  Loading fees...</td></tr>';
+  if (financeIsLoading || (append && !financeHasMore)) return;
+  financeIsLoading = true;
+
+  if (!append) {
+    financeOffset = 0;
+    financeHasMore = false;
+    financeFeeRows = [];
+    if (nextButton) {
+      nextButton.hidden = true;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
+    tbody.innerHTML =
+      '<tr><td colspan="7" style="text-align: center; color: grey;"><i class="fas fa-spinner fa-spin" style="color: grey"></i>  Loading fees...</td></tr>';
+  } else if (nextButton) {
+    nextButton.disabled = true;
+    nextButton.textContent = "Loading...";
+  }
 
   try {
     const authContext = await window.getAuthContext();
     const schoolId = authContext?.profile?.school_id;
     if (!schoolId) throw new Error("Your account is not linked to a school.");
 
-    const { data: fees, error: feeError } = await supabaseClient
+    const { data: page, error: feeError } = await supabaseClient
       .from("student_fees")
       .select(
         `
@@ -120,11 +141,24 @@ async function loadStudentFees() {
       `,
       )
       .eq("school_id", schoolId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(financeOffset, financeOffset + FINANCE_PAGE_SIZE);
 
     if (feeError) throw feeError;
 
-    const studentIds = [...new Set((fees || []).map((fee) => fee.student_id).filter(Boolean))];
+    const fees = page || [];
+    const visibleFees = fees.slice(0, FINANCE_PAGE_SIZE);
+    financeHasMore = fees.length > FINANCE_PAGE_SIZE;
+    if (!append && visibleFees.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="payments-empty-state">No fee records found.</td></tr>';
+      populateFinanceFilterOptions("financeTermFilter", [], "termId", "termName", "All semesters");
+      populateFinanceFilterOptions("financeClassFilter", [], "classId", "className", "All classes");
+      populateFinanceFilterOptions("financeYearFilter", [], "yearId", "yearLabel", "All academic years");
+      return;
+    }
+
+    const studentIds = [...new Set(visibleFees.map((fee) => fee.student_id).filter(Boolean))];
     const { data: studentRecords, error: studentError } = studentIds.length
       ? await supabaseClient
           .from("students")
@@ -155,11 +189,14 @@ async function loadStudentFees() {
     );
 
     const currentFeeRows = mapCurrentFinanceFeeRecords(
-      fees,
+      visibleFees,
       studentMap,
       enrollmentIdentityMap,
     );
-    financeFeeRows = currentFeeRows;
+    financeFeeRows = append
+      ? financeFeeRows.concat(currentFeeRows)
+      : currentFeeRows;
+    financeOffset += visibleFees.length;
 
     populateFinanceFilterOptions("financeTermFilter", financeFeeRows, "termId", "termName", "All semesters");
     populateFinanceFilterOptions("financeClassFilter", financeFeeRows, "classId", "className", "All classes");
@@ -167,7 +204,18 @@ async function loadStudentFees() {
     renderFinanceFeeRows();
   } catch (err) {
     console.error("Error loading student fees:", err.message);
-    tbody.innerHTML = '<tr><td colspan="7" class="payments-empty-state is-error">Payment records could not be loaded. Refresh the page or contact an administrator.</td></tr>';
+    if (!append) {
+      tbody.innerHTML = '<tr><td colspan="7" class="payments-empty-state is-error">Payment records could not be loaded. Refresh the page or contact an administrator.</td></tr>';
+    } else if (typeof showToast === "function") {
+      showToast("Could not load more payment records.", "error");
+    }
+  } finally {
+    financeIsLoading = false;
+    if (nextButton) {
+      nextButton.hidden = !financeHasMore;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
   }
 }
 
@@ -305,6 +353,9 @@ function initializeFinanceFilters() {
     .forEach((id) => document.getElementById(id)?.addEventListener("input", renderFinanceFeeRows));
   ["financeTermFilter", "financeClassFilter", "financeYearFilter", "financeStatusFilter"]
     .forEach((id) => document.getElementById(id)?.addEventListener("change", renderFinanceFeeRows));
+  document
+    .getElementById("nextFinancePage")
+    ?.addEventListener("click", () => loadStudentFees({ append: true }));
 }
 
 document.addEventListener("DOMContentLoaded", initializeFinanceFilters);

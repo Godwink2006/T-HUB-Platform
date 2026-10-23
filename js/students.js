@@ -703,21 +703,44 @@ document.addEventListener("DOMContentLoaded", () => {
   loadStudentsTable();
 });
 
-async function loadStudentsTable() {
+const STUDENTS_PAGE_SIZE = 30;
+let studentsOffset = 0;
+let studentsHasMore = false;
+let studentsLoading = false;
+
+async function loadStudentsTable(options = {}) {
   const tableBody = document.getElementById("studentsTableBody");
   if (!tableBody) return;
+  const append = options.append === true;
+  const nextButton = document.getElementById("nextStudentsPage");
 
-  tableBody.innerHTML = `
-    <tr>
-     <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">
-        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
-        Loading students...
-      </td>
-    </tr>
-  `;
+  if (studentsLoading || (append && !studentsHasMore)) return;
+  studentsLoading = true;
+
+  if (!append) {
+    studentsOffset = 0;
+    studentsHasMore = false;
+    window.allStudentsCache = [];
+    if (nextButton) {
+      nextButton.hidden = true;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
+    tableBody.innerHTML = `
+      <tr>
+       <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">
+          <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+          Loading students...
+        </td>
+      </tr>
+    `;
+  } else if (nextButton) {
+    nextButton.disabled = true;
+    nextButton.textContent = "Loading...";
+  }
 
   try {
-    const { data: students, error } = await supabaseClient
+    const { data: page, error } = await supabaseClient
       .from("students")
       .select(
         `
@@ -748,11 +771,18 @@ async function loadStudentsTable() {
         )
       `,
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(studentsOffset, studentsOffset + STUDENTS_PAGE_SIZE);
 
     if (error) throw error;
 
-    if (!students || students.length === 0) {
+    const students = page || [];
+    const visibleStudents = students.slice(0, STUDENTS_PAGE_SIZE);
+    studentsHasMore = students.length > STUDENTS_PAGE_SIZE;
+    studentsOffset += visibleStudents.length;
+
+    if (!append && visibleStudents.length === 0) {
       tableBody.innerHTML = `
         <tr>
           <td colspan="5" style="text-align: center; padding: 20px;">
@@ -763,67 +793,40 @@ async function loadStudentsTable() {
       return;
     }
 
-    window.allStudentsCache = students;
+    window.allStudentsCache = append
+      ? (window.allStudentsCache || []).concat(visibleStudents)
+      : visibleStudents;
 
     populateClassFilterDropdown();
     filterStudents();
-
-    tableBody.innerHTML = students
-      .map((student) => {
-        const profile = student.profiles || {};
-        const className = student.classes?.name || "N/A";
-
-        const photoSrc = profile.photo_url ? profile.photo_url : DEFAULT_AVATAR;
-        const status = (profile.status || "active").toLowerCase();
-        const statusClass =
-          status === "active"
-            ? "students-status-active"
-            : "students-status-inactive";
-
-        return `
+  } catch (err) {
+    console.error("Error fetching students:", err);
+    if (!append) {
+      tableBody.innerHTML = `
         <tr>
-          <td>
-            <span class="app-person-cell">
-            <img
-              src="${photoSrc}"
-              class="student-photo"
-              alt="${escapeHTML(profile.full_name || "Student")}"
-              onerror="this.onerror=null; this.src='${DEFAULT_AVATAR}';"
-            />
-              <span class="app-person-meta">
-                <span>${escapeHTML(profile.full_name || "N/A")}</span>
-                <small class="app-person-id">Student ID: ${escapeHTML(student.student_id || "N/A")}</small>
-              </span>
-            </span>
-          </td>
-          <td>${escapeHTML(student.gender || "N/A")}</td>
-          <td>${escapeHTML(className)}</td>
-          <td>
-            <span class="${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
-          </td>
-          <td>
-            <button class="students-actions-btn view" onclick="viewStudent('${student.id}')">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="students-actions-btn edit" onclick="editStudent('${student.id}')">
-              <i class="fa-solid fa-pen"></i>
-            </button>
+          <td colspan="5" style="text-align: center; color: red; padding: 20px;">
+            Failed to load students: ${escapeHTML(err.message || "Unknown error")}
           </td>
         </tr>
       `;
-      })
-      .join("");
-  } catch (err) {
-    console.error("Error fetching students:", err);
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="5" style="text-align: center; color: red; padding: 20px;">
-          Failed to load students: ${escapeHTML(err.message || "Unknown error")}
-        </td>
-      </tr>
-    `;
+    } else if (typeof showToast === "function") {
+      showToast("Could not load more students.", "error");
+    }
+  } finally {
+    studentsLoading = false;
+    if (nextButton) {
+      nextButton.hidden = !studentsHasMore;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("nextStudentsPage")
+    ?.addEventListener("click", () => loadStudentsTable({ append: true }));
+});
 
 const formatDate = (dateString) => {
   if (!dateString) return "-";

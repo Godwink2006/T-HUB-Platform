@@ -156,6 +156,26 @@ body {
   border: 0.5px solid #14532d;
 }
 
+.attendance-pagination-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 24px;
+  background: #2563eb;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.attendance-pagination-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.attendance-pagination-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .back-academics-btn {
   width: auto;
   height: 30px;

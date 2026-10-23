@@ -461,14 +461,38 @@ document
   .getElementById("libraryStatusFilter")
   ?.addEventListener("change", applyLibraryBookFilters);
 
-async function loadBooksTable() {
-  renderTableLoading();
+const LIBRARY_BOOKS_PAGE_SIZE = 30;
+let libraryBooksOffset = 0;
+let libraryBooksHasMore = false;
+let libraryBooksLoading = false;
+let loadedLibraryBooks = [];
+
+async function loadBooksTable(options = {}) {
   const tableBody = document.getElementById("booksTableBody");
   if (!tableBody) return;
+  const append = options.append === true;
+  const nextButton = document.getElementById("nextLibraryBooksPage");
+
+  if (libraryBooksLoading || (append && !libraryBooksHasMore)) return;
+  libraryBooksLoading = true;
+
+  if (!append) {
+    libraryBooksOffset = 0;
+    libraryBooksHasMore = false;
+    loadedLibraryBooks = [];
+    if (nextButton) {
+      nextButton.hidden = true;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
+    renderTableLoading();
+  } else if (nextButton) {
+    nextButton.disabled = true;
+    nextButton.textContent = "Loading...";
+  }
 
   try {
-
-    const { data: books, error } = await window.supabaseClient
+    const { data: page, error } = await window.supabaseClient
       .from("books")
       .select(
         `
@@ -478,21 +502,17 @@ async function loadBooksTable() {
         )
       `,
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(libraryBooksOffset, libraryBooksOffset + LIBRARY_BOOKS_PAGE_SIZE);
 
     if (error) throw error;
 
-    const { data: allBorrowings, error: borrowError } =
-      await window.supabaseClient
-        .from("book_borrowings")
-        .select("book_id, status")
-        .eq("status", "borrowed");
+    const books = page || [];
+    const visibleBooks = books.slice(0, LIBRARY_BOOKS_PAGE_SIZE);
+    libraryBooksHasMore = books.length > LIBRARY_BOOKS_PAGE_SIZE;
 
-    if (borrowError) throw borrowError;
-
-    tableBody.innerHTML = "";
-
-    if (!books || books.length === 0) {
+    if (!append && visibleBooks.length === 0) {
       tableBody.innerHTML = `
         <tr>
           <td colspan="9" style="text-align: center; padding: 20px; color: #666;">
@@ -503,12 +523,25 @@ async function loadBooksTable() {
       return;
     }
 
+    const { data: allBorrowings, error: borrowError } = await window.supabaseClient
+        .from("book_borrowings")
+        .select("book_id, status")
+        .eq("status", "borrowed")
+        .in("book_id", visibleBooks.map((book) => book.id));
+
+    if (borrowError) throw borrowError;
+
+    libraryBooksOffset += visibleBooks.length;
+    loadedLibraryBooks = append
+      ? loadedLibraryBooks.concat(visibleBooks)
+      : visibleBooks;
+
     const departmentFilter = document.getElementById("libraryDepartmentFilter");
     const selectedDepartment = departmentFilter?.value || "";
     if (departmentFilter) {
       const departmentNames = [
         ...new Set(
-          books
+          loadedLibraryBooks
             .map((book) => book.departments?.name)
             .filter((name) => typeof name === "string" && name.trim()),
         ),
@@ -523,7 +556,7 @@ async function loadBooksTable() {
       }
     }
 
-    books.forEach((book) => {
+    visibleBooks.forEach((book) => {
       const tr = document.createElement("tr");
 
       const coverSrc =
@@ -597,7 +630,19 @@ async function loadBooksTable() {
     attachBookActionListeners();
   } catch (err) {
     console.error("Error loading books table:", err);
-    showToast("Failed to load library inventory.", "error");
+    if (typeof showToast === "function") {
+      showToast(
+        append ? "Could not load more books." : "Failed to load library inventory.",
+        "error",
+      );
+    }
+  } finally {
+    libraryBooksLoading = false;
+    if (nextButton) {
+      nextButton.hidden = !libraryBooksHasMore;
+      nextButton.disabled = false;
+      nextButton.textContent = "Next";
+    }
   }
 }
 
@@ -616,6 +661,8 @@ function attachBookActionListeners() {
   const editButtons = document.querySelectorAll("#booksTableBody .edit");
 
   editButtons.forEach((button) => {
+    if (button.dataset.listenerAttached === "true") return;
+    button.dataset.listenerAttached = "true";
     button.addEventListener("click", () => {
       const bookId = button.getAttribute("data-id");
       if (bookId) {
@@ -625,6 +672,8 @@ function attachBookActionListeners() {
   });
 
   viewButtons.forEach((button) => {
+    if (button.dataset.listenerAttached === "true") return;
+    button.dataset.listenerAttached = "true";
     button.addEventListener("click", () => {
       const bookId = button.getAttribute("data-id");
       if (bookId) {
@@ -1557,5 +1606,8 @@ document
   });
 
 document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("nextLibraryBooksPage")
+    ?.addEventListener("click", () => loadBooksTable({ append: true }));
   loadBooksTable();
 });

@@ -61,6 +61,32 @@
   gap: 1.5rem;
 }
 
+.books-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 28px;
+}
+
+.books-pagination button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 24px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.books-pagination button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.books-pagination button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .book-card {
   background: #ffffff;
   overflow: hidden;

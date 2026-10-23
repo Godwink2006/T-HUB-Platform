@@ -213,6 +213,32 @@ body {
   overflow: hidden;
 }
 
+.grades-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 28px;
+}
+
+.grades-pagination button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 24px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.grades-pagination button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.grades-pagination button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
