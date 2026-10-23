@@ -1,4 +1,4 @@
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .form-section,
   .form-section h3,
   .school-logo-preview,
@@ -23,7 +23,7 @@
   .graduated-school-access .school-information-notice,
   .upload-btn,
   .avatar-edit-container {
-    border-radius: 0 !important;
+    border-radius: 10px;
   }
 }
 
