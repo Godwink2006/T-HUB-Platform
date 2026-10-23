@@ -6,6 +6,7 @@ let dashboardAnnouncementSchoolId = null;
 let dashboardCanDeleteAnnouncements = false;
 let resolveAnnouncementDeleteConfirmation = null;
 let announcementDeleteFocusReturn = null;
+let dashboardAvailabilityCheck = null;
 
 const dateRangeModal = document.getElementById("dateRangeModal");
 const closeDateModal = document.getElementById("closeDateModal");
@@ -287,6 +288,62 @@ function dashboardErrorRequiresSignIn(error) {
     );
 }
 
+async function checkDashboardAvailability(user, profile) {
+  if (!user?.id || !profile?.school_id) return null;
+
+  const cacheKey = `${user.id}:${profile.school_id}`;
+  if (dashboardAvailabilityCheck?.key === cacheKey) {
+    return dashboardAvailabilityCheck.promise;
+  }
+
+  const promise = (async () => {
+    const profileStatus = String(profile.status || "active").trim().toLowerCase();
+    if (profileStatus !== "active") {
+      return "Your account is inactive. Contact your school administrator to restore access.";
+    }
+
+    const { data: schoolIsActive, error: schoolError } =
+      await window.supabaseClient.rpc("is_school_active", {
+        target_school_id: profile.school_id,
+      });
+    if (schoolError) throw schoolError;
+    if (schoolIsActive !== true) {
+      return "This school is currently inactive, so its dashboard data is unavailable. Contact T-HUB support for help.";
+    }
+
+    if (String(profile.role || "").trim().toLowerCase() === "student") {
+      const { data: enrollments, error: enrollmentError } =
+        await window.supabaseClient
+          .from("student_enrollments")
+          .select("enrollment_status")
+          .eq("student_id", user.id)
+          .eq("school_id", profile.school_id);
+      if (enrollmentError) throw enrollmentError;
+
+      const hasEndedEnrollment = (enrollments || []).some((enrollment) =>
+        ["graduated", "transferred", "transfered"].includes(
+          String(enrollment.enrollment_status || "").trim().toLowerCase(),
+        ),
+      );
+      if (hasEndedEnrollment) {
+        return "Your enrollment at this school is marked as graduated or transferred, so this dashboard is no longer available. Contact the school if you think this is a mistake.";
+      }
+    }
+
+    return null;
+  })();
+
+  dashboardAvailabilityCheck = { key: cacheKey, promise };
+  try {
+    return await promise;
+  } catch (error) {
+    if (dashboardAvailabilityCheck?.promise === promise) {
+      dashboardAvailabilityCheck = null;
+    }
+    throw error;
+  }
+}
+
 function renderDashboardRetryMessage(container, message, retryLabel, retry) {
   if (!container) return;
 
@@ -436,7 +493,7 @@ async function loadDashboardAnnouncements() {
 
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
-      .select("school_id, full_name, role")
+      .select("school_id, full_name, role, status")
       .eq("id", user.id)
       .single();
 
@@ -459,6 +516,13 @@ async function loadDashboardAnnouncements() {
       error.dashboardMessage = "Your school account is missing a role. Ask a school administrator to check your account.";
       throw error;
     }
+
+    const availabilityIssue = await checkDashboardAvailability(user, profile);
+    if (availabilityIssue) {
+      showDashboardAccessCheckError(availabilityIssue, "Refresh dashboard");
+      return;
+    }
+
     accessVerified = true;
     finishDashboardAccessCheck();
 
@@ -915,7 +979,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const { data: profile, error: profileError } = await window.supabaseClient
       .from("profiles")
-      .select("school_id, role")
+      .select("school_id, role, status")
       .eq("id", user.id)
       .single();
 
@@ -927,6 +991,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           : "Your account is not linked to a school. Ask a school administrator to check your profile.",
         "Try again",
       );
+      return;
+    }
+
+    const availabilityIssue = await checkDashboardAvailability(user, profile);
+    if (availabilityIssue) {
+      showDashboardAccessCheckError(availabilityIssue, "Refresh dashboard");
       return;
     }
 
