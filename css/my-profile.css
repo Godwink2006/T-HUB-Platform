@@ -304,7 +304,8 @@ body {
   .savepassword-btn,
   .upload-btn,
   .back-my-profiles-btn,
-  .avatar-edit-container {
+  .avatar-edit-container,
+  .profile-information-notice {
     border-radius: 10px !important;
   }
 }
