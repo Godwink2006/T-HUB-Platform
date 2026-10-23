@@ -33,7 +33,7 @@
 .profile-information-notice {
   margin: 0 0 16px;
   padding: 12px 16px;
-  border: 1px solid #bfdbfe;
+  border: 0.5px solid #bfdbfe;
   background: #eff6ff;
   color: #1e40af;
   font-size: 14px;
@@ -275,7 +275,7 @@ body {
   gap: 1.25rem;
   padding: 0.75rem;
   background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 0.5px solid #e2e8f0;
 }
 
 .avatar-preview-wrapper {
