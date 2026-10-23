@@ -61,6 +61,24 @@ Deno.serve(async (request) => {
     return respond({ success: false, message: "Your profile is not linked to a school." }, 400);
   }
 
+  const checkSchoolIsActive = async () => {
+    const { data, error } = await authClient.rpc("is_school_active", {
+      target_school_id: adminProfile.school_id,
+    });
+    if (error) throw new Error(`Could not verify the school's status: ${error.message}`);
+    return data === true;
+  };
+
+  try {
+    if (!(await checkSchoolIsActive())) {
+      return respond({ success: false, message: "This school is inactive. Student promotion is unavailable until the school is reactivated." }, 403);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not verify the school's status.";
+    console.error("School status check failed before promotion:", message);
+    return respond({ success: false, message }, 503);
+  }
+
   const createdAuthUserIds: string[] = [];
 
   try {
@@ -223,6 +241,9 @@ Deno.serve(async (request) => {
     }
 
     if (!existingAuth.user) {
+      if (!(await checkSchoolIsActive())) {
+        return respond({ success: false, message: "This school is inactive. Student promotion is unavailable until the school is reactivated." }, 403);
+      }
       const { data: createdUser, error: createUserError } = await adminClient.auth.admin.createUser({
         id: studentId,
         email,
@@ -232,6 +253,10 @@ Deno.serve(async (request) => {
       });
       if (createUserError) throw new Error(`Auth creation failed: ${createUserError.message}`);
       if (createdUser.user?.id) createdAuthUserIds.push(createdUser.user.id);
+    }
+
+    if (!(await checkSchoolIsActive())) {
+      throw new Error("This school became inactive before the promotion could be completed.");
     }
 
     const { error: promotionError } = await adminClient.rpc("promote_grade9_students_transaction", {

@@ -1,3 +1,57 @@
+function getPeriodErrorMessage(error, action) {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+    return "This school is inactive. You can view existing periods, but you cannot make changes until the school is reactivated.";
+  }
+  if (code === "23P01") {
+    return "This time conflicts with another period. Choose a different start or end time.";
+  }
+  if (code === "23505") {
+    return "A period with this name already exists for this school level.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|not allowed/.test(diagnostic)
+  ) {
+    if (action === "load") {
+      return "You do not have permission to view periods for this school.";
+    }
+    return `Could not ${action} this period. This school may be inactive, or your account may not have permission.`;
+  }
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token/.test(diagnostic)
+  ) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|network|connection|timeout|timed out/.test(diagnostic)) {
+    return "Could not connect to load periods. Check your internet connection and try again.";
+  }
+  if (code === "PGRST116") {
+    return action === "update"
+      ? "This period is no longer available to update. Refresh the page and try again."
+      : "Could not load this period. Refresh the page and try again.";
+  }
+  if (code === "23503" || code === "23514" || code === "22P02") {
+    return "Some period information is invalid or linked to another record. Review the details and try again.";
+  }
+  return action === "load"
+    ? "Could not load periods. Please try again."
+    : `Could not ${action} this period. Please try again.`;
+}
+
+function showPeriodError(error, action) {
+  console.error(`Periods page ${action} error:`, error);
+  const message = getPeriodErrorMessage(error, action);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 async function openAddPeriodModal() {
   const modal = document.getElementById("periodModal");
   const form = document.getElementById("periodForm");
@@ -32,7 +86,15 @@ async function fetchFilteredPeriods() {
   const statusFilter =
     document.getElementById("filterStatusSelect")?.value?.toLowerCase() || "";
 
+  const tbody = document.getElementById("periodsTableBody");
   renderPeriodsTable([], true);
+
+  try {
+    if (!window.supabaseClient) {
+      const message = showPeriodError(new Error("Supabase client is not initialized."), "load");
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+      return;
+    }
 
   let query = supabaseClient
     .from("periods")
@@ -57,13 +119,16 @@ async function fetchFilteredPeriods() {
   const { data: periods, error } = await query;
 
   if (error) {
-    console.error("Fetch error:", error.message);
-    if (typeof showToast === "function")
-      showToast("Failed to load periods.", "error");
+    const message = showPeriodError(error, "load");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
     return;
   }
 
   renderPeriodsTable(periods || []);
+  } catch (error) {
+    const message = showPeriodError(error, "load");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+  }
 }
 
 function formatDateTime(isoString) {
@@ -166,25 +231,12 @@ async function handleSavePeriod(event) {
     const { data, error } = await query;
 
     if (error) {
-      if (error.code === "42501") {
-        showToast("Permission denied: Active admin status required.", "error");
-        return;
-      }
-      if (error.code === "23P01") {
-        showToast(
-          `Time conflict! Overlaps with another period in ${schoolLevel}.`,
-          "error",
-        );
-        return;
-      }
-      if (error.code === "23505") {
-        showToast(
-          `A period named '${name}' already exists in ${schoolLevel}.`,
-          "error",
-        );
-        return;
-      }
-      showToast(error.message, "error");
+      showPeriodError(error, periodId ? "update" : "create");
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      showPeriodError({ code: "42501" }, periodId ? "update" : "create");
       return;
     }
 
@@ -202,7 +254,7 @@ async function handleSavePeriod(event) {
     }
     await fetchFilteredPeriods();
   } catch (err) {
-    showToast(err.message, "error");
+    showPeriodError(err, periodId ? "update" : "create");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -270,21 +322,29 @@ async function populatePeriodFilterDropdowns() {
   const levelSelect = document.getElementById("filterLevelSelect");
   if (!levelSelect) return;
 
-  const { data, error } = await supabaseClient
-    .from("periods")
-    .select("school_level")
+  try {
+    const { data, error } = await supabaseClient
+      .from("periods")
+      .select("school_level");
 
-  if (error || !data) return;
+    if (error) {
+      showPeriodError(error, "load");
+      return;
+    }
+    if (!data) return;
 
-  const uniqueLevels = [...new Set(data.map((item) => item.school_level))];
+    const uniqueLevels = [...new Set(data.map((item) => item.school_level))];
 
-  const currentVal = levelSelect.value;
-  levelSelect.innerHTML =
-    `<option value="">All Levels</option>` +
-    uniqueLevels
-      .map((lvl) => `<option value="${lvl}">${lvl}</option>`)
-      .join("");
-  levelSelect.value = currentVal;
+    const currentVal = levelSelect.value;
+    levelSelect.innerHTML =
+      `<option value="">All Levels</option>` +
+      uniqueLevels
+        .map((lvl) => `<option value="${escapeHTML(lvl)}">${escapeHTML(lvl)}</option>`)
+        .join("");
+    levelSelect.value = currentVal;
+  } catch (error) {
+    showPeriodError(error, "load");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -393,33 +453,12 @@ async function handleUpdatePeriod(event) {
       .select();
 
     if (error) {
-      if (error.code === "42501") {
-        showToast("Permission denied: Active admin status required.", "error");
-        return;
-      }
-
-      if (error.code === "23P01") {
-        showToast(
-          "Time conflict! This period overlaps with another period.",
-          "error",
-        );
-        return;
-      }
-
-      if (error.code === "23505") {
-        showToast(`A period named '${name}' already exists.`, "error");
-        return;
-      }
-
-      showToast(error.message, "error");
+      showPeriodError(error, "update");
       return;
     }
 
     if (!data || data.length === 0) {
-      showToast(
-        "Permission denied: You are not allowed to update this period.",
-        "error",
-      );
+      showPeriodError({ code: "42501" }, "update");
       return;
     }
 
@@ -437,7 +476,7 @@ async function handleUpdatePeriod(event) {
 
     await fetchFilteredPeriods();
   } catch (err) {
-    showToast(err.message, "error");
+    showPeriodError(err, "update");
   } finally {
     if (updateBtn) {
       updateBtn.disabled = false;
@@ -462,42 +501,37 @@ function closeEditPeriodModal() {
 }
 
 async function openEditPeriodModal(id) {
-  const { data: period, error } = await supabaseClient
-    .from("periods")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const { data: period, error } = await supabaseClient
+      .from("periods")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  if (error || !period) {
-    showToast("Failed to load period details.", "error");
-    return;
-  }
+    if (error || !period) {
+      showPeriodError(error || new Error("Period not found."), "load");
+      return;
+    }
 
-  originalPeriodData = {
-    name: period.name,
-    start_time: period.start_time,
-    end_time: period.end_time,
-    status: period.status,
-  };
+    originalPeriodData = {
+      name: period.name,
+      start_time: period.start_time,
+      end_time: period.end_time,
+      status: period.status,
+    };
 
-  document.getElementById("editPeriodId").value = period.id;
+    document.getElementById("editPeriodId").value = period.id;
+    document.getElementById("editSchoolLevelInput").value = period.school_level;
+    document.getElementById("editPeriodNameInput").value = period.name;
+    document.getElementById("editStartTimeInput").value = period.start_time;
+    document.getElementById("editEndTimeInput").value = period.end_time;
+    document.getElementById("editPeriodStatusSelect").value = period.status;
+    document.getElementById("editPeriodModalTitle").textContent = "Edit Period";
+    document.getElementById("editPeriodModal").classList.add("active");
 
-  document.getElementById("editSchoolLevelInput").value = period.school_level;
-
-  document.getElementById("editPeriodNameInput").value = period.name;
-
-  document.getElementById("editStartTimeInput").value = period.start_time;
-
-  document.getElementById("editEndTimeInput").value = period.end_time;
-
-  document.getElementById("editPeriodStatusSelect").value = period.status;
-
-  document.getElementById("editPeriodModalTitle").textContent = "Edit Period";
-
-  document.getElementById("editPeriodModal").classList.add("active");
-
-  if (typeof lockBodyScroll === "function") {
-    lockBodyScroll();
+    if (typeof lockBodyScroll === "function") lockBodyScroll();
+  } catch (error) {
+    showPeriodError(error, "load");
   }
 }
 
@@ -515,58 +549,51 @@ async function loadClassesIntoSchoolLevelDropdown() {
     senior_secondary: "Senior Secondary",
   };
 
-  const { data: classes, error } = await supabaseClient
-    .from("classes")
-    .select("name, school_level")
-    .eq("status", "active")
-    .order("name", { ascending: true });
+  try {
+    const { data: classes, error } = await supabaseClient
+      .from("classes")
+      .select("name, school_level")
+      .eq("status", "active")
+      .order("name", { ascending: true });
 
-  if (error) {
-    console.error("Failed to load active classes:", error);
-    return;
-  }
+    if (error) {
+      showPeriodError(error, "load");
+      return;
+    }
 
-  const activeClasses = classes || [];
+    const activeClasses = classes || [];
 
-  const uniqueLevels = [
-    ...new Set(activeClasses.map((c) => c.school_level).filter(Boolean)),
-  ];
+    const uniqueLevels = [
+      ...new Set(activeClasses.map((c) => c.school_level).filter(Boolean)),
+    ];
 
-  select.innerHTML = `
-    <option value="">Select Level or Class</option>
+    select.innerHTML = `
+      <option value="">Select Level or Class</option>
+      <optgroup label="School Levels">
+        ${
+          uniqueLevels.length > 0
+            ? uniqueLevels
+                .map((lvl) => `<option value="${escapeHTML(lvl)}">${levelLabels[lvl] || escapeHTML(lvl)}</option>`)
+                .join("")
+            : `<option disabled>No active school levels</option>`
+        }
+      </optgroup>
+      <optgroup label="Active Classes">
+        ${
+          activeClasses.length > 0
+            ? activeClasses
+                .map((cls) => `<option value="${escapeHTML(cls.name)}" data-level="${escapeHTML(cls.school_level)}">${escapeHTML(cls.name)}</option>`)
+                .join("")
+            : `<option disabled>No active classes found</option>`
+        }
+      </optgroup>
+    `;
 
-    <optgroup label="School Levels">
-      ${
-        uniqueLevels.length > 0
-          ? uniqueLevels
-              .map(
-                (lvl) =>
-                  `<option value="${lvl}">${levelLabels[lvl] || lvl}</option>`,
-              )
-              .join("")
-          : `<option disabled>No active school levels</option>`
-      }
-    </optgroup>
-
-    <optgroup label="Active Classes">
-      ${
-        activeClasses.length > 0
-          ? activeClasses
-              .map(
-                (cls) =>
-                  `<option value="${escapeHTML(cls.name)}" data-level="${escapeHTML(cls.school_level)}">${escapeHTML(cls.name)}</option>`,
-              )
-              .join("")
-          : `<option disabled>No active classes found</option>`
-      }
-    </optgroup>
-  `;
-
-  if (
-    currentVal &&
-    [...select.options].some((option) => option.value === currentVal)
-  ) {
-    select.value = currentVal;
+    if (currentVal && [...select.options].some((option) => option.value === currentVal)) {
+      select.value = currentVal;
+    }
+  } catch (error) {
+    showPeriodError(error, "load");
   }
 }
 

@@ -8,41 +8,119 @@ const DEFAULT_AVATAR =
 
 let currentProfileData = null;
 
+function getMyProfileErrorMessage(error, context = "profile", action = "update") {
+  const code = String(error?.code || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+    return "This school is inactive, so this change is not allowed right now. Contact your school administrator for help.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(diagnostic)
+  ) {
+    if (action === "load") {
+      return `Could not load your ${context} because your account does not have permission. Contact your school administrator if you need help.`;
+    }
+    if (context === "password") {
+      return "Your account is not allowed to change the password here. Sign in again or contact support for help.";
+    }
+    return "Your profile could not be saved because your account or school does not have permission for this change. Contact your school administrator if you need help.";
+  }
+  if (
+    status === 401 ||
+    code === "pgrst301" ||
+    /invalid jwt|session.*expired|refresh token/.test(diagnostic)
+  ) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `Could not connect to ${action} your ${context}. Check your internet connection and try again.`;
+  }
+  if (code === "pgrst116") {
+    return "Your profile could not be found. Sign in again or contact your school administrator.";
+  }
+  if (
+    code === "23505" ||
+    code === "email_exists" ||
+    code === "user_already_exists" ||
+    /already registered|email.*already|phone_number/.test(diagnostic)
+  ) {
+    if (/phone_number|phone number/.test(diagnostic)) {
+      return "That phone number is already registered to another account.";
+    }
+    return "An account with that email address already exists. Use a different email address.";
+  }
+  if (code === "invalid_credentials" || /invalid login credentials|current password.*incorrect|password.*incorrect/.test(diagnostic)) {
+    return "The current password is incorrect. Check it and try again.";
+  }
+  if (/same password|different from the old password/.test(diagnostic)) {
+    return "Choose a new password that is different from your current password.";
+  }
+  if (code === "same_password") {
+    return "Choose a new password that is different from your current password.";
+  }
+  if (/weak password|password should be at least|password.*too short/.test(diagnostic)) {
+    return "That password does not meet the security requirements. Choose a stronger password and try again.";
+  }
+  if (/email rate limit|rate limit/.test(diagnostic)) {
+    return "Too many attempts were made. Wait a little while, then try again.";
+  }
+  if (/file size|payload too large|object.*too large/.test(diagnostic) || status === 413) {
+    return "The profile photo is too large. Choose a smaller image and try again.";
+  }
+  return `Could not update your ${context}. Please try again.`;
+}
+
+function showMyProfileError(error, context = "profile", action = "update") {
+  console.error(`My Profile ${context} error:`, error);
+  const message = getMyProfileErrorMessage(error, context, action);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 async function loadMyProfile() {
-  const {
-    data: { user },
-    error: authError,
-  } = await supabaseClient.auth.getUser();
+  try {
+    const { data, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = data?.user;
 
-  if (authError || !user) return;
+    if (!user) {
+      showMyProfileError({ status: 401 }, "profile", "load");
+      return;
+    }
 
-  const { data: profile, error } = await supabaseClient
-    .from("profiles")
-    .select("photo_url, full_name, email, phone_number")
-    .eq("id", user.id)
-    .single();
+    const { data: profile, error } = await supabaseClient
+      .from("profiles")
+      .select("photo_url, full_name, email, phone_number")
+      .eq("id", user.id)
+      .single();
 
-  if (error) {
-    if (typeof showToast === "function")
-      showToast("Error fetching profile", "error");
-    return;
+    if (error) {
+      showMyProfileError(error, "profile", "load");
+      return;
+    }
+
+    let avatarUrl = profile.photo_url || DEFAULT_AVATAR;
+    if (profile.photo_url && !profile.photo_url.includes("?t=")) {
+      avatarUrl = `${profile.photo_url}?t=${Date.now()}`;
+    }
+
+    currentProfileData = {
+      fullName: profile.full_name || "",
+      email: user.email || profile.email || "",
+      phone: profile.phone_number || "",
+      photoUrl: avatarUrl,
+    };
+
+    populateProfileForm(currentProfileData);
+
+    checkProfileChanges();
+  } catch (error) {
+    showMyProfileError(error, "profile", "load");
   }
-
-  let avatarUrl = profile.photo_url || DEFAULT_AVATAR;
-  if (profile.photo_url && !profile.photo_url.includes("?t=")) {
-    avatarUrl = `${profile.photo_url}?t=${Date.now()}`;
-  }
-
-  currentProfileData = {
-    fullName: profile.full_name || "",
-    email: user.email || profile.email || "",
-    phone: profile.phone_number || "",
-    photoUrl: profile.photo_url || DEFAULT_AVATAR,
-  };
-
-  populateProfileForm(currentProfileData);
-
-  checkProfileChanges();
 }
 
 function populateProfileForm(data) {
@@ -96,10 +174,19 @@ function compressImageToBlob(file, maxWidth = 800, quality = 0.7) {
 async function handleUpdateProfile(event) {
   if (event) event.preventDefault();
 
-  const {
-    data: { user },
-  } = await supabaseClient.auth.getUser();
-  if (!user) return;
+  let user;
+  try {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error) throw error;
+    user = data?.user;
+    if (!user) {
+      showMyProfileError({ status: 401 }, "profile");
+      return;
+    }
+  } catch (error) {
+    showMyProfileError(error, "profile");
+    return;
+  }
 
   const fullName = document.getElementById("fullName").value.trim();
   const email = document.getElementById("emailAddress").value.trim();
@@ -134,6 +221,9 @@ async function handleUpdateProfile(event) {
     saveBtn.textContent = "Saving...";
   }
 
+  let uploadedAvatarPath = null;
+  let emailUpdateRequested = false;
+
   try {
     let photoUrl = currentProfileData?.photoUrl;
 
@@ -154,6 +244,7 @@ async function handleUpdateProfile(event) {
         });
 
       if (uploadError) throw uploadError;
+      uploadedAvatarPath = filePath;
 
       const { data: urlData } = supabaseClient.storage
         .from("avatars")
@@ -168,36 +259,28 @@ async function handleUpdateProfile(event) {
         email,
       });
       if (authError) throw authError;
+      emailUpdateRequested = true;
     }
 
-    const { error: updateError } = await supabaseClient
+    const { data: updatedProfile, error: updateError } = await supabaseClient
       .from("profiles")
       .update({
         full_name: fullName,
         phone_number: phoneInput,
         photo_url: photoUrl,
       })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select("id");
 
-    if (updateError) {
-      if (updateError.code === "23505") {
-        if (
-          updateError.message?.includes("phone_number") ||
-          updateError.details?.includes("phone_number")
-        ) {
-          showToast(
-            "That phone number is already registered to another account.",
-            "error",
-          );
-          return;
-        }
+    if (updateError) throw updateError;
 
-        showToast("An account with these details already exists.", "error");
-        return;
-      }
-
-      throw updateError;
+    if (!updatedProfile || updatedProfile.length === 0) {
+      const noProfileRowError = new Error("Profile update returned no rows.");
+      noProfileRowError.code = "42501";
+      throw noProfileRowError;
     }
+
+    uploadedAvatarPath = null;
 
     if (isEmailChanging) {
       showToast(
@@ -213,7 +296,25 @@ async function handleUpdateProfile(event) {
     if (fileInput) fileInput.value = "";
     checkProfileChanges();
   } catch (err) {
-    showToast(err.message, "error");
+    if (uploadedAvatarPath) {
+      try {
+        const { error: cleanupError } = await supabaseClient.storage
+          .from("avatars")
+          .remove([uploadedAvatarPath]);
+        if (cleanupError) {
+          console.error("Could not remove unused profile photo upload:", cleanupError);
+        }
+      } catch (cleanupError) {
+        console.error("Could not remove unused profile photo upload:", cleanupError);
+      }
+    }
+
+    let message = getMyProfileErrorMessage(err, "profile");
+    if (emailUpdateRequested) {
+      message = `Your email change request was sent, but the rest of your profile could not be saved. ${message}`;
+    }
+    console.error("My Profile save error:", err);
+    showToast(message, "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -337,7 +438,7 @@ async function handleChangePassword(event) {
     showToast("Password updated successfully!", "success");
     document.getElementById("changeMyPassword").reset();
   } catch (err) {
-    showToast(err.message, "error");
+    showMyProfileError(err, "password");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -388,35 +489,39 @@ function validatePasswordRequirements(password) {
 
 document.addEventListener("DOMContentLoaded", async function () {
   const saveBtn = document.getElementById("saveProfileInfo");
+  if (!saveBtn) return;
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabaseClient.auth.getUser();
+  try {
+    const { data, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = data?.user;
 
-  if (authError || !user) {
-    console.error("User not logged in");
-    return;
-  }
+    if (!user) {
+      showMyProfileError({ status: 401 }, "enrollment information", "load");
+      return;
+    }
 
-  const { data: enrollment, error: dbError } = await supabaseClient
-    .from("student_enrollments")
-    .select("school_id, enrollment_status")
-    .eq("student_id", user.id);
+    const { data: enrollment, error: dbError } = await supabaseClient
+      .from("student_enrollments")
+      .select("school_id, enrollment_status")
+      .eq("student_id", user.id);
 
-  if (dbError || !enrollment) {
-    console.error("Could not fetch enrollment information", dbError);
-    return;
-  }
+    if (dbError) {
+      showMyProfileError(dbError, "enrollment information", "load");
+      return;
+    }
 
-  const isRestrictedType = enrollment.some(
-    (enrollment) =>
-      enrollment.enrollment_status === "Graduated" ||
-      enrollment.enrollment_status === "Transfered",
-  );
+    const isRestrictedType = (enrollment || []).some(
+      (record) =>
+        record.enrollment_status === "Graduated" ||
+        record.enrollment_status === "Transfered",
+    );
 
-  if (!isRestrictedType) {
-    saveBtn.style.display = "flex";
+    if (!isRestrictedType) {
+      saveBtn.style.display = "flex";
+    }
+  } catch (error) {
+    showMyProfileError(error, "enrollment information", "load");
   }
 });
 
@@ -433,16 +538,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
+    const { data, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = data?.user;
 
     if (user) {
-      const { data: profile } = await supabaseClient
+      const { data: profile, error } = await supabaseClient
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
+      if (error) showMyProfileError(error, "profile", "load");
 
       const role = profile?.role?.toLowerCase();
 
@@ -459,7 +565,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
     }
   } catch (err) {
-    console.error("Error setting back button destination:", err);
+    showMyProfileError(err, "profile", "load");
     backBtn.onclick = () => {
       window.location.href = "settings.html";
     };

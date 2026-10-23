@@ -27,13 +27,82 @@ function formatDateTime(isoString) {
 
 let currentAssessments = [];
 
+function getAssessmentErrorMessage(error, action, entity) {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+  const itemName = entity === "category" ? "category" : "assessment";
+  const pluralName = entity === "category" ? "categories" : "assessments";
+
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+    return "This school is inactive. You can view existing information, but you cannot make changes until the school is reactivated.";
+  }
+
+  if (code === "23505") {
+    if (diagnostic.includes("unique_active_assessment_per_school")) {
+      return "Only one assessment can be active per school. Deactivate the current active assessment first.";
+    }
+    return `A ${itemName} with these details already exists.`;
+  }
+
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|not allowed/.test(diagnostic)
+  ) {
+    if (action === "load") {
+      return `You do not have permission to view ${pluralName} for this school.`;
+    }
+    const verb = action === "create" ? "create" : "update";
+    return `Could not ${verb} the ${itemName}. This school may be inactive, or your account may not have permission.`;
+  }
+
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token/.test(diagnostic)
+  ) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+
+  if (/failed to fetch|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `Could not connect to load ${pluralName}. Check your internet connection and try again.`;
+  }
+
+  if (code === "PGRST116") {
+    return action === "update"
+      ? `This ${itemName} is no longer available to update. Refresh the page and try again.`
+      : `Could not load ${pluralName}. Refresh the page and try again.`;
+  }
+
+  if (code === "23503" || code === "23514" || code === "22P02") {
+    return `Some ${itemName} information is invalid or linked to another record. Review the details and try again.`;
+  }
+
+  return action === "load"
+    ? `Could not load ${pluralName}. Please try again.`
+    : `Could not ${action} the ${itemName}. Please try again.`;
+}
+
+function showAssessmentError(error, action, entity) {
+  console.error(`Assessment page ${action} ${entity} error:`, error);
+  const message = getAssessmentErrorMessage(error, action, entity);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 async function loadAssessments() {
   const tableBody = document.getElementById("assessmentsTableBody");
   if (!tableBody) return;
 
   try {
     if (!window.supabaseClient) {
-      console.error("Supabase client is not initialized.");
+      const message = showAssessmentError(
+        new Error("Supabase client is not initialized."),
+        "load",
+        "assessment",
+      );
+      tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
       return;
     }
 
@@ -52,13 +121,11 @@ async function loadAssessments() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      if (typeof showToast === "function") {
-        showToast("Failed to load assessments.", "error");
-      }
+      const message = showAssessmentError(error, "load", "assessment");
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; color: red; padding: 20px;">
-            Error loading data.
+          <td colspan="7" style="text-align: center; padding: 20px;">
+            ${escapeHTML(message)}
           </td>
         </tr>
       `;
@@ -68,14 +135,11 @@ async function loadAssessments() {
     currentAssessments = data || [];
     renderAssessmentTable(currentAssessments);
   } catch (err) {
-    console.error("Error loading assessments:", err);
-    if (typeof showToast === "function") {
-      showToast("Unexpected error loading assessments.", "error");
-    }
+    const message = showAssessmentError(err, "load", "assessment");
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; color: red; padding: 20px;">
-          Error loading data.
+        <td colspan="7" style="text-align: center; padding: 20px;">
+          ${escapeHTML(message)}
         </td>
       </tr>
     `;
@@ -104,8 +168,6 @@ function renderAssessmentTable(assessments) {
         ? "assessment-status-inactive"
         : "assessment-status-active";
       const statusLabel = isInactive ? "Inactive" : "Active";
-
-      const rawName = item.name || "";
 
       return `
         <tr data-id="${escapeHTML(item.id)}">
@@ -248,7 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
   tableBody.dataset.listenerAttached = "true";
 
   tableBody.addEventListener("click", (e) => {
-    const editBtn = event.target.closest(".edit-assessment");
+    const editBtn = e.target.closest(".edit-assessment");
     if (editBtn) {
       const id = editBtn.dataset.id;
       if (typeof openEditAssessmentModal === "function") {
@@ -333,27 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .single();
 
         if (error) {
-          console.error("Supabase insert error:", error);
-
-          if (error.code === "23505") {
-            notifyUser(
-              "An assessment with this name already exists.",
-              "error",
-              nameInput,
-            );
-            return;
-          }
-          if (
-            error.code === "42501" ||
-            error.message?.toLowerCase().includes("permission")
-          ) {
-            notifyUser(
-              "You do not have permission to create an assessment.",
-              "error",
-            );
-            return;
-          }
-          notifyUser("Failed to create assessment. Please try again.", "error");
+          showAssessmentError(error, "create", "assessment");
           return;
         }
 
@@ -363,11 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof closeAssessmentModal === "function") closeAssessmentModal();
         if (typeof loadAssessments === "function") loadAssessments();
       } catch (error) {
-        console.error("Unexpected runtime error:", error);
-        notifyUser(
-          "Something went wrong while processing your request.",
-          "error",
-        );
+        showAssessmentError(error, "create", "assessment");
       } finally {
         if (saveButton) {
           saveButton.disabled = false;
@@ -472,48 +510,12 @@ document.addEventListener("DOMContentLoaded", () => {
           .select();
 
         if (!error && (!data || data.length === 0)) {
-          notifyUser(
-            "You do not have permission to edit this assessment.",
-            "error",
-          );
+          showAssessmentError({ code: "42501" }, "update", "assessment");
           return;
         }
 
         if (error) {
-          console.error("Supabase update error:", error);
-
-          const isDuplicateErr =
-            error.code === "23505" ||
-            error.message
-              ?.toLowerCase()
-              .includes("unique_active_assessment_per_school");
-
-          if (isDuplicateErr) {
-            notifyUser(
-              "Only one assessment can be active per school. Please deactivate the current active assessment first.",
-              "error",
-            );
-            return;
-          }
-
-          const isPermissionErr =
-            error.code === "42501" ||
-            error.code === "PGRST301" ||
-            error.status === 403 ||
-            error.message?.toLowerCase().includes("permission") ||
-            error.message
-              ?.toLowerCase()
-              .includes("violates row-level security");
-
-          if (isPermissionErr) {
-            notifyUser(
-              "You do not have permission to edit this assessment.",
-              "error",
-            );
-            return;
-          }
-
-          notifyUser("Failed to update assessment. Please try again.", "error");
+          showAssessmentError(error, "update", "assessment");
           return;
         }
 
@@ -527,11 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
           loadAssessments();
         }
       } catch (error) {
-        console.error("Unexpected runtime error:", error);
-        notifyUser(
-          "Something went wrong while processing your request.",
-          "error",
-        );
+        showAssessmentError(error, "update", "assessment");
       } finally {
         if (saveButton) {
           saveButton.disabled = false;
@@ -653,29 +651,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .single();
 
         if (error) {
-          console.error("Supabase category insert error:", error);
-
-          if (error.code === "23505") {
-            notifyUser(
-              "A category with this name already exists.",
-              "error",
-              nameInput,
-            );
-            return;
-          }
-
-          if (
-            error.code === "42501" ||
-            error.message?.toLowerCase().includes("permission")
-          ) {
-            notifyUser(
-              "You do not have permission to create categories.",
-              "error",
-            );
-            return;
-          }
-
-          notifyUser("Failed to create category. Please try again.", "error");
+          showAssessmentError(error, "create", "category");
           return;
         }
 
@@ -684,11 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
         closeCategoryModal();
         loadCategories();
       } catch (err) {
-        console.error("Unexpected runtime error:", err);
-        notifyUser(
-          "Something went wrong while processing your request.",
-          "error",
-        );
+        showAssessmentError(err, "create", "category");
       } finally {
         if (saveButton) {
           saveButton.disabled = false;
@@ -805,26 +777,12 @@ document.addEventListener("DOMContentLoaded", () => {
           .select();
 
         if (!error && (!data || data.length === 0)) {
-          notifyUser(
-            "You do not have permission to edit this category.",
-            "error",
-          );
+          showAssessmentError({ code: "42501" }, "update", "category");
           return;
         }
 
         if (error) {
-          console.error("Supabase update category error:", error);
-          if (
-            error.code === "42501" ||
-            error.message?.toLowerCase().includes("permission")
-          ) {
-            notifyUser(
-              "You do not have permission to edit this category.",
-              "error",
-            );
-            return;
-          }
-          notifyUser("Failed to update category. Please try again.", "error");
+          showAssessmentError(error, "update", "category");
           return;
         }
 
@@ -832,11 +790,7 @@ document.addEventListener("DOMContentLoaded", () => {
         closeEditCategoryModal();
         loadCategories();
       } catch (err) {
-        console.error("Unexpected runtime error:", err);
-        notifyUser(
-          "Something went wrong while processing your request.",
-          "error",
-        );
+        showAssessmentError(err, "update", "category");
       } finally {
         if (saveButton) {
           saveButton.disabled = false;
@@ -862,6 +816,16 @@ async function loadCategories() {
   if (!tableBody) return;
 
   try {
+    if (!window.supabaseClient) {
+      const message = showAssessmentError(
+        new Error("Supabase client is not initialized."),
+        "load",
+        "category",
+      );
+      tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+      return;
+    }
+
     tableBody.innerHTML = `
       <tr>
         <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
@@ -877,13 +841,11 @@ async function loadCategories() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      if (typeof showToast === "function") {
-        showToast("Failed to load categories.", "error");
-      }
+      const message = showAssessmentError(error, "load", "category");
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; color: red; padding: 20px;">
-            Error loading categories data.
+          <td colspan="7" style="text-align: center; padding: 20px;">
+            ${escapeHTML(message)}
           </td>
         </tr>
       `;
@@ -893,10 +855,8 @@ async function loadCategories() {
     currentCategories = data || [];
     renderCategoryTable(currentCategories);
   } catch (err) {
-    console.error("Unexpected error loading categories:", err);
-    if (typeof showToast === "function") {
-      showToast("Unexpected error loading categories.", "error");
-    }
+    const message = showAssessmentError(err, "load", "category");
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
   }
 }
 

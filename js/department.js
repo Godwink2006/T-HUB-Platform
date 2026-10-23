@@ -36,6 +36,57 @@ const cancelEditDepartmentModal = document.getElementById(
 const editDepartmentModal = document.getElementById("editDepartmentModal");
 const editDepartmentButtons = document.querySelectorAll(".edit-Department");
 
+function getDepartmentErrorMessage(error, action) {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+    return "This school is inactive. You can view existing departments, but you cannot make changes until the school is reactivated.";
+  }
+  if (code === "23505") {
+    return "A department with this name already exists.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|not allowed/.test(diagnostic)
+  ) {
+    if (action === "load") {
+      return "You do not have permission to view departments for this school.";
+    }
+    return `Could not ${action} this department. This school may be inactive, or your account may not have permission.`;
+  }
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token/.test(diagnostic)
+  ) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|network|connection|timeout|timed out/.test(diagnostic)) {
+    return "Could not connect to load departments. Check your internet connection and try again.";
+  }
+  if (code === "PGRST116") {
+    return action === "load"
+      ? "This department is unavailable or you do not have permission to view it. Refresh the page and try again."
+      : "This department is no longer available to update. Refresh the page and try again.";
+  }
+  if (code === "23503" || code === "23514" || code === "22P02") {
+    return "Some department information is invalid or linked to another record. Review the details and try again.";
+  }
+  return action === "load"
+    ? "Could not load departments. Please try again."
+    : `Could not ${action} this department. Please try again.`;
+}
+
+function showDepartmentError(error, action) {
+  console.error(`Departments page ${action} error:`, error);
+  const message = getDepartmentErrorMessage(error, action);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 closeEditDepartmentModal.addEventListener("click", () => {
   editDepartmentModal.style.display = "none";
 
@@ -84,6 +135,15 @@ async function loadDepartments() {
   `;
 
   try {
+    if (!window.supabaseClient) {
+      const message = showDepartmentError(
+        new Error("Supabase client is not initialized."),
+        "load",
+      );
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+      return;
+    }
+
     const { data, error } = await supabaseClient
       .from("departments")
       .select("*")
@@ -94,8 +154,8 @@ async function loadDepartments() {
     currentDepartmentsData = data || [];
     renderDepartmentsTable(currentDepartmentsData);
   } catch (err) {
-    console.error("Fetch Error:", err.message);
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Failed to load departments.</td></tr>`;
+    const message = showDepartmentError(err, "load");
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
   }
 }
 
@@ -184,20 +244,12 @@ async function handleAddClass(event) {
       .select();
 
     if (error) {
-      if (error.code === "23505") {
-        showToast("This department name already exists.", "error");
-        return;
-      }
-      if (error.code === "42501") {
-        showToast("You do not have permission to add a department.", "error");
-        return;
-      }
-      showToast(error.message, "error");
+      showDepartmentError(error, "create");
       return;
     }
 
     if (!data || data.length === 0) {
-      showToast("You do not have permission to add a department.", "error");
+      showDepartmentError({ code: "42501" }, "create");
       return;
     }
 
@@ -209,7 +261,7 @@ async function handleAddClass(event) {
     }
     await loadDepartments();
   } catch (err) {
-    showToast(err.message, "error");
+    showDepartmentError(err, "create");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -235,7 +287,7 @@ let originalDepartmentData = null;
 
 async function openEditModal(departmentId) {
   if (!window.supabaseClient) {
-    console.error("Supabase client is not initialized.");
+    showDepartmentError(new Error("Supabase client is not initialized."), "load");
     return;
   }
 
@@ -247,9 +299,7 @@ async function openEditModal(departmentId) {
       .single();
 
     if (error || !data) {
-      if (typeof showToast === "function") {
-        showToast("Failed to fetch department details.", "error");
-      }
+      showDepartmentError(error || new Error("Department not found."), "load");
       return;
     }
 
@@ -267,9 +317,7 @@ async function openEditModal(departmentId) {
 
     showModalById("editDepartmentModal");
   } catch (err) {
-    if (typeof showToast === "function") {
-      showToast(err.message || "An error occurred.", "error");
-    }
+    showDepartmentError(err, "load");
   }
 }
 
@@ -318,23 +366,12 @@ async function handleEditDepartment(event) {
       .select();
 
     if (error) {
-      if (error.code === "23505") {
-        showToast("This department name already exists.", "error");
-        return;
-      }
-      if (error.code === "42501") {
-        showToast(
-          "You do not have permission to update a department.",
-          "error",
-        );
-        return;
-      }
-      showToast(error.message, "error");
+      showDepartmentError(error, "update");
       return;
     }
 
     if (!data || data.length === 0) {
-      showToast("You do not have permission to update a department.", "error");
+      showDepartmentError({ code: "42501" }, "update");
       return;
     }
 
@@ -345,7 +382,7 @@ async function handleEditDepartment(event) {
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
     await loadDepartments();
   } catch (err) {
-    showToast(err.message, "error");
+    showDepartmentError(err, "update");
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;

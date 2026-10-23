@@ -313,6 +313,7 @@ async function handleFormSubmit() {
   const saveBtn = document.querySelector(
     '#schoolInformationForm .save-btn, #schoolInformationForm button[type="submit"]',
   );
+  let uploadedLogoPath = null;
 
   try {
     if (saveBtn) {
@@ -338,6 +339,7 @@ async function handleFormSubmit() {
         });
 
       if (uploadError) throw uploadError;
+      uploadedLogoPath = filePath;
 
       const { data: publicUrlData } = supabaseClient.storage
         .from("avatars")
@@ -356,7 +358,7 @@ async function handleFormSubmit() {
         .update({ ...formData, updated_at: new Date().toISOString() })
         .eq("id", existingRecordId)
         .select()
-        .single();
+        .maybeSingle();
 
       error = updateErr;
       savedRecord = data;
@@ -373,10 +375,28 @@ async function handleFormSubmit() {
 
     if (error) throw error;
 
+    if (existingRecordId && !savedRecord) {
+      if (uploadedLogoPath) {
+        const { error: cleanupError } = await supabaseClient.storage
+          .from("avatars")
+          .remove([uploadedLogoPath]);
+        if (cleanupError) {
+          console.error("Could not remove the unused school logo upload:", cleanupError);
+        }
+        uploadedLogoPath = null;
+      }
+      showToast(
+        "School information was not saved. This school may be inactive or your account may not have permission to update it.",
+        "error",
+      );
+      return;
+    }
+
     if (savedRecord) {
       existingRecordId = savedRecord.id;
 
       originalSchoolData = { ...savedRecord };
+      uploadedLogoPath = null;
     }
 
     if (logoInput) {
@@ -401,8 +421,27 @@ async function handleFormSubmit() {
       await logActivity(schoolId, activityMessage, "purple", "Everyone");
     }
   } catch (err) {
-    console.error("Error saving profile:", err.message);
-    showToast("Failed to save settings: " + err.message, "error");
+    console.error("Error saving profile:", err);
+
+    if (uploadedLogoPath) {
+      const { error: cleanupError } = await supabaseClient.storage
+        .from("avatars")
+        .remove([uploadedLogoPath]);
+      if (cleanupError) {
+        console.error("Could not remove the unused school logo upload:", cleanupError);
+      }
+    }
+
+    const errorCode = err && typeof err === "object" ? err.code : null;
+    if (errorCode === "PGRST116" || errorCode === "42501") {
+      showToast(
+        "School information was not saved. This school may be inactive or your account may not have permission to update it.",
+        "error",
+      );
+    } else {
+      const detail = err instanceof Error ? err.message : "Please try again.";
+      showToast("Failed to save settings: " + detail, "error");
+    }
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;

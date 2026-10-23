@@ -38,6 +38,57 @@ const cancelEditSubjectModal = document.getElementById(
 );
 const editSubjectModal = document.getElementById("editSubjectModal");
 
+function getSubjectErrorMessage(error, action, entity = "subject") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+    return "This school is inactive. You can view existing subjects, but you cannot make changes until the school is reactivated.";
+  }
+  if (code === "23505") {
+    return "A subject with this name already exists.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(diagnostic)
+  ) {
+    if (action === "load") {
+      return `You do not have permission to view ${entity} information for this school.`;
+    }
+    return `Could not ${action} this ${entity}. This school may be inactive, or your account may not have permission.`;
+  }
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token/.test(diagnostic)
+  ) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `Could not connect to load ${entity} information. Check your internet connection and try again.`;
+  }
+  if (code === "PGRST116") {
+    return action === "update"
+      ? "This subject is no longer available to update. Refresh the page and try again."
+      : `Could not load ${entity} details. Refresh the page and try again.`;
+  }
+  if (code === "23503" || code === "23514" || code === "22P02") {
+    return "Some subject information is invalid or linked to another record. Review the details and try again.";
+  }
+  return action === "load"
+    ? `Could not load ${entity} information. Please try again.`
+    : `Could not ${action} this ${entity}. Please try again.`;
+}
+
+function showSubjectError(error, action, entity = "subject") {
+  console.error(`Subjects page ${action} ${entity} error:`, error);
+  const message = getSubjectErrorMessage(error, action, entity);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 closeEditSubjectModal.addEventListener("click", () => {
   editSubjectModal.style.display = "none";
 
@@ -62,21 +113,32 @@ async function populateDepartmentDropdown() {
   const departmentSelect = document.getElementById("departmentSelect");
   if (!departmentSelect) return;
 
-  const { data: departments, error } = await supabaseClient
-    .from("departments")
-    .select("id, name")
-    .eq("status", "active")
-    .order("name");
+  try {
+    const { data: departments, error } = await supabaseClient
+      .from("departments")
+      .select("id, name")
+      .eq("status", "active")
+      .order("name");
 
-  const currentSelection = departmentSelect.value;
-  departmentSelect.innerHTML = `<option value="">Select department</option>`;
+    if (error) {
+      showSubjectError(error, "load", "departments");
+      departmentSelect.innerHTML = `<option value="">Could not load departments</option>`;
+      return;
+    }
 
-  departments?.forEach((dept) => {
-    departmentSelect.add(new Option(dept.name, dept.id));
-  });
+    const currentSelection = departmentSelect.value;
+    departmentSelect.innerHTML = `<option value="">Select department</option>`;
 
-  if (currentSelection) {
-    departmentSelect.value = currentSelection;
+    departments?.forEach((dept) => {
+      departmentSelect.add(new Option(dept.name, dept.id));
+    });
+
+    if (currentSelection) {
+      departmentSelect.value = currentSelection;
+    }
+  } catch (error) {
+    showSubjectError(error, "load", "departments");
+    departmentSelect.innerHTML = `<option value="">Could not load departments</option>`;
   }
 }
 
@@ -118,20 +180,12 @@ async function handleAddSubject(event) {
       .select();
 
     if (error) {
-      if (error.code === "23505") {
-        showToast(
-          "This subject name already exists. Please choose a different name.",
-          "error",
-        );
-        return;
-      }
+      showSubjectError(error, "create");
+      return;
+    }
 
-      if (error.code === "42501") {
-        showToast("You do not have permission to add a subject.", "error");
-        return;
-      }
-
-      showToast(error.message, "error");
+    if (!data || data.length === 0) {
+      showSubjectError({ code: "42501" }, "create");
       return;
     }
 
@@ -144,7 +198,7 @@ async function handleAddSubject(event) {
 
     await fetchFilteredSubjects();
   } catch (err) {
-    showToast(err.message, "error");
+    showSubjectError(err, "create");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -183,7 +237,18 @@ async function fetchFilteredSubjects() {
   const statusFilter =
     document.getElementById("filterStatusSelect")?.value?.toLowerCase() || "";
 
+  const tbody = document.getElementById("subjectsTableBody");
   renderSubjectsTable([], true);
+
+  try {
+  if (!window.supabaseClient) {
+    const message = showSubjectError(
+      new Error("Supabase client is not initialized."),
+      "load",
+    );
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+    return;
+  }
 
   let query = supabaseClient.from("subjects").select(`
     id,
@@ -217,14 +282,16 @@ async function fetchFilteredSubjects() {
   const { data: subjects, error } = await query;
 
   if (error) {
-    console.error("Fetch error:", error.message);
-    if (typeof showToast === "function") {
-      showToast("Failed to load subjects.", "error");
-    }
+    const message = showSubjectError(error, "load");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
     return;
   }
 
   renderSubjectsTable(subjects || []);
+  } catch (error) {
+    const message = showSubjectError(error, "load");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+  }
 }
 
 function renderSubjectsTable(subjects, isLoading = false) {
@@ -297,6 +364,7 @@ async function populateSubjectFilterDropdowns() {
   const deptSelect = document.getElementById("filterDepartmentSelect");
   if (!deptSelect) return;
 
+  try {
   const { data: subjects, error } = await supabaseClient
     .from("subjects")
     .select(
@@ -307,10 +375,7 @@ async function populateSubjectFilterDropdowns() {
     )
 
   if (error) {
-    console.error(
-      "Error fetching filter departments from subjects:",
-      error.message,
-    );
+    showSubjectError(error, "load", "department filters");
     return;
   }
 
@@ -332,34 +397,45 @@ async function populateSubjectFilterDropdowns() {
   if (uniqueDepartments.has(selectedDept)) {
     deptSelect.value = selectedDept;
   }
+  } catch (error) {
+    showSubjectError(error, "load", "department filters");
+  }
 }
 
 let initialSubjectData = null;
 
 async function populateEditDepartmentDropdown() {
   const deptSelect = document.getElementById("editDepartmentSelect");
-  if (!deptSelect) return;
+  if (!deptSelect) return true;
 
-  const { data: departments, error } = await supabaseClient
-    .from("departments")
-    .select("id, name")
-    .eq("status", "active")
-    .order("name");
+  try {
+    const { data: departments, error } = await supabaseClient
+      .from("departments")
+      .select("id, name")
+      .eq("status", "active")
+      .order("name");
 
-  if (error) {
-    console.error("Error fetching active departments:", error.message);
-    return;
+    if (error) {
+      showSubjectError(error, "load", "departments");
+      deptSelect.innerHTML = `<option value="">Could not load departments</option>`;
+      return false;
+    }
+
+    deptSelect.innerHTML = `<option value="">Select department</option>`;
+    departments?.forEach((dept) => {
+      deptSelect.add(new Option(dept.name, dept.id));
+    });
+    return true;
+  } catch (error) {
+    showSubjectError(error, "load", "departments");
+    deptSelect.innerHTML = `<option value="">Could not load departments</option>`;
+    return false;
   }
-
-  deptSelect.innerHTML = `<option value="">Select department</option>`;
-  departments?.forEach((dept) => {
-    deptSelect.add(new Option(dept.name, dept.id));
-  });
 }
 
 async function openEditSubjectModal(subjectId) {
   try {
-    await populateEditDepartmentDropdown();
+    if (!(await populateEditDepartmentDropdown())) return;
 
     const { data: subject, error } = await supabaseClient
       .from("subjects")
@@ -368,7 +444,7 @@ async function openEditSubjectModal(subjectId) {
       .single();
 
     if (error || !subject) {
-      showToast("Could not load subject details.", "error");
+      showSubjectError(error || new Error("Subject not found."), "load");
       return;
     }
 
@@ -392,7 +468,7 @@ async function openEditSubjectModal(subjectId) {
     if (modal) modal.style.display = "flex";
     if (typeof lockBodyScroll === "function") lockBodyScroll();
   } catch (err) {
-    showToast(err.message, "error");
+    showSubjectError(err, "load");
   }
 }
 
@@ -455,19 +531,12 @@ async function handleUpdateSubject(event) {
       .select();
 
     if (error) {
-      if (error.code === "23505") {
-        showToast(
-          "This subject name already exists. Please choose another.",
-          "error",
-        );
-        return;
-      }
-      showToast(error.message, "error");
+      showSubjectError(error, "update");
       return;
     }
 
     if (!data || data.length === 0) {
-      showToast("You do not have permission to update this subject.", "error");
+      showSubjectError({ code: "42501" }, "update");
       return;
     }
 
@@ -485,7 +554,7 @@ async function handleUpdateSubject(event) {
       await fetchFilteredSubjects();
     }
   } catch (err) {
-    showToast(err.message, "error");
+    showSubjectError(err, "update");
   } finally {
     if (updateBtn) {
       updateBtn.disabled = false;

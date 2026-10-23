@@ -43,6 +43,17 @@ Deno.serve(async (request) => {
     return respond({ success: false, message: "Only active school administrators and accountants can invite parents." }, 403);
   }
   if (!staff.school_id) return respond({ success: false, message: "Your staff profile is not linked to a school." }, 400);
+  const { data: schoolIsActive, error: schoolStatusError } = await authClient.rpc(
+    "is_school_active",
+    { target_school_id: staff.school_id },
+  );
+  if (schoolStatusError) {
+    console.error("Could not verify school status before parent invitation:", schoolStatusError.message);
+    return respond({ success: false, message: "The school's status could not be verified. Try again or contact the system administrator." }, 503);
+  }
+  if (schoolIsActive !== true) {
+    return respond({ success: false, message: "This school is inactive. Parent invitations are unavailable until the school is reactivated." }, 403);
+  }
   if (!appSiteUrl) return respond({ success: false, message: "Parent invitations are not configured. Contact the system administrator." }, 503);
 
   let invitedAuthUserId: string | null = null;

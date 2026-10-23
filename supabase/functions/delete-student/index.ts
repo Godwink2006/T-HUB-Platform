@@ -81,6 +81,20 @@ Deno.serve(async (request) => {
       return jsonResponse({ success: false, message: "Only an active school admin can delete students." }, 403);
     }
 
+    const { data: schoolIsActive, error: schoolStatusError } = await userClient.rpc(
+      "is_school_active",
+      { target_school_id: adminProfile.school_id },
+    );
+    if (schoolStatusError) {
+      throw new Error(`Could not verify the school's status: ${schoolStatusError.message}`);
+    }
+    if (schoolIsActive !== true) {
+      return jsonResponse({
+        success: false,
+        message: "This school is inactive. Student deletion is unavailable until the school is reactivated.",
+      }, 403);
+    }
+
     let body: { student_id?: unknown };
     try {
       body = await request.json();
@@ -132,12 +146,9 @@ Deno.serve(async (request) => {
       throw new Error(`Could not check the student's login account: ${authLookupError.message}`);
     }
 
-    if (authResult?.user) {
-      const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(studentId);
-      if (deleteAuthError) throw new Error(`Could not remove the student's login account: ${deleteAuthError.message}`);
-      authUserDeleted = true;
-    }
-
+    // Auth is a separate service and cannot participate in the database
+    // transaction. Complete the atomic database deletion first so an RPC
+    // failure never removes the student's login while leaving their records.
     const { data: deletionResult, error: deletionError } = await userClient.rpc(
       "admin_delete_student_data",
       {
@@ -150,12 +161,24 @@ Deno.serve(async (request) => {
     if (deletionError) {
       return jsonResponse({
         success: false,
-        partial: authUserDeleted,
-        auth_account_deleted: authUserDeleted,
-        message: authUserDeleted
-          ? "The login account was removed, but student records remain. Retry the student deletion to finish cleanup."
-          : deletionError.message,
+        partial: false,
+        auth_account_deleted: false,
+        message: deletionError.message,
       }, 409);
+    }
+
+    if (authResult?.user) {
+      const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(studentId);
+      if (deleteAuthError) {
+        return jsonResponse({
+          success: false,
+          partial: true,
+          student_records_deleted: true,
+          auth_account_deleted: false,
+          message: "Student records were deleted, but the login account could not be removed. Contact the system administrator to finish account cleanup.",
+        }, 502);
+      }
+      authUserDeleted = true;
     }
 
     const warnings: string[] = [];

@@ -72,6 +72,18 @@ Deno.serve(async (request) => {
     }
 
     if (body.action === "unlink") {
+      const { data: schoolIsActive, error: schoolStatusError } = await authClient.rpc(
+        "is_school_active",
+        { target_school_id: staff.school_id },
+      );
+      if (schoolStatusError) {
+        console.error("Could not verify school status before unlinking parent:", schoolStatusError.message);
+        return respond({ success: false, message: "The school's status could not be verified. Try again or contact the system administrator." }, 503);
+      }
+      if (schoolIsActive !== true) {
+        return respond({ success: false, message: "This school is inactive. Parent links cannot be changed until the school is reactivated." }, 403);
+      }
+
       const linkId = typeof body.link_id === "string" ? body.link_id : "";
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(linkId)) {
         return respond({ success: false, message: "Choose a valid parent link." }, 400);

@@ -37,6 +37,60 @@ const cancelEditClassModal = document.getElementById("cancelEditClassModal");
 const editClassModal = document.getElementById("editClassModal");
 const editButtons = document.querySelectorAll(".edit");
 
+function getClassErrorMessage(error, action) {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+    return "This school is inactive. You can view existing classes, but you cannot make changes until the school is reactivated.";
+  }
+  if (code === "23505") {
+    return "A class with this name already exists.";
+  }
+  if (code === "23514") {
+    return "Some class information is invalid. Check the capacity and selected school level.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|not allowed/.test(diagnostic)
+  ) {
+    if (action === "load") {
+      return "You do not have permission to view classes for this school.";
+    }
+    return `Could not ${action} this class. This school may be inactive, or your account may not have permission.`;
+  }
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token/.test(diagnostic)
+  ) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|network|connection|timeout|timed out/.test(diagnostic)) {
+    return "Could not connect to load classes. Check your internet connection and try again.";
+  }
+  if (code === "PGRST116") {
+    return action === "load"
+      ? "This class is unavailable or you do not have permission to view it. Refresh the page and try again."
+      : "This class is no longer available to update. Refresh the page and try again.";
+  }
+  if (code === "23503" || code === "22P02") {
+    return "Some class information is invalid or linked to another record. Review the details and try again.";
+  }
+  return action === "load"
+    ? "Could not load classes. Please try again."
+    : `Could not ${action} this class. Please try again.`;
+}
+
+function showClassError(error, action) {
+  console.error(`Classes page ${action} error:`, error);
+  const message = getClassErrorMessage(error, action);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 closeEditClassModal.addEventListener("click", () => {
   editClassModal.style.display = "none";
 
@@ -138,6 +192,15 @@ async function loadClasses() {
   `;
 
   try {
+    if (!window.supabaseClient) {
+      const message = showClassError(
+        new Error("Supabase client is not initialized."),
+        "load",
+      );
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+      return;
+    }
+
     const { data, error } = await supabaseClient
       .from("classes")
       .select("*")
@@ -148,8 +211,8 @@ async function loadClasses() {
     currentClassesData = data || [];
     renderClassesTable(currentClassesData);
   } catch (err) {
-    console.error("Fetch Error:", err.message);
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Failed to load classes.</td></tr>`;
+    const message = showClassError(err, "load");
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
   }
 }
 
@@ -209,7 +272,7 @@ let originalClassData = null;
 
 async function openEditModal(classId) {
   if (!window.supabaseClient) {
-    console.error("Supabase client is not initialized.");
+    showClassError(new Error("Supabase client is not initialized."), "load");
     return;
   }
 
@@ -221,9 +284,7 @@ async function openEditModal(classId) {
       .single();
 
     if (error || !data) {
-      if (typeof showToast === "function") {
-        showToast("Failed to fetch class details.", "error");
-      }
+      showClassError(error || new Error("Class not found."), "load");
       return;
     }
 
@@ -245,9 +306,7 @@ async function openEditModal(classId) {
 
     openModal("editClassModal");
   } catch (err) {
-    if (typeof showToast === "function") {
-      showToast(err.message || "An error occurred.", "error");
-    }
+    showClassError(err, "load");
   }
 }
 
@@ -305,26 +364,12 @@ async function handleEditClass(event) {
       .select();
 
     if (error) {
-      if (error.code === "23505") {
-        showToast("This class name already exists.", "error");
-        return;
-      }
-      if (error.code === "42501") {
-        showToast(
-          "Permission denied: Only active admins can edit classes.",
-          "error",
-        );
-        return;
-      }
-      showToast(error.message || "Failed to update class.", "error");
+      showClassError(error, "update");
       return;
     }
 
     if (!data || data.length === 0) {
-      showToast(
-        "Permission denied: Only active admins can edit classes.",
-        "error",
-      );
+      showClassError({ code: "42501" }, "update");
       return;
     }
 
@@ -332,7 +377,7 @@ async function handleEditClass(event) {
     closeModal("editClassModal");
     await loadClasses();
   } catch (err) {
-    showToast(err.message, "error");
+    showClassError(err, "update");
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -398,27 +443,12 @@ async function handleAddClass(event) {
       .select();
 
     if (error) {
-      if (error.code === "23505") {
-        showToast(
-          "This class name already exists. Please choose a different name.",
-          "error",
-        );
-        return;
-      }
+      showClassError(error, "create");
+      return;
+    }
 
-      if (error.code === "23514") {
-        showToast(
-          "Invalid data submitted. Check capacity and selected level.",
-          "error",
-        );
-        return;
-      }
-
-      if (error.code === "42501") {
-        showToast("You do not have permission to add a class.", "error");
-        return;
-      }
-      showToast(error.message, "error");
+    if (!data || data.length === 0) {
+      showClassError({ code: "42501" }, "create");
       return;
     }
 
@@ -427,7 +457,7 @@ async function handleAddClass(event) {
     closeModal("classModal");
     await loadClasses();
   } catch (err) {
-    showToast(err.message, "error");
+    showClassError(err, "create");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;

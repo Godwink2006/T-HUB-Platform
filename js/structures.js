@@ -3,6 +3,60 @@ const FEE_STRUCTURE_CURRENCIES = Object.freeze({
   USD: { label: "US Dollar (USD)", symbol: "USD" },
 });
 
+function getFeeStructureErrorMessage(error, action, entity = "fee structure") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+    return "This school is inactive. You can view existing fee structures, but you cannot make changes until the school is reactivated.";
+  }
+  if (code === "23505") {
+    return "A fee structure already exists for this class, academic year, and semester.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(diagnostic)
+  ) {
+    if (action === "load") {
+      return `You do not have permission to view ${entity} information for this school.`;
+    }
+    return `Could not ${action} this ${entity}. This school may be inactive, or your account may not have permission.`;
+  }
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token/.test(diagnostic)
+  ) {
+    return "Your session has expired. Sign in again and retry.";
+  }
+  if (/failed to fetch|network|connection|timeout|timed out/.test(diagnostic)) {
+    return `Could not connect to load ${entity} information. Check your internet connection and try again.`;
+  }
+  if (code === "PGRST116") {
+    return action === "update"
+      ? "This fee structure is no longer available to update. Refresh the page and try again."
+      : `Could not load ${entity} details. Refresh the page and try again.`;
+  }
+  if (code === "22023" || code === "23514" || code === "22P02") {
+    return "Some fee structure information is invalid. Review your selections and try again.";
+  }
+  if (code === "23503") {
+    return "The selected class, academic year, or semester is no longer available. Refresh the page and try again.";
+  }
+  return action === "load"
+    ? `Could not load ${entity} information. Please try again.`
+    : `Could not ${action} this ${entity}. Please try again.`;
+}
+
+function showFeeStructureError(error, action, entity = "fee structure") {
+  console.error(`Fee structures page ${action} ${entity} error:`, error);
+  const message = getFeeStructureErrorMessage(error, action, entity);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 function formatFeeStructureMoney(amount, currencyCode) {
   const number = Number(amount);
   const formatted = Number.isFinite(number)
@@ -120,18 +174,7 @@ async function updateFeeStructure(shouldPrint = false) {
       }, 100);
     }
   } catch (err) {
-    console.error("Error updating structure:", err);
-
-    let message = err.message || "Failed to update fee structure.";
-
-    if (err.code === "42501" || err.message?.includes("row-level security")) {
-      message =
-        "Unauthorized: You do not have permission to update fee structures.";
-    }
-
-    if (typeof showToast === "function") {
-      showToast(message, "error");
-    }
+    showFeeStructureError(err, "update");
   } finally {
     if (btnUpdate) {
       btnUpdate.disabled = false;
@@ -313,7 +356,7 @@ async function populateInitialDropdowns() {
       });
     }
   } catch (err) {
-    console.error("Error loading initial dropdowns:", err.message);
+    showFeeStructureError(err, "load", "fee setup options");
   }
 }
 
@@ -346,7 +389,8 @@ async function fetchSemestersForYear(academicYearId) {
         semesterSelect.innerHTML += `<option value="${escapeHTML(tm.id)}">${escapeHTML(tm.name || "")}</option>`;
     });
   } catch (err) {
-    console.error("Error fetching semesters for year:", err.message);
+    showFeeStructureError(err, "load", "semesters");
+    semesterSelect.innerHTML = `<option value="">Could not load semesters</option>`;
   }
 }
 
@@ -427,24 +471,7 @@ async function saveFeeStructure(shouldPrint = false) {
     if (modal) modal.style.display = "none";
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   } catch (err) {
-    console.error("Error saving fee structure:", err);
-
-    let message = "Failed to save fee structure.";
-
-    if (err.code === "23505") {
-      message =
-        "A fee structure already exists for this Class, Academic Year, and Semester.";
-    } else if (
-      err.code === "42501" ||
-      err.message?.includes("row-level security")
-    ) {
-      message =
-        "Unauthorized: You do not have permission to create fee structures.";
-    } else if (err.message) {
-      message = err.message;
-    }
-
-    showToast(message, "error");
+    showFeeStructureError(err, "create");
   } finally {
     if (saveBtn) saveBtn.disabled = false;
     if (saveAndPrintBtn) saveAndPrintBtn.disabled = false;
@@ -513,11 +540,11 @@ async function loadFeeStructures() {
     allFeeStructures = data || [];
     renderFeeStructuresTable(allFeeStructures);
   } catch (err) {
-    console.error("Error loading fee structures:", err.message);
+    const message = showFeeStructureError(err, "load");
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; color: red; padding: 20px;">
-          Failed to load fee structures.
+        <td colspan="8" style="text-align: center; padding: 20px;">
+          ${escapeHTML(message)}
         </td>
       </tr>
     `;
@@ -668,10 +695,7 @@ async function openViewStructureModal(structureId) {
       });
     }
   } catch (err) {
-    console.error("Error fetching view details:", err.message);
-    if (typeof showToast === "function") {
-      showToast("Failed to load fee structure details.", "error");
-    }
+    showFeeStructureError(err, "load", "fee structure details");
     viewModal.style.display = "none";
     if (typeof unLockBodyScroll === "function") unLockBodyScroll();
   }
@@ -751,9 +775,7 @@ async function openEditStructureModal(structureId) {
     if (typeof lockBodyScroll === "function") lockBodyScroll();
     modal.style.display = "flex";
   } catch (err) {
-    console.error("Error opening edit modal detailed:", err);
-    if (typeof showToast === "function")
-      showToast(err.message || "Failed to load edit details.", "error");
+    showFeeStructureError(err, "load", "fee structure edit details");
   }
 }
 
@@ -1026,6 +1048,18 @@ async function fetchFilteredFeeStructures() {
     .getElementById("filterStatusSelect")
     ?.value.toLowerCase();
 
+  const tbody = document.getElementById("feeStructuresBody");
+
+  try {
+  if (!window.supabaseClient) {
+    const message = showFeeStructureError(
+      new Error("Supabase client is not initialized."),
+      "load",
+    );
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+    return;
+  }
+
   let query = supabaseClient.from("fee_structures").select(`
     *,
     academic_years ( id, year_label ),
@@ -1048,7 +1082,8 @@ async function fetchFilteredFeeStructures() {
   const { data, error } = await query;
 
   if (error) {
-    console.error("Fetch error:", error.message);
+    const message = showFeeStructureError(error, "load");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
     return;
   }
 
@@ -1070,6 +1105,10 @@ async function fetchFilteredFeeStructures() {
   }
 
   renderFeeStructuresTable(filteredData);
+  } catch (error) {
+    const message = showFeeStructureError(error, "load");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+  }
 }
 
 let searchDebounceTimeout = null;
@@ -1097,6 +1136,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await fetchFilteredFeeStructures();
 });
 async function populateFilterDropdowns() {
+  try {
   const { data: structures, error } = await supabaseClient
     .from("fee_structures")
     .select(
@@ -1111,10 +1151,7 @@ async function populateFilterDropdowns() {
     )
 
   if (error) {
-    console.error(
-      "Error fetching filter choices from fee_structures:",
-      error.message,
-    );
+    showFeeStructureError(error, "load", "fee structure filters");
     return;
   }
 
@@ -1169,6 +1206,9 @@ async function populateFilterDropdowns() {
     });
 
     semesterSelect.value = selectedsemester;
+  }
+  } catch (error) {
+    showFeeStructureError(error, "load", "fee structure filters");
   }
 }
 
