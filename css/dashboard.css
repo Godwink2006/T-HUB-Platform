@@ -43,10 +43,34 @@ body.dashboard-auth-checking .dashboard-auth-loading {
   text-align: center;
 }
 
+body.dashboard-auth-error-open .dashboard-auth-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(15 23 42 / 48%);
+  color: #475569;
+  text-align: center;
+}
+
+body.dashboard-auth-error-open .dashboard-container {
+  visibility: visible;
+}
+
 .dashboard-auth-loading__content {
   display: grid;
   justify-items: center;
   gap: 16px;
+}
+
+body.dashboard-auth-error-open .dashboard-auth-loading__content {
+  width: min(100%, 480px);
+  padding: 28px;
+  border: 0.5px solid #e2e8f0;
+  background: #fff;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 24%);
 }
 
 .dashboard-auth-loading__content p {
@@ -66,11 +90,16 @@ body.dashboard-auth-checking .dashboard-auth-loading {
 .dashboard-auth-loading__retry {
   padding: 9px 16px;
   border: 0;
-  border-radius: 8px;
+
   background: #2563eb;
   color: #fff;
   font: inherit;
   cursor: pointer;
+}
+
+.dashboard-auth-loading__retry:focus-visible {
+  outline: 0.5px solid #93c5fd;
+  outline-offset: 3px;
 }
 
 @keyframes dashboard-auth-spin {
@@ -806,7 +835,9 @@ body.dashboard-auth-checking .dashboard-auth-loading {
   .announcement-delete-btn,
   .announcement-confirm-modal,
   .announcement-confirm-actions button,
-  .dashboard-error-retry {
+  .dashboard-error-retry,
+  body.dashboard-auth-error-open .dashboard-auth-loading__content,
+.dashboard-auth-loading__retry {
     border-radius: 10px;
   }
 

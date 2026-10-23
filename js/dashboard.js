@@ -234,6 +234,7 @@ function escapeHtml(str) {
 
 function finishDashboardAccessCheck() {
   document.body.classList.remove("dashboard-auth-checking");
+  document.body.classList.remove("dashboard-auth-error-open");
   document.getElementById("dashboardAuthLoading")?.remove();
 }
 
@@ -422,32 +423,44 @@ async function loadDashboardRecentActivities(schoolId) {
   }
 }
 
-function showDashboardAccessCheckError(message, retryLabel = "Try again") {
+function showDashboardAccessCheckError(message, actionLabel = "Continue to view other information") {
   const loadingScreen = document.getElementById("dashboardAuthLoading");
   if (!loadingScreen) return;
 
   const content = document.createElement("div");
   content.className = "dashboard-auth-loading__content";
   const text = document.createElement("p");
+  text.id = "dashboardAuthErrorMessage";
   text.setAttribute("role", "alert");
   text.textContent = message;
-  const retry = document.createElement("button");
-  retry.className = "dashboard-auth-loading__retry";
-  retry.type = "button";
-  retry.textContent = retryLabel;
-  retry.addEventListener(
+  const action = document.createElement("button");
+  action.className = "dashboard-auth-loading__retry";
+  action.type = "button";
+  const requiresSignIn = actionLabel === "Sign in";
+  action.textContent = requiresSignIn
+    ? "Sign in"
+    : "Continue to view other information";
+  action.addEventListener(
     "click",
     () => {
-      if (retryLabel === "Sign in") {
+      unLockBodyScroll();
+      if (requiresSignIn) {
         window.location.replace("/index.html");
       } else {
-        window.location.reload();
+        finishDashboardAccessCheck();
       }
     },
     { once: true },
   );
-  content.append(text, retry);
+  content.append(text, action);
   loadingScreen.replaceChildren(content);
+  loadingScreen.setAttribute("role", "dialog");
+  loadingScreen.setAttribute("aria-modal", "true");
+  loadingScreen.setAttribute("aria-labelledby", text.id);
+  document.body.classList.remove("dashboard-auth-checking");
+  document.body.classList.add("dashboard-auth-error-open");
+  lockBodyScroll();
+  action.focus();
 }
 
 async function loadDashboardAnnouncements() {
@@ -519,7 +532,7 @@ async function loadDashboardAnnouncements() {
 
     const availabilityIssue = await checkDashboardAvailability(user, profile);
     if (availabilityIssue) {
-      showDashboardAccessCheckError(availabilityIssue, "Refresh dashboard");
+      showDashboardAccessCheckError(availabilityIssue);
       return;
     }
 
@@ -996,7 +1009,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const availabilityIssue = await checkDashboardAvailability(user, profile);
     if (availabilityIssue) {
-      showDashboardAccessCheckError(availabilityIssue, "Refresh dashboard");
+      showDashboardAccessCheckError(availabilityIssue);
       return;
     }
 
