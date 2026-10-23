@@ -39,8 +39,26 @@ as $$
     when 'subject' then
       exists (select 1 from public.attendance a join public.attendance_records ar on ar.attendance_id = a.id join public.parent_student_links l on l.student_id = ar.student_id where a.subject_id = p_id and l.parent_user_id = (select auth.uid()) and l.status = 'active')
       or exists (select 1 from public.grades g join public.grade_records gr on gr.grade_id = g.id join public.parent_student_links l on l.student_id = gr.student_id where g.subject_id = p_id and l.parent_user_id = (select auth.uid()) and l.status = 'active')
+      or exists (
+        select 1
+        from public.timetable_lessons as lesson
+        join public.timetables as timetable
+          on timetable.id = lesson.timetable_id
+         and timetable.school_id = lesson.school_id
+        where lesson.subject_id = p_id
+          and (select private.parent_portal_can_read_timetable(timetable.id, timetable.school_id))
+      )
     when 'period' then
       exists (select 1 from public.attendance a join public.attendance_records ar on ar.attendance_id = a.id join public.parent_student_links l on l.student_id = ar.student_id where a.period_id = p_id and l.parent_user_id = (select auth.uid()) and l.status = 'active')
+      or exists (
+        select 1
+        from public.timetable_lessons as lesson
+        join public.timetables as timetable
+          on timetable.id = lesson.timetable_id
+         and timetable.school_id = lesson.school_id
+        where lesson.period_id = p_id
+          and (select private.parent_portal_can_read_timetable(timetable.id, timetable.school_id))
+      )
     when 'assessment' then
       exists (select 1 from public.grades g join public.grade_records gr on gr.grade_id = g.id join public.parent_student_links l on l.student_id = gr.student_id where g.assessment_id = p_id and l.parent_user_id = (select auth.uid()) and l.status = 'active')
     when 'assessment_category' then

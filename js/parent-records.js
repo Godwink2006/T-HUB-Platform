@@ -167,25 +167,32 @@ async function loadParentRecordData(
     const { data: timetables, error: timetableError } = await client
       .from("timetables")
       .select(
-        "id, status, academic_year_id, created_at, academic_years:academic_year_id(year_label)",
+        "id, status, academic_year_id, created_at, academic_years:academic_year_id(id,year_label,status)",
       )
       .eq("class_id", student.class_id)
       .eq("school_id", student.school_id)
-      .ilike("status", "active")
       .order("created_at", { ascending: false });
     if (timetableError) throw timetableError;
     if (!timetables?.length) return;
+
+    const currentYearTimetables = timetables.filter(
+      (item) =>
+        String(item.academic_years?.status || "").toLowerCase() === "active",
+    );
+    const candidates = currentYearTimetables.length
+      ? currentYearTimetables
+      : timetables;
 
     const { data: allLessons, error: lessonsError } = await client
       .from("timetable_lessons")
       .select(
         "id, timetable_id, day_of_week, is_break, period_id, subject_id, teacher_id, periods:period_id(id,name,start_time,end_time), subjects:subject_id(name)",
       )
-      .in("timetable_id", timetables.map((item) => item.id));
+      .in("timetable_id", candidates.map((item) => item.id));
     if (lessonsError) throw lessonsError;
 
-    // More than one active timetable can exist for a class. Prefer the one
-    // with the most complete placed schedule; ties retain newest-first order.
+    // Admin can display active or inactive timetable records. Match its
+    // current-year schedule by completeness, preferring Active only on ties.
     const completeness = (timetable) => {
       const lessons = (allLessons || []).filter(
         (lesson) => lesson.timetable_id === timetable.id,
@@ -195,9 +202,10 @@ async function loadParentRecordData(
       );
       const periodCount = new Set(placed.map((lesson) => lesson.period_id)).size;
       const subjectCount = placed.filter((lesson) => lesson.subject_id).length;
-      return [periodCount, placed.length, subjectCount];
+      const isActive = String(timetable.status || "").toLowerCase() === "active";
+      return [periodCount, placed.length, subjectCount, Number(isActive)];
     };
-    const timetable = timetables.reduce((best, candidate) => {
+    const timetable = candidates.reduce((best, candidate) => {
       const candidateScore = completeness(candidate);
       const bestScore = completeness(best);
       for (let index = 0; index < candidateScore.length; index += 1) {
