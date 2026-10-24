@@ -13,6 +13,64 @@ function getTeacherStaffId(profile) {
   return teacherDetails?.staff_id || "No ID found";
 }
 
+function timetableErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const details = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token|authentication required|not authenticated/.test(details)
+  ) {
+    return "Your session has expired. Sign in again, then retry.";
+  }
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(details)) {
+    return "This school is inactive. Existing timetables can be viewed, but changes are unavailable until the school is reactivated.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(details)
+  ) {
+    return action === "load" || action === "view"
+      ? "You do not have permission to view this timetable information. Contact your school administrator."
+      : `The timetable could not be ${action === "update" ? "updated" : "saved"}. The school may be inactive, or your account may not have permission. Contact your school administrator.`;
+  }
+  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(details)) {
+    return "Timetable information could not be reached. Check your internet connection and try again.";
+  }
+  if (code === "23P02" || /teacher conflict|already booked|teacher.*already.*period/.test(details)) {
+    return "Teacher conflict: a selected teacher is already scheduled for another class during this period.";
+  }
+  if (code === "23P03" || /invalid lesson|not actively assigned|not assigned to teach/.test(details)) {
+    return "A selected teacher is not actively assigned to teach this subject for this class. Check the teacher assignments and try again.";
+  }
+  if (code === "23505" || /duplicate key|unique constraint|already exists/.test(details)) {
+    return "A timetable or lesson with these details already exists. Review the class, year, day, and period.";
+  }
+  if (code === "23503" || /foreign key|referenced record|no longer exists/.test(details)) {
+    return "A selected class, academic year, period, subject, or teacher is no longer available. Refresh the page and try again.";
+  }
+  if (code === "PGRST116") {
+    return "This timetable could not be found or is no longer available. Refresh the page and try again.";
+  }
+  if (code === "22023" || code === "23514" || code === "22P02") {
+    return "Some timetable information is invalid. Review your selections and try again.";
+  }
+
+  return action === "load" || action === "view"
+    ? "Timetable information could not be loaded. Please try again."
+    : `The timetable could not be ${action === "update" ? "updated" : "saved"}. Please try again.`;
+}
+
+function showTimetableError(error, action = "load") {
+  console.error(`Timetable ${action} error:`, error);
+  const message = timetableErrorMessage(error, action);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 const DRAFT_KEY = "draft_timetable_lessons";
 
 function saveDraftToStorage(lessons) {
@@ -38,6 +96,7 @@ function clearDraftStorage() {
     timetableId: null,
     editingTimetableId: null,
     schoolId: null,
+    schoolLoadError: null,
     editingLessonId: null,
     isEditModalContext: false,
     lookups: {
@@ -47,6 +106,7 @@ function clearDraftStorage() {
       periods: [],
       teachers: [],
     },
+    lookupsLoaded: false,
   };
 
   const getEl = (id) => document.getElementById(id);
@@ -75,6 +135,27 @@ function clearDraftStorage() {
     if (form) form.reset();
   }
 
+  function renderTableError(message, onRetry = loadTimetables) {
+    const tbody = getEl("timetablesTableBody");
+    if (!tbody) return;
+
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.style.cssText = "text-align:center; padding:20px; color:#b91c1c;";
+    const messageEl = document.createElement("p");
+    messageEl.textContent = message;
+    messageEl.style.margin = "0 0 12px";
+    const retryButton = document.createElement("button");
+    retryButton.type = "button";
+    retryButton.textContent = "Try again";
+    retryButton.className = "save-btn";
+    retryButton.addEventListener("click", onRetry);
+    cell.append(messageEl, retryButton);
+    row.appendChild(cell);
+    tbody.replaceChildren(row);
+  }
+
   async function fetchUserProfileAndSchool() {
     try {
       if (!supabaseClient) throw new Error("Supabase client missing.");
@@ -93,23 +174,31 @@ function clearDraftStorage() {
 
       if (profileErr) throw profileErr;
       state.schoolId = profile.school_id;
+      state.schoolLoadError = null;
       return profile.school_id;
     } catch (err) {
-      console.error("Auth initialization failed:", err.message);
-      showToast("Failed to authenticate user context.", "error");
+      state.schoolId = null;
+      if (String(err?.code || "").toUpperCase() === "PGRST116") {
+        state.schoolLoadError = "Your school profile could not be found. Reload the page or contact your school administrator.";
+      } else {
+        console.error("Timetable school profile load error:", err);
+        state.schoolLoadError = timetableErrorMessage(err, "load");
+      }
       return null;
     }
   }
 
   async function loadDropdownData() {
     try {
+      if (!supabaseClient) throw new Error("Supabase client is unavailable");
+      if (!state.schoolId) throw new Error("School profile is unavailable");
       const [
-        { data: classes },
-        { data: years },
-        { data: periods },
-        { data: teachers },
-        { data: subjects },
-        { data: teacherAssignments },
+        classesRes,
+        yearsRes,
+        periodsRes,
+        teachersRes,
+        subjectsRes,
+        teacherAssignmentsRes,
       ] = await Promise.all([
         supabaseClient
           .from("classes")
@@ -149,7 +238,25 @@ function clearDraftStorage() {
           .eq("status", "active"),
       ]);
 
+      const failedResult = [
+        classesRes,
+        yearsRes,
+        periodsRes,
+        teachersRes,
+        subjectsRes,
+        teacherAssignmentsRes,
+      ].find((result) => result.error);
+      if (failedResult) throw failedResult.error;
+
+      const classes = classesRes.data;
+      const years = yearsRes.data;
+      const periods = periodsRes.data;
+      const teachers = teachersRes.data;
+      const subjects = subjectsRes.data;
+      const teacherAssignments = teacherAssignmentsRes.data;
+
       state.teacherAssignments = teacherAssignments || [];
+      state.lookupsLoaded = true;
       state.lookups = {
         classes: classes || [],
         years: years || [],
@@ -181,8 +288,22 @@ function clearDraftStorage() {
       populatePeriodOptions("addLessonPeriod", state.lookups.periods);
       populatePeriodOptions("editLessonPeriod", state.lookups.periods);
     } catch (err) {
-      console.error("Failed loading dropdowns:", err);
-      showToast("Error loading interface dropdowns.", "error");
+      state.lookups = {
+        classes: [],
+        years: [],
+        subjects: [],
+        periods: [],
+        teachers: [],
+      };
+      state.teacherAssignments = [];
+      state.lookupsLoaded = false;
+      ["timetableClassSelect", "timetableYearSelect"].forEach((id) =>
+        populateSelectOptions(id, [], "id", "name"),
+      );
+      ["addLessonPeriod", "editLessonPeriod"].forEach((id) =>
+        populatePeriodOptions(id, []),
+      );
+      showTimetableError(err, "load");
     }
   }
 
@@ -502,11 +623,9 @@ function clearDraftStorage() {
       renderEditLessonsTable();
       showModal(getEl("editTimetableModal"));
     } catch (err) {
-      console.error("Error opening edit modal:", err);
-      showToast(
-        `Failed: ${err.message || "Could not load timetable details."}`,
-        "error",
-      );
+      state.editingTimetableId = null;
+      state.editLessons = [];
+      showTimetableError(err, "view");
     }
   }
 
@@ -517,7 +636,13 @@ function clearDraftStorage() {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Loading timetables...</td></tr>`;
 
     try {
-      if (!state.schoolId) return;
+      if (!state.schoolId) {
+        renderTableError(
+          state.schoolLoadError || "Your school profile could not be loaded. Reload the page and try again.",
+          () => window.location.reload(),
+        );
+        return;
+      }
 
       const { data: timetables, error } = await supabaseClient
         .from("timetables")
@@ -574,8 +699,9 @@ function clearDraftStorage() {
         })
         .join("");
     } catch (err) {
-      console.error("Failed to load timetables:", err.message);
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#dc2626;">Failed to load data. ${escapeHTML(err.message)}</td></tr>`;
+      const message = showTimetableError(err, "load");
+      cachedTimetables = [];
+      renderTableError(message);
     }
   }
 
@@ -586,6 +712,7 @@ function clearDraftStorage() {
       );
       if (createTrigger) {
         e.preventDefault();
+        if (!state.lookupsLoaded) loadDropdownData();
         state.timetableId = null;
         state.lessons = [];
         clearDraftStorage();
@@ -989,7 +1116,7 @@ function clearDraftStorage() {
         resetForm("timetableForm");
         await loadTimetables();
       } catch (err) {
-        showToast(err.message || "Failed to save timetable.", "error");
+        showTimetableError(err, "create");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -1056,37 +1183,7 @@ function clearDraftStorage() {
         );
 
         if (error) {
-          let customMessage = error.message;
-
-          if (customMessage.includes("Failed to update timetable:")) {
-            customMessage = customMessage
-              .replace("Failed to update timetable:", "")
-              .trim();
-          }
-
-          if (
-            error.code === "23P02" ||
-            customMessage.includes("Teacher Conflict")
-          ) {
-            showToast(
-              "Teacher Conflict: A selected teacher is already booked for another class during this period.",
-              "error",
-            );
-            return;
-          }
-
-          if (
-            error.code === "23P03" ||
-            customMessage.includes("Invalid lesson")
-          ) {
-            showToast(
-              "Assignment Error: Teacher is not actively assigned to teach this subject for this class.",
-              "error",
-            );
-            return;
-          }
-
-          showToast(`Error: ${customMessage}`, "error");
+          showTimetableError(error, "update");
           return;
         }
 
@@ -1100,7 +1197,7 @@ function clearDraftStorage() {
         hideModal(getEl("editTimetableModal"));
         await loadTimetables();
       } catch (err) {
-        showToast("Unexpected error while updating timetable.", "error");
+        showTimetableError(err, "update");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -1118,6 +1215,11 @@ function clearDraftStorage() {
       await loadDropdownData();
       await loadTimetables();
       bindCascadingEvents();
+    } else {
+      renderTableError(
+        state.schoolLoadError || "Your school profile could not be loaded. Reload the page and try again.",
+        () => window.location.reload(),
+      );
     }
   }
 
@@ -1406,9 +1508,18 @@ async function handleViewTimetable(timetableId) {
         .join("");
     }
   } catch (err) {
-    console.error("Failed to load timetable view:", err.message);
+    const message = timetableErrorMessage(err, "view");
+    showTimetableError(err, "view");
+    if (classLabel) classLabel.textContent = "-";
+    if (yearLabel) yearLabel.textContent = "-";
     if (gridBody) {
-      gridBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#dc2626;">Failed to display timetable: ${escapeHTML(err.message)}</td></tr>`;
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 6;
+      cell.style.cssText = "text-align:center; color:#b91c1c; padding:20px;";
+      cell.textContent = message;
+      row.appendChild(cell);
+      gridBody.replaceChildren(row);
     }
   }
 }

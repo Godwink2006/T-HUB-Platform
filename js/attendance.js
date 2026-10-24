@@ -30,6 +30,64 @@ function getLocalDateString() {
   return `${year}-${month}-${day}`;
 }
 
+function getAttendanceErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toUpperCase();
+  const details = [error?.message, error?.details, error?.hint]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (!error) {
+    return action === "save"
+      ? "Attendance could not be saved. Please try again."
+      : "Attendance could not be loaded. Please try again.";
+  }
+  if (code === "42501" || /row-level security|permission denied|not authorized|not permitted/.test(details)) {
+    return action === "save"
+      ? "You do not have permission to save attendance. Check that your account is active and assigned to this school."
+      : "You do not have permission to view these attendance records. Check that your account is active and assigned to this school.";
+  }
+  if (/school.{0,30}(inactive|not active)|inactive.{0,30}school/.test(details)) {
+    return "This school is inactive, so attendance cannot be changed. Contact your school administrator.";
+  }
+  if (/graduated|transferred/.test(details) && /attendance|student/.test(details)) {
+    return "Attendance cannot be saved for a student who has graduated or transferred out.";
+  }
+  if (/does not belong to the selected class|not belong to.*class|wrong class/.test(details)) {
+    return "One or more selected students are no longer in this class. Reload the class roster and try again.";
+  }
+  if (code === "401" || code === "PGRST301" || /jwt expired|invalid jwt|not authenticated/.test(details)) {
+    return "Your session has expired. Sign in again, then retry.";
+  }
+  if (/failed to fetch|network|timed out|timeout|fetch error/.test(details)) {
+    return "The server could not be reached. Check your connection and try again.";
+  }
+  if (/duplicate key|already exists|unique constraint/.test(details)) {
+    return "Attendance has already been recorded for this class, period, and date. Refresh the page to see the latest record.";
+  }
+  if (/foreign key|violates.*constraint|invalid input syntax|invalid.*uuid/.test(details)) {
+    return "Some attendance details are no longer valid. Refresh the page and try again.";
+  }
+  if (code === "PGRST116") {
+    return "A required record could not be found. Refresh the page and try again.";
+  }
+  return action === "save"
+    ? "Attendance could not be saved. Please check your selections and try again."
+    : "Attendance could not be loaded. Please refresh the page and try again.";
+}
+
+function setAttendanceTableError(message) {
+  const tbody = document.getElementById("attendanceTableBody");
+  if (!tbody) return;
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = 8;
+  cell.style.cssText = "text-align:center; color:#dc2626; padding:16px;";
+  cell.textContent = message;
+  row.appendChild(cell);
+  tbody.replaceChildren(row);
+}
+
 function lockAttendanceBodyScroll() {
   document.documentElement.classList.add("modal-open");
   document.body.classList.add("modal-open");
@@ -132,6 +190,13 @@ async function loadAcademicContext() {
         .maybeSingle(),
     ]);
 
+    const contextError = yearRes.error || termRes.error || assessmentRes.error;
+    if (contextError) {
+      console.error("Attendance academic context lookup failed:", contextError);
+      showToast(getAttendanceErrorMessage(contextError), "error");
+      return;
+    }
+
     if (yearRes.data) {
       activeAcademicYearId = yearRes.data.id;
       window.activeAcademicYearId = yearRes.data.id;
@@ -146,6 +211,7 @@ async function loadAcademicContext() {
     }
   } catch (err) {
     console.error("Error loading academic context:", err);
+    showToast(getAttendanceErrorMessage(err), "error");
   }
 }
 
@@ -175,10 +241,20 @@ function initAttendanceModalLogic() {
     let subjectId = lesson ? lesson.subject_id : null;
     let subjectName = lesson?.subjects?.name || null;
 
-    const user = (await supabaseClient.auth.getUser()).data?.user;
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) {
+      showToast(getAttendanceErrorMessage(authError), "error");
+      return;
+    }
+    const user = authData?.user;
     let profile = null;
 
-    if (user) {
+    if (!user) {
+      showToast("Your session has expired. Sign in again, then retry.", "error");
+      return;
+    }
+
+    {
       const [profileRes, assignmentRes] = await Promise.all([
         supabaseClient
           .from("profiles")
@@ -194,7 +270,20 @@ function initAttendanceModalLogic() {
           .maybeSingle(),
       ]);
 
+      if (profileRes.error) {
+        showToast(getAttendanceErrorMessage(profileRes.error), "error");
+        return;
+      }
+      if (assignmentRes.error) {
+        showToast(getAttendanceErrorMessage(assignmentRes.error), "error");
+        return;
+      }
+
       if (profileRes.data) profile = profileRes.data;
+      if (!profile?.school_id) {
+        showToast("Your account is not linked to a school. Contact your school administrator.", "error");
+        return;
+      }
       if (!subjectName && assignmentRes.data?.subjects) {
         subjectId = assignmentRes.data.subjects.id;
         subjectName = assignmentRes.data.subjects.name;
@@ -237,10 +326,15 @@ async function populateClassOptions() {
   if (!classSelect) return;
   classSelect.innerHTML = `<option value="">Select Class</option>`;
 
-  const user = (await supabaseClient.auth.getUser()).data?.user;
-  if (!user) return;
-
   try {
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = authData?.user;
+    if (!user) {
+      showToast("Your session has expired. Sign in again, then retry.", "error");
+      return;
+    }
+
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("id, role, school_id")
@@ -303,7 +397,8 @@ async function populateClassOptions() {
   } catch (error) {
     currentAttendanceProfile = null;
     console.error("Error fetching attendance classes:", error);
-    showToast(error.message || "Could not load classes for attendance.", "error");
+    classSelect.replaceChildren(new Option("Classes could not be loaded", ""));
+    showToast(getAttendanceErrorMessage(error), "error");
   }
 }
 
@@ -323,7 +418,9 @@ async function handleClassSelectChange(classId) {
   }).format(new Date());
 
   try {
-    const user = (await supabaseClient.auth.getUser()).data?.user;
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = authData?.user;
     if (requestId !== attendancePeriodRequestId) return;
     if (!user) return setPeriodSelectMessage(periodSelect, "Sign in to load periods.");
     const profile =
@@ -381,7 +478,7 @@ async function handleClassSelectChange(classId) {
 
     if (lError) {
       console.error("Timetable query error:", lError);
-      setPeriodSelectMessage(periodSelect, "Could not load your lessons. Please try again.");
+      setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(lError));
       return;
     }
 
@@ -412,7 +509,7 @@ async function handleClassSelectChange(classId) {
   } catch (err) {
     console.error("Error in handleClassSelectChange:", err);
     if (requestId === attendancePeriodRequestId) {
-      setPeriodSelectMessage(periodSelect, "Could not load your lessons. Please try again.");
+      setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(err));
     }
   }
 }
@@ -433,6 +530,9 @@ async function loadDefaultPeriods(periodSelect, requestId) {
 
     if (error) {
       console.error("Error loading default periods:", error);
+      if (requestId === attendancePeriodRequestId) {
+        setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(error));
+      }
       return;
     }
 
@@ -460,6 +560,9 @@ async function loadDefaultPeriods(periodSelect, requestId) {
     }
   } catch (err) {
     console.error("Exception in loadDefaultPeriods:", err);
+    if (requestId === attendancePeriodRequestId) {
+      setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(err));
+    }
   } finally {
     if (requestId === attendancePeriodRequestId) {
       periodSelect.disabled = periodSelect.options.length <= 1;
@@ -521,7 +624,8 @@ async function loadRosterIntoModal(classId) {
 
     if (studentErr) {
       console.error("Error fetching active students:", studentErr);
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Error loading students: ${escapeHtml(studentErr.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">${escapeHtml(getAttendanceErrorMessage(studentErr))}</td></tr>`;
+      showToast(getAttendanceErrorMessage(studentErr), "error");
       return;
     }
 
@@ -579,7 +683,9 @@ async function loadRosterIntoModal(classId) {
     });
   } catch (err) {
     console.error("Roster exception:", err);
-    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Failed to load roster.</td></tr>`;
+    const message = getAttendanceErrorMessage(err);
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">${escapeHtml(message)}</td></tr>`;
+    showToast(message, "error");
   }
 }
 
@@ -598,7 +704,9 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
 
   try {
     const activeContext = currentAttendanceSession;
-    const user = (await supabaseClient.auth.getUser()).data?.user;
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = authData?.user;
 
     if (!user) {
       showToast("Session expired. Please log in again.", "error");
@@ -614,11 +722,12 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
 
     let schoolId = activeContext.schoolId;
     if (!schoolId) {
-      const { data: profile } = await supabaseClient
+      const { data: profile, error: profileError } = await supabaseClient
         .from("profiles")
         .select("school_id")
         .eq("id", user.id)
         .maybeSingle();
+      if (profileError) throw profileError;
 
       schoolId = profile?.school_id;
     }
@@ -634,13 +743,14 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       window.activeAcademicYearId;
 
     if (!academicYearId) {
-      const { data: activeYear } = await supabaseClient
+      const { data: activeYear, error: yearError } = await supabaseClient
         .from("academic_years")
         .select("id")
         .eq("school_id", schoolId)
         .ilike("status", "Active")
         .limit(1)
         .maybeSingle();
+      if (yearError) throw yearError;
 
       academicYearId = activeYear?.id;
     }
@@ -653,13 +763,14 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
     let termId = activeContext.termId || activeTermId || window.activeTermId;
 
     if (!termId) {
-      const { data: activeTerm } = await supabaseClient
+      const { data: activeTerm, error: termError } = await supabaseClient
         .from("terms")
         .select("id")
         .eq("academic_year_id", academicYearId)
         .ilike("status", "Active")
         .limit(1)
         .maybeSingle();
+      if (termError) throw termError;
 
       termId = activeTerm?.id;
     }
@@ -675,13 +786,14 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       window.activeAssessmentId;
 
     if (!assessmentId) {
-      const { data: activeAssessment } = await supabaseClient
+      const { data: activeAssessment, error: assessmentError } = await supabaseClient
         .from("assessments")
         .select("id")
         .eq("term_id", termId)
         .ilike("status", "Active")
         .limit(1)
         .maybeSingle();
+      if (assessmentError) throw assessmentError;
 
       assessmentId = activeAssessment?.id;
     }
@@ -733,7 +845,7 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       });
 
     if (rpcError) {
-      showToast(`Error saving attendance: ${rpcError.message}`, "error");
+      showToast(getAttendanceErrorMessage(rpcError, "save"), "error");
       return;
     }
 
@@ -747,7 +859,8 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       loadAttendanceTable();
     }
   } catch (err) {
-    showToast(`Failed to save attendance: ${err.message}`, "error");
+    console.error("Attendance save failed:", err);
+    showToast(getAttendanceErrorMessage(err, "save"), "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -794,9 +907,16 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
   }
 
   try {
-    const user = (await supabaseClient.auth.getUser()).data?.user;
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = authData?.user;
     if (!user) {
       attendanceHasMore = false;
+      if (!loadMore) {
+        setAttendanceTableError("Your session has expired. Sign in again to view attendance.");
+      } else {
+        showToast("Your session has expired. Sign in again, then retry.", "error");
+      }
       return;
     }
 
@@ -808,6 +928,15 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
 
     if (profileError) {
       console.error("Error fetching profile role:", profileError);
+      if (!loadMore) setAttendanceTableError(getAttendanceErrorMessage(profileError));
+      else showToast(getAttendanceErrorMessage(profileError), "error");
+      return;
+    }
+    if (!profile?.role) {
+      const message = "Your account profile could not be verified. Contact your school administrator.";
+      if (!loadMore) setAttendanceTableError(message);
+      else showToast(message, "error");
+      return;
     }
 
     let query = supabaseClient.from("attendance").select(
@@ -841,7 +970,8 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
     if (error) {
       console.error("Error loading attendance table:", error);
       if (!loadMore) attendanceHasMore = false;
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Error: ${escapeHtml(error.message)}</td></tr>`;
+      if (!loadMore) setAttendanceTableError(getAttendanceErrorMessage(error));
+      else showToast(getAttendanceErrorMessage(error), "error");
       return;
     }
 
@@ -877,9 +1007,9 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
   } catch (err) {
     console.error("Attendance table exception:", err);
     if (!loadMore) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
+      setAttendanceTableError(getAttendanceErrorMessage(err));
     } else {
-      showToast("Could not load older attendance records. Try again.", "error");
+      showToast(getAttendanceErrorMessage(err), "error");
     }
   } finally {
     attendanceTableLoading = false;
@@ -1042,6 +1172,10 @@ async function renderFilteredAttendanceTable(attendanceList) {
           (attendanceStudentCounts.get(record.attendance_id) || 0) + 1,
         );
       });
+    } else {
+      console.error("Could not load attendance student counts:", countErr);
+      missingCountIds.forEach((id) => attendanceStudentCounts.set(id, null));
+      showToast("Attendance loaded, but student totals could not be retrieved.", "error");
     }
   }
 
@@ -1056,7 +1190,9 @@ async function renderFilteredAttendanceTable(attendanceList) {
     const termName = item.terms?.name || "N/A";
     const termId = item.terms?.id || item.term_id || "";
 
-    const studentCount = attendanceStudentCounts.get(item.id) || 0;
+    const studentCount = attendanceStudentCounts.has(item.id)
+      ? attendanceStudentCounts.get(item.id) ?? "—"
+      : "—";
     const formattedDate = formatDate(item.date);
     const isDraft = item.status === "drafted";
 
@@ -1211,9 +1347,11 @@ async function openViewAttendanceModal(attendanceId) {
 
     if (parentErr || !attendance) {
       console.error("Error fetching attendance details:", parentErr);
+      const message = getAttendanceErrorMessage(parentErr);
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">Failed to load attendance metadata.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">${escapeHtml(message)}</td></tr>`;
       }
+      showToast(message, "error");
       return;
     }
 
@@ -1267,9 +1405,11 @@ async function openViewAttendanceModal(attendanceId) {
 
     if (recordsErr) {
       console.error("Error fetching attendance student records:", recordsErr);
+      const message = getAttendanceErrorMessage(recordsErr);
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">Failed to load student records.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">${escapeHtml(message)}</td></tr>`;
       }
+      showToast(message, "error");
       return;
     }
 
@@ -1339,9 +1479,11 @@ async function openViewAttendanceModal(attendanceId) {
     }
   } catch (err) {
     console.error("View modal exception:", err);
+    const message = getAttendanceErrorMessage(err);
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">An error occurred while loading details.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">${escapeHtml(message)}</td></tr>`;
     }
+    showToast(message, "error");
   }
 }
 
@@ -1410,6 +1552,7 @@ async function openEditAttendanceModal(attendanceId) {
 
   if (!modal || !attendanceId) return;
   currentEditingAttendanceId = attendanceId;
+  initialEditState = null;
 
   if (creatorElement) creatorElement.textContent = "Loading...";
   if (tbody) {
@@ -1428,8 +1571,9 @@ async function openEditAttendanceModal(attendanceId) {
       .single();
 
     if (parentErr || !attendance) {
-      showToast("Error loading attendance record.", "error");
-      closeModal(modal);
+      const message = getAttendanceErrorMessage(parentErr);
+      if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding:12px;">${escapeHtml(message)}</td></tr>`;
+      showToast(message, "error");
       return;
     }
 
@@ -1462,9 +1606,14 @@ async function openEditAttendanceModal(attendanceId) {
       .select("student_id, status")
       .eq("attendance_id", attendanceId);
 
-    if (recordsErr || !records || records.length === 0) {
-      if (tbody)
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students found.</td></tr>`;
+    if (recordsErr) {
+      const message = getAttendanceErrorMessage(recordsErr);
+      if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding:12px;">${escapeHtml(message)}</td></tr>`;
+      showToast(message, "error");
+      return;
+    }
+    if (!records || records.length === 0) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No student attendance records exist for this session.</td></tr>`;
       return;
     }
 
@@ -1531,6 +1680,9 @@ async function openEditAttendanceModal(attendanceId) {
     };
   } catch (err) {
     console.error("Edit modal error:", err);
+    const message = getAttendanceErrorMessage(err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding:12px;">${escapeHtml(message)}</td></tr>`;
+    showToast(message, "error");
   }
 }
 
@@ -1549,7 +1701,9 @@ async function handleSaveEditAttendance() {
   }
 
   try {
-    const user = (await supabaseClient.auth.getUser()).data?.user;
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    const user = authData?.user;
     if (!user) {
       showToast("Session expired. Please log in again.", "error");
       return;
@@ -1557,11 +1711,12 @@ async function handleSaveEditAttendance() {
 
     let schoolId = currentAttendanceSession?.schoolId;
     if (!schoolId) {
-      const { data: profile } = await supabaseClient
+      const { data: profile, error: profileError } = await supabaseClient
         .from("profiles")
         .select("school_id")
         .eq("id", user.id)
         .maybeSingle();
+      if (profileError) throw profileError;
 
       schoolId = profile?.school_id;
     }
@@ -1606,7 +1761,7 @@ async function handleSaveEditAttendance() {
     );
 
     if (rpcError) {
-      showToast(`Error: ${rpcError.message}`, "error");
+      showToast(getAttendanceErrorMessage(rpcError, "save"), "error");
       return;
     }
 
@@ -1621,7 +1776,8 @@ async function handleSaveEditAttendance() {
       loadAttendanceTable();
     }
   } catch (err) {
-    showToast(`Failed to update attendance: ${err.message}`, "error");
+    console.error("Attendance update failed:", err);
+    showToast(getAttendanceErrorMessage(err, "save"), "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;

@@ -9,6 +9,67 @@ const formatDate = (dateString) => {
   });
 };
 
+function teacherAssignmentErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const details = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (
+    status === 401 ||
+    code === "PGRST301" ||
+    /invalid jwt|session.*expired|refresh token/.test(details)
+  ) {
+    return "Your session has expired. Sign in again, then retry.";
+  }
+  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(details)) {
+    return "This school is inactive. You can view existing teacher assignments, but changes are unavailable until the school is reactivated.";
+  }
+  if (
+    code === "42501" ||
+    status === 403 ||
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(details)
+  ) {
+    return action === "load"
+      ? "You do not have permission to view teacher assignments. Contact your school administrator."
+      : `Teacher assignments could not be ${action === "update" ? "updated" : "saved"}. The school may be inactive, or your account may not have permission. Contact your school administrator.`;
+  }
+  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(details)) {
+    return "Teacher assignments could not be reached. Check your internet connection and try again.";
+  }
+  if (code === "23505" || /duplicate key|already exists|unique constraint/.test(details)) {
+    if (details.includes("idx_unique_class_teacher_per_class")) {
+      return "This class already has a class teacher for the selected academic year.";
+    }
+    return "A matching teacher assignment already exists. Review the teacher, subject, class, and academic year.";
+  }
+  if (code === "23503" || /foreign key|violates.*constraint/.test(details)) {
+    return "One of the selected teachers, subjects, classes, or academic years is no longer available. Refresh the page and try again.";
+  }
+  if (code === "PGRST116") {
+    if (action === "view") {
+      return "This teacher assignment could not be found. Refresh the list and try again.";
+    }
+    if (action === "update") {
+      return "This assignment could not be updated. It may no longer exist, or your school or account may not allow the change. Refresh the list and contact your school administrator if the problem continues.";
+    }
+    return "The requested teacher assignment is no longer available. Refresh the page and try again.";
+  }
+  if (code === "23514" || code === "22P02" || code === "22023") {
+    return "Some assignment information is invalid. Review your selections and try again.";
+  }
+
+  return action === "load"
+    ? "Teacher assignments could not be loaded. Please try again."
+    : `The teacher assignment could not be ${action === "update" ? "updated" : "saved"}. Please try again.`;
+}
+
+function showTeacherAssignmentError(error, action = "load") {
+  console.error(`Teacher assignments ${action} error:`, error);
+  const message = teacherAssignmentErrorMessage(error, action);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadAssignmentsTable();
 });
@@ -62,8 +123,11 @@ function populateSelect(
   }
 }
 
+let assignmentDropdownsLoaded = false;
+
 async function loadFormDropdowns() {
   try {
+    if (!window.supabaseClient) throw new Error("Supabase client is unavailable");
     const [teachersRes, subjectsRes, classesRes, yearsRes] = await Promise.all([
       window.supabaseClient
         .from("teachers")
@@ -91,6 +155,11 @@ async function loadFormDropdowns() {
         .select("id, year_label")
         .eq("status", "Active")
     ]);
+
+    const failedResult = [teachersRes, subjectsRes, classesRes, yearsRes].find(
+      (result) => result.error,
+    );
+    if (failedResult) throw failedResult.error;
 
     const formattedTeachers = (teachersRes.data || []).map((t) => ({
       id: t.profiles?.id || t.id,
@@ -127,8 +196,16 @@ async function loadFormDropdowns() {
       "year_label",
       "Select Academic Year",
     );
+    assignmentDropdownsLoaded = true;
   } catch (err) {
-    console.error("Error loading dropdown data:", err.message);
+    assignmentDropdownsLoaded = false;
+    [
+      ["assignTeacherId", "Select Teacher"],
+      ["assignSubjectId", "Select Subject"],
+      ["assignClassId", "Select Class"],
+      ["assignAcademicYearId", "Select Academic Year"],
+    ].forEach(([id, label]) => populateSelect(id, [], "id", "name", label));
+    showTeacherAssignmentError(err, "load");
   }
 }
 
@@ -138,28 +215,10 @@ async function handleCreateAssignment(e) {
   const form = e.target;
   const saveBtn = form.querySelector("button[type='submit']");
 
-  const {
-    data: { user },
-    error: authError,
-  } = await window.supabaseClient.auth.getUser();
-
-  if (authError || !user) {
-    showToast("Session expired. Please log in again.", "error");
+  if (!window.supabaseClient) {
+    showTeacherAssignmentError(new Error("Supabase client is unavailable"), "create");
     return;
   }
-
-  const { data: profile, error: profileError } = await window.supabaseClient
-    .from("profiles")
-    .select("school_id")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || !profile?.school_id) {
-    showToast("Could not retrieve school profile for this user.", "error");
-    return;
-  }
-
-  const schoolId = profile.school_id;
 
   const teacherId = document.getElementById("assignTeacherId").value;
   const subjectId = document.getElementById("assignSubjectId").value;
@@ -175,25 +234,46 @@ async function handleCreateAssignment(e) {
     return;
   }
 
-  const payload = {
-    school_id: schoolId,
-    teacher_id: teacherId,
-    subject_id: subjectId,
-    class_id: classId,
-    academic_year_id: academicYearId,
-    is_class_teacher: isClassTeacher,
-    status: status ? status.toLowerCase() : "active",
-    description: description || null,
-  };
-
   try {
-    const isValid = await validateTeacherAssignment(payload);
-    if (!isValid) return;
-
     if (saveBtn) {
       saveBtn.disabled = true;
       saveBtn.textContent = "Saving...";
     }
+
+    const {
+      data: { user },
+      error: authError,
+    } = await window.supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    if (!user) {
+      showToast("Your session has expired. Sign in again, then retry.", "error");
+      return;
+    }
+
+    const { data: profile, error: profileError } = await window.supabaseClient
+      .from("profiles")
+      .select("school_id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profileError) throw profileError;
+    if (!profile?.school_id) {
+      showToast("Your school profile could not be found. Contact your school administrator.", "error");
+      return;
+    }
+
+    const payload = {
+      school_id: profile.school_id,
+      teacher_id: teacherId,
+      subject_id: subjectId,
+      class_id: classId,
+      academic_year_id: academicYearId,
+      is_class_teacher: isClassTeacher,
+      status: status ? status.toLowerCase() : "active",
+      description: description || null,
+    };
+
+    const isValid = await validateTeacherAssignment(payload);
+    if (!isValid) return;
 
     const { error } = await window.supabaseClient
       .from("teacher_assignments")
@@ -204,14 +284,12 @@ async function handleCreateAssignment(e) {
         const constraintName = error.details || error.message || "";
 
         if (constraintName.includes("idx_unique_class_teacher_per_class")) {
-          throw new Error(
-            "This class already has an assigned Class Teacher for this academic year.",
+          showToast(
+            "This class already has a class teacher for the selected academic year.",
+            "error",
           );
+          return;
         }
-
-        throw new Error(
-          "This class already has an assigned Class Teacher for this academic year.",
-        );
       }
       throw error;
     }
@@ -220,8 +298,7 @@ async function handleCreateAssignment(e) {
     showToast("Teacher assignment added successfully!", "success");
     await loadAssignmentsTable();
   } catch (err) {
-    console.error("Error creating assignment:", err.message);
-    showToast("Failed to assign teacher: " + err.message, "error");
+    showTeacherAssignmentError(err, "create");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -237,21 +314,28 @@ async function validateTeacherAssignment({
   subject_id,
   currentAssignmentId = null,
 }) {
-  const client = window.supabaseClient || supabaseClient;
+  const client = window.supabaseClient;
+  if (!client) {
+    showTeacherAssignmentError(new Error("Supabase client is unavailable"), "create");
+    return false;
+  }
 
-  const { data: existing, error } = await client
+  let query = client
     .from("teacher_assignments")
     .select("id, profiles(full_name)")
     .eq("school_id", school_id)
     .eq("class_id", class_id)
     .eq("academic_year_id", academic_year_id)
     .eq("subject_id", subject_id)
-    .eq("status", "active")
-    .neq("id", currentAssignmentId);
+    .eq("status", "active");
+
+  if (currentAssignmentId) query = query.neq("id", currentAssignmentId);
+
+  const { data: existing, error } = await query;
 
   if (error) {
-    console.error("Validation error:", error);
-    return true;
+    showTeacherAssignmentError(error, "create");
+    return false;
   }
 
   if (existing && existing.length > 0) {
@@ -271,19 +355,24 @@ let originalEditData = null;
 
 async function openEditModal(assignmentId) {
   const editModal = document.getElementById("editAssignModal");
-  if (!editModal) return;
-
-  editModal.style.display = "flex";
-  document.body.style.overflow = "hidden";
+  if (!editModal || !assignmentId) {
+    showToast("This teacher assignment could not be identified. Refresh the list and try again.", "error");
+    return;
+  }
 
   try {
+    if (!window.supabaseClient) throw new Error("Supabase client is unavailable");
     const { data: assign, error } = await window.supabaseClient
       .from("teacher_assignments")
       .select("id, is_class_teacher, status, description")
       .eq("id", assignmentId)
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+    if (!assign) {
+      showToast(teacherAssignmentErrorMessage({ code: "PGRST116" }, "view"), "error");
+      return;
+    }
 
     originalEditData = {
       is_class_teacher: assign.is_class_teacher,
@@ -318,9 +407,11 @@ async function openEditModal(assignmentId) {
     if (statusSelect) statusSelect.value = assign.status;
     if (descriptionTextarea)
       descriptionTextarea.value = assign.description || "";
+
+    editModal.style.display = "flex";
+    document.body.style.overflow = "hidden";
   } catch (err) {
-    console.error("Error fetching assignment details:", err.message);
-    showToast("Failed to load assignment details: " + err.message, "error");
+    showTeacherAssignmentError(err, "view");
   }
 }
 
@@ -330,6 +421,11 @@ async function handleUpdateAssignment(e) {
   const form = e.target;
   const updateBtn = form.querySelector("button[type='submit']");
   const assignmentId = document.getElementById("editAssignmentId")?.value;
+
+  if (!assignmentId || !originalEditData) {
+    showToast("Assignment details are missing. Close this form, refresh the list, and try again.", "error");
+    return;
+  }
 
   const classTeacherSelect =
     form.querySelector("select[name='is_class_teacher']") ||
@@ -348,6 +444,11 @@ async function handleUpdateAssignment(e) {
   const currentDescription = descriptionTextarea
     ? descriptionTextarea.value.trim()
     : "";
+
+  if (!classTeacherSelect || !statusSelect || !descriptionTextarea) {
+    showToast("The assignment form could not be read. Close it and try again.", "error");
+    return;
+  }
 
   const hasChanges =
     currentIsClassTeacher !== originalEditData.is_class_teacher ||
@@ -372,25 +473,15 @@ async function handleUpdateAssignment(e) {
       updateBtn.textContent = "Updating...";
     }
 
-    const { error } = await window.supabaseClient
+    const { data: updatedAssignment, error } = await window.supabaseClient
       .from("teacher_assignments")
       .update(payload)
-      .eq("id", assignmentId);
-    if (error) {
-      if (
-        error.code === "42501" ||
-        error.message?.toLowerCase().includes("row-level security")
-      ) {
-        throw new Error("Permission denied.");
-      }
-
-      if (error.code === "23505") {
-        throw new Error(
-          "This class already has an assigned Class Teacher for this academic year.",
-        );
-      }
-
-      throw error;
+      .eq("id", assignmentId)
+      .select("id")
+      .maybeSingle();
+    if (error) throw error;
+    if (!updatedAssignment) {
+      throw { code: "PGRST116", message: "No assignment row was updated" };
     }
 
     closeModal(document.getElementById("editAssignModal"));
@@ -400,8 +491,7 @@ async function handleUpdateAssignment(e) {
       await loadAssignmentsTable();
     }
   } catch (err) {
-    console.error("Error updating assignment:", err.message);
-    showToast(err.message, "error");
+    showTeacherAssignmentError(err, "update");
   } finally {
     if (updateBtn) {
       updateBtn.disabled = false;
@@ -451,7 +541,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("assignForm");
 
   if (openBtn) {
-    openBtn.addEventListener("click", () => openModal(assignModal));
+    openBtn.addEventListener("click", () => {
+      openModal(assignModal);
+      if (!assignmentDropdownsLoaded) loadFormDropdowns();
+    });
   }
 
   if (closeBtn) {
@@ -511,6 +604,7 @@ async function loadAssignmentsTable(options = {}) {
   }
 
   try {
+    if (!window.supabaseClient) throw new Error("Supabase client is unavailable");
     const { data: assignments, error } = await window.supabaseClient
       .from("teacher_assignments")
       .select(
@@ -550,14 +644,27 @@ async function loadAssignmentsTable(options = {}) {
 
     filterAssignments();
   } catch (err) {
-    console.error("Error fetching assignments:", err.message);
+    const message = teacherAssignmentErrorMessage(err, "load");
+    console.error("Error fetching teacher assignments:", err);
     if (!append) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="10" style="text-align: center; color: red; padding: 20px;">Failed to load assignments data.</td>
-        </tr>`;
-    } else if (typeof showToast === "function") {
-      showToast("Could not load more assignments.", "error");
+      tableBody.replaceChildren();
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 10;
+      cell.style.cssText = "text-align:center; padding:20px; color:#b91c1c;";
+      const text = document.createElement("p");
+      text.textContent = message;
+      text.style.margin = "0 0 12px";
+      const retryButton = document.createElement("button");
+      retryButton.type = "button";
+      retryButton.textContent = "Try again";
+      retryButton.className = "save-btn";
+      retryButton.addEventListener("click", () => loadAssignmentsTable());
+      cell.append(text, retryButton);
+      row.appendChild(cell);
+      tableBody.appendChild(row);
+    } else {
+      showTeacherAssignmentError(err, "load");
     }
   } finally {
     assignmentsLoading = false;
