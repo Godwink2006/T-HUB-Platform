@@ -1,3 +1,91 @@
+function enrollmentErrorMessage(error, action = "general") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const raw = String(error?.message || error?.details || "").toLowerCase();
+
+  if (code === "ENROLLMENT_NO_UPDATE") {
+    return "No enrollment records were changed. They may no longer be available, or your account may not be allowed to update them.";
+  }
+  if (code === "ENROLLMENT_PARTIAL_UPDATE") {
+    return "Only some selected records were updated. Refresh the page to review the current enrollment statuses.";
+  }
+  if (/school.{0,30}(inactive|not active)|inactive.{0,30}school|school is not active/.test(raw)) {
+    return "This school is inactive, so enrollment changes cannot be made right now.";
+  }
+  if (code === "42501" || status === 401 || status === 403 || /permission denied|row-level security|rls|not authorized|unauthorized/.test(raw)) {
+    return "You don’t have permission to do this. Contact your school administrator if you think you should.";
+  }
+  if (/jwt|token.{0,20}(expired|invalid)|session.{0,20}expired|not authenticated/.test(raw)) {
+    return "Your session has expired. Sign in again, then retry.";
+  }
+  if (/not linked to a school|could not determine.*school|active school could not be determined/.test(raw)) {
+    return "Your school could not be verified. Refresh the page or contact your school administrator.";
+  }
+  if (/network|fetch failed|failed to fetch|timeout|timed out|connection/.test(raw)) {
+    return "The server could not be reached. Check your connection and try again.";
+  }
+  if (/secure code generation|crypto|secure context/.test(raw)) {
+    return "Secure transfer codes are unavailable in this browser. Open the page over a secure connection and try again.";
+  }
+  if (/complete 32-character transfer code/.test(raw)) {
+    return "Enter the complete transfer code provided by the sending school.";
+  }
+  if (/transfer code/.test(raw) && /expired|invalid|used|not found|does not exist/.test(raw)) {
+    return "This transfer code is invalid, expired, or already used. Ask the sending school for a new code.";
+  }
+  if (/capacity|class.{0,20}(full|limit|maximum)/.test(raw)) {
+    return "The target class may be at capacity. Review the class capacity and try again.";
+  }
+  if (code === "23505" && action === "transfer") {
+    return "That student ID is already in use at the receiving school. Choose a different ID.";
+  }
+  if (/already.{0,30}enroll|enroll.{0,30}already|duplicate enrollment|student can appear only once/.test(raw) || code === "23505") {
+    return "A matching enrollment already exists or the selection contains a duplicate student. Review the selected records.";
+  }
+  if (/fee structure|fee.{0,20}(missing|invalid|match)/.test(raw)) {
+    return "The selected fee structure is unavailable for that class, term, or academic year. Choose a valid fee structure and try again.";
+  }
+  if (/active academic year|active year|first term|second term|semester term/.test(raw)) {
+    return "The required active academic year or term could not be found. Check the school’s academic setup.";
+  }
+  if (/grade 9|grade 10|student.*grade/.test(raw)) {
+    return "The selected enrollment does not meet the grade requirements for this action.";
+  }
+  if (code === "PGRST116" || /could not be found|no longer exists/.test(raw)) {
+    return "Some selected enrollment information is no longer available. Refresh the page and try again.";
+  }
+
+  if (action === "load") return "Enrollment records could not be loaded. Please try again.";
+  if (action === "options") return "The required enrollment options could not be loaded. Check your connection and try again.";
+  if (action === "transfer") return "The student transfer could not be completed. Verify the transfer details and try again.";
+  if (action === "transfer-code") return "A transfer code could not be generated. Verify the enrollment and try again.";
+  if (action === "preview-transfer") return "The transfer code could not be verified. Check the code and try again.";
+  if (action === "promote") return "The promotion could not be completed. Review the selected enrollments and target options, then try again.";
+  if (action === "move") return "The enrollment move could not be completed. Review the selected records and target options, then try again.";
+  if (action === "status") return "Enrollment status could not be updated. Refresh the page and try again.";
+  return "The request could not be completed. Please try again.";
+}
+
+function renderEnrollmentLoadError(tbody, message, retry) {
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = 6;
+  cell.className = "enrollment-empty-state enrollment-error-state";
+  const text = document.createElement("p");
+  text.textContent = message;
+  cell.appendChild(text);
+  if (retry) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "enrollment-error-retry";
+    button.textContent = "Try again";
+    button.addEventListener("click", retry, { once: true });
+    cell.appendChild(button);
+  }
+  row.appendChild(cell);
+  tbody.replaceChildren(row);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const selectAllCheckbox = document.getElementById("selectAll");
   const bulkActionBar = document.getElementById("bulkActionBar");
@@ -406,8 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
       modalConfirm.onclick = () =>
         acceptIncomingTransfer(codeHash, targetOptions.schoolId);
     } catch (err) {
-      previewContainer.textContent =
-        err.message || "Could not validate this transfer code.";
+      console.error("Could not preview student transfer:", err);
+      previewContainer.textContent = enrollmentErrorMessage(err, "preview-transfer");
     } finally {
       modalConfirm.disabled = false;
       if (modalConfirm.textContent === "Checking...")
@@ -472,7 +560,8 @@ document.addEventListener("DOMContentLoaded", () => {
       modalConfirm.disabled = false;
       modalCancel.disabled = false;
       modalConfirm.textContent = "Accept transfer";
-      showToast(`Transfer failed: ${err.message}`, "error");
+      console.error("Student transfer failed:", err);
+      showToast(enrollmentErrorMessage(err, "transfer"), "error");
     }
   }
 
@@ -584,7 +673,7 @@ document.addEventListener("DOMContentLoaded", () => {
         openModal();
       } catch (err) {
         console.error("Error generating student transfer code:", err);
-        showToast(`Could not generate transfer code: ${err.message}`, "error");
+        showToast(enrollmentErrorMessage(err, "transfer-code"), "error");
       } finally {
         button.disabled = false;
         button.removeAttribute("aria-busy");
@@ -823,7 +912,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const capacity =
             parseInt(selectedOption.getAttribute("data-capacity")) || 0;
 
-          if (!countErr && count >= capacity) {
+          if (countErr) {
+            console.error("Could not check target class capacity:", countErr);
+            capacityWarning.textContent =
+              "Could not verify class capacity. It will be checked again before saving.";
+          } else if (capacity > 0 && count >= capacity) {
             capacityWarning.textContent = `⚠️ Warning: Class has reached capacity (${count}/${capacity}).`;
           } else {
             capacityWarning.textContent = `Class occupancy: ${count || 0} / ${capacity} available.`;
@@ -897,7 +990,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error setting up Grade 9 to 10 promotion modal:", err);
-        modalBody.innerHTML = `<p style="color: red;">Error: ${escapeHtml(err.message || "Unknown error")}</p>`;
+        modalBody.innerHTML = `<p class="enrollment-error-state">${escapeHtml(enrollmentErrorMessage(err, "options"))}</p>`;
       }
     });
 
@@ -919,14 +1012,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .in("id", enrollmentIds);
 
       if (fetchErr) throw fetchErr;
-
-      console.log("Submitting Promotion With:", {
-        targetClassId,
-        feeStructureId,
-        email,
-        phone,
-        enrollmentIds,
-      });
 
       if (!feeStructureId) {
         showToast(
@@ -968,7 +1053,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return true;
     } catch (err) {
       console.error("Grade 9 to 10 promotion failed:", err);
-      showToast(`Promotion failed: ${err.message}`, "error");
+      showToast(enrollmentErrorMessage(err, "promote"), "error");
       return false;
     }
   }
@@ -1045,7 +1130,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return true;
     } catch (error) {
       console.error("Yearly Grade 9 to 10 promotion failed:", error);
-      showToast(`Promotion failed: ${error.message}`, "error");
+      showToast(enrollmentErrorMessage(error, "promote"), "error");
       return false;
     }
   }
@@ -1478,7 +1563,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (promoted) closeModal();
           } catch (error) {
             console.error("Yearly Grade 9 to 10 promotion failed:", error);
-            showToast(error.message || "Yearly promotion failed.", "error");
+            showToast(enrollmentErrorMessage(error, "promote"), "error");
           } finally {
             modalConfirm.disabled = false;
             modalConfirm.textContent = originalText;
@@ -1492,7 +1577,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         modalBody.innerHTML = `
         <p style="color: #b42318;">
-          ${escapeHtml(error.message || "Could not load promotion options.")}
+          ${escapeHtml(enrollmentErrorMessage(error, "options"))}
         </p>
       `;
       }
@@ -1773,7 +1858,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (succeeded) closeModal();
           } catch (err) {
             console.error("Second-semester confirmation failed:", err);
-            capacityWarning.textContent = `Promotion failed: ${err.message || "Unexpected error."}`;
+            capacityWarning.textContent = enrollmentErrorMessage(err, "promote");
           } finally {
             modalConfirm.disabled = false;
             modalConfirm.textContent = originalText;
@@ -1782,7 +1867,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error setting up promotion modal:", err);
-        modalBody.innerHTML = `<p style="color: red;">Error: ${escapeHtml(err.message || "Unknown error")}</p>`;
+        modalBody.innerHTML = `<p class="enrollment-error-state">${escapeHtml(enrollmentErrorMessage(err, "options"))}</p>`;
       }
     });
 
@@ -1818,8 +1903,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadStudentEnrollments();
       return true;
     } catch (err) {
-      const message =
-        err?.message || "Unexpected error while promoting students.";
+      const message = enrollmentErrorMessage(err, "promote");
       console.error("Promotion RPC failed:", err);
       const status = document.getElementById("capacityWarning");
       if (status) status.textContent = `Promotion failed: ${message}`;
@@ -2066,8 +2150,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const capacity =
             parseInt(selectedOption.getAttribute("data-capacity"), 10) || 0;
 
-          if (
-            !countErr &&
+          if (countErr) {
+            console.error("Could not check target class capacity:", countErr);
+            capacityWarning.textContent =
+              "Could not verify class capacity. It will be checked again before saving.";
+          } else if (
             capacity > 0 &&
             count + sourceRows.length > capacity
           ) {
@@ -2128,7 +2215,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error setting up yearly promotion modal:", err);
-        modalBody.innerHTML = `<p style="color: red;">Error: ${escapeHtml(err.message || "Unknown error")}</p>`;
+        modalBody.innerHTML = `<p class="enrollment-error-state">${escapeHtml(enrollmentErrorMessage(err, "options"))}</p>`;
       }
     });
 
@@ -2163,8 +2250,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return true;
     } catch (err) {
       console.error("Yearly promotion execution failed:", err);
-      const message =
-        err?.message || "Unexpected error while promoting students.";
+      const message = enrollmentErrorMessage(err, "promote");
       const status = document.getElementById("capacityWarning");
       if (status) status.textContent = `Promotion failed: ${message}`;
       showToast(`Promotion failed: ${message}`, "error");
@@ -2173,12 +2259,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   async function executeStatusChange(enrollmentIds, newStatus) {
     try {
-      const { error } = await supabaseClient
+      const { data: updatedRows, error } = await supabaseClient
         .from("student_enrollments")
         .update({ enrollment_status: newStatus })
-        .in("id", enrollmentIds);
+        .in("id", enrollmentIds)
+        .select("id");
 
       if (error) throw error;
+      if (!updatedRows?.length) {
+        const noUpdateError = new Error("No enrollment records were updated.");
+        noUpdateError.code = "ENROLLMENT_NO_UPDATE";
+        throw noUpdateError;
+      }
+      if (updatedRows.length !== enrollmentIds.length) {
+        const partialUpdateError = new Error("Some enrollment records were not updated.");
+        partialUpdateError.code = "ENROLLMENT_PARTIAL_UPDATE";
+        throw partialUpdateError;
+      }
 
       showToast(
         `Successfully updated status to "${newStatus}" for ${enrollmentIds.length} enrollment record(s)!`,
@@ -2188,8 +2285,8 @@ document.addEventListener("DOMContentLoaded", () => {
         loadStudentEnrollments();
       }
     } catch (err) {
-      console.error("Error updating status:", err.message);
-      showToast("Failed to update student status.", "error");
+      console.error("Error updating enrollment status:", err);
+      showToast(enrollmentErrorMessage(err, "status"), "error");
     }
   }
 
@@ -2227,8 +2324,8 @@ document.addEventListener("DOMContentLoaded", () => {
         loadStudentEnrollments();
       return true;
     } catch (err) {
-      console.error("Error executing semester move:", err.message);
-      showToast(`Failed to move students: ${err.message}`, "error");
+      console.error("Error executing semester move:", err);
+      showToast(enrollmentErrorMessage(err, "move"), "error");
       return false;
     } finally {
       if (confirmButton) {
@@ -2279,8 +2376,8 @@ document.addEventListener("DOMContentLoaded", () => {
         loadStudentEnrollments();
       return true;
     } catch (err) {
-      console.error("Error executing new year move:", err.message);
-      showToast(`Failed to move students to new year: ${err.message}`, "error");
+      console.error("Error executing new year move:", err);
+      showToast(enrollmentErrorMessage(err, "move"), "error");
       return false;
     } finally {
       if (confirmButton) {
@@ -2449,7 +2546,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error loading modal data:", err);
-        modalBody.innerHTML = `<p style="color: red;">Failed to load form options: ${escapeHtml(err.message || "Unknown error")}</p>`;
+        modalBody.innerHTML = `<p class="enrollment-error-state">${escapeHtml(enrollmentErrorMessage(err, "options"))}</p>`;
       }
     });
 
@@ -2622,7 +2719,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       } catch (err) {
         console.error("Error loading new year modal data:", err);
-        modalBody.innerHTML = `<p style="color: red;">Failed to load options: ${escapeHtml(err.message || "Unknown error")}</p>`;
+        modalBody.innerHTML = `<p class="enrollment-error-state">${escapeHtml(enrollmentErrorMessage(err, "options"))}</p>`;
       }
     });
 });
@@ -2804,12 +2901,15 @@ async function loadStudentEnrollments(options = {}) {
     }
     window.applyEnrollmentFilters();
   } catch (err) {
-    console.error("Error loading enrollment table:", err.message);
+    console.error("Error loading enrollment table:", err);
     if (!append) {
-      tbody.innerHTML =
-        '<tr><td colspan="6" style="text-align: center; color: red;">Failed to load enrollment data.</td></tr>';
+      renderEnrollmentLoadError(
+        tbody,
+        enrollmentErrorMessage(err, "load"),
+        () => loadStudentEnrollments(),
+      );
     } else if (typeof showToast === "function") {
-      showToast("Could not load more enrollment records.", "error");
+      showToast(enrollmentErrorMessage(err, "load"), "error");
     }
   } finally {
     enrollmentIsLoading = false;

@@ -30,6 +30,27 @@
   cursor: wait;
 }
 
+.enrollment-error-state {
+  color: #b91c1c;
+  text-align: center;
+}
+
+.enrollment-error-retry {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.enrollment-error-retry:hover {
+  background: #1d4ed8;
+}
+
 .student-table {
   width: 100%;
   border-collapse: collapse;
