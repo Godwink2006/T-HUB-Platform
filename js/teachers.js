@@ -2,6 +2,85 @@ const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
 let cachedDepartments = [];
 
+function teacherErrorMessage(error, action = "load") {
+  const code = String(error?.code || error?.name || "").toLowerCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const diagnostic = `${code} ${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+
+  if (status === 401 || code === "pgrst301" || /invalid jwt|session.*expired|refresh token/.test(diagnostic)) {
+    return "Your session has expired. Sign in again, then reopen Teachers.";
+  }
+  if (/school.{0,30}inactive|inactive.{0,30}school/.test(diagnostic)) {
+    return "This school is inactive. Teacher records can be viewed, but changes are unavailable until the school is reactivated.";
+  }
+  if (code === "42501" || status === 403 || /row-level security|permission denied|not authorized|unauthorized|access denied|insufficient privilege/.test(diagnostic)) {
+    if (action === "load" || action === "view") {
+      return "You do not have permission to view teacher records. Contact your school administrator for access.";
+    }
+    if (action === "departments") {
+      return "You do not have permission to load department options. Contact your school administrator.";
+    }
+    if (action === "photo") {
+      return "You do not have permission to upload this teacher’s photo. Contact your school administrator.";
+    }
+    return `You do not have permission to ${action} teacher records. Contact your school administrator.`;
+  }
+  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(diagnostic)) {
+    const operation = {
+      load: "loaded",
+      view: "loaded",
+      departments: "loaded",
+      photo: "uploaded",
+      create: "created",
+      update: "saved",
+    }[action] || "processed";
+    return `Teacher information could not be ${operation} because the connection failed. Check your internet connection and try again.`;
+  }
+  if (code === "23505" || /duplicate key|already exists|unique constraint/.test(diagnostic)) {
+    return "That staff ID or email is already in use. Check the details and try again.";
+  }
+  if (code === "23503" || /foreign key|violates.*constraint/.test(diagnostic)) {
+    return "The selected department or linked record is no longer available. Refresh the page and try again.";
+  }
+  if (code === "23514" || code === "22p02" || /invalid input|invalid date|check constraint/.test(diagnostic)) {
+    return "Some teacher information is invalid. Review the fields and try again.";
+  }
+  if (status === 413 || /file.{0,20}(too large|exceeds)|payload too large/.test(diagnostic)) {
+    return "The photo is too large. Choose a smaller image and try again.";
+  }
+  if (status === 415 || /unsupported media|invalid mime|file type/.test(diagnostic)) {
+    return "That photo format is not supported. Choose an image file and try again.";
+  }
+  if (action === "photo" && /canvas|image|file/.test(diagnostic)) {
+    return "The teacher photo could not be processed. Choose another image and try again.";
+  }
+  if (code === "pgrst116") {
+    return action === "view"
+      ? "This teacher record could not be found. Refresh the list and try again."
+      : "The requested teacher record could not be found.";
+  }
+
+  const appMessage = String(error?.message || "").trim();
+  if (appMessage && !/\b(?:postgrest|postgres|sqlstate|row-level security|failed to fetch|permission denied|edge function returned|\b(?:select|insert|update|delete)\b.*\b(?:table|relation)\b)\b/i.test(appMessage)) {
+    return appMessage;
+  }
+  const messages = {
+    load: "Teacher records could not be loaded. Please try again.",
+    view: "Teacher details could not be loaded. Please try again.",
+    departments: "Department options could not be loaded. Check your connection and try again.",
+    create: "The teacher could not be added. Check the information and try again.",
+    update: "Teacher changes could not be saved. Please try again.",
+  };
+  return messages[action] || "The request could not be completed. Please try again.";
+}
+
+function showTeacherError(error, action = "load") {
+  const message = teacherErrorMessage(error, action);
+  console.error(`Teachers page ${action} error:`, error);
+  if (typeof showToast === "function") showToast(message, "error");
+  return message;
+}
+
 function filterTeachersTable() {
   const searchQuery =
     document.getElementById("teacherSearchInput")?.value.trim().toLowerCase() ||
@@ -132,32 +211,35 @@ async function loadDepartmentDropdown(
   forceRefresh = false,
 ) {
   const selectEl = document.getElementById(selectId);
-  if (!selectEl) return;
+  if (!selectEl) return false;
 
-  if (forceRefresh) {
-    cachedDepartments = [];
-  }
-
-  if (cachedDepartments.length === 0) {
-    const { data: departments, error } = await supabaseClient
-      .from("departments")
-      .select("id, name")
-      .order("name", { ascending: true });
-
-    if (error) {
-      console.error("Failed to fetch departments:", error);
-      return;
+  try {
+    if (forceRefresh) {
+      cachedDepartments = [];
     }
-    cachedDepartments = departments || [];
-  }
 
-  selectEl.innerHTML = `<option value="">Select Department</option>`;
-  cachedDepartments.forEach((dept) => {
-    const option = document.createElement("option");
-    option.value = dept.id;
-    option.textContent = dept.name;
-    selectEl.appendChild(option);
-  });
+    if (cachedDepartments.length === 0) {
+      const { data: departments, error } = await supabaseClient
+        .from("departments")
+        .select("id, name")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      cachedDepartments = departments || [];
+    }
+
+    selectEl.innerHTML = `<option value="">Select Department</option>`;
+    cachedDepartments.forEach((dept) => {
+      const option = document.createElement("option");
+      option.value = dept.id;
+      option.textContent = dept.name;
+      selectEl.appendChild(option);
+    });
+    return true;
+  } catch (error) {
+    showTeacherError(error, "departments");
+    return false;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -309,8 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
         hideAddModal();
         loadTeachers();
       } catch (err) {
-        console.error("Error creating teacher:", err);
-        showToast(err.message || "An error occurred.", "error");
+        showTeacherError(err, "create");
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "Save Teacher";
@@ -705,7 +786,10 @@ if (editTeacherForm) {
               upsert: false,
             });
 
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            uploadError.teacherAction = "photo";
+            throw uploadError;
+          }
 
           const { data: urlData } = supabaseClient.storage
             .from("avatars")
@@ -772,8 +856,7 @@ if (editTeacherForm) {
       hideEditModal();
       loadTeachers();
     } catch (err) {
-      console.error("Error updating teacher:", err);
-      showToast(err.message || "An error occurred during update.", "error");
+      showTeacherError(err, err.teacherAction || "update");
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = "Update Teacher";
@@ -853,7 +936,20 @@ async function loadTeachers() {
     }, 50);
   } catch (err) {
     console.error("Failed to fetch teachers:", err);
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: #ef4444;">Failed to load teachers.</td></tr>`;
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 5;
+    cell.className = "teachers-load-error";
+    const message = document.createElement("p");
+    message.textContent = teacherErrorMessage(err, "load");
+    const retryButton = document.createElement("button");
+    retryButton.type = "button";
+    retryButton.className = "teachers-retry-btn";
+    retryButton.textContent = "Try again";
+    retryButton.addEventListener("click", () => loadTeachers(), { once: true });
+    cell.append(message, retryButton);
+    row.appendChild(cell);
+    tbody.replaceChildren(row);
   }
 }
 

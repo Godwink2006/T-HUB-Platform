@@ -3,6 +3,69 @@ const addBorrowModal = document.getElementById("addBorrowModal");
 const closeAddBorrowModal = document.getElementById("closeAddBorrowModal");
 const cancelAddBorrowModal = document.getElementById("cancelAddBorrowModal");
 
+function libraryErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const raw = String(error?.message || error?.details || "").toLowerCase();
+
+  if (code === "PGRST116") return "This book or borrowing record could not be found. Refresh the page and try again.";
+  if (code === "23505") {
+    return action === "borrow"
+      ? "This borrower already has an active checkout for this book."
+      : "A book with this code already exists. Use a different book code.";
+  }
+  if (code === "23514" || code === "22P02") return "Check the copy count and other required details, then try again.";
+  if (/currently borrowed|active borrowing|unreturned|must be returned/.test(raw)) {
+    return "This book still has an active borrowing. Record its return before deleting it.";
+  }
+  if (/school.{0,30}(inactive|not active)|inactive.{0,30}school|school is not active/.test(raw)) {
+    return "This school is inactive, so library changes cannot be made right now.";
+  }
+  if (code === "42501" || status === 401 || status === 403 || /permission denied|row-level security|rls|not authorized|unauthorized/.test(raw)) {
+    return "You don’t have permission to do this. If you think you should, contact your school administrator.";
+  }
+  if (/jwt|token.{0,20}(expired|invalid)|session.{0,20}expired|not authenticated/.test(raw)) {
+    return "Your session has expired. Sign in again, then retry.";
+  }
+  if (/not linked to a school|determine user school|school_id/.test(raw)) {
+    return "Your account is not linked to a school. Contact your school administrator.";
+  }
+  if (/network|fetch failed|failed to fetch|timeout|timed out|connection/.test(raw)) {
+    return "The server could not be reached. Check your connection and try again.";
+  }
+
+  if (action === "save") return "The book could not be saved. Check the information and try again.";
+  if (action === "update") return "The book could not be updated. Check the information and try again.";
+  if (action === "delete") return "The book could not be deleted. Please try again.";
+  if (action === "borrow") return "The book could not be checked out. Confirm it is available and try again.";
+  if (action === "return") return "The book could not be marked as returned. Please try again.";
+  if (action === "details") return "Book details or borrowing history could not be loaded. Please try again.";
+  if (action === "departments") return "Departments could not be loaded. Please try again.";
+  if (action === "borrowers") return "Borrowers could not be loaded. Please try again.";
+  if (action === "return-details") return "Active borrowing details could not be loaded. Please try again.";
+  return "Library inventory could not be loaded. Please try again.";
+}
+
+function renderLibraryErrorRow(tableBody, message, retry) {
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = 9;
+  cell.className = "library-empty-result library-error-result";
+  const text = document.createElement("p");
+  text.textContent = message;
+  cell.appendChild(text);
+  if (retry) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "library-error-retry";
+    button.textContent = "Try again";
+    button.addEventListener("click", retry, { once: true });
+    cell.appendChild(button);
+  }
+  row.appendChild(cell);
+  tableBody.replaceChildren(row);
+}
+
 cancelAddBorrowModal?.addEventListener("click", () => {
   if (addBorrowModal) addBorrowModal.style.display = "none";
 });
@@ -322,7 +385,7 @@ async function handleSaveBook() {
     await loadBooksTable();
   } catch (err) {
     console.error("Error saving book:", err);
-    showToast(err.message || "Failed to save book.", "error");
+    showToast(libraryErrorMessage(err, "save"), "error");
   } finally {
     saveButton.disabled = false;
     saveButton.textContent = "Save Book";
@@ -368,7 +431,10 @@ async function loadDepartmentDropdown() {
     }
   } catch (err) {
     console.error("Error loading departments:", err);
-    showToast("Failed to load departments.", "error");
+    departmentSelect.replaceChildren(
+      new Option("Departments unavailable — reopen to retry", ""),
+    );
+    showToast(libraryErrorMessage(err, "departments"), "error");
   }
 }
 
@@ -669,19 +735,14 @@ async function loadBooksTable(options = {}) {
   } catch (err) {
     console.error("Error loading books table:", err);
     if (!append) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="9" style="text-align: center; padding: 20px; color: #b91c1c;">
-            Failed to load library inventory: ${escapeHtml(err?.message || "Unknown error")}
-          </td>
-        </tr>
-      `;
+      renderLibraryErrorRow(
+        tableBody,
+        libraryErrorMessage(err, "load"),
+        () => loadBooksTable(),
+      );
     }
     if (typeof showToast === "function") {
-      showToast(
-        append ? "Could not load more books." : "Failed to load library inventory.",
-        "error",
-      );
+      showToast(libraryErrorMessage(err, "load"), "error");
     }
   } finally {
     libraryBooksLoading = false;
@@ -789,7 +850,7 @@ async function deleteLibraryBook() {
   } catch (error) {
     console.error("Could not delete library book:", error);
     if (typeof showToast === "function") {
-      showToast(error?.message || "Could not delete this book.", "error");
+      showToast(libraryErrorMessage(error, "delete"), "error");
     }
   } finally {
     confirmButton.disabled = false;
@@ -922,7 +983,7 @@ async function openEditBookModal(bookId) {
     if (requestId !== editBookRequestId) return;
     document.getElementById("editBookCode").textContent = "Book details unavailable";
     console.error("Error loading book for editing:", err);
-    showToast(err.message || "Failed to load book data.", "error");
+    showToast(libraryErrorMessage(err, "details"), "error");
   }
 }
 
@@ -951,6 +1012,10 @@ async function loadEditDepartmentDropdown() {
     }
   } catch (err) {
     console.error("Error fetching departments for edit:", err);
+    deptSelect.replaceChildren(
+      new Option("Departments unavailable — close and reopen to retry", ""),
+    );
+    throw err;
   }
 }
 
@@ -1087,7 +1152,7 @@ async function handleUpdateBook() {
     }
   } catch (err) {
     console.error("Error updating book:", err);
-    showToast(err.message || "Failed to update book.", "error");
+    showToast(libraryErrorMessage(err, "update"), "error");
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Update Book";
@@ -1254,10 +1319,21 @@ async function openViewBookModal(bookId) {
     ["viewTotalCopies", "viewAvailableCopies", "viewBorrowedCopies"]
       .forEach((id) => { document.getElementById(id).textContent = "—"; });
     document.getElementById("viewBorrowHistoryBody").innerHTML =
-      '<tr><td colspan="5" style="text-align:center; padding:15px; color:#666">Borrowing history could not be loaded.</td></tr>';
+      '<tr><td colspan="5" class="library-error-result">Borrowing history could not be loaded.</td></tr>';
     console.error("Error loading view modal data:", err);
     if (typeof showToast === "function") {
-      showToast("Failed to load full book details.", "error");
+      showToast(libraryErrorMessage(err, "details"), "error");
+    }
+    const historyBody = document.getElementById("viewBorrowHistoryBody");
+    const errorCell = historyBody?.querySelector("td");
+    if (errorCell) {
+      const retryButton = document.createElement("button");
+      retryButton.type = "button";
+      retryButton.className = "library-error-retry";
+      retryButton.textContent = "Try again";
+      retryButton.addEventListener("click", () => openViewBookModal(bookId), { once: true });
+      errorCell.appendChild(document.createElement("br"));
+      errorCell.appendChild(retryButton);
     }
   }
 }
@@ -1345,17 +1421,26 @@ async function loadBorrowersDropdown(requestId = ++borrowerDropdownRequestId) {
     if (requestId !== borrowerDropdownRequestId) return;
 
     allBorrowerProfiles = profiles || [];
+    document.getElementById("borrowerDropdownRetry")?.remove();
     if (saveBorrowBtn) saveBorrowBtn.disabled = allBorrowerProfiles.length === 0;
     renderBorrowerOptions(
       document.getElementById("studentSearchInput")?.value || "",
     );
   } catch (err) {
     if (requestId !== borrowerDropdownRequestId) return;
+    document.getElementById("borrowerDropdownRetry")?.remove();
     select.replaceChildren(new Option("Borrowers could not be loaded", ""));
     console.error("Error loading borrower profiles:", err);
     if (typeof showToast === "function") {
-      showToast(err.message || "Could not load borrowers.", "error");
+      showToast(libraryErrorMessage(err, "borrowers"), "error");
     }
+    const retryButton = document.createElement("button");
+    retryButton.id = "borrowerDropdownRetry";
+    retryButton.type = "button";
+    retryButton.className = "library-error-retry";
+    retryButton.textContent = "Try again";
+    retryButton.addEventListener("click", () => loadBorrowersDropdown(), { once: true });
+    select.insertAdjacentElement("afterend", retryButton);
   }
 }
 
@@ -1507,7 +1592,7 @@ async function handleSaveBorrow() {
   } catch (err) {
     console.error("Error saving borrow record:", err);
     if (typeof showToast === "function") {
-      showToast(err.message || "Failed to borrow book.", "error");
+      showToast(libraryErrorMessage(err, "borrow"), "error");
     }
   } finally {
     saveBtn.disabled = false;
@@ -1530,6 +1615,7 @@ async function openReturnModal(bookId) {
   if (searchInput) searchInput.value = "";
 
   const select = document.getElementById("returnBorrowStudentSelect");
+  document.getElementById("returnBorrowRetry")?.remove();
   const borrowDateDisplay = document.getElementById("displayBorrowDate");
   const returnDateDisplay = document.getElementById("displayReturnDate");
   const recordIdInput = document.getElementById("activeBorrowRecordId");
@@ -1579,13 +1665,21 @@ async function openReturnModal(bookId) {
     }
 
     renderBorrowerDropdown(currentActiveBorrowings);
+    document.getElementById("returnBorrowRetry")?.remove();
   } catch (err) {
     if (requestId !== returnModalRequestId) return;
     if (select) select.replaceChildren(new Option("Borrowers could not be loaded", ""));
     console.error("Error opening return modal:", err);
     if (typeof showToast === "function") {
-      showToast("Failed to load return details.", "error");
+      showToast(libraryErrorMessage(err, "return-details"), "error");
     }
+    const retryButton = document.createElement("button");
+    retryButton.id = "returnBorrowRetry";
+    retryButton.type = "button";
+    retryButton.className = "library-error-retry";
+    retryButton.textContent = "Try again";
+    retryButton.addEventListener("click", () => openReturnModal(bookId), { once: true });
+    select?.insertAdjacentElement("afterend", retryButton);
   }
 }
 
@@ -1706,7 +1800,7 @@ if (returnForm) {
     } catch (err) {
       console.error("Error processing return:", err);
       if (typeof showToast === "function") {
-        showToast(err.message || "Failed to return book.", "error");
+        showToast(libraryErrorMessage(err, "return"), "error");
       }
     } finally {
       confirmBtn.disabled = false;

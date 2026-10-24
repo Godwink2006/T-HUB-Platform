@@ -15,6 +15,56 @@ let financeOffset = 0;
 let financeHasMore = false;
 let financeIsLoading = false;
 
+function financeErrorMessage(error, action = "load") {
+  const code = String(error?.code || "").toUpperCase();
+  const status = Number(error?.status || error?.statusCode || 0);
+  const raw = String(error?.message || error?.details || "").toLowerCase();
+
+  if (code === "PGRST116") return "This fee record could not be found. Refresh the page and try again.";
+  if (code === "23505") return "This payment may already have been recorded. Refresh the payment history before trying again.";
+  if (code === "23514" || code === "22P02") return "Check the payment amounts and fee allocations, then try again.";
+  if (/school.{0,30}(inactive|not active)|inactive.{0,30}school|school is not active/.test(raw)) {
+    return "This school is inactive, so payments cannot be changed right now.";
+  }
+  if (code === "42501" || status === 401 || status === 403 || /permission denied|row-level security|rls|not authorized|unauthorized/.test(raw)) {
+    return "You don’t have permission to do this. If you think you should, contact your school administrator.";
+  }
+  if (/jwt|token.{0,20}(expired|invalid)|session.{0,20}expired/.test(raw)) {
+    return "Your session has expired. Sign in again, then retry.";
+  }
+  if (/insufficient|exceed.{0,20}(balance|remaining)|greater than.{0,20}(balance|remaining)/.test(raw)) {
+    return "The payment amount is greater than the remaining balance. Check the amounts and try again.";
+  }
+  if (/network|fetch failed|failed to fetch|timeout|timed out|connection/.test(raw)) {
+    return "The server could not be reached. Check your connection and try again.";
+  }
+
+  if (action === "save") return "The payment could not be saved. Check the amounts and try again.";
+  if (action === "details") return "Payment details could not be loaded. Please try again.";
+  if (action === "allocations") return "Fee items could not be loaded. Please try again.";
+  return "Payment records could not be loaded. Please try again.";
+}
+
+function showFinanceLoadError(tbody, colspan, error, action, retry) {
+  const row = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = colspan;
+  cell.className = "payments-empty-state is-error";
+  const message = document.createElement("p");
+  message.textContent = financeErrorMessage(error, action);
+  cell.appendChild(message);
+  if (retry) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "finance-error-retry";
+    button.textContent = "Try again";
+    button.addEventListener("click", retry, { once: true });
+    cell.appendChild(button);
+  }
+  row.appendChild(cell);
+  tbody.replaceChildren(row);
+}
+
 function setFinanceModalVisibility(modal, isVisible) {
   if (!modal) return;
 
@@ -203,11 +253,11 @@ async function loadStudentFees(options = {}) {
     populateFinanceFilterOptions("financeYearFilter", financeFeeRows, "yearId", "yearLabel", "All academic years");
     renderFinanceFeeRows();
   } catch (err) {
-    console.error("Error loading student fees:", err.message);
+    console.error("Error loading student fees:", err);
     if (!append) {
-      tbody.innerHTML = '<tr><td colspan="7" class="payments-empty-state is-error">Payment records could not be loaded. Refresh the page or contact an administrator.</td></tr>';
+      showFinanceLoadError(tbody, 7, err, "load", () => loadStudentFees());
     } else if (typeof showToast === "function") {
-      showToast("Could not load more payment records.", "error");
+      showToast(financeErrorMessage(err, "load"), "error");
     }
   } finally {
     financeIsLoading = false;
@@ -575,16 +625,27 @@ async function viewFeeDetails(feeId) {
     }
   } catch (err) {
     if (requestId !== feeDetailsRequestId) return;
-    console.error("Error loading fee details:", err.message);
+    console.error("Error loading fee details:", err);
     document.getElementById("modal-student-name").textContent = "Details unavailable";
     document.getElementById("modal-academic-year").textContent = "—";
     document.getElementById("modal-term").textContent = "—";
     document.getElementById("modal-class").textContent = "—";
+    const message = financeErrorMessage(err, "details");
     document.getElementById("modal-fee-summary-tbody").innerHTML =
-      '<tr><td colspan="2">Fee details could not be loaded.</td></tr>';
+      `<tr><td colspan="2" class="payments-empty-state is-error">${escapeHTML(message)}</td></tr>`;
     document.getElementById("modal-payment-history-tbody").innerHTML =
-      '<tr><td colspan="3">Payment history could not be loaded.</td></tr>';
-    showToast("Could not load payment details.", "error");
+      `<tr><td colspan="3" class="payments-empty-state is-error">${escapeHTML(message)}</td></tr>`;
+    const detailsCell = document.querySelector("#modal-fee-summary-tbody td");
+    if (detailsCell) {
+      const retryButton = document.createElement("button");
+      retryButton.type = "button";
+      retryButton.className = "finance-error-retry";
+      retryButton.textContent = "Try again";
+      retryButton.addEventListener("click", () => viewFeeDetails(feeId), { once: true });
+      detailsCell.appendChild(document.createElement("br"));
+      detailsCell.appendChild(retryButton);
+    }
+    showToast(message, "error");
   }
 }
 
@@ -716,8 +777,8 @@ if (savePaymentBtn) {
       if (typeof viewFeeDetails === "function") viewFeeDetails(activeFeeId);
       if (typeof loadStudentFees === "function") loadStudentFees();
     } catch (err) {
-      console.error("Error saving itemized payment:", err.message);
-      showToast("Failed to save payment: " + err.message, "error");
+      console.error("Error saving itemized payment:", err);
+      showToast(financeErrorMessage(err, "save"), "error");
     } finally {
       savePaymentBtn.disabled = false;
       savePaymentBtn.textContent = originalButtonText;
@@ -726,6 +787,7 @@ if (savePaymentBtn) {
 }
 async function loadFeeItemAllocations(feeId) {
   const container = document.getElementById("item-allocations-container");
+  if (!container) return;
   container.innerHTML = "Loading items...";
 
   try {
@@ -811,8 +873,17 @@ async function loadFeeItemAllocations(feeId) {
       input.addEventListener("input", updateAllocationTotal);
     });
   } catch (err) {
-    console.error("Detailed Supabase Error:", err.message || err);
-    container.innerHTML = `<p style="color: red;">Error: ${escapeHTML(err.message || "Check console for details")}</p>`;
+    console.error("Error loading fee items:", err);
+    container.replaceChildren();
+    const message = document.createElement("p");
+    message.className = "payments-empty-state is-error";
+    message.textContent = financeErrorMessage(err, "allocations");
+    const retryButton = document.createElement("button");
+    retryButton.type = "button";
+    retryButton.className = "finance-error-retry";
+    retryButton.textContent = "Try again";
+    retryButton.addEventListener("click", () => loadFeeItemAllocations(feeId), { once: true });
+    container.append(message, retryButton);
   }
 }
 
