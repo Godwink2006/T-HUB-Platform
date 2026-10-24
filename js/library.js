@@ -15,6 +15,9 @@ function libraryErrorMessage(error, action = "load") {
       : "A book with this code already exists. Use a different book code.";
   }
   if (code === "23514" || code === "22P02") return "Check the copy count and other required details, then try again.";
+  if (code === "LIBRARY_NO_UPDATE") {
+    return "No changes were saved. The book may no longer be available, or your account may not be allowed to edit it.";
+  }
   if (/currently borrowed|active borrowing|unreturned|must be returned/.test(raw)) {
     return "This book still has an active borrowing. Record its return before deleting it.";
   }
@@ -1074,14 +1077,17 @@ async function handleUpdateBook() {
   const hasNewImage = photoInput && photoInput.files[0];
 
   if (currentOriginalBookData) {
+    const normalizeOptionalText = (value) => String(value ?? "").trim();
     const isUnchanged =
       title === (currentOriginalBookData.title || "") &&
       author === (currentOriginalBookData.author || "") &&
       department_id === (currentOriginalBookData.department_id || "") &&
       parseInt(copies_total, 10) ===
         (currentOriginalBookData.total_copies || 0) &&
-      shelf_location === (currentOriginalBookData.shelf_location || "") &&
-      description === (currentOriginalBookData.description || "") &&
+      normalizeOptionalText(shelf_location) ===
+        normalizeOptionalText(currentOriginalBookData.shelf_location) &&
+      normalizeOptionalText(description) ===
+        normalizeOptionalText(currentOriginalBookData.description) &&
       status === (currentOriginalBookData.status || "active").toLowerCase() &&
       !hasNewImage;
 
@@ -1132,12 +1138,19 @@ async function handleUpdateBook() {
 
     saveBtn.textContent = "Saving to database...";
 
-    const { error } = await window.supabaseClient
+    const { data: updatedBook, error } = await window.supabaseClient
       .from("books")
       .update(updateData)
-      .eq("id", bookId);
+      .eq("id", bookId)
+      .select("id")
+      .maybeSingle();
 
     if (error) throw error;
+    if (!updatedBook) {
+      const noUpdateError = new Error("The book update did not affect a row.");
+      noUpdateError.code = "LIBRARY_NO_UPDATE";
+      throw noUpdateError;
+    }
 
     showToast("Book updated successfully!", "success");
 
