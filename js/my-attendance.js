@@ -91,13 +91,13 @@ async function loadStudentAttendanceData(userId, historyIndex, client) {
         term_id,
         academic_year_id,
         class_id,
+        teacher_id,
         subject_id,
         periods ( id, name ),
         terms ( id, name ),
         academic_years ( id, year_label ),
         classes ( id, name ),
-        subjects ( id, name ),
-        profiles:teacher_id ( id, full_name )
+        subjects ( id, name )
       `)
       .in("id", attendanceIds);
 
@@ -122,9 +122,41 @@ async function loadStudentAttendanceData(userId, historyIndex, client) {
         academic_years: getOneRelation(record.attendance.academic_years),
         classes: getOneRelation(record.attendance.classes),
         subjects: getOneRelation(record.attendance.subjects),
-        profiles: getOneRelation(record.attendance.profiles),
       },
     }));
+
+  const classIds = [
+    ...new Set(
+      allAttendanceRecords
+        .map((record) => record.attendance.class_id)
+        .filter(Boolean)
+        .map(String),
+    ),
+  ];
+  const teacherNameMap = new Map();
+  const teacherNameResults = await Promise.all(
+    classIds.map((classId) =>
+      client.rpc("student_timetable_teacher_names", { p_class_id: classId }),
+    ),
+  );
+  for (const result of teacherNameResults) {
+    if (result.error) {
+      console.warn("Could not load assigned teacher names for attendance:", result.error);
+      continue;
+    }
+    for (const teacher of result.data || []) {
+      if (teacher?.teacher_id && teacher.full_name) {
+        teacherNameMap.set(String(teacher.teacher_id), teacher.full_name);
+      }
+    }
+  }
+  allAttendanceRecords = allAttendanceRecords.map((record) => ({
+    ...record,
+    attendance: {
+      ...record.attendance,
+      teacher_name: teacherNameMap.get(String(record.attendance.teacher_id)) || null,
+    },
+  }));
 
   populateDropdownFilters(allAttendanceRecords);
   showAttendanceFilterPrompt("Choose your filters, then select View attendance.");
@@ -226,7 +258,7 @@ function renderAttendanceHistory(records) {
           year: "numeric",
         })
       : "-";
-    const teacherName = attendance?.profiles?.full_name || "-";
+    const teacherName = attendance?.teacher_name || "-";
     const status = record.status || "-";
     const statusClass = status.toLowerCase().replace(/[^a-z0-9_-]/g, "");
     const tr = document.createElement("tr");

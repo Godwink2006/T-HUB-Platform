@@ -86,28 +86,31 @@ async function initStudentContext() {
       }))
       .filter((record) => record.grades);
 
-    const gradeCreatorIds = [
+    cachedStudentGradeCreators = new Map();
+    const gradeClassIds = [
       ...new Set(
         cachedStudentGrades
-          .map((record) => record.grades.created_by)
+          .map((record) => record.grades.class_id)
           .filter(Boolean)
           .map(String),
       ),
     ];
-    cachedStudentGradeCreators = new Map();
-    if (gradeCreatorIds.length) {
-      const { data: creators, error: creatorsError } = await client
-        .from("profiles")
-        .select("id, full_name, role, teachers(staff_id)")
-        .in("id", gradeCreatorIds);
-
-      if (creatorsError) {
-        console.error("Could not load grade entry names:", creatorsError);
-      } else {
-        for (const creator of creators || []) {
-          if (creator?.id) {
-            cachedStudentGradeCreators.set(String(creator.id), creator);
-          }
+    const teacherNameResults = await Promise.all(
+      gradeClassIds.map((classId) =>
+        client.rpc("student_timetable_teacher_names", { p_class_id: classId }),
+      ),
+    );
+    for (const result of teacherNameResults) {
+      if (result.error) {
+        console.warn("Could not load assigned teacher names for grades:", result.error);
+        continue;
+      }
+      for (const teacher of result.data || []) {
+        if (teacher?.teacher_id && teacher.full_name) {
+          cachedStudentGradeCreators.set(String(teacher.teacher_id), {
+            full_name: teacher.full_name,
+            role: "teacher",
+          });
         }
       }
     }
