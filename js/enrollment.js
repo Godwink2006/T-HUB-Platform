@@ -701,7 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Please select a status.", "info");
         return;
       }
-      await executeStatusChange(selectedEnrollmentIds, newStatus);
+      await executeStatusChange(selectedEnrollmentIds, newStatus, modalConfirm);
       closeModal();
     };
   });
@@ -2257,7 +2257,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
   }
-  async function executeStatusChange(enrollmentIds, newStatus) {
+  async function executeStatusChange(enrollmentIds, newStatus, confirmButton) {
+    const originalButtonText = confirmButton?.textContent || "Confirm";
+    if (confirmButton) {
+      confirmButton.disabled = true;
+      confirmButton.setAttribute("aria-busy", "true");
+      confirmButton.textContent = "Saving...";
+    }
+
     try {
       const { data: updatedRows, error } = await supabaseClient
         .from("student_enrollments")
@@ -2287,6 +2294,12 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       console.error("Error updating enrollment status:", err);
       showToast(enrollmentErrorMessage(err, "status"), "error");
+    } finally {
+      if (confirmButton) {
+        confirmButton.disabled = false;
+        confirmButton.removeAttribute("aria-busy");
+        confirmButton.textContent = originalButtonText;
+      }
     }
   }
 

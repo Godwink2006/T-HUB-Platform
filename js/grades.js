@@ -62,7 +62,7 @@ function getGradeErrorMessage(error, action = "load") {
     : "Grades could not be loaded. Refresh the page and try again.";
 }
 
-function setGradeTableMessage(tbody, message, colspan = 6) {
+function setGradeTableMessage(tbody, message, colspan = 7) {
   if (!tbody) return;
   const row = document.createElement("tr");
   const cell = document.createElement("td");
@@ -529,6 +529,15 @@ async function handleLoadStudents(e) {
     return;
   }
 
+  const loadStudentsBtn = document.getElementById("loadEnterGrade");
+  const originalButtonText = loadStudentsBtn?.textContent || "Load Students";
+  if (loadStudentsBtn) {
+    loadStudentsBtn.disabled = true;
+    loadStudentsBtn.setAttribute("aria-busy", "true");
+    loadStudentsBtn.textContent = "Loading...";
+  }
+
+  try {
   const classId = classSelect.value;
   const className = classSelect.options[classSelect.selectedIndex].text;
 
@@ -639,6 +648,13 @@ async function handleLoadStudents(e) {
   if (enterGradeModal) openModal(enterGradeModal);
 
   await loadStudentRosterForGrades(classId, finalMaxMarks);
+  } finally {
+    if (loadStudentsBtn) {
+      loadStudentsBtn.disabled = false;
+      loadStudentsBtn.removeAttribute("aria-busy");
+      loadStudentsBtn.textContent = originalButtonText;
+    }
+  }
 }
 
 async function handleSaveGrades(e) {
@@ -1009,7 +1025,8 @@ async function loadGradesList(options = {}) {
         category_id,
         assessment_categories ( name ),
         classes ( name ),
-        subjects ( name )
+        subjects ( name ),
+        grade_records ( count )
       `,
       )
       .order("created_at", { ascending: false });
@@ -1037,7 +1054,7 @@ async function loadGradesList(options = {}) {
       if (gradeListRenderedCount === 0) {
         tbody.innerHTML = `
         <tr data-grade-empty="true">
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records found.
           </td>
         </tr>`;
@@ -1077,7 +1094,7 @@ async function loadGradesList(options = {}) {
       if (gradeListRenderedCount === 0) {
         tbody.innerHTML = `
         <tr data-grade-empty="true">
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records on this page match the selected filters.
           </td>
         </tr>`;
@@ -1107,6 +1124,7 @@ async function loadGradesList(options = {}) {
         const categoryName = item.assessment_categories?.name || "N/A";
         const className = item.classes?.name || "N/A";
         const subjectName = item.subjects?.name || "N/A";
+        const studentCount = item.grade_records?.[0]?.count ?? 0;
         const displayStatus = isDraft ? "Drafted" : "Submitted";
 
         const actionButtonHTML = isDraft
@@ -1123,6 +1141,7 @@ async function loadGradesList(options = {}) {
             <td>${className}</td>
             <td>${subjectName}</td>
             <td>${formattedDate}</td>
+            <td>${studentCount}</td>
             <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
             <td>${actionButtonHTML}</td>
           </tr>

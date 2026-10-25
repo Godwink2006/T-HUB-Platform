@@ -237,6 +237,12 @@ function initAttendanceModalLogic() {
       return;
     }
 
+    const originalButtonText = loadStudentsBtn.textContent;
+    loadStudentsBtn.disabled = true;
+    loadStudentsBtn.setAttribute("aria-busy", "true");
+    loadStudentsBtn.textContent = "Loading...";
+
+    try {
     let lesson = currentTodayLessons.find((l) => l.period_id === periodId);
     let subjectId = lesson ? lesson.subject_id : null;
     let subjectName = lesson?.subjects?.name || null;
@@ -292,7 +298,7 @@ function initAttendanceModalLogic() {
 
     closeModal(document.getElementById("attendanceModal"));
 
-    openStudentAttendanceModal({
+    await openStudentAttendanceModal({
       classId: classId,
       className: className,
       periodId: periodId,
@@ -309,6 +315,14 @@ function initAttendanceModalLogic() {
       assessmentId: activeAssessmentId || window.activeAssessmentId,
       dateStr: getLocalDateString(),
     });
+    } catch (error) {
+      console.error("Could not load attendance students:", error);
+      showToast(getAttendanceErrorMessage(error), "error");
+    } finally {
+      loadStudentsBtn.disabled = false;
+      loadStudentsBtn.removeAttribute("aria-busy");
+      loadStudentsBtn.textContent = originalButtonText;
+    }
   });
 
   studentForm?.addEventListener("submit", async (e) => {
