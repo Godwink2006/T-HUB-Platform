@@ -924,7 +924,6 @@ function renderGradesStats(records) {
   let totalMax = 0;
   let validCount = 0;
   let sumPercentages = 0;
-  let highestPct = -1;
   let passedCount = 0;
 
   records.forEach((row) => {
@@ -937,7 +936,6 @@ function renderGradesStats(records) {
       totalMax += maxMarks;
       sumPercentages += pct;
       validCount++;
-      if (pct > highestPct) highestPct = pct;
       if (pct >= 60) passedCount++;
     } else if (Number.isFinite(score)) {
       totalScore += score;
@@ -985,11 +983,6 @@ function renderGradesStats(records) {
         <span class="parent-stat-label">Assessments</span>
         <span class="parent-stat-value">${records.length}</span>
         <span class="parent-stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥60%)` : "Recorded grades"}</span>
-      </div>
-      <div class="parent-stat-card">
-        <span class="parent-stat-label">Highest mark</span>
-        <span class="parent-stat-value text-success">${highestPct >= 0 ? highestPct.toFixed(1) + "%" : "-"}</span>
-        <span class="parent-stat-sub">Top assessment result</span>
       </div>
     </div>
   `;
