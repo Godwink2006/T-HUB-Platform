@@ -356,55 +356,34 @@ async function loadStudentGrades(authUserId) {
 function renderStudentGradesStats(records) {
   let totalScore = 0;
   let totalMax = 0;
-  const periodResults = new Map();
+  let validCount = 0;
+  let passedCount = 0;
+  let sumPercentages = 0;
 
   records.forEach((rec) => {
     const grade = rec.grades || {};
-    const assessment = getOneRelation(grade.assessments) || {};
     const category = getOneRelation(grade.assessment_categories) || {};
     const score = Number(rec.score);
     const categoryMax = Number(category.marks);
-    const assessmentId = grade.assessment_id || assessment.id || grade.id;
-    const key = [grade.class_id, grade.subject_id, assessmentId]
-      .map((value) => String(value ?? ""))
-      .join(":");
-
-    if (!periodResults.has(key)) {
-      periodResults.set(key, {
-        score: 0,
-        hasScore: false,
-        categoryMaxTotal: 0,
-        periodMax: Number(assessment.maximum_marks),
-      });
-    }
-    const period = periodResults.get(key);
 
     if (Number.isFinite(score)) {
       totalScore += score;
-      period.score += score;
-      period.hasScore = true;
     }
     if (Number.isFinite(categoryMax) && categoryMax > 0) {
       totalMax += categoryMax;
-      period.categoryMaxTotal += categoryMax;
+      if (Number.isFinite(score)) {
+        const percentage = (score / categoryMax) * 100;
+        sumPercentages += percentage;
+        validCount++;
+        if (percentage >= 70) passedCount++;
+      }
     }
   });
 
-  const periodPercentages = [...periodResults.values()]
-    .map((period) => {
-      const maxMarks =
-        Number.isFinite(period.periodMax) && period.periodMax > 0
-          ? period.periodMax
-          : period.categoryMaxTotal;
-      return period.hasScore && maxMarks > 0
-        ? (period.score / maxMarks) * 100
-        : null;
-    })
-    .filter((percentage) => Number.isFinite(percentage));
-  const validCount = periodPercentages.length;
-  const passedCount = periodPercentages.filter((percentage) => percentage >= 70).length;
   const avgPct = validCount
-    ? periodPercentages.reduce((sum, percentage) => sum + percentage, 0) / validCount
+    ? totalMax > 0
+      ? (totalScore / totalMax) * 100
+      : sumPercentages / validCount
     : 0;
 
   const letterGrade =
@@ -424,7 +403,7 @@ function renderStudentGradesStats(records) {
   return `
     <div class="stats-grid">
       <div class="stat-card">
-        <span class="stat-label">Average Period Score</span>
+        <span class="stat-label">Average Category Score</span>
         <span class="stat-value ${gradeClass}">${validCount > 0 ? avgPct.toFixed(1) + "%" : "-"}</span>
         <span class="stat-sub">${validCount > 0 ? `Grade ${letterGrade} performance` : "No scores yet"}</span>
       </div>
@@ -434,7 +413,7 @@ function renderStudentGradesStats(records) {
         <span class="stat-sub">Cumulative marks scored</span>
       </div>
       <div class="stat-card">
-        <span class="stat-label">Period Results</span>
+        <span class="stat-label">Assessment Categories</span>
         <span class="stat-value">${validCount}</span>
         <span class="stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥70%)` : "Recorded grades"}</span>
       </div>
