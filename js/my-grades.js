@@ -1,4 +1,5 @@
 let cachedStudentGrades = [];
+let cachedStudentGradeCreators = new Map();
 let studentTerms = [];
 
 function getOneRelation(value) {
@@ -56,6 +57,7 @@ async function initStudentContext() {
         grades!inner (
           id,
           status,
+          created_by,
           date_recorded,
           term_id,
           academic_year_id,
@@ -83,6 +85,32 @@ async function initStudentContext() {
         grades: getOneRelation(record.grades),
       }))
       .filter((record) => record.grades);
+
+    const gradeCreatorIds = [
+      ...new Set(
+        cachedStudentGrades
+          .map((record) => record.grades.created_by)
+          .filter(Boolean)
+          .map(String),
+      ),
+    ];
+    cachedStudentGradeCreators = new Map();
+    if (gradeCreatorIds.length) {
+      const { data: creators, error: creatorsError } = await client
+        .from("profiles")
+        .select("id, full_name, role, teachers(staff_id)")
+        .in("id", gradeCreatorIds);
+
+      if (creatorsError) {
+        console.error("Could not load grade entry names:", creatorsError);
+      } else {
+        for (const creator of creators || []) {
+          if (creator?.id) {
+            cachedStudentGradeCreators.set(String(creator.id), creator);
+          }
+        }
+      }
+    }
 
     const gradeYearIds = [
       ...new Set(
@@ -313,6 +341,7 @@ async function loadStudentGrades(authUserId) {
         categoryName,
         score: record.score,
         weight: category?.marks ?? "-",
+        creatorId: grade.created_by ? String(grade.created_by) : null,
       });
     });
 
@@ -322,9 +351,9 @@ async function loadStudentGrades(authUserId) {
         <div class="card" style="margin-bottom:20px;background:#fff;border:0.5px solid rgb(219,215,215);padding:16px;">
           <h3>${escapeHTML(subjectName)}</h3>
           <div class="table-responsive">
-            <table class="table" style="width:100%;border-collapse:collapse;min-width:320px;">
+            <table class="table" style="width:100%;border-collapse:collapse;min-width:480px;">
               <thead>
-                <tr><th>Category</th><th>Score</th><th>Max Marks</th></tr>
+                <tr><th>Category</th><th>Score</th><th>Max Marks</th><th>Entered by</th></tr>
               </thead>
               <tbody>
                 ${items.map((item) => `
@@ -332,6 +361,7 @@ async function loadStudentGrades(authUserId) {
                     <td>${escapeHTML(item.categoryName)}</td>
                     <td><strong>${item.score ?? "N/A"}</strong></td>
                     <td>${item.weight}</td>
+                    <td>${renderStudentGradeAuthor(cachedStudentGradeCreators.get(item.creatorId), item.creatorId)}</td>
                   </tr>`).join("")}
               </tbody>
             </table>
@@ -353,6 +383,24 @@ async function loadStudentGrades(authUserId) {
     }
   }
 }
+
+function renderStudentGradeAuthor(profile, profileId) {
+  if (!profile) {
+    return `<span class="table-muted">${profileId ? "Name unavailable" : "Unknown"}</span>`;
+  }
+
+  const name = escapeHTML(profile.full_name || "Unknown");
+  const role = profile.role
+    ? escapeHTML(String(profile.role).charAt(0).toUpperCase() + String(profile.role).slice(1).toLowerCase())
+    : "";
+  const staffId = profile.teachers?.staff_id
+    ? escapeHTML(profile.teachers.staff_id)
+    : "";
+  const details = [role, staffId].filter(Boolean).join(" · ");
+
+  return `<span><strong>${name}</strong>${details ? `<small style="display:block;color:#718096;">${details}</small>` : ""}</span>`;
+}
+
 function renderStudentGradesStats(records) {
   let totalScore = 0;
   let totalMax = 0;
