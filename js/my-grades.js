@@ -402,7 +402,7 @@ function renderStudentGradesStats(records) {
     })
     .filter((percentage) => Number.isFinite(percentage));
   const validCount = periodPercentages.length;
-  const passedCount = periodPercentages.filter((percentage) => percentage >= 60).length;
+  const passedCount = periodPercentages.filter((percentage) => percentage >= 70).length;
   const avgPct = validCount
     ? periodPercentages.reduce((sum, percentage) => sum + percentage, 0) / validCount
     : 0;
@@ -419,7 +419,7 @@ function renderStudentGradesStats(records) {
             : "F";
 
   const gradeClass =
-    avgPct >= 80 ? "text-green" : avgPct >= 60 ? "text-amber" : "text-red";
+    avgPct >= 80 ? "text-green" : avgPct >= 70 ? "text-amber" : "text-red";
 
   return `
     <div class="stats-grid">
@@ -436,7 +436,7 @@ function renderStudentGradesStats(records) {
       <div class="stat-card">
         <span class="stat-label">Period Results</span>
         <span class="stat-value">${validCount}</span>
-        <span class="stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥60%)` : "Recorded grades"}</span>
+        <span class="stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥70%)` : "Recorded grades"}</span>
       </div>
     </div>
   `;

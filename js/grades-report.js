@@ -223,10 +223,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (percentage >= 80) {
           badgeClass = "distinction";
           badgeLabel = "Distinction";
-        } else if (percentage >= 60) {
-          badgeClass = "credit";
-          badgeLabel = "Credit";
-        } else if (percentage >= 50) {
+        } else if (percentage >= 70) {
           badgeClass = "pass";
           badgeLabel = "Pass";
         }

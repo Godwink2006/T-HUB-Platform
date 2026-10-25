@@ -971,7 +971,7 @@ function renderGradesStats(records) {
     })
     .filter((percentage) => Number.isFinite(percentage));
   const validCount = periodPercentages.length;
-  const passedCount = periodPercentages.filter((percentage) => percentage >= 60).length;
+  const passedCount = periodPercentages.filter((percentage) => percentage >= 70).length;
   const avgPct = validCount
     ? periodPercentages.reduce((sum, percentage) => sum + percentage, 0) / validCount
     : 0;
@@ -990,7 +990,7 @@ function renderGradesStats(records) {
   const gradeClass =
     avgPct >= 80
       ? "text-success"
-      : avgPct >= 60
+      : avgPct >= 70
         ? "text-warning"
         : "text-danger";
 
@@ -1009,7 +1009,7 @@ function renderGradesStats(records) {
       <div class="parent-stat-card">
         <span class="parent-stat-label">Period results</span>
         <span class="parent-stat-value">${validCount}</span>
-        <span class="parent-stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥60%)` : "Recorded grades"}</span>
+        <span class="parent-stat-sub">${validCount > 0 ? `${passedCount} of ${validCount} passed (≥70%)` : "Recorded grades"}</span>
       </div>
     </div>
   `;
