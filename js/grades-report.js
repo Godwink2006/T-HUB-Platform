@@ -1,7 +1,7 @@
 /**
  * grades-report.js
- * Loads assessments and grade records to calculate live highest, lowest,
- * average scores, and student assessment breakdowns.
+ * Loads category grade records and combines them into assessment-period
+ * results before calculating summary scores or rendering the roster.
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             status,
             class_id,
             subject_id,
+            assessment_id,
             academic_year_id,
             term_id,
             classes ( id, name ),
@@ -120,11 +121,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Merge student name into records
-      allGradeData = rawRecords.map((r) => ({
+      // Merge student names, then combine category rows into one whole-period
+      // result per student, class, subject, and assessment.
+      const namedRecords = rawRecords.map((r) => ({
         ...r,
         studentName: studentNameMap.get(r.student_id) || "Student",
       }));
+      allGradeData = buildAssessmentPeriodResults(namedRecords);
 
       renderSummary(allGradeData);
       renderDetails(allGradeData);
@@ -146,9 +149,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       summaryBody.innerHTML = `
         <tr>
           <td>0</td>
-          <td>0</td>
-          <td>0</td>
-          <td>0</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
           <td>
             <button class="grades-report-actions-btn btn-print" onclick="ReportsCommon.printReport()">
               <i class="fa-solid fa-print"></i> Print
@@ -162,31 +165,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Distinct assessments
-    const distinctAssessments = new Set();
-    const scores = [];
-
-    records.forEach((r) => {
-      if (r.grades?.id) distinctAssessments.add(r.grades.id);
-      if (r.score !== null && r.score !== undefined && !isNaN(r.score)) {
-        scores.push(Number(r.score));
-      }
-    });
-
-    const totalAssessments = distinctAssessments.size;
-    const highestScore = scores.length > 0 ? Math.max(...scores) : 0;
-    const lowestScore = scores.length > 0 ? Math.min(...scores) : 0;
-    const averageScore =
-      scores.length > 0
-        ? scores.reduce((sum, val) => sum + val, 0) / scores.length
-        : 0;
+    const percentages = records
+      .map((record) => record.percentage)
+      .filter((percentage) => Number.isFinite(percentage));
+    const highestScore = percentages.length ? Math.max(...percentages) : null;
+    const lowestScore = percentages.length ? Math.min(...percentages) : null;
+    const averageScore = percentages.length
+      ? percentages.reduce((sum, percentage) => sum + percentage, 0) / percentages.length
+      : null;
 
     summaryBody.innerHTML = `
       <tr>
-        <td><strong>${ReportsCommon.formatNumber(totalAssessments)}</strong> <small style="color: #64748b;">(${ReportsCommon.formatNumber(records.length)} student entries)</small></td>
-        <td><strong style="color: #16a34a;">${highestScore}</strong></td>
-        <td><strong style="color: #dc2626;">${lowestScore}</strong></td>
-        <td><strong style="color: #2563eb;">${averageScore.toFixed(1)}</strong></td>
+        <td><strong>${ReportsCommon.formatNumber(records.length)}</strong></td>
+        <td><strong style="color: #16a34a;">${highestScore === null ? "-" : `${highestScore.toFixed(1)}%`}</strong></td>
+        <td><strong style="color: #dc2626;">${lowestScore === null ? "-" : `${lowestScore.toFixed(1)}%`}</strong></td>
+        <td><strong style="color: #2563eb;">${averageScore === null ? "-" : `${averageScore.toFixed(1)}%`}</strong></td>
         <td>
           <button class="grades-report-actions-btn btn-print" title="Print Report" onclick="ReportsCommon.printReport()">
             <i class="fa-solid fa-print"></i> Print
@@ -206,7 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!detailBody) return;
 
     if (detailCount) {
-      detailCount.textContent = `${records.length} ${records.length === 1 ? "record" : "records"}`;
+      detailCount.textContent = `${records.length} ${records.length === 1 ? "period result" : "period results"}`;
     }
 
     if (!records || records.length === 0) {
@@ -220,20 +213,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         const gradeInfo = item.grades || {};
         const className = gradeInfo.classes?.name || "N/A";
         const subjectName = gradeInfo.subjects?.name || "N/A";
-        const assessmentName =
-          gradeInfo.assessments?.name ||
-          gradeInfo.assessment_categories?.name ||
-          "Assessment";
-        const maxMarks =
-          gradeInfo.assessments?.maximum_marks ||
-          gradeInfo.assessment_categories?.marks ||
-          100;
+        const assessmentName = item.assessmentName || "Assessment";
+        const maxMarks = item.maxMarks;
+        const score = item.score;
+        const percentage = item.percentage;
 
-        const score = Number(item.score) || 0;
-        const percentage = maxMarks > 0 ? (score / maxMarks) * 100 : score;
-
-        let badgeClass = "fail";
-        let badgeLabel = "Below Average";
+        let badgeClass = Number.isFinite(percentage) ? "fail" : "";
+        let badgeLabel = Number.isFinite(percentage) ? "Below Average" : "No score";
         if (percentage >= 80) {
           badgeClass = "distinction";
           badgeLabel = "Distinction";
@@ -253,7 +239,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <td>${ReportsCommon.escapeHTML(assessmentName)}</td>
             <td><strong>${score}</strong></td>
             <td>${maxMarks}</td>
-            <td>${percentage.toFixed(1)}%</td>
+            <td>${Number.isFinite(percentage) ? `${percentage.toFixed(1)}%` : "-"}</td>
             <td><span class="grade-badge ${badgeClass}">${badgeLabel}</span></td>
           </tr>
         `;
@@ -277,20 +263,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const rows = allGradeData.map((item) => {
       const gradeInfo = item.grades || {};
-      const maxMarks =
-        gradeInfo.assessments?.maximum_marks ||
-        gradeInfo.assessment_categories?.marks ||
-        100;
-      const score = Number(item.score) || 0;
-      const percentage = maxMarks > 0 ? ((score / maxMarks) * 100).toFixed(1) : score;
-
+      const percentage = Number.isFinite(item.percentage) ? item.percentage.toFixed(1) : "";
       return [
         item.studentName || "Unknown",
         gradeInfo.classes?.name || "N/A",
         gradeInfo.subjects?.name || "N/A",
-        gradeInfo.assessments?.name || gradeInfo.assessment_categories?.name || "N/A",
-        score,
-        maxMarks,
+        item.assessmentName || "N/A",
+        item.score,
+        item.maxMarks ?? "",
         percentage,
         gradeInfo.terms?.name || "N/A",
         gradeInfo.academic_years?.year_label || "N/A",
@@ -299,4 +279,57 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     ReportsCommon.exportToCSV("Grade_Report", headers, rows);
   };
+
+  function buildAssessmentPeriodResults(records) {
+    const groups = new Map();
+
+    records.forEach((record) => {
+      const grade = record.grades || {};
+      const assessment = grade.assessments || {};
+      const category = grade.assessment_categories || {};
+      const assessmentId = grade.assessment_id || assessment.id || grade.id;
+      const key = [record.student_id, grade.class_id, grade.subject_id, assessmentId]
+        .map((value) => String(value ?? ""))
+        .join(":");
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          student_id: record.student_id,
+          studentName: record.studentName,
+          grades: grade,
+          assessmentName: assessment.name || "Assessment",
+          score: 0,
+          categoryMaxTotal: 0,
+          periodMax: Number(assessment.maximum_marks),
+          hasScore: false,
+        });
+      }
+
+      const result = groups.get(key);
+      const score = Number(record.score);
+      const categoryMax = Number(category.marks);
+      if (Number.isFinite(score)) {
+        result.score += score;
+        result.hasScore = true;
+      }
+      if (Number.isFinite(categoryMax) && categoryMax > 0) {
+        result.categoryMaxTotal += categoryMax;
+      }
+    });
+
+    return [...groups.values()].map((result) => {
+      // Each grade row is one category. Add category scores for the period,
+      // then divide by the assessment's period-wide maximum marks. Use the
+      // summed category maximum only for older periods without that value.
+      result.maxMarks =
+        Number.isFinite(result.periodMax) && result.periodMax > 0
+          ? result.periodMax
+          : result.categoryMaxTotal;
+      result.percentage =
+        result.hasScore && result.maxMarks > 0
+          ? (result.score / result.maxMarks) * 100
+          : null;
+      return result;
+    });
+  }
 });
