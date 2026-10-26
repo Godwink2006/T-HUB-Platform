@@ -39,10 +39,24 @@ function getAssessmentErrorMessage(error, action, entity) {
   }
 
   if (code === "23505") {
+    if (
+      entity === "category" &&
+      diagnostic.includes("unique_school_assessment_category_name")
+    ) {
+      return "An active category with this name already exists. Make the existing category inactive first, then try again.";
+    }
     if (diagnostic.includes("unique_active_assessment_per_school")) {
       return "Only one assessment can be active per school. Deactivate the current active assessment first.";
     }
     return `A ${itemName} with these details already exists.`;
+  }
+
+  if (
+    code === "23514" &&
+    entity === "category" &&
+    /assessment category is already used by grades/.test(diagnostic)
+  ) {
+    return "This assessment category already has grades and cannot be edited. Create a new category for future grades.";
   }
 
   if (
