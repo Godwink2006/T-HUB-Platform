@@ -660,6 +660,31 @@ body {
   background: #dbeafe;
 }
 
+.finance-receipt-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 0.5px solid #cbd8ef;
+  background: #f5f8ff;
+  color: #234eaa;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.finance-receipt-button:hover {
+  border-color: #9bb6eb;
+  background: #eaf1ff;
+}
+
+.finance-receipt-button:focus-visible {
+  outline: 0.5px solid #93b4ff;
+  outline-offset: 2px;
+}
+
 .recordPayment-modal,
 .view-payment-modal {
   padding: 20px;
@@ -1143,7 +1168,8 @@ tr {
   .finance-page .details-grid,
   .finance-page .recordPayment-modal-header button,
   .finance-page #closeViewPaymentModal,
-  .finance-page .cancel-btn {
+  .finance-page .cancel-btn,
+  .finance-receipt-button {
     border-radius: 10px;
   }
 
