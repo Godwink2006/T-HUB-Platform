@@ -1888,59 +1888,40 @@ document
         gradeDetails?.assessment_categories?.name || "Assessment";
 
       const updatedRecordsInfo = [];
+      const recordsPayload = [];
 
-      const updatePromises = Array.from(inputs).map(async (input) => {
+      Array.from(inputs).forEach((input) => {
         const recordId = input.dataset.recordId;
         const studentId = input.dataset.studentId;
         const rawVal = input.value.trim();
+        const initialScore = input.dataset.initialValue ?? "";
 
-        let score = null;
-        if (rawVal !== "") {
-          const parsed = parseFloat(rawVal);
-          if (isNaN(parsed))
-            throw new Error(`Invalid score number for student record.`);
-          score = parsed;
+        if (rawVal === initialScore) return;
+
+        if (rawVal === "") {
+          throw new Error("A grade score cannot be left blank.");
+        }
+
+        const score = Number(rawVal);
+        if (!Number.isFinite(score) || score < 0) {
+          throw new Error("Enter a valid, non-negative grade score.");
         }
 
         updatedRecordsInfo.push({ student_id: studentId, score: score });
-
-        const { data, error } = await client
-          .from("grade_records")
-          .update({ score: score })
-          .eq("id", recordId)
-          .select("id")
-          .maybeSingle();
-        if (error) throw error;
-        if (!data) {
-          throw new Error("The grade record was not updated. It may have changed or your access may have been removed.");
-        }
+        recordsPayload.push({ record_id: recordId, score: score });
       });
 
-      const updateResults = await Promise.allSettled(updatePromises);
-      const failedUpdates = updateResults.filter((result) => result.status === "rejected");
-      if (failedUpdates.length) {
-        const updateError = failedUpdates[0].reason;
-        updateError.partialGradeUpdate = updateResults.some((result) => result.status === "fulfilled");
-        throw updateError;
-      }
-
-      if (hasStatusChanged) {
-        const { data: updatedGrade, error: gradeErr } = await client
-          .from("grades")
-          .update({ status: currentStatus })
-          .eq("id", currentEditGradeId)
-          .select("id")
-          .maybeSingle();
-
-        if (gradeErr) {
-          gradeErr.partialGradeUpdate = hasScoresChanged;
-          throw gradeErr;
-        }
-        if (!updatedGrade) {
-          const noUpdateError = new Error("The grade record was not updated. It may have changed or your access may have been removed.");
-          noUpdateError.partialGradeUpdate = hasScoresChanged;
-          throw noUpdateError;
-        }
+      const { data: updatedGradeId, error: updateError } = await client.rpc(
+        "update_grade_session",
+        {
+          p_grade_id: currentEditGradeId,
+          p_status: hasStatusChanged ? currentStatus : null,
+          p_records: recordsPayload,
+        },
+      );
+      if (updateError) throw updateError;
+      if (!updatedGradeId) {
+        throw new Error("The grade record was not updated or access was removed.");
       }
 
       const isSubmittedState = currentStatus === "submitted";
