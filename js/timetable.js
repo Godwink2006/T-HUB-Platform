@@ -16,40 +16,65 @@ function getTeacherStaffId(profile) {
 function timetableErrorMessage(error, action = "load") {
   const code = String(error?.code || "").toUpperCase();
   const status = Number(error?.status || error?.statusCode || 0);
-  const details = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+  const details =
+    `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
 
   if (
     status === 401 ||
     code === "PGRST301" ||
-    /invalid jwt|session.*expired|refresh token|authentication required|not authenticated/.test(details)
+    /invalid jwt|session.*expired|refresh token|authentication required|not authenticated/.test(
+      details,
+    )
   ) {
     return "Your session has expired. Sign in again, then retry.";
   }
-  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(details)) {
+  if (
+    /school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(
+      details,
+    )
+  ) {
     return "This school is inactive. Existing timetables can be viewed, but changes are unavailable until the school is reactivated.";
   }
   if (
     code === "42501" ||
     status === 403 ||
-    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(details)
+    /row-level security|permission denied|insufficient privilege|not authorized|unauthorized|access denied|not allowed/.test(
+      details,
+    )
   ) {
     return action === "load" || action === "view"
       ? "You do not have permission to view this timetable information. Contact your school administrator."
       : `The timetable could not be ${action === "update" ? "updated" : "saved"}. The school may be inactive, or your account may not have permission. Contact your school administrator.`;
   }
-  if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(details)) {
+  if (
+    /failed to fetch|fetch failed|network|connection|timeout|timed out/.test(
+      details,
+    )
+  ) {
     return "Timetable information could not be reached. Check your internet connection and try again.";
   }
-  if (code === "23P02" || /teacher conflict|already booked|teacher.*already.*period/.test(details)) {
+  if (
+    code === "23P02" ||
+    /teacher conflict|already booked|teacher.*already.*period/.test(details)
+  ) {
     return "Teacher conflict: a selected teacher is already scheduled for another class during this period.";
   }
-  if (code === "23P03" || /invalid lesson|not actively assigned|not assigned to teach/.test(details)) {
+  if (
+    code === "23P03" ||
+    /invalid lesson|not actively assigned|not assigned to teach/.test(details)
+  ) {
     return "A selected teacher is not actively assigned to teach this subject for this class. Check the teacher assignments and try again.";
   }
-  if (code === "23505" || /duplicate key|unique constraint|already exists/.test(details)) {
+  if (
+    code === "23505" ||
+    /duplicate key|unique constraint|already exists/.test(details)
+  ) {
     return "A timetable or lesson with these details already exists. Review the class, year, day, and period.";
   }
-  if (code === "23503" || /foreign key|referenced record|no longer exists/.test(details)) {
+  if (
+    code === "23503" ||
+    /foreign key|referenced record|no longer exists/.test(details)
+  ) {
     return "A selected class, academic year, period, subject, or teacher is no longer available. Refresh the page and try again.";
   }
   if (code === "PGRST116") {
@@ -179,7 +204,8 @@ function clearDraftStorage() {
     } catch (err) {
       state.schoolId = null;
       if (String(err?.code || "").toUpperCase() === "PGRST116") {
-        state.schoolLoadError = "Your school profile could not be found. Reload the page or contact your school administrator.";
+        state.schoolLoadError =
+          "Your school profile could not be found. Reload the page or contact your school administrator.";
       } else {
         console.error("Timetable school profile load error:", err);
         state.schoolLoadError = timetableErrorMessage(err, "load");
@@ -561,7 +587,9 @@ function clearDraftStorage() {
 
       const { data: timetable, error: ttErr } = await supabaseClient
         .from("timetables")
-        .select("id, status, class_id, academic_year_id, academic_years(id, year_label)")
+        .select(
+          "id, status, class_id, academic_year_id, academic_years(id, year_label)",
+        )
         .eq("id", timetableId)
         .single();
 
@@ -572,11 +600,11 @@ function clearDraftStorage() {
       const classObj = state.lookups.classes.find(
         (c) => c.id === timetable.class_id,
       );
-  const yearObj =
-  timetable.academic_years ||
-  state.lookups.years.find((y) => y.id === timetable.academic_year_id);
+      const yearObj =
+        timetable.academic_years ||
+        state.lookups.years.find((y) => y.id === timetable.academic_year_id);
 
-  const classEl = getEl("editModalClassName");
+      const classEl = getEl("editModalClassName");
       const yearEl = getEl("editModalYearLabel");
       const statusSelect = getEl("editTimetableStatusSelect");
 
@@ -638,7 +666,8 @@ function clearDraftStorage() {
     try {
       if (!state.schoolId) {
         renderTableError(
-          state.schoolLoadError || "Your school profile could not be loaded. Reload the page and try again.",
+          state.schoolLoadError ||
+            "Your school profile could not be loaded. Reload the page and try again.",
           () => window.location.reload(),
         );
         return;
@@ -662,47 +691,43 @@ function clearDraftStorage() {
       cachedTimetables = timetables || [];
 
       populateAcademicYearFilterOptions(cachedTimetables);
-
-      renderTimetablesTable(cachedTimetables);
-
-      if (!timetables || timetables.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No timetables found.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = timetables
-        .map((item) => {
-          const className = item.classes?.name || "-";
-          const yearLabel = item.academic_years?.year_label || "-";
-          const isStatusActive = (item.status || "").toLowerCase() === "active";
-          const statusClass = isStatusActive
-            ? "timetables-status-active"
-            : "timetables-status-inactive";
-
-          return `
-            <tr data-timetable-id="${escapeHTML(item.id)}">
-              <td>${escapeHTML(className)}</td>
-              <td>${escapeHTML(yearLabel)}</td>
-              <td>
-                <span class="${statusClass}">${escapeHTML(item.status || "Inactive")}</span>
-              </td>
-              <td>
-                <button class="timetables-actions-btn view" data-id="${escapeHTML(item.id)}" title="View">
-                  <i class="fa-solid fa-eye"></i>
-                </button>
-                <button class="timetables-actions-btn edit" data-id="${escapeHTML(item.id)}" title="Edit">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-              </td>
-            </tr>
-          `;
-        })
-        .join("");
+      applyTimetableFilters();
     } catch (err) {
       const message = showTimetableError(err, "load");
       cachedTimetables = [];
       renderTableError(message);
     }
+  }
+
+  function addTimetableToCache(id, classId, yearId, status) {
+    if (!id) return;
+
+    const classInfo = state.lookups.classes.find((item) => item.id === classId);
+    const yearInfo = state.lookups.years.find((item) => item.id === yearId);
+    const timetable = {
+      id,
+      status: status || "Active",
+      classes: classInfo ? { id: classInfo.id, name: classInfo.name } : null,
+      academic_years: yearInfo
+        ? { id: yearInfo.id, year_label: yearInfo.year_label }
+        : null,
+    };
+
+    cachedTimetables = [
+      timetable,
+      ...cachedTimetables.filter((item) => item.id !== id),
+    ];
+    populateAcademicYearFilterOptions(cachedTimetables);
+    applyTimetableFilters();
+  }
+
+  function updateTimetableInCache(id, status) {
+    const timetable = cachedTimetables.find((item) => item.id === id);
+    if (!timetable) return;
+
+    timetable.status = status || timetable.status;
+    populateAcademicYearFilterOptions(cachedTimetables);
+    applyTimetableFilters();
   }
 
   function bindEvents() {
@@ -734,7 +759,6 @@ function clearDraftStorage() {
           openEditTimetableModal(timetableId);
         }
       }
-
     });
 
     getEl("addLessonBtn")?.addEventListener("click", (e) => {
@@ -1101,11 +1125,13 @@ function clearDraftStorage() {
       };
 
       try {
-        const { error } = await supabaseClient.rpc(
+        const { data: timetableId, error } = await supabaseClient.rpc(
           "save_timetable_with_lessons",
           payload,
         );
         if (error) throw error;
+
+        addTimetableToCache(timetableId, classId, yearId, statusVal);
 
         showToast("Timetable created successfully!", "success");
 
@@ -1114,7 +1140,6 @@ function clearDraftStorage() {
 
         hideModal(getEl("timetableModal"));
         resetForm("timetableForm");
-        await loadTimetables();
       } catch (err) {
         showTimetableError(err, "create");
       } finally {
@@ -1189,13 +1214,14 @@ function clearDraftStorage() {
 
         showToast("Timetable updated successfully!", "success");
 
+        updateTimetableInCache(state.editingTimetableId, statusVal);
+
         state.editLessons = [];
         state.initialEditLessons = [];
         state.editingTimetableId = null;
         clearDraftStorage();
 
         hideModal(getEl("editTimetableModal"));
-        await loadTimetables();
       } catch (err) {
         showTimetableError(err, "update");
       } finally {
@@ -1217,7 +1243,8 @@ function clearDraftStorage() {
       bindCascadingEvents();
     } else {
       renderTableError(
-        state.schoolLoadError || "Your school profile could not be loaded. Reload the page and try again.",
+        state.schoolLoadError ||
+          "Your school profile could not be loaded. Reload the page and try again.",
         () => window.location.reload(),
       );
     }
@@ -1305,10 +1332,16 @@ function clearDraftStorage() {
     if (!yearSelect) return;
 
     const currentSelection = yearSelect.value;
+    const activeYearIds = new Set(
+      (state.lookups.years || []).map((year) => year.id),
+    );
 
     const yearMap = new Map();
     timetables.forEach((item) => {
-      if (item.academic_years?.id) {
+      if (
+        item.academic_years?.id &&
+        activeYearIds.has(item.academic_years.id)
+      ) {
         yearMap.set(item.academic_years.id, item.academic_years.year_label);
       }
     });
@@ -1484,12 +1517,16 @@ async function handleViewTimetable(timetableId) {
                 return `
                   <td>
                     <div style="font-weight:600;">${escapeHTML(subjectName)}</div>
-                    ${teacherName ? `
+                    ${
+                      teacherName
+                        ? `
                       <span class="timetable-teacher">
                         <span>${escapeHTML(teacherName)}</span>
                         <small>Staff ID: ${escapeHTML(teacherStaffId)}</small>
                       </span>
-                    ` : ""}
+                    `
+                        : ""
+                    }
                   </td>
                 `;
               }

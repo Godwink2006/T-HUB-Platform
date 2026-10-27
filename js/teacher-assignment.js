@@ -135,25 +135,31 @@ async function loadFormDropdowns() {
           `
       id,
       staff_id,
-      profiles!inner ( id, full_name, status )
+      is_archived,
+      profiles!inner ( id, full_name, role, status, is_archived )
     `,
         )
-        .eq("profiles.status", "active"),
+        .eq("profiles.role", "teacher")
+        .eq("profiles.status", "active")
+        .eq("profiles.is_archived", false)
+        .eq("is_archived", false),
 
       window.supabaseClient
         .from("subjects")
         .select("id, name")
-        .eq("status", "Active"),
+        .ilike("status", "active")
+        .eq("is_archived", false),
 
       window.supabaseClient
         .from("classes")
         .select("id, name")
-        .eq("status", "active"),
+        .ilike("status", "active")
+        .eq("is_archived", false),
 
       window.supabaseClient
         .from("academic_years")
         .select("id, year_label")
-        .eq("status", "Active")
+        .ilike("status", "active"),
     ]);
 
     const failedResult = [teachersRes, subjectsRes, classesRes, yearsRes].find(
@@ -275,9 +281,29 @@ async function handleCreateAssignment(e) {
     const isValid = await validateTeacherAssignment(payload);
     if (!isValid) return;
 
-    const { error } = await window.supabaseClient
+    const { data: newAssignment, error } = await window.supabaseClient
       .from("teacher_assignments")
-      .insert([payload]);
+      .insert([payload])
+      .select(
+        `
+        id,
+        is_class_teacher,
+        status,
+        created_at,
+        updated_at,
+        description,
+        profiles!teacher_id (
+          id,
+          full_name,
+          photo_url,
+          teachers ( staff_id )
+        ),
+        subjects ( id, name ),
+        classes ( id, name ),
+        academic_years ( id, year_label )
+      `,
+      )
+      .single();
 
     if (error) {
       if (error.code === "23505") {
@@ -295,8 +321,8 @@ async function handleCreateAssignment(e) {
     }
 
     form.reset();
+    addAssignmentToCurrentList(newAssignment);
     showToast("Teacher assignment added successfully!", "success");
-    await loadAssignmentsTable();
   } catch (err) {
     showTeacherAssignmentError(err, "create");
   } finally {
@@ -484,12 +510,9 @@ async function handleUpdateAssignment(e) {
       throw { code: "PGRST116", message: "No assignment row was updated" };
     }
 
+    updateAssignmentInCurrentList(assignmentId, payload);
     closeModal(document.getElementById("editAssignModal"));
     showToast("Teacher assignment updated successfully!", "success");
-
-    if (typeof loadAssignmentsTable === "function") {
-      await loadAssignmentsTable();
-    }
   } catch (err) {
     showTeacherAssignmentError(err, "update");
   } finally {
@@ -571,6 +594,35 @@ const ASSIGNMENTS_PAGE_SIZE = 30;
 let assignmentsOffset = 0;
 let assignmentsHasMore = false;
 let assignmentsLoading = false;
+
+function addAssignmentToCurrentList(assignment) {
+  if (!assignment?.id) return;
+
+  globalAssignmentsData = [
+    assignment,
+    ...globalAssignmentsData.filter((item) => item.id !== assignment.id),
+  ];
+  assignmentsOffset += 1;
+  populateFilterDropdowns(globalAssignmentsData);
+  filterAssignments();
+
+  const nextButton = document.getElementById("nextAssignmentsPage");
+  if (nextButton) {
+    nextButton.hidden = !assignmentsHasMore;
+    nextButton.disabled = false;
+    nextButton.textContent = "Next";
+  }
+}
+
+function updateAssignmentInCurrentList(assignmentId, changes) {
+  const assignment = globalAssignmentsData.find(
+    (item) => item.id === assignmentId,
+  );
+  if (!assignment) return;
+
+  Object.assign(assignment, changes);
+  filterAssignments();
+}
 
 async function loadAssignmentsTable(options = {}) {
   const tableBody = document.getElementById("assignmentsTableBody");
