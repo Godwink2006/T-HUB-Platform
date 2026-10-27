@@ -350,21 +350,25 @@ async function handleSaveBook() {
 
     const schoolId = profile.school_id;
 
-    const { data, error } = await window.supabaseClient.from("books").insert([
-      {
-        school_id: schoolId,
-        book_code: book_code,
-        title: title,
-        author: author,
-        department_id: department_id,
-        total_copies: parseInt(copies_total, 10),
-        available_copies: parseInt(copies_total, 10),
-        shelf_location: shelf_location || null,
-        description: description || null,
-        cover_image_url: coverBase64,
-        status: status,
-      },
-    ]);
+    const { data: savedBook, error } = await window.supabaseClient
+      .from("books")
+      .insert([
+        {
+          school_id: schoolId,
+          book_code: book_code,
+          title: title,
+          author: author,
+          department_id: department_id,
+          total_copies: parseInt(copies_total, 10),
+          available_copies: parseInt(copies_total, 10),
+          shelf_location: shelf_location || null,
+          description: description || null,
+          cover_image_url: coverBase64,
+          status: status,
+        },
+      ])
+      .select("*, departments(name)")
+      .single();
 
     if (error) throw error;
 
@@ -385,7 +389,7 @@ async function handleSaveBook() {
       fileNameText.textContent = "No new file chosen";
     }
 
-    await loadBooksTable();
+    upsertLibraryBookRow(savedBook, { prepend: true, borrowedCount: 0 });
   } catch (err) {
     console.error("Error saving book:", err);
     showToast(libraryErrorMessage(err, "save"), "error");
@@ -657,80 +661,10 @@ async function loadBooksTable(options = {}) {
     if (!append) tableBody.replaceChildren();
 
     visibleBooks.forEach((book) => {
-      const tr = document.createElement("tr");
-
-      const coverSrc =
-        book.cover_image_url ||
-        "https://cdn-icons-png.flaticon.com/512/29/29302.png";
-      const departmentName = book.departments ? book.departments.name : "-";
-
-      const activeBorrowedCount = allBorrowings
-        ? allBorrowings.filter((b) => b.book_id === book.id).length
-        : 0;
-
-      const totalCopies = book.total_copies || 0;
-
-      const availableCopies = Math.max(0, totalCopies - activeBorrowedCount);
-      const bookStatus =
-        String(book.status || "inactive").toLocaleLowerCase() === "active"
-          ? "active"
-          : "inactive";
-
-      tr.dataset.libraryBookRow = "true";
-      tr.dataset.search = [
-        book.book_code,
-        book.title,
-        book.author,
-        departmentName,
-        book.shelf_location,
-        book.description,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLocaleLowerCase();
-      tr.dataset.department = departmentName;
-      tr.dataset.status = bookStatus;
-
-      tr.innerHTML = `
-        <td>
-          <img
-            src="${coverSrc}"
-            alt="Book Cover"
-            onerror="
-              this.onerror = null;
-              this.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            "
-            class="book-photo"
-          />
-        </td>
-        <td>${escapeHtml(book.book_code)}</td>
-        <td>${escapeHtml(book.title)}</td>
-        <td>${escapeHtml(book.author)}</td>
-        <td>${escapeHtml(departmentName)}</td>
-        <td>${totalCopies}</td>
-        <td>${availableCopies}</td>
-        <td><span class="books-status-${bookStatus}">
-          ${escapeHTML(book.status || "Inactive")}
-        </span></td>
-        <td>
-         <button class="books-actions-btn edit" data-id="${book.id}">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-
-          <button class="books-actions-btn view" data-id="${book.id}">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-          ${
-            canDeleteLibraryBooks
-              ? `<button class="books-actions-btn library-delete-btn" data-id="${book.id}" data-title="${escapeHtml(book.title)}" data-code="${escapeHtml(book.book_code)}" aria-label="Delete ${escapeHtml(book.title)}" title="Delete book">
-                  <i class="fa-solid fa-trash"></i>
-                </button>`
-              : ""
-          }
-        </td>
-      `;
-
-      tableBody.appendChild(tr);
+      const activeBorrowedCount = (allBorrowings || []).filter(
+        (borrowing) => borrowing.book_id === book.id,
+      ).length;
+      tableBody.appendChild(createLibraryBookRow(book, activeBorrowedCount));
     });
 
     applyLibraryBookFilters();
@@ -755,6 +689,90 @@ async function loadBooksTable(options = {}) {
       nextButton.textContent = "Next";
     }
   }
+}
+
+function createLibraryBookRow(book, activeBorrowedCount = 0) {
+  const row = document.createElement("tr");
+  const departmentName = book.departments?.name || "-";
+  const totalCopies = Number(book.total_copies) || 0;
+  const bookStatus =
+    String(book.status || "inactive").toLowerCase() === "active"
+      ? "active"
+      : "inactive";
+
+  row.dataset.libraryBookRow = "true";
+  row.dataset.bookId = book.id;
+  row.dataset.search = [
+    book.book_code,
+    book.title,
+    book.author,
+    departmentName,
+    book.shelf_location,
+    book.description,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  row.dataset.department = departmentName;
+  row.dataset.status = bookStatus;
+  row.innerHTML = `
+    <td><img src="${escapeHtml(book.cover_image_url || "https://cdn-icons-png.flaticon.com/512/29/29302.png")}" alt="Book Cover" class="book-photo" onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" /></td>
+    <td>${escapeHtml(book.book_code)}</td>
+    <td>${escapeHtml(book.title)}</td>
+    <td>${escapeHtml(book.author)}</td>
+    <td>${escapeHtml(departmentName)}</td>
+    <td>${totalCopies}</td>
+    <td>${Math.max(0, totalCopies - activeBorrowedCount)}</td>
+    <td><span class="books-status-${bookStatus}">${escapeHtml(book.status || "Inactive")}</span></td>
+    <td>
+      <button class="books-actions-btn edit" data-id="${escapeHtml(book.id)}"><i class="fa-solid fa-pen"></i></button>
+      <button class="books-actions-btn view" data-id="${escapeHtml(book.id)}"><i class="fa-solid fa-eye"></i></button>
+      ${canDeleteLibraryBooks ? `<button class="books-actions-btn library-delete-btn" data-id="${escapeHtml(book.id)}" data-title="${escapeHtml(book.title)}" data-code="${escapeHtml(book.book_code)}" aria-label="Delete ${escapeHtml(book.title)}" title="Delete book"><i class="fa-solid fa-trash"></i></button>` : ""}
+    </td>
+  `;
+  return row;
+}
+
+function upsertLibraryBookRow(book, options = {}) {
+  if (!book?.id) return;
+
+  const tableBody = document.getElementById("booksTableBody");
+  if (!tableBody) return;
+  const existingIndex = loadedLibraryBooks.findIndex(
+    (loadedBook) => loadedBook.id === book.id,
+  );
+  const existingRow = tableBody.querySelector(
+    `tr[data-library-book-row][data-book-id="${book.id}"]`,
+  );
+
+  if (existingIndex >= 0) {
+    loadedLibraryBooks[existingIndex] = book;
+    if (existingRow) {
+      existingRow.replaceWith(
+        createLibraryBookRow(book, options.borrowedCount || 0),
+      );
+    }
+  } else if (options.prepend) {
+    const previousCount = loadedLibraryBooks.length;
+    const loadedLimit =
+      previousCount + (libraryBooksHasMore ? 0 : 1) || LIBRARY_BOOKS_PAGE_SIZE;
+    loadedLibraryBooks = [book, ...loadedLibraryBooks].slice(0, loadedLimit);
+    libraryBooksOffset = Math.max(
+      libraryBooksOffset + (libraryBooksHasMore ? 0 : 1),
+      loadedLibraryBooks.length,
+    );
+
+    tableBody
+      .querySelectorAll("tr:not([data-library-book-row])")
+      .forEach((row) => row.remove());
+    const firstRow = tableBody.querySelector("tr[data-library-book-row]");
+    tableBody.insertBefore(createLibraryBookRow(book, 0), firstRow || null);
+    const rows = tableBody.querySelectorAll("tr[data-library-book-row]");
+    if (rows.length > loadedLimit) rows[rows.length - 1].remove();
+  }
+
+  applyLibraryBookFilters();
+  attachBookActionListeners();
 }
 
 function escapeHtml(str) {
@@ -1142,8 +1160,8 @@ async function handleUpdateBook() {
       .from("books")
       .update(updateData)
       .eq("id", bookId)
-      .select("id")
-      .maybeSingle();
+      .select("*, departments(name)")
+      .single();
 
     if (error) throw error;
     if (!updatedBook) {
@@ -1159,10 +1177,9 @@ async function handleUpdateBook() {
       editBookModal.style.display = "none";
       unLockBodyScroll();
     }
-
-    if (typeof loadBooksTable === "function") {
-      await loadBooksTable();
-    }
+    upsertLibraryBookRow(updatedBook, {
+      borrowedCount: currentBorrowed,
+    });
   } catch (err) {
     console.error("Error updating book:", err);
     showToast(libraryErrorMessage(err, "update"), "error");
@@ -1364,18 +1381,57 @@ function getBorrowerPhotoUrl(photoUrl) {
   return window.DEFAULT_PROFILE_AVATAR || "";
 }
 
+async function refreshLibraryBookAfterBorrowChange(bookId) {
+  const tasks = [];
+
+  if (viewBookModal?.style.display === "flex" && currentViewBookId === bookId) {
+    tasks.push(openViewBookModal(bookId));
+  }
+
+  const book = loadedLibraryBooks.find((item) => item.id === bookId);
+  const row = document.querySelector(
+    `#booksTableBody tr[data-library-book-row][data-book-id="${bookId}"]`,
+  );
+  if (book && row) {
+    tasks.push(
+      (async () => {
+        const { count, error } = await window.supabaseClient
+          .from("book_borrowings")
+          .select("id", { count: "exact", head: true })
+          .eq("book_id", bookId)
+          .eq("status", "borrowed");
+        if (error) throw error;
+
+        const borrowedCount = count || 0;
+        const totalCopies = Number(book.total_copies) || 0;
+        const availableCell = row.cells[6];
+        if (availableCell) {
+          availableCell.textContent = Math.max(0, totalCopies - borrowedCount);
+        }
+      })(),
+    );
+  }
+
+  const results = await Promise.allSettled(tasks);
+  results.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error("Could not refresh the updated book details:", result.reason);
+    }
+  });
+}
+
 document
   .getElementById("borrowFromViewBtn")
   .addEventListener("click", async () => {
     if (!currentViewBookId) return;
-
-    document.getElementById("viewBookModal").style.display = "none";
 
     const borrowModal = document.getElementById("addBorrowModal");
     if (borrowModal) borrowModal.style.display = "flex";
 
     const requestId = ++borrowerDropdownRequestId;
     allBorrowerProfiles = [];
+    borrowerSchoolId = null;
+    clearTimeout(borrowerSearchDebounce);
     document.getElementById("borrowForm")?.reset();
     const borrowerSearch = document.getElementById("studentSearchInput");
     if (borrowerSearch) borrowerSearch.value = "";
@@ -1395,50 +1451,111 @@ document
       hiddenBookIdInput.value = currentViewBookId;
     }
 
-    await loadBorrowersDropdown(requestId);
+    await loadBorrowersDropdown("", requestId);
   });
 
 let allBorrowerProfiles = [];
 let borrowerDropdownRequestId = 0;
+let borrowerSchoolId = null;
+let borrowerSearchDebounce = null;
 
-async function loadBorrowersDropdown(requestId = ++borrowerDropdownRequestId) {
+async function loadBorrowersDropdown(
+  searchTerm = "",
+  requestId = ++borrowerDropdownRequestId,
+) {
   const select = document.getElementById("borrowStudentSelect");
   if (!select) return;
 
   try {
-    const {
-      data: { user },
-      error: authError,
-    } = await window.supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    if (!user) throw new Error("User not authenticated.");
+    if (!borrowerSchoolId) {
+      const {
+        data: { user },
+        error: authError,
+      } = await window.supabaseClient.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error("User not authenticated.");
 
-    const { data: userProfile, error: profileError } =
-      await window.supabaseClient
-        .from("profiles")
-        .select("school_id")
-        .eq("id", user.id)
-        .single();
-    if (profileError) throw profileError;
-    if (!userProfile?.school_id) {
-      throw new Error("Your profile is not linked to a school.");
+      const { data: userProfile, error: profileError } =
+        await window.supabaseClient
+          .from("profiles")
+          .select("school_id")
+          .eq("id", user.id)
+          .single();
+      if (profileError) throw profileError;
+      if (!userProfile?.school_id) {
+        throw new Error("Your profile is not linked to a school.");
+      }
+      borrowerSchoolId = userProfile.school_id;
     }
 
-    const { data: profiles, error } = await window.supabaseClient
+    const safeQuery = String(searchTerm || "")
+      .trim()
+      .replace(/[,%()"\\]/g, " ")
+      .replace(/\s+/g, " ");
+    const profileQuery = window.supabaseClient
       .from("profiles")
       .select("id, full_name, email, role, status, students(student_id)")
-      .eq("school_id", userProfile.school_id)
-      .order("full_name", { ascending: true });
-    if (error) throw error;
+      .eq("school_id", borrowerSchoolId)
+      .ilike("status", "active")
+      .neq("role", "parent")
+      .order("full_name", { ascending: true })
+      .limit(5);
 
-    if (requestId !== borrowerDropdownRequestId) return;
+    if (!safeQuery) {
+      const { data: profiles, error } = await profileQuery;
+      if (error) throw error;
+      if (requestId !== borrowerDropdownRequestId) return;
+      allBorrowerProfiles = profiles || [];
+    } else {
+      const pattern = `%${safeQuery}%`;
+      const [profileMatches, studentMatches] = await Promise.all([
+        profileQuery.or(
+          `full_name.ilike.${pattern},email.ilike.${pattern},role.ilike.${pattern}`,
+        ),
+        window.supabaseClient
+          .from("students")
+          .select("id")
+          .eq("school_id", borrowerSchoolId)
+          .ilike("student_id", pattern)
+          .limit(5),
+      ]);
+      if (profileMatches.error) throw profileMatches.error;
+      if (studentMatches.error) throw studentMatches.error;
+      if (requestId !== borrowerDropdownRequestId) return;
 
-    allBorrowerProfiles = profiles || [];
+      const studentProfileIds = (studentMatches.data || [])
+        .map((student) => student.id)
+        .filter(Boolean);
+      let studentProfileMatches = [];
+      if (studentProfileIds.length) {
+        const { data, error } = await window.supabaseClient
+          .from("profiles")
+          .select("id, full_name, email, role, status, students(student_id)")
+          .eq("school_id", borrowerSchoolId)
+          .ilike("status", "active")
+          .neq("role", "parent")
+          .in("id", studentProfileIds);
+        if (error) throw error;
+        studentProfileMatches = data || [];
+      }
+
+      if (requestId !== borrowerDropdownRequestId) return;
+      const profilesById = new Map();
+      [...(profileMatches.data || []), ...studentProfileMatches].forEach(
+        (profile) => profilesById.set(profile.id, profile),
+      );
+      allBorrowerProfiles = [...profilesById.values()]
+        .sort((a, b) =>
+          String(a.full_name || a.email || "").localeCompare(
+            String(b.full_name || b.email || ""),
+          ),
+        )
+        .slice(0, 5);
+    }
+
     document.getElementById("borrowerDropdownRetry")?.remove();
     if (saveBorrowBtn) saveBorrowBtn.disabled = allBorrowerProfiles.length === 0;
-    renderBorrowerOptions(
-      document.getElementById("studentSearchInput")?.value || "",
-    );
+    renderBorrowerOptions(searchTerm);
   } catch (err) {
     if (requestId !== borrowerDropdownRequestId) return;
     document.getElementById("borrowerDropdownRetry")?.remove();
@@ -1452,7 +1569,11 @@ async function loadBorrowersDropdown(requestId = ++borrowerDropdownRequestId) {
     retryButton.type = "button";
     retryButton.className = "library-error-retry";
     retryButton.textContent = "Try again";
-    retryButton.addEventListener("click", () => loadBorrowersDropdown(), { once: true });
+    retryButton.addEventListener(
+      "click",
+      () => loadBorrowersDropdown(searchTerm),
+      { once: true },
+    );
     select.insertAdjacentElement("afterend", retryButton);
   }
 }
@@ -1521,7 +1642,14 @@ function renderBorrowerOptions(searchTerm = "") {
 document
   .getElementById("studentSearchInput")
   ?.addEventListener("input", (e) => {
-    renderBorrowerOptions(e.target.value.trim());
+    const searchTerm = e.target.value.trim();
+    const select = document.getElementById("borrowStudentSelect");
+    if (select) select.replaceChildren(new Option("Searching borrowers…", ""));
+    if (saveBorrowBtn) saveBorrowBtn.disabled = true;
+    clearTimeout(borrowerSearchDebounce);
+    borrowerSearchDebounce = setTimeout(() => {
+      loadBorrowersDropdown(searchTerm);
+    }, 250);
   });
 
 const borrowForm = document.getElementById("borrowForm");
@@ -1596,12 +1724,7 @@ async function handleSaveBorrow() {
 
     const modal = document.getElementById("addBorrowModal");
     if (modal) modal.style.display = "none";
-
-    unLockBodyScroll();
-
-    if (typeof loadBooksTable === "function") {
-      loadBooksTable();
-    }
+    await refreshLibraryBookAfterBorrowChange(bookId);
   } catch (err) {
     console.error("Error saving borrow record:", err);
     if (typeof showToast === "function") {
@@ -1615,12 +1738,14 @@ async function handleSaveBorrow() {
 
 let currentActiveBorrowings = [];
 let returnModalRequestId = 0;
+let currentReturnBookId = null;
 
 async function openReturnModal(bookId) {
   const modal = document.getElementById("returnBorrowModal");
   if (!modal) return;
 
   const requestId = ++returnModalRequestId;
+  currentReturnBookId = bookId;
   currentActiveBorrowings = [];
   modal.style.display = "flex";
 
@@ -1808,8 +1933,7 @@ if (returnForm) {
       }
 
       document.getElementById("returnBorrowModal").style.display = "none";
-      unLockBodyScroll();
-      if (typeof loadBooksTable === "function") loadBooksTable();
+      await refreshLibraryBookAfterBorrowChange(currentReturnBookId);
     } catch (err) {
       console.error("Error processing return:", err);
       if (typeof showToast === "function") {
@@ -1837,8 +1961,6 @@ document
   .getElementById("returnBookFromViewBtn")
   ?.addEventListener("click", () => {
     if (!currentViewBookId) return;
-
-    document.getElementById("viewBookModal").style.display = "none";
 
     openReturnModal(currentViewBookId);
   });

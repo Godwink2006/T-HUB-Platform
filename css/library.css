@@ -1208,6 +1208,12 @@ tr {
   font-style: normal !important;
 }
 
+/* Keep borrow and return dialogs above the book details modal they were opened from. */
+#addBorrowModal,
+#returnBorrowModal {
+  z-index: 1001;
+}
+
 @media (max-width: 768px) {
   .modal-book,
   .view-book-modal,
