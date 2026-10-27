@@ -88,10 +88,11 @@ function getAttendanceErrorMessage(error, action = "load") {
   }
   return action === "save"
     ? "Attendance could not be saved. Please check your selections and try again."
-    : "Attendance could not be loaded. Please refresh the page and try again.";
+    : "Attendance could not be loaded. Please try again.";
 }
 
 function setAttendanceTableError(message) {
+  attendanceNeedsReconnectRefresh = true;
   const tbody = document.getElementById("attendanceTableBody");
   if (!tbody) return;
   const row = document.createElement("tr");
@@ -99,6 +100,13 @@ function setAttendanceTableError(message) {
   cell.colSpan = 8;
   cell.style.cssText = "text-align:center; color:#dc2626; padding:16px;";
   cell.textContent = message;
+  const retryButton = document.createElement("button");
+  retryButton.type = "button";
+  retryButton.textContent = "Try again";
+  retryButton.style.cssText = "display:block; margin:10px auto 0; cursor:pointer;";
+  retryButton.addEventListener("click", () => loadAttendanceTable());
+  cell.appendChild(document.createElement("br"));
+  cell.appendChild(retryButton);
   row.appendChild(cell);
   tbody.replaceChildren(row);
 }
@@ -130,7 +138,6 @@ function closeModal(modal) {
 document.addEventListener("DOMContentLoaded", () => {
   initModalEventListeners();
   initAttendanceModalLogic();
-  loadAcademicContext();
 });
 
 function initModalEventListeners() {
@@ -146,7 +153,10 @@ function initModalEventListeners() {
     ?.addEventListener("click", async () => {
       resetAttendanceModal();
       openModal(attendanceModal);
-      await populateClassOptions();
+        await Promise.all([
+          populateClassOptions(),
+          loadAcademicContext(),
+        ]);
     });
 
   document
@@ -486,20 +496,26 @@ async function populateClassOptions() {
         .from("classes")
         .select("id, name")
         .eq("school_id", profile.school_id)
+        .ilike("status", "active")
         .order("name");
       if (error) throw error;
       classes = data || [];
     } else if (role === "teacher") {
       const { data: assignments, error } = await supabaseClient
         .from("teacher_assignments")
-        .select("class_id, classes(id, name)")
+        .select("class_id, classes(id, name, status)")
         .eq("teacher_id", user.id);
       if (error) throw error;
 
       classes = [
         ...new Map(
           (assignments || [])
-            .filter((assignment) => assignment.classes)
+            .filter(
+              (assignment) =>
+                assignment.classes &&
+                String(assignment.classes.status || "").toLowerCase() ===
+                  "active",
+            )
             .map((assignment) => [
               assignment.classes.id,
               assignment.classes,
@@ -1031,7 +1047,14 @@ let attendanceOffset = 0;
 let attendanceHasMore = true;
 let attendanceTableLoading = false;
 let attendanceViewerRole = "";
+let attendanceNeedsReconnectRefresh = false;
 const attendanceStudentCounts = new Map();
+
+window.addEventListener("online", () => {
+  if (!attendanceNeedsReconnectRefresh) return;
+  attendanceNeedsReconnectRefresh = false;
+  loadAttendanceTable();
+});
 
 async function loadAttendanceTable({ loadMore = false } = {}) {
   const tbody = document.getElementById("attendanceTableBody");
@@ -1125,6 +1148,7 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
     }
 
     const records = attendanceList || [];
+    attendanceNeedsReconnectRefresh = false;
     if (loadMore) allAttendanceList.push(...records);
     else allAttendanceList = records;
     attendanceOffset += records.length;
@@ -1236,8 +1260,9 @@ async function refreshAttendanceSessionRow(attendanceId, studentCount = null) {
     return true;
   } catch (error) {
     console.error("Could not refresh the saved attendance row:", error);
+    attendanceNeedsReconnectRefresh = true;
     showToast(
-      "Attendance was saved, but its row could not be refreshed. Please refresh the page to see the latest record.",
+      "Attendance was saved, but the list could not update while the server was unavailable. It will retry when your connection returns; you do not need to reload the page.",
       "error",
     );
     return false;
