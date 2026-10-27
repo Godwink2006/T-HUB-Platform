@@ -398,6 +398,78 @@ function renderFinanceFeeRows() {
   }));
 }
 
+async function refreshFinanceFeeRow(feeId) {
+  const index = financeFeeRows.findIndex(
+    (row) => String(row.fee?.id) === String(feeId),
+  );
+  if (index < 0) return false;
+
+  try {
+    const { data: fee, error } = await supabaseClient
+      .from("student_fees")
+      .select(
+        `
+        id,
+        currency_code,
+        total_fees,
+        total_paid,
+        balance,
+        status,
+        student_id,
+        class_id,
+        academic_year_id,
+        term_id,
+        classes:class_id (id, name),
+        academic_years:academic_year_id (year_label),
+        terms:term_id (name)
+      `,
+      )
+      .eq("id", feeId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!fee) return false;
+
+    const cachedRow = financeFeeRows[index];
+    const studentMap = fee.student_id
+      ? {
+          [fee.student_id]: {
+            student_id: cachedRow.studentCode,
+            profiles: {
+              full_name: cachedRow.studentName,
+              photo_url: cachedRow.studentPhoto,
+            },
+          },
+        }
+      : {};
+    const enrollmentIdentityMap = fee.student_id
+      ? {
+          [fee.student_id]: {
+            student_name_snapshot: cachedRow.studentName,
+            student_code_snapshot: cachedRow.studentCode,
+            student_photo_snapshot: cachedRow.studentPhoto,
+          },
+        }
+      : {};
+
+    const [updatedRow] = mapCurrentFinanceFeeRecords(
+      [fee],
+      studentMap,
+      enrollmentIdentityMap,
+    );
+    financeFeeRows[index] = updatedRow;
+    renderFinanceFeeRows();
+    return true;
+  } catch (error) {
+    console.error("Could not refresh the updated finance fee row:", error);
+    showToast(
+      "Payment was saved, but the fee row could not be refreshed. The rest of the table was left as it is.",
+      "error",
+    );
+    return false;
+  }
+}
+
 function initializeFinanceFilters() {
   ["financeStudentSearch", "financeTermFilter", "financeClassFilter", "financeYearFilter", "financeStatusFilter"]
     .forEach((id) => document.getElementById(id)?.addEventListener("input", renderFinanceFeeRows));
@@ -775,7 +847,7 @@ if (savePaymentBtn) {
       document.getElementById("recordPaymentForm")?.reset();
 
       if (typeof viewFeeDetails === "function") viewFeeDetails(activeFeeId);
-      if (typeof loadStudentFees === "function") loadStudentFees();
+      await refreshFinanceFeeRow(activeFeeId);
     } catch (err) {
       console.error("Error saving itemized payment:", err);
       showToast(financeErrorMessage(err, "save"), "error");
