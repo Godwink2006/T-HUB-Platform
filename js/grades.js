@@ -231,14 +231,15 @@ async function populateClassOptions() {
     if (role === "admin") {
       const { data: allClasses, error } = await client
         .from("classes")
-        .select("id, name")
+        .select("id, name, status")
+        .ilike("status", "active")
         .order("name", { ascending: true });
       if (error) throw error;
       classesList = allClasses || [];
     } else if (role === "teacher") {
       const { data: assignments, error } = await client
         .from("teacher_assignments")
-        .select("class_id, classes(id, name)")
+        .select("class_id, classes(id, name, status)")
         .eq("teacher_id", user.id);
 
       if (error) throw error;
@@ -246,7 +247,7 @@ async function populateClassOptions() {
       classesList = [
         ...new Map(
           (assignments || [])
-            .filter((a) => a.classes)
+            .filter((a) => a.classes && String(a.classes.status || "").toLowerCase() === "active")
             .map((a) => [a.classes.id, a.classes]),
         ).values(),
       ];
@@ -318,13 +319,13 @@ async function handleClassSelectChange(classId) {
 
       const { data: assignedData, error: assignedErr } = await client
         .from("teacher_assignments")
-        .select("subject_id, subjects(id, name)")
+        .select("subject_id, subjects(id, name, status)")
         .eq("class_id", classId);
 
       if (assignedErr) throw assignedErr;
 
       (assignedData || []).forEach((item) => {
-        if (item.subjects?.id) {
+        if (item.subjects?.id && String(item.subjects.status || "").toLowerCase() === "active") {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
@@ -333,6 +334,7 @@ async function handleClassSelectChange(classId) {
         const { data: allSubjects, error: subjectsError } = await client
           .from("subjects")
           .select("id, name")
+          .ilike("status", "active")
           .order("name", { ascending: true });
         if (subjectsError) throw subjectsError;
 
@@ -342,14 +344,14 @@ async function handleClassSelectChange(classId) {
 
       const { data: teacherData, error: teacherErr } = await client
         .from("teacher_assignments")
-        .select("subject_id, subjects(id, name)")
+        .select("subject_id, subjects(id, name, status)")
         .eq("class_id", classId)
         .eq("teacher_id", user.id);
 
       if (teacherErr) throw teacherErr;
 
       (teacherData || []).forEach((item) => {
-        if (item.subjects?.id) {
+        if (item.subjects?.id && String(item.subjects.status || "").toLowerCase() === "active") {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
@@ -397,6 +399,7 @@ async function loadAssessmentCategories() {
     const { data: categories, error } = await client
       .from("assessment_categories")
       .select("id, name, marks")
+      .ilike("status", "Active")
       .order("name", { ascending: true });
 
     if (error) {
@@ -458,54 +461,127 @@ function populateAssessmentDropdown(assessments) {
 async function loadAcademicContext() {
   try {
     const client = window.supabaseClient || supabaseClient;
+    activeAcademicYearId = null;
+    activeTermId = null;
+    activeAssessment = [];
+    window.activeAcademicYearId = null;
+    window.activeAcademicYearLabel = "";
+    window.activeTermId = null;
+    window.activeTermLabel = "";
+    window.activeAssessment = [];
 
-    const [yearRes, termRes, assessmentRes] = await Promise.all([
+    const yearRes = await client
+      .from("academic_years")
+      .select("id, year_label, status")
+      .ilike("status", "Active")
+      .maybeSingle();
+    if (yearRes.error) throw yearRes.error;
+    if (!yearRes.data) {
+      showToast("There is no active academic year. Ask an administrator to activate one.", "error");
+      return;
+    }
 
-      client
-        .from("academic_years")
-        .select("id, year_label")
-        .ilike("status", "Active")
-        .maybeSingle(),
-
+    const [termRes, assessmentRes] = await Promise.all([
       client
         .from("terms")
-        .select("id, name")
+        .select("id, name, academic_year_id, status")
+        .eq("academic_year_id", yearRes.data.id)
         .ilike("status", "Active")
         .maybeSingle(),
-
       client
         .from("assessments")
-        .select("id, name, maximum_marks")
+        .select("id, name, maximum_marks, academic_year_id, start_date, end_date, status")
+        .eq("academic_year_id", yearRes.data.id)
         .ilike("status", "Active")
         .order("name", { ascending: true }),
     ]);
 
-    const contextError = yearRes.error || termRes.error || assessmentRes.error;
-    if (contextError) {
-      console.error("Could not load grades academic context:", contextError);
-      showToast(getGradeErrorMessage(contextError), "error");
-      return;
-    }
+    const contextError = termRes.error || assessmentRes.error;
+    if (contextError) throw contextError;
 
-    if (yearRes.data) {
-      window.activeAcademicYearId = yearRes.data.id;
-      window.activeAcademicYearLabel = yearRes.data.year_label;
-    }
+    activeAcademicYearId = yearRes.data.id;
+    window.activeAcademicYearId = yearRes.data.id;
+    window.activeAcademicYearLabel = yearRes.data.year_label;
 
     if (termRes.data) {
+      activeTermId = termRes.data.id;
       window.activeTermId = termRes.data.id;
       window.activeTermLabel = termRes.data.name;
     }
 
-    if (assessmentRes.data) {
-      window.activeAssessment = assessmentRes.data;
-    }
+    activeAssessment = assessmentRes.data || [];
+    window.activeAssessment = activeAssessment;
   } catch (err) {
     console.error("Error loading academic context for grades:", err);
     if (typeof showToast === "function") {
       showToast(getGradeErrorMessage(err), "error");
     }
   }
+}
+
+async function validateActiveGradeSetup({
+  classId,
+  subjectId,
+  categoryId,
+  academicYearId,
+  termId,
+  assessmentId,
+}) {
+  const client = window.supabaseClient || supabaseClient;
+  const [classResult, subjectResult, categoryResult, yearResult, termResult, assessmentResult] =
+    await Promise.all([
+      client.from("classes").select("id").eq("id", classId).ilike("status", "active").maybeSingle(),
+      client.from("subjects").select("id").eq("id", subjectId).ilike("status", "active").maybeSingle(),
+      client.from("assessment_categories").select("id").eq("id", categoryId).ilike("status", "active").maybeSingle(),
+      client.from("academic_years").select("id").eq("id", academicYearId).ilike("status", "active").maybeSingle(),
+      client.from("terms").select("id, academic_year_id").eq("id", termId).eq("academic_year_id", academicYearId).ilike("status", "active").maybeSingle(),
+      client.from("assessments").select("id, academic_year_id, start_date, end_date").eq("id", assessmentId).eq("academic_year_id", academicYearId).ilike("status", "active").maybeSingle(),
+    ]);
+
+  const queryError = [
+    classResult.error,
+    subjectResult.error,
+    categoryResult.error,
+    yearResult.error,
+    termResult.error,
+    assessmentResult.error,
+  ].find(Boolean);
+  if (queryError) {
+    console.error("Could not verify active grade setup selections:", queryError);
+    showToast(getGradeErrorMessage(queryError), "error");
+    return false;
+  }
+
+  const inactiveChoice = [
+    [classResult.data, "The selected class is no longer active. Refresh and choose an active class."],
+    [subjectResult.data, "The selected subject is no longer active. Refresh and choose an active subject."],
+    [categoryResult.data, "The selected assessment category is no longer active. Refresh and choose an active category."],
+    [yearResult.data, "There is no active academic year. Ask an administrator to activate one."],
+    [termResult.data, "There is no active term for the active academic year. Ask an administrator to check the term settings."],
+    [assessmentResult.data, "There is no active assessment for the active academic year. Ask an administrator to check the assessment settings."],
+  ].find(([record]) => !record);
+
+  if (inactiveChoice) {
+    showToast(inactiveChoice[1], "error");
+    return false;
+  }
+
+  const today = getGradeCurrentLocalDate();
+  const assessment = assessmentResult.data;
+  if (
+    !assessment.start_date ||
+    !assessment.end_date ||
+    today < assessment.start_date ||
+    today > assessment.end_date
+  ) {
+    showToast(
+      "The active assessment is outside its entry dates. Ask an administrator to check its start and end dates.",
+      "error",
+    );
+    return false;
+  }
+
+  return true;
 }
 
 async function handleLoadStudents(e) {
@@ -569,6 +645,26 @@ async function handleLoadStudents(e) {
 
   const assessmentId = selectedAssessment ? selectedAssessment.id : null;
   const assessmentName = selectedAssessment ? selectedAssessment.name : "";
+  const academicYearId = window.activeAcademicYearId || activeAcademicYearId || null;
+  const termId = window.activeTermId || activeTermId || null;
+
+  if (!academicYearId || !termId || !assessmentId) {
+    showToast(
+      "An active academic year, term, and assessment are required before loading students.",
+      "error",
+    );
+    return;
+  }
+
+  const setupIsActive = await validateActiveGradeSetup({
+    classId,
+    subjectId,
+    categoryId,
+    academicYearId,
+    termId,
+    assessmentId,
+  });
+  if (!setupIsActive) return;
 
   const categoriesList =
     window.activeCategories || window.activeAssessmentCategories || [];
@@ -613,8 +709,8 @@ async function handleLoadStudents(e) {
     categoryId,
     categoryName,
     maxMarks: finalMaxMarks,
-    academicYearId: window.activeAcademicYearId || activeAcademicYearId || null,
-    termId: window.activeTermId || activeTermId || null,
+    academicYearId,
+    termId,
   };
 
   const elYear = document.getElementById("enterGradeModalYear");
@@ -920,6 +1016,13 @@ function getGradeLocalDate(timestamp) {
   if (!timestamp) return "";
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return "";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function getGradeCurrentLocalDate() {
+  const date = new Date();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${date.getFullYear()}-${month}-${day}`;
