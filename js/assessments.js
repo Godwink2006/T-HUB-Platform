@@ -26,6 +26,52 @@ function formatDateTime(isoString) {
 }
 
 let currentAssessments = [];
+let currentAcademicYears = [];
+let activeAcademicYearId = "";
+
+function populateAcademicYearSelect(select, selectedYearId = "") {
+  if (!select) return;
+  select.replaceChildren(new Option("Select Academic Year", "", true, true));
+  select.options[0].disabled = true;
+
+  currentAcademicYears.forEach((year) => {
+    select.add(new Option(year.year_label, year.id));
+  });
+
+  if (selectedYearId) select.value = String(selectedYearId);
+}
+
+async function loadAcademicYears() {
+  const { data, error } = await supabaseClient
+    .from("academic_years")
+    .select("id, year_label, status")
+    .order("year_label", { ascending: false });
+
+  if (error) {
+    showAssessmentError(error, "load", "assessment");
+    return false;
+  }
+
+  currentAcademicYears = data || [];
+  activeAcademicYearId =
+    currentAcademicYears.find(
+      (year) => String(year.status || "").toLowerCase() === "active",
+    )?.id || "";
+
+  populateAcademicYearSelect(
+    document.getElementById("assessmentAcademicYearInput"),
+    activeAcademicYearId,
+  );
+  populateAcademicYearSelect(
+    document.getElementById("editAssessmentAcademicYearInput"),
+  );
+
+  return true;
+}
+
+function formatDateOnly(value) {
+  return value ? escapeHTML(String(value).slice(0, 10)) : "—";
+}
 
 function getAssessmentErrorMessage(error, action, entity) {
   const code = String(error?.code || "").toUpperCase();
@@ -116,13 +162,13 @@ async function loadAssessments() {
         "load",
         "assessment",
       );
-      tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
       return;
     }
 
     tableBody.innerHTML = `
       <tr>
-         <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+         <td colspan="10" style="text-align: center; padding: 2rem; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading assessments...
       </td>
@@ -138,7 +184,7 @@ async function loadAssessments() {
       const message = showAssessmentError(error, "load", "assessment");
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 20px;">
+          <td colspan="10" style="text-align: center; padding: 20px;">
             ${escapeHTML(message)}
           </td>
         </tr>
@@ -147,12 +193,19 @@ async function loadAssessments() {
     }
 
     currentAssessments = data || [];
+    const yearsById = new Map(
+      currentAcademicYears.map((year) => [String(year.id), year.year_label]),
+    );
+    currentAssessments.forEach((item) => {
+      item.academic_year_label =
+        yearsById.get(String(item.academic_year_id)) || "—";
+    });
     renderAssessmentTable(currentAssessments);
   } catch (err) {
     const message = showAssessmentError(err, "load", "assessment");
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; padding: 20px;">
+        <td colspan="10" style="text-align: center; padding: 20px;">
           ${escapeHTML(message)}
         </td>
       </tr>
@@ -167,7 +220,7 @@ function renderAssessmentTable(assessments) {
   if (assessments.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; padding: 20px;">
+        <td colspan="10" style="text-align: center; padding: 20px;">
           No assessments found.
         </td>
       </tr>
@@ -186,6 +239,9 @@ function renderAssessmentTable(assessments) {
       return `
         <tr data-id="${escapeHTML(item.id)}">
          <td>${escapeHTML(item.name || "-")}</td>
+          <td>${escapeHTML(item.academic_year_label || "—")}</td>
+          <td>${formatDateOnly(item.start_date)}</td>
+          <td>${formatDateOnly(item.end_date)}</td>
           <td>${escapeHTML(item.description || "—")}</td>
           <td>${escapeHTML(item.maximum_marks ?? "-")}</td>
           <td>
@@ -214,10 +270,17 @@ function renderAssessmentTable(assessments) {
     .join("");
 }
 
-function openAssessmentModal() {
+async function openAssessmentModal() {
   const modal = document.getElementById("assessmentModal");
 
   if (!modal) return;
+
+  if (currentAcademicYears.length === 0) await loadAcademicYears();
+  document.getElementById("assessmentForm")?.reset();
+  populateAcademicYearSelect(
+    document.getElementById("assessmentAcademicYearInput"),
+    activeAcademicYearId,
+  );
 
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
@@ -254,6 +317,14 @@ function openEditAssessmentModal(id) {
     assessment.maximum_marks;
   document.getElementById("editAssessmentStatusInput").value =
     assessment.status;
+  populateAcademicYearSelect(
+    document.getElementById("editAssessmentAcademicYearInput"),
+    assessment.academic_year_id,
+  );
+  document.getElementById("editAssessmentStartDateInput").value =
+    assessment.start_date || "";
+  document.getElementById("editAssessmentEndDateInput").value =
+    assessment.end_date || "";
 
   const rawStatus = assessment.status || "";
   const normalizedStatus = rawStatus
@@ -263,6 +334,9 @@ function openEditAssessmentModal(id) {
   form.dataset.origDescription = assessment.description || "";
   form.dataset.origMarks = assessment.maximum_marks;
   form.dataset.origStatus = normalizedStatus;
+  form.dataset.origAcademicYearId = assessment.academic_year_id || "";
+  form.dataset.origStartDate = assessment.start_date || "";
+  form.dataset.origEndDate = assessment.end_date || "";
 
   modal.dataset.id = id;
   modal.classList.add("active");
@@ -280,6 +354,9 @@ function closeEditAssessmentModal() {
     delete form.dataset.origDescription;
     delete form.dataset.origMarks;
     delete form.dataset.origStatus;
+    delete form.dataset.origAcademicYearId;
+    delete form.dataset.origStartDate;
+    delete form.dataset.origEndDate;
   }
 
   modal.classList.remove("active");
@@ -316,7 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("cancelEditAssessmentModal")
     ?.addEventListener("click", closeEditAssessmentModal);
 
-  loadAssessments();
+  loadAcademicYears().then(() => loadAssessments());
 
   const tableBody = document.getElementById("assessmentsTableBody");
   if (!tableBody || tableBody.dataset.listenerAttached === "true") return;
@@ -349,6 +426,11 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const marksInput = document.getElementById("assessmentMarksInput");
       const statusInput = document.getElementById("assessmentStatusInput");
+      const academicYearInput = document.getElementById(
+        "assessmentAcademicYearInput",
+      );
+      const startDateInput = document.getElementById("assessmentStartDateInput");
+      const endDateInput = document.getElementById("assessmentEndDateInput");
 
       const saveButton =
         event.submitter || assessmentForm.querySelector('[type="submit"]');
@@ -358,6 +440,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const rawMarks = marksInput?.value.trim();
       const marks = Number(rawMarks);
       const status = statusInput?.value.trim();
+      const academicYearId = academicYearInput?.value;
+      const startDate = startDateInput?.value;
+      const endDate = endDateInput?.value;
 
       if (!name)
         return notifyUser("Assessment name is required.", "error", nameInput);
@@ -385,6 +470,22 @@ document.addEventListener("DOMContentLoaded", () => {
           "error",
           statusInput,
         );
+      if (!academicYearId)
+        return notifyUser(
+          "Please select an academic year.",
+          "error",
+          academicYearInput,
+        );
+      if (!startDate)
+        return notifyUser("Start date is required.", "error", startDateInput);
+      if (!endDate)
+        return notifyUser("End date is required.", "error", endDateInput);
+      if (endDate < startDate)
+        return notifyUser(
+          "End date must be on or after the start date.",
+          "error",
+          endDateInput,
+        );
 
       const normalizedStatus =
         status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
@@ -400,6 +501,9 @@ document.addEventListener("DOMContentLoaded", () => {
           .insert([
             {
               name: name,
+              academic_year_id: academicYearId,
+              start_date: startDate,
+              end_date: endDate,
               description: description,
               maximum_marks: marks,
               status: normalizedStatus,
@@ -449,6 +553,13 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       const marksInput = document.getElementById("editAssessmentMarksInput");
       const statusInput = document.getElementById("editAssessmentStatusInput");
+      const academicYearInput = document.getElementById(
+        "editAssessmentAcademicYearInput",
+      );
+      const startDateInput = document.getElementById(
+        "editAssessmentStartDateInput",
+      );
+      const endDateInput = document.getElementById("editAssessmentEndDateInput");
 
       const saveButton =
         event.submitter || editAssessmentForm.querySelector('[type="submit"]');
@@ -457,6 +568,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const rawMarks = marksInput?.value.trim();
       const marks = Number(rawMarks);
       const status = statusInput?.value.trim();
+      const academicYearId = academicYearInput?.value;
+      const startDate = startDateInput?.value;
+      const endDate = endDateInput?.value;
 
       if (!assessmentId) {
         return notifyUser("Invalid assessment reference ID.", "error");
@@ -483,6 +597,26 @@ document.addEventListener("DOMContentLoaded", () => {
           statusInput,
         );
       }
+      if (!academicYearId) {
+        return notifyUser(
+          "Please select an academic year.",
+          "error",
+          academicYearInput,
+        );
+      }
+      if (!startDate) {
+        return notifyUser("Start date is required.", "error", startDateInput);
+      }
+      if (!endDate) {
+        return notifyUser("End date is required.", "error", endDateInput);
+      }
+      if (endDate < startDate) {
+        return notifyUser(
+          "End date must be on or after the start date.",
+          "error",
+          endDateInput,
+        );
+      }
 
       const normalizedStatus =
         status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
@@ -495,11 +629,18 @@ document.addEventListener("DOMContentLoaded", () => {
         originalDescription === "" ? null : originalDescription;
       const originalMarks = Number(editAssessmentForm.dataset.origMarks);
       const originalStatus = editAssessmentForm.dataset.origStatus;
+      const originalAcademicYearId =
+        editAssessmentForm.dataset.origAcademicYearId || "";
+      const originalStartDate = editAssessmentForm.dataset.origStartDate || "";
+      const originalEndDate = editAssessmentForm.dataset.origEndDate || "";
 
       const hasChanges =
         description !== baselineDesc ||
         marks !== originalMarks ||
-        normalizedStatus !== originalStatus;
+        normalizedStatus !== originalStatus ||
+        academicYearId !== originalAcademicYearId ||
+        startDate !== originalStartDate ||
+        endDate !== originalEndDate;
 
       if (!hasChanges) {
         notifyUser("No changes detected.", "info");
@@ -516,6 +657,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const { data, error } = await supabaseClient
           .from("assessments")
           .update({
+            academic_year_id: academicYearId,
+            start_date: startDate,
+            end_date: endDate,
             description: description,
             maximum_marks: marks,
             status: normalizedStatus,
