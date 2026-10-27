@@ -9,6 +9,7 @@ let gradeListHasMore = true;
 let gradeListRenderedCount = 0;
 let gradeListIsLoading = false;
 let gradeListRefreshPending = false;
+let loadedGradeRows = [];
 
 function getGradeErrorMessage(error, action = "load") {
   if (error?.partialGradeUpdate) {
@@ -776,9 +777,9 @@ async function handleSaveGrades(e) {
       closeModal(enterGradeModal);
     }
 
-    if (typeof loadGradesList === "function") {
-      loadGradesList();
-    }
+    const gradeRowRefreshed = await refreshGradeRow(gradeId, {
+      insertIfMissing: true,
+    });
 
     let notificationFailed = false;
     if (
@@ -801,9 +802,9 @@ async function handleSaveGrades(e) {
       );
     }
 
-    if (notificationFailed) {
+    if (notificationFailed && gradeRowRefreshed) {
       showToast("Grades were saved, but some student notifications could not be sent.", "error");
-    } else {
+    } else if (gradeRowRefreshed) {
       showToast("Grades saved successfully!", "success");
     }
   } catch (err) {
@@ -994,6 +995,7 @@ async function loadGradesList(options = {}) {
     gradeListOffset = 0;
     gradeListHasMore = true;
     gradeListRenderedCount = 0;
+    loadedGradeRows = [];
     tbody.innerHTML = "";
   }
 
@@ -1077,29 +1079,11 @@ async function loadGradesList(options = {}) {
     gradeListOffset += grades.length;
     gradeListHasMore = grades.length === GRADE_LIST_PAGE_SIZE;
 
-    const filteredGrades = grades.filter((item) => {
-      const normalizedStatus = (item.status || "drafted").toLowerCase();
-      const itemStatus = normalizedStatus.includes("draft")
-        ? "drafted"
-        : "submitted";
-      const itemDate = getGradeLocalDate(item.created_at);
-      if (selectedStatus && itemStatus !== selectedStatus) return false;
-      if (startDate && itemDate !== startDate) return false;
-      if (!searchQuery) return true;
-
-      const categoryName = (
-        item.assessment_categories?.name || ""
-      ).toLowerCase();
-      const className = (item.classes?.name || "").toLowerCase();
-      const subjectName = (item.subjects?.name || "").toLowerCase();
-      const statusText = (item.status || "").toLowerCase();
-
-      return (
-        categoryName.includes(searchQuery) ||
-        className.includes(searchQuery) ||
-        subjectName.includes(searchQuery) ||
-        statusText.includes(searchQuery)
-      );
+    loadedGradeRows.push(...grades);
+    const filteredGrades = filterLoadedGradeRows(grades, {
+      searchQuery,
+      selectedStatus,
+      startDate,
     });
 
     if (filteredGrades.length === 0) {
@@ -1115,51 +1099,10 @@ async function loadGradesList(options = {}) {
     }
 
     tbody.querySelector('[data-grade-empty="true"]')?.remove();
-    tbody.insertAdjacentHTML("beforeend", filteredGrades
-      .map((item) => {
-        const gradeId = item.id || item.grade_id;
-
-        if (!gradeId) {
-          console.error("Missing ID for grade record:", item);
-        }
-
-        const rawStatus = (item.status || "draft").toLowerCase();
-        const isDraft = rawStatus.includes("draft");
-
-        const formattedDate = item.created_at
-          ? new Date(item.created_at).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-            })
-          : "N/A";
-
-        const categoryName = item.assessment_categories?.name || "N/A";
-        const className = item.classes?.name || "N/A";
-        const subjectName = item.subjects?.name || "N/A";
-        const studentCount = item.grade_records?.[0]?.count ?? 0;
-        const displayStatus = isDraft ? "Drafted" : "Submitted";
-
-        const actionButtonHTML = isDraft
-          ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${gradeId}">
-               <i class="fa-solid fa-pen"></i>
-             </button>`
-          : `<button class="grades-actions-btn view" title="View Grades" data-action="view" data-grade-id="${gradeId}">
-               <i class="fa-solid fa-eye"></i>
-             </button>`;
-
-        return `
-          <tr data-grade-id="${gradeId}" data-class-id="${item.class_id || ""}" data-subject-id="${item.subject_id || ""}" data-category-id="${item.category_id || ""}">
-            <td>${categoryName}</td>
-            <td>${className}</td>
-            <td>${subjectName}</td>
-            <td>${formattedDate}</td>
-            <td>${studentCount}</td>
-            <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
-            <td>${actionButtonHTML}</td>
-          </tr>
-        `;
-      })
-      .join(""));
+    tbody.insertAdjacentHTML(
+      "beforeend",
+      filteredGrades.map(renderGradeRow).join(""),
+    );
     gradeListRenderedCount += filteredGrades.length;
   } catch (err) {
     console.error("Error loading grades list:", err);
@@ -1181,6 +1124,166 @@ async function loadGradesList(options = {}) {
       gradeListRefreshPending = false;
       loadGradesList();
     }
+  }
+}
+
+function filterLoadedGradeRows(
+  rows = loadedGradeRows,
+  filters = {
+    searchQuery: (document.getElementById("gradeSearchInput")?.value || "")
+      .toLowerCase()
+      .trim(),
+    selectedStatus: document.getElementById("gradeToolbarStatusSelect")?.value,
+    startDate: document.getElementById("gradeToolbarStartDate")?.value,
+  },
+) {
+  const { searchQuery, selectedStatus, startDate } = filters;
+  return rows.filter((item) => {
+    const normalizedStatus = (item.status || "drafted").toLowerCase();
+    const itemStatus = normalizedStatus.includes("draft")
+      ? "drafted"
+      : "submitted";
+    if (selectedStatus && itemStatus !== selectedStatus) return false;
+    if (startDate && getGradeLocalDate(item.created_at) !== startDate) return false;
+    if (!searchQuery) return true;
+
+    const searchableFields = [
+      item.assessment_categories?.name,
+      item.classes?.name,
+      item.subjects?.name,
+      item.status,
+    ];
+    return searchableFields.some((value) =>
+      String(value || "").toLowerCase().includes(searchQuery),
+    );
+  });
+}
+
+function renderGradeRow(item) {
+  const gradeId = item.id || item.grade_id;
+  if (!gradeId) {
+    console.error("Missing ID for grade record:", item);
+    return "";
+  }
+
+  const isDraft = (item.status || "draft").toLowerCase().includes("draft");
+  const formattedDate = item.created_at
+    ? new Date(item.created_at).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+      })
+    : "N/A";
+  const actionButtonHTML = isDraft
+    ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${escapeGradeHtml(gradeId)}"><i class="fa-solid fa-pen"></i></button>`
+    : `<button class="grades-actions-btn view" title="View Grades" data-action="view" data-grade-id="${escapeGradeHtml(gradeId)}"><i class="fa-solid fa-eye"></i></button>`;
+
+  return `
+    <tr data-grade-id="${escapeGradeHtml(gradeId)}" data-class-id="${escapeGradeHtml(item.class_id || "")}" data-subject-id="${escapeGradeHtml(item.subject_id || "")}" data-category-id="${escapeGradeHtml(item.category_id || "")}">
+      <td>${escapeGradeHtml(item.assessment_categories?.name || "N/A")}</td>
+      <td>${escapeGradeHtml(item.classes?.name || "N/A")}</td>
+      <td>${escapeGradeHtml(item.subjects?.name || "N/A")}</td>
+      <td>${formattedDate}</td>
+      <td>${item.grade_records?.[0]?.count ?? 0}</td>
+      <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${isDraft ? "Drafted" : "Submitted"}</span></td>
+      <td>${actionButtonHTML}</td>
+    </tr>`;
+}
+
+function renderLoadedGradeRows() {
+  const tbody = document.getElementById("gradesTableBody");
+  if (!tbody) return;
+
+  const visibleRows = filterLoadedGradeRows();
+  if (!visibleRows.length) {
+    setGradeTableMessage(
+      tbody,
+      loadedGradeRows.length
+        ? "No grade records on this page match the selected filters."
+        : "No grade records found.",
+    );
+  } else {
+    tbody.innerHTML = visibleRows.map(renderGradeRow).join("");
+  }
+
+  gradeListRenderedCount = visibleRows.length;
+  const nextButton = document.getElementById("nextGradesPage");
+  if (nextButton) nextButton.hidden = !gradeListHasMore;
+}
+
+async function refreshGradeRow(gradeId, { insertIfMissing = false } = {}) {
+  if (!gradeId) return false;
+
+  try {
+    const client = window.supabaseClient || supabaseClient;
+    const { data: row, error } = await client
+      .from("grades")
+      .select(`
+        id,
+        status,
+        created_at,
+        created_by,
+        class_id,
+        subject_id,
+        category_id,
+        assessment_categories ( name ),
+        classes ( name ),
+        subjects ( name ),
+        grade_records ( count )
+      `)
+      .eq("id", gradeId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const existingIndex = loadedGradeRows.findIndex(
+      (item) => String(item.id) === String(gradeId),
+    );
+    if (!row) {
+      if (existingIndex >= 0) loadedGradeRows.splice(existingIndex, 1);
+      renderLoadedGradeRows();
+      return true;
+    }
+
+    const selectedClass = document.getElementById("gradeToolbarClassSelect")?.value;
+    const selectedSubject = document.getElementById("gradeToolbarSubjectSelect")?.value;
+    const selectedCategory = document.getElementById("gradeToolbarCategorySelect")?.value;
+    const matchesQueryFilters =
+      (!selectedClass || row.class_id === selectedClass) &&
+      (!selectedSubject || row.subject_id === selectedSubject) &&
+      (!selectedCategory || row.category_id === selectedCategory);
+
+    if (!matchesQueryFilters) {
+      if (existingIndex >= 0) loadedGradeRows.splice(existingIndex, 1);
+      renderLoadedGradeRows();
+      return true;
+    }
+
+    if (existingIndex >= 0) {
+      loadedGradeRows[existingIndex] = row;
+    } else if (insertIfMissing) {
+      loadedGradeRows.push(row);
+      loadedGradeRows.sort((a, b) => {
+        const dateOrder = String(b.created_at || "").localeCompare(String(a.created_at || ""));
+        return dateOrder || String(b.id).localeCompare(String(a.id));
+      });
+
+      const loadedRowLimit = Math.max(GRADE_LIST_PAGE_SIZE, gradeListOffset);
+      if (loadedGradeRows.length > loadedRowLimit) {
+        loadedGradeRows.pop();
+        gradeListHasMore = true;
+      }
+      gradeListOffset = loadedGradeRows.length;
+    }
+
+    renderLoadedGradeRows();
+    return true;
+  } catch (error) {
+    console.error("Could not refresh the saved grade row:", error);
+    showToast(
+      "Grades were saved, but the affected row could not be refreshed. Please refresh the page to see the latest record.",
+      "error",
+    );
+    return false;
   }
 }
 
@@ -1763,7 +1866,9 @@ document
         );
       }
 
-      if (typeof showToast === "function") {
+      closeModal(document.getElementById("editGradeModal"));
+      const gradeRowRefreshed = await refreshGradeRow(currentEditGradeId);
+      if (gradeRowRefreshed && typeof showToast === "function") {
         showToast(
           notificationFailed
             ? "Grades were updated, but some student notifications could not be sent."
@@ -1771,9 +1876,6 @@ document
           notificationFailed ? "error" : "success",
         );
       }
-
-      closeModal(document.getElementById("editGradeModal"));
-      if (typeof loadGradesList === "function") loadGradesList();
     } catch (err) {
       console.error("Error saving updated grades:", err);
       if (typeof showToast === "function") {
