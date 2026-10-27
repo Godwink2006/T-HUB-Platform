@@ -1,0 +1,511 @@
+:root {
+  font-family: "Poppins", sans-serif;
+  color: #172033;
+  background: #f4f6fa;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+.report-cards-page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.page-header h1 {
+  margin: 0;
+  color: #13213a;
+  font-size: 30px;
+}
+.page-header p {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 14px;
+  background: #fff;
+  padding: 18px;
+  border: 1px solid #e3e8f0;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+.filters select,
+.filters input {
+  height: 43px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid #d7deea;
+  border-radius: 7px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-weight: 400;
+}
+.roster-card {
+  background: #fff;
+  border: 1px solid #e3e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.roster-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e9edf4;
+}
+.roster-heading h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.roster-heading p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+.secondary-button,
+.pagination button,
+.primary-button,
+.icon-button,
+.row-button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 7px;
+}
+.secondary-button {
+  background: white;
+  border: 1px solid #d7deea;
+  padding: 9px 12px;
+  color: #334155;
+}
+.table-wrap {
+  overflow: auto;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 760px;
+}
+th,
+td {
+  text-align: left;
+  padding: 13px 16px;
+  border-bottom: 1px solid #edf0f5;
+  font-size: 13px;
+}
+th {
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+}
+td {
+  color: #26334a;
+}
+.student-name {
+  font-weight: 600;
+  color: #15233b;
+}
+.student-sub {
+  display: block;
+  color: #8490a3;
+  font-size: 11px;
+}
+.status-pill {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: #eef2f7;
+  color: #566276;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+.row-button {
+  border: 0;
+  background: #2563eb;
+  color: white;
+  padding: 8px 11px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.row-button:hover,
+.primary-button:hover {
+  background: #1d4ed8;
+}
+.table-message {
+  text-align: center;
+  color: #738096;
+  padding: 30px !important;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+.pagination button {
+  border: 1px solid #d7deea;
+  background: white;
+  padding: 8px 12px;
+  color: #334155;
+}
+.pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pagination span {
+  font-size: 13px;
+  color: #64748b;
+}
+.report-modal[hidden] {
+  display: none;
+}
+.report-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3vh 16px;
+  overflow: auto;
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+}
+.report-dialog {
+  position: relative;
+  width: min(100%, 1000px);
+  min-height: 80vh;
+  background: #eef1f5;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.25);
+}
+.dialog-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e3e8f0;
+}
+.dialog-toolbar h2 {
+  font-size: 17px;
+  margin: 0;
+}
+.dialog-toolbar p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 3px 0 0;
+}
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.primary-button {
+  padding: 10px 14px;
+  border: 0;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+.icon-button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #d7deea;
+  background: #fff;
+  color: #334155;
+}
+.print-sheet {
+  width: 100%;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 34px;
+  background: white;
+  min-height: 1000px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.1);
+  color: #111827;
+}
+.sheet-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 3px double #172033;
+  padding-bottom: 15px;
+  margin-bottom: 18px;
+}
+.sheet-logo {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+}
+.sheet-school {
+  text-align: center;
+  flex: 1;
+}
+.sheet-school h2 {
+  font-size: 21px;
+  margin: 0;
+  text-transform: uppercase;
+}
+.sheet-school p {
+  margin: 3px 0;
+  font-size: 12px;
+  color: #475569;
+}
+.sheet-title {
+  text-align: center;
+  margin: 10px 0 18px;
+}
+.sheet-title h3 {
+  font-size: 19px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sheet-title p {
+  margin: 4px 0;
+  color: #475569;
+  font-size: 12px;
+}
+.student-meta {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 9px 16px;
+  border: 1px solid #9aa4b2;
+  padding: 12px;
+  margin-bottom: 18px;
+  font-size: 12px;
+}
+.student-meta strong {
+  color: #334155;
+}
+.section-title {
+  font-size: 14px;
+  margin: 18px 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #cbd5e1;
+}
+.grade-table,
+.attendance-table {
+  min-width: 0;
+  width: 100%;
+}
+.grade-table th,
+.grade-table td,
+.attendance-table th,
+.attendance-table td {
+  padding: 8px 9px;
+  border: 1px solid #cbd5e1;
+  font-size: 11px;
+}
+.grade-table th,
+.attendance-table th {
+  background: #f1f5f9;
+  color: #26334a;
+}
+.grade-table td {
+  text-align: center;
+}
+.grade-table td:first-child,
+.grade-table th:first-child {
+  text-align: left;
+}
+.overall-average-row th,
+.overall-average-row td {
+  background: #f1f5f9;
+  border-top: 2px solid #94a3b8;
+  font-weight: 700;
+}
+.attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.attendance-stat {
+  border: 1px solid #cbd5e1;
+  padding: 10px;
+  text-align: center;
+}
+.attendance-stat b {
+  display: block;
+  font-size: 17px;
+}
+.attendance-stat span {
+  font-size: 10px;
+  color: #64748b;
+}
+.report-note {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 8px;
+}
+.remarks-cell {
+  text-align: left !important;
+}
+.signature-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+  margin: 55px 12px 0;
+  font-size: 11px;
+}
+.signature-line {
+  border-top: 1px solid #475569;
+  padding-top: 5px;
+  text-align: center;
+}
+.empty-report {
+  padding: 14px;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  text-align: center;
+  font-size: 12px;
+}
+.error-message {
+  color: #b91c1c;
+}
+.is-loading {
+  opacity: 0.65;
+  pointer-events: none;
+}
+@media (max-width: 800px) {
+  .report-cards-page {
+    padding: 18px 12px;
+  }
+  .filters {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
+    padding: 13px;
+  }
+  .page-header {
+    align-items: flex-start;
+  }
+  .page-header h1 {
+    font-size: 24px;
+  }
+  .print-sheet {
+    margin: 0;
+    padding: 18px;
+    min-height: unset;
+  }
+  .sheet-heading {
+    gap: 8px;
+  }
+  .sheet-logo {
+    width: 52px;
+    height: 52px;
+  }
+  .sheet-school h2 {
+    font-size: 15px;
+  }
+  .student-meta {
+    grid-template-columns: 1fr 1fr;
+  }
+  .report-modal {
+    padding: 0;
+  }
+  .report-dialog {
+    border-radius: 0;
+    min-height: 100vh;
+  }
+}
+@media (max-width: 480px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+  .roster-heading {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .attendance-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+  body {
+    background: white;
+  }
+  .report-cards-page,
+  .no-print,
+  .modal-backdrop {
+    display: none !important;
+  }
+  .report-modal {
+    position: static;
+    display: block !important;
+    padding: 0;
+    overflow: visible;
+  }
+  .report-dialog {
+    width: 100%;
+    min-height: 0;
+    box-shadow: none;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .print-sheet {
+    max-width: none;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  .table-wrap {
+    overflow: visible;
+  }
+  .grade-table,
+  .attendance-table {
+    min-width: 0;
+  }
+  .sheet-heading {
+    break-inside: avoid;
+  }
+  .grade-table,
+  .attendance-summary,
+  .signature-row {
+    break-inside: avoid;
+  }
+  .grade-table {
+    font-size: 10px;
+  }
+}

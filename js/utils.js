@@ -98,7 +98,11 @@ const ADMIN_ACCOUNTANT_PAGES = [
 
 const PARENT_ONLY_PAGES = ["parent-dashboard.html", "parent-records.html"];
 
-const ADMIN_TEACHER_PAGES = ["attendance.html", "grades.html"];
+const ADMIN_TEACHER_PAGES = [
+  "attendance.html",
+  "grades.html",
+  "student-report-cards.html",
+];
 
 const TEACHER_ONLY_PAGES = ["my-assignments.html"];
 
