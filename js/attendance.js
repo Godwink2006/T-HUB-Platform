@@ -881,9 +881,10 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
     );
     closeModal(document.getElementById("studentAttendanceModal"));
 
-    if (typeof loadAttendanceTable === "function") {
-      loadAttendanceTable();
-    }
+    await refreshAttendanceSessionRow(
+      savedAttendanceId || activeContext.id,
+      recordsPayload.length,
+    );
   } catch (err) {
     console.error("Attendance save failed:", err);
     showToast(getAttendanceErrorMessage(err, "save"), "error");
@@ -909,6 +910,7 @@ let allAttendanceList = [];
 let attendanceOffset = 0;
 let attendanceHasMore = true;
 let attendanceTableLoading = false;
+let attendanceViewerRole = "";
 const attendanceStudentCounts = new Map();
 
 async function loadAttendanceTable({ loadMore = false } = {}) {
@@ -982,6 +984,7 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
     );
 
     const role = String(profile?.role || "").toLowerCase();
+    attendanceViewerRole = role;
     if (role === "teacher") {
       query = query.eq("teacher_id", user.id);
     } else if (shouldFilterAttendanceToSubmitted(role)) {
@@ -1044,6 +1047,80 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
       loadMoreButton.disabled = false;
       loadMoreButton.textContent = "Next";
     }
+  }
+}
+
+async function refreshAttendanceSessionRow(attendanceId, studentCount = null) {
+  if (!attendanceId) return false;
+
+  try {
+    const { data: row, error } = await supabaseClient
+      .from("attendance")
+      .select(`
+        id,
+        date,
+        status,
+        class_id,
+        subject_id,
+        academic_year_id,
+        term_id,
+        classes(id, name),
+        subjects(id, name),
+        academic_years(id, year_label),
+        terms(id, name)
+      `)
+      .eq("id", attendanceId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const existingIndex = allAttendanceList.findIndex(
+      (item) => String(item.id) === String(attendanceId),
+    );
+    if (existingIndex >= 0) allAttendanceList.splice(existingIndex, 1);
+
+    const wasAlreadyLoaded = existingIndex >= 0;
+    const shouldHide =
+      !row ||
+      (attendanceViewerRole &&
+        shouldFilterAttendanceToSubmitted(attendanceViewerRole) &&
+        String(row.status || "").toLowerCase() !== "submitted");
+
+    if (shouldHide) {
+      attendanceStudentCounts.delete(String(attendanceId));
+    } else {
+      allAttendanceList.push(row);
+      allAttendanceList.sort((a, b) => {
+        const dateOrder = String(b.date || "").localeCompare(String(a.date || ""));
+        return dateOrder || String(a.id).localeCompare(String(b.id));
+      });
+
+      if (Number.isInteger(studentCount)) {
+        attendanceStudentCounts.set(String(attendanceId), studentCount);
+      }
+
+      const loadedRowLimit = Math.max(ATTENDANCE_PAGE_SIZE, attendanceOffset);
+      if (allAttendanceList.length > loadedRowLimit) {
+        const removed = allAttendanceList.pop();
+        if (removed?.id) attendanceStudentCounts.delete(String(removed.id));
+        if (!wasAlreadyLoaded) attendanceHasMore = true;
+      }
+    }
+
+    attendanceOffset = allAttendanceList.length;
+    await applyAttendanceFilters();
+    const loadMoreButton = document.getElementById("loadMoreAttendance");
+    if (loadMoreButton) {
+      loadMoreButton.hidden = !attendanceHasMore || allAttendanceList.length === 0;
+    }
+    return true;
+  } catch (error) {
+    console.error("Could not refresh the saved attendance row:", error);
+    showToast(
+      "Attendance was saved, but its row could not be refreshed. Please refresh the page to see the latest record.",
+      "error",
+    );
+    return false;
   }
 }
 
@@ -1798,9 +1875,10 @@ async function handleSaveEditAttendance() {
 
     closeModal(document.getElementById("editAttendanceModal"));
 
-    if (typeof loadAttendanceTable === "function") {
-      loadAttendanceTable();
-    }
+    await refreshAttendanceSessionRow(
+      currentEditingAttendanceId,
+      recordsPayload.length,
+    );
   } catch (err) {
     console.error("Attendance update failed:", err);
     showToast(getAttendanceErrorMessage(err, "save"), "error");
