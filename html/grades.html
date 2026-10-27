@@ -20,20 +20,23 @@
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
     />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-      <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="T-HUB" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body>
     <main class="grades-main-content">
@@ -45,7 +48,7 @@
           <button
             onclick="window.location.href = 'academics.html'"
             class="back-grades-btn"
-
+          >
             <i class="fa-solid fa-chevron-left"></i>
             Back
           </button>
@@ -76,11 +79,7 @@
           <option value="">All Assessment Categories</option>
         </select>
 
-        <input
-          type="date"
-          id="gradeToolbarStartDate"
-          aria-label="From date"
-        />
+        <input type="date" id="gradeToolbarStartDate" aria-label="From date" />
 
         <select id="gradeToolbarStatusSelect" aria-label="Filter by status">
           <option value="">All Statuses</option>
@@ -213,9 +212,7 @@
                   <th>Score</th>
                 </tr>
               </thead>
-              <tbody id="viewGradeTableBody">
-
-              </tbody>
+              <tbody id="viewGradeTableBody"></tbody>
             </table>
           </section>
 
@@ -250,8 +247,9 @@
               <p id="editModalAssessment"></p>
               <small
                 id="editModalCategoryMax"
-                style="color: #666; display: block">
-    </small>
+                style="color: #666; display: block"
+              >
+              </small>
             </div>
 
             <div class="details-item">
@@ -259,16 +257,17 @@
               <p id="editModalAssessmentPeriod"></p>
               <small
                 id="editModalPeriodMax"
-                style="color: #666; display: block">
-    </small>
+                style="color: #666; display: block"
+              >
+              </small>
             </div>
 
             <div class="details-item">
               <label>Effective Max Limit</label>
               <p
                 id="editModalMaxMarks"
-                style="font-weight: bold; color: #dc2626">
-    </p>
+                style="font-weight: bold; color: #dc2626"
+              ></p>
             </div>
 
             <div class="details-item">
@@ -310,9 +309,7 @@
                     <th>Score</th>
                   </tr>
                 </thead>
-                <tbody id="editGradeTableBody">
-
-                </tbody>
+                <tbody id="editGradeTableBody"></tbody>
               </table>
             </section>
 
@@ -320,8 +317,8 @@
               <button
                 type="button"
                 class="cancel-btn"
-                id="cancelEditGradeModal">
-
+                id="cancelEditGradeModal"
+              >
                 Cancel
               </button>
               <button type="submit" class="save-btn">Update Grades</button>
@@ -339,7 +336,6 @@
         </div>
 
         <div class="enterGrade-modal-body">
-
           <div class="details-grid">
             <div class="details-item">
               <label>Academic Year</label>
@@ -401,9 +397,7 @@
                     <th>Score</th>
                   </tr>
                 </thead>
-                <tbody id="gradeRosterTableBody">
-
-                </tbody>
+                <tbody id="gradeRosterTableBody"></tbody>
               </table>
             </section>
 
@@ -411,8 +405,8 @@
               <button
                 type="button"
                 class="cancel-btn"
-                id="cancelEnterGradeModal">
-
+                id="cancelEnterGradeModal"
+              >
                 Cancel
               </button>
               <button type="button" id="saveGradesBtn" class="save-btn">
@@ -430,6 +424,6 @@
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/grades.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>

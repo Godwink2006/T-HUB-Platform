@@ -221,7 +221,6 @@ body {
 
 .grades-pagination button {
   border: 0;
-  border-radius: 8px;
   padding: 11px 24px;
   background: #2563eb;
   color: #fff;
@@ -269,7 +268,6 @@ tr {
   display: inline-flex;
   align-items: center;
   padding: 5px 10px;
-  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
 }
@@ -533,7 +531,6 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
-
   .enterGrade-modal-content,
   .editGrade-modal-content {
     display: flex;
@@ -743,7 +740,7 @@ tr {
     height: 34px;
     width: 34px;
     font-size: 16px;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
   }
 
   .grade-modal-body,
@@ -800,14 +797,14 @@ tr {
   .grades-actions-btn {
     width: 34px;
     height: 34px;
-    border-radius: 8px;
+    border-radius: 10px;
   }
 
   .enterGrade-modal-content,
   .editGrade-modal-content,
   .grade-modal-content,
   .view-grade-modal-content {
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
   }
 
@@ -815,8 +812,8 @@ tr {
   .editGrade-modal-header,
   .grade-modal-header,
   .view-grade-modal-header {
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
   }
 
   .cancel-btn,
@@ -825,13 +822,14 @@ tr {
   .back-grades-btn,
   .toolbar input,
   .toolbar select,
-  .grades-actions-btn {
-    border-radius: 8px;
+  .grades-actions-btn,
+  .grades-pagination button,
+  .badge {
+    border-radius: 10px;
   }
 }
 
 @media screen and (max-width: 380px) {
-
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
