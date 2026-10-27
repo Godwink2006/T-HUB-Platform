@@ -84,6 +84,13 @@ function getAssessmentErrorMessage(error, action, entity) {
     return "This school is inactive. You can view existing information, but you cannot make changes until the school is reactivated.";
   }
 
+  if (
+    code === "23514" &&
+    /assessment is already in use|assessment.*already used|only start_date, end_date, and status|name cannot be changed/.test(diagnostic)
+  ) {
+    return "This assessment is already used by attendance or grades. Only its start date, end date, and status can be changed.";
+  }
+
   if (code === "23505") {
     if (
       entity === "category" &&
@@ -94,7 +101,17 @@ function getAssessmentErrorMessage(error, action, entity) {
     if (diagnostic.includes("unique_active_assessment_per_school")) {
       return "Only one assessment can be active per school. Deactivate the current active assessment first.";
     }
+    if (
+      diagnostic.includes("unique_school_year_assessment_name") ||
+      diagnostic.includes("unique_school_assessment_name")
+    ) {
+      return "An assessment with this name already exists for this school and academic year.";
+    }
     return `A ${itemName} with these details already exists.`;
+  }
+
+  if (code === "23503" && /academic_year/.test(diagnostic)) {
+    return "The selected academic year is no longer available. Refresh the page and choose an academic year again.";
   }
 
   if (
