@@ -42,6 +42,18 @@ function getAttendanceErrorMessage(error, action = "load") {
       ? "Attendance could not be saved. Please try again."
       : "Attendance could not be loaded. Please try again.";
   }
+  if (/choose an assessment before recording/.test(details)) {
+    return "Choose an assessment before recording attendance.";
+  }
+  if (/selected assessment does not exist/.test(details)) {
+    return "The selected assessment is no longer available. Refresh and choose an assessment again.";
+  }
+  if (
+    (code === "23514" || code === "P0001") &&
+    /assessment is not active for entry today|assessment.*date range|date range.*assessment/.test(details)
+  ) {
+    return "Attendance is closed for this assessment. Ask an administrator to check that it is Active and that today is within its start and end dates.";
+  }
   if (code === "42501" || /row-level security|permission denied|not authorized|not permitted/.test(details)) {
     return action === "save"
       ? "You do not have permission to save attendance. Check that your account is active and assigned to this school."
