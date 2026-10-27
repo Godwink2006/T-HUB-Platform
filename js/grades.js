@@ -1002,8 +1002,8 @@ async function loadGradesList(options = {}) {
   gradeListIsLoading = true;
   if (nextButton) {
     nextButton.disabled = true;
-    nextButton.hidden = false;
-    nextButton.textContent = "Loading...";
+    nextButton.hidden = !append;
+    nextButton.textContent = "Next";
   }
 
   const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")
