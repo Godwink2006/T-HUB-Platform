@@ -48,6 +48,9 @@ function getAttendanceErrorMessage(error, action = "load") {
   if (/selected assessment does not exist/.test(details)) {
     return "The selected assessment is no longer available. Refresh and choose an assessment again.";
   }
+  if (/selected .* is no longer active|outside the assessment dates/.test(details)) {
+    return "One of the selected attendance options is inactive, or the date is outside the assessment window. Refresh and select active options.";
+  }
   if (
     (code === "23514" || code === "P0001") &&
     /assessment is not active for entry today|assessment.*date range|date range.*assessment/.test(details)
@@ -181,49 +184,151 @@ function initModalEventListeners() {
 
 async function loadAcademicContext() {
   try {
-    const [yearRes, termRes, assessmentRes] = await Promise.all([
-      supabaseClient
-        .from("academic_years")
-        .select("id")
-        .ilike("status", "Active")
-        .limit(1)
-        .maybeSingle(),
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    if (authError) throw authError;
+    if (!authData?.user) return;
+
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("school_id")
+      .eq("id", authData.user.id)
+      .maybeSingle();
+    if (profileError) throw profileError;
+    if (!profile?.school_id) return;
+
+    const { data: activeYear, error: yearError } = await supabaseClient
+      .from("academic_years")
+      .select("id")
+      .eq("school_id", profile.school_id)
+      .ilike("status", "active")
+      .limit(1)
+      .maybeSingle();
+    if (yearError) throw yearError;
+
+    activeAcademicYearId = activeYear?.id || null;
+    window.activeAcademicYearId = activeAcademicYearId;
+    activeTermId = null;
+    activeAssessmentId = null;
+
+    if (!activeAcademicYearId) return;
+
+    const [termRes, assessmentRes] = await Promise.all([
       supabaseClient
         .from("terms")
         .select("id")
-        .ilike("status", "Active")
+        .eq("school_id", profile.school_id)
+        .eq("academic_year_id", activeAcademicYearId)
+        .ilike("status", "active")
         .limit(1)
         .maybeSingle(),
       supabaseClient
         .from("assessments")
         .select("id")
-        .ilike("status", "Active")
+        .eq("school_id", profile.school_id)
+        .eq("academic_year_id", activeAcademicYearId)
+        .ilike("status", "active")
+        .lte("start_date", getLocalDateString())
+        .gte("end_date", getLocalDateString())
         .limit(1)
         .maybeSingle(),
     ]);
 
-    const contextError = yearRes.error || termRes.error || assessmentRes.error;
-    if (contextError) {
-      console.error("Attendance academic context lookup failed:", contextError);
-      showToast(getAttendanceErrorMessage(contextError), "error");
-      return;
-    }
+    const contextError = termRes.error || assessmentRes.error;
+    if (contextError) throw contextError;
 
-    if (yearRes.data) {
-      activeAcademicYearId = yearRes.data.id;
-      window.activeAcademicYearId = yearRes.data.id;
-    }
-    if (termRes.data) {
-      activeTermId = termRes.data.id;
-      window.activeTermId = termRes.data.id;
-    }
-    if (assessmentRes.data) {
-      activeAssessmentId = assessmentRes.data.id;
-      window.activeAssessmentId = assessmentRes.data.id;
-    }
+    activeTermId = termRes.data?.id || null;
+    activeAssessmentId = assessmentRes.data?.id || null;
+    window.activeTermId = activeTermId;
+    window.activeAssessmentId = activeAssessmentId;
   } catch (err) {
     console.error("Error loading academic context:", err);
     showToast(getAttendanceErrorMessage(err), "error");
+  }
+}
+
+async function validateActiveAttendanceContext(context, schoolId, dateStr) {
+  const client = window.supabaseClient || supabaseClient;
+  const checks = [
+    {
+      label: "class",
+      query: client
+        .from("classes")
+        .select("id")
+        .eq("id", context.classId)
+        .eq("school_id", schoolId)
+        .ilike("status", "active")
+        .maybeSingle(),
+    },
+    {
+      label: "period",
+      query: client
+        .from("periods")
+        .select("id")
+        .eq("id", context.periodId)
+        .eq("school_id", schoolId)
+        .ilike("status", "active")
+        .maybeSingle(),
+    },
+    {
+      label: "academic year",
+      query: client
+        .from("academic_years")
+        .select("id")
+        .eq("id", context.academicYearId)
+        .eq("school_id", schoolId)
+        .ilike("status", "active")
+        .maybeSingle(),
+    },
+    {
+      label: "term",
+      query: client
+        .from("terms")
+        .select("id")
+        .eq("id", context.termId)
+        .eq("school_id", schoolId)
+        .eq("academic_year_id", context.academicYearId)
+        .ilike("status", "active")
+        .maybeSingle(),
+    },
+    {
+      label: "assessment",
+      query: client
+        .from("assessments")
+        .select("id")
+        .eq("id", context.assessmentId)
+        .eq("school_id", schoolId)
+        .eq("academic_year_id", context.academicYearId)
+        .ilike("status", "active")
+        .lte("start_date", dateStr)
+        .gte("end_date", dateStr)
+        .maybeSingle(),
+    },
+  ];
+
+  if (context.subjectId) {
+    checks.push({
+      label: "subject",
+      query: client
+        .from("subjects")
+        .select("id")
+        .eq("id", context.subjectId)
+        .eq("school_id", schoolId)
+        .ilike("status", "active")
+        .maybeSingle(),
+    });
+  }
+
+  const results = await Promise.all(
+    checks.map(async ({ label, query }) => ({ label, ...(await query) })),
+  );
+  const failedQuery = results.find((result) => result.error);
+  if (failedQuery) throw failedQuery.error;
+
+  const inactive = results.find((result) => !result.data);
+  if (inactive) {
+    throw new Error(
+      `The selected ${inactive.label} is no longer active or is outside the assessment dates. Refresh and select active attendance details.`,
+    );
   }
 }
 
@@ -496,7 +601,8 @@ async function handleClassSelectChange(classId) {
       `,
       )
       .eq("timetable_id", timetable.id)
-      .ilike("day_of_week", todayName);
+      .ilike("day_of_week", todayName)
+      .ilike("periods.status", "active");
     if (isTeacher) lessonsQuery = lessonsQuery.eq("teacher_id", user.id);
 
     const { data: lessons, error: lError } = await lessonsQuery;
@@ -552,6 +658,8 @@ async function loadDefaultPeriods(periodSelect, requestId) {
     const { data: defaultPeriods, error } = await supabaseClient
       .from("periods")
       .select("id, name, start_time, end_time")
+      .eq("school_id", currentAttendanceProfile?.school_id)
+      .ilike("status", "active")
       .order("name", { ascending: true });
 
     if (error) {
@@ -832,6 +940,18 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
+    const attendanceDate = activeContext.dateStr || getLocalDateString();
+    await validateActiveAttendanceContext(
+      {
+        ...activeContext,
+        academicYearId,
+        termId,
+        assessmentId,
+      },
+      schoolId,
+      attendanceDate,
+    );
+
     const statusDropdowns = document.querySelectorAll(
       ".attendance-status-dropdown",
     );
@@ -864,7 +984,7 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
         p_teacher_id: user.id,
         p_academic_year_id: academicYearId,
         p_term_id: termId,
-        p_date: activeContext.dateStr || getLocalDateString(),
+        p_date: attendanceDate,
         p_status: workflowStatus,
         p_attendance_id: activeContext.id || null,
         p_records: recordsPayload,
