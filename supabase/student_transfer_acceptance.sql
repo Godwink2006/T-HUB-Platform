@@ -54,6 +54,10 @@ set search_path = ''
 as $$
 declare
   v_actor_id uuid := auth.uid();
+  v_actor_role text;
+  v_actor_status text;
+  v_target_school_id uuid;
+  v_school_status text;
   v_transfer public.student_transfers%rowtype;
   v_student_name text;
   v_source_student_code text;
@@ -68,11 +72,28 @@ begin
     raise exception 'Enter a valid transfer code.';
   end if;
 
-  if not exists (
+  select lower(btrim(coalesce(profile.role::text, ''))),
+         lower(btrim(coalesce(profile.status::text, ''))),
+         profile.school_id,
+         lower(btrim(coalesce(school.status::text, '')))
+    into v_actor_role, v_actor_status, v_target_school_id, v_school_status
+  from public.profiles as profile
+  join public.schools as school on school.id = profile.school_id
+  where profile.id = v_actor_id;
+
+  if not found
+     or v_actor_status <> 'active'
+     or v_actor_role not in ('admin', 'accountant')
+     or v_school_status <> 'active' then
+    raise exception 'Only an active school administrator or accountant can receive student transfers.';
+  end if;
+
+  if v_actor_role = 'admin' and not exists (
     select 1 from public.student_transfer_admins as transfer_admin
     where transfer_admin.user_id = v_actor_id
+      and transfer_admin.school_id = v_target_school_id
   ) then
-    raise exception 'Your account is not authorized to receive student transfers.';
+    raise exception 'Your account is not authorized to receive student transfers for this school.';
   end if;
 
   select transfer.* into v_transfer
@@ -80,11 +101,7 @@ begin
   where transfer.code_hash = pg_catalog.decode(pg_catalog.lower(p_code_hash), 'hex')
     and transfer.status = 'code_issued'
     and transfer.code_expires_at > now()
-    and exists (
-      select 1 from public.student_transfer_admins as transfer_admin
-      where transfer_admin.user_id = v_actor_id
-        and transfer_admin.school_id <> transfer.source_school_id
-    );
+    and v_target_school_id <> transfer.source_school_id;
 
   if not found then
     raise exception 'Transfer code is invalid, expired, already used, or not valid for your school.';
@@ -143,6 +160,9 @@ as $$
 declare
   v_actor_id uuid := auth.uid();
   v_school_id uuid;
+  v_actor_role text;
+  v_actor_status text;
+  v_school_status text;
   v_transfer public.student_transfers%rowtype;
   v_target_class_name text;
   v_target_year_status text;
@@ -171,13 +191,32 @@ begin
     raise exception 'Enter a receiving-school student ID of 1 to 64 characters.';
   end if;
 
-  select transfer_admin.school_id into v_school_id
-  from public.student_transfer_admins as transfer_admin
-  where transfer_admin.user_id = v_actor_id
-    and transfer_admin.school_id in (
-      select class.school_id from public.classes as class where class.id = p_target_class_id
-    );
-  if v_school_id is null then
+  select lower(btrim(coalesce(profile.role::text, ''))),
+         lower(btrim(coalesce(profile.status::text, ''))),
+         profile.school_id,
+         lower(btrim(coalesce(school.status::text, '')))
+    into v_actor_role, v_actor_status, v_school_id, v_school_status
+  from public.profiles as profile
+  join public.schools as school on school.id = profile.school_id
+  where profile.id = v_actor_id;
+
+  if not found
+     or v_actor_role not in ('admin', 'accountant')
+     or v_actor_status <> 'active'
+     or v_school_status <> 'active'
+     or not exists (
+       select 1 from public.classes as class
+       where class.id = p_target_class_id
+         and class.school_id = v_school_id
+     ) then
+    raise exception 'Your account is not authorized for the selected receiving school.';
+  end if;
+
+  if v_actor_role = 'admin' and not exists (
+    select 1 from public.student_transfer_admins as transfer_admin
+    where transfer_admin.user_id = v_actor_id
+      and transfer_admin.school_id = v_school_id
+  ) then
     raise exception 'Your account is not authorized for the selected receiving school.';
   end if;
 

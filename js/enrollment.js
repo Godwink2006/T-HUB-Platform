@@ -343,12 +343,13 @@ document.addEventListener("DOMContentLoaded", () => {
       .eq("id", user.id)
       .single();
     if (profileError) throw profileError;
+    const role = String(profile.role || "").trim().toLowerCase();
     if (
-      profile.role !== "admin" ||
-      String(profile.status).toLowerCase() !== "active"
+      !["admin", "accountant"].includes(role) ||
+      String(profile.status || "").trim().toLowerCase() !== "active"
     ) {
       throw new Error(
-        "Only an active school administrator can receive a transfer.",
+        "Only an active school administrator or accountant can receive a transfer.",
       );
     }
     if (!profile.school_id)
@@ -402,14 +403,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     modalConfirm.disabled = true;
     modalConfirm.textContent = "Checking...";
+    let failureAction = "preview-transfer";
     try {
       const codeHash = await getTransferCodeHash();
-      const [{ data: preview, error: previewError }, targetOptions] =
-        await Promise.all([
-          client.rpc("preview_student_transfer", { p_code_hash: codeHash }),
-          loadTransferTargetOptions(client),
-        ]);
+      const [previewResult, optionsResult] = await Promise.allSettled([
+        client.rpc("preview_student_transfer", { p_code_hash: codeHash }),
+        loadTransferTargetOptions(client),
+      ]);
+
+      if (previewResult.status === "rejected") throw previewResult.reason;
+      const { data: preview, error: previewError } = previewResult.value;
       if (previewError) throw previewError;
+
+      failureAction = "options";
+      if (optionsResult.status === "rejected") throw optionsResult.reason;
+      const targetOptions = optionsResult.value;
 
       const classOptions = targetOptions.classes
         .map(
@@ -495,7 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
         acceptIncomingTransfer(codeHash, targetOptions.schoolId);
     } catch (err) {
       console.error("Could not preview student transfer:", err);
-      previewContainer.textContent = enrollmentErrorMessage(err, "preview-transfer");
+      previewContainer.textContent = enrollmentErrorMessage(err, failureAction);
     } finally {
       modalConfirm.disabled = false;
       if (modalConfirm.textContent === "Checking...")
