@@ -170,7 +170,12 @@ function initAttendanceModalLogic() {
       return;
     }
 
-    let lesson = currentTodayLessons.find((l) => l.period_id === periodId);
+    const origBtnText = loadStudentsBtn.textContent;
+    loadStudentsBtn.disabled = true;
+    loadStudentsBtn.textContent = "Loading Students...";
+
+    try {
+      let lesson = currentTodayLessons.find((l) => l.period_id === periodId);
     let subjectId = lesson ? lesson.subject_id : null;
     let subjectName = lesson?.subjects?.name || null;
 
@@ -230,7 +235,14 @@ function initAttendanceModalLogic() {
       termId: activeTermId || window.activeTermId,
       assessmentId: activeAssessmentId || window.activeAssessmentId,
       dateStr: getLocalDateString(),
-    });
+      });
+    } catch (err) {
+      console.error("Error loading students for attendance:", err);
+      showToast(err.message || "Failed to load students.", "error");
+    } finally {
+      loadStudentsBtn.disabled = false;
+      loadStudentsBtn.textContent = origBtnText;
+    }
   });
 
   studentForm?.addEventListener("submit", async (e) => {

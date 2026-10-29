@@ -113,7 +113,6 @@ function initGradeModalEventListeners() {
 }
 
 function resetGradeModal() {
-
   const form =
     document.getElementById("gradeForm") ||
     document.getElementById("gradeSetupForm");
@@ -201,7 +200,12 @@ async function populateClassOptions() {
       classesList = [
         ...new Map(
           (assignments || [])
-            .filter((a) => a.classes && (!a.classes.status || a.classes.status.toLowerCase() === "active"))
+            .filter(
+              (a) =>
+                a.classes &&
+                (!a.classes.status ||
+                  a.classes.status.toLowerCase() === "active"),
+            )
             .map((a) => [a.classes.id, a.classes]),
         ).values(),
       ];
@@ -283,7 +287,11 @@ async function handleClassSelectChange(classId) {
       if (assignedErr) console.error("Admin subject query error:", assignedErr);
 
       (assignedData || []).forEach((item) => {
-        if (item.subjects?.id && (!item.subjects.status || item.subjects.status.toLowerCase() === "active")) {
+        if (
+          item.subjects?.id &&
+          (!item.subjects.status ||
+            item.subjects.status.toLowerCase() === "active")
+        ) {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
@@ -314,7 +322,11 @@ async function handleClassSelectChange(classId) {
       if (teacherErr) console.error("Teacher subject query error:", teacherErr);
 
       (teacherData || []).forEach((item) => {
-        if (item.subjects?.id && (!item.subjects.status || item.subjects.status.toLowerCase() === "active")) {
+        if (
+          item.subjects?.id &&
+          (!item.subjects.status ||
+            item.subjects.status.toLowerCase() === "active")
+        ) {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
@@ -421,7 +433,6 @@ async function loadAcademicContext() {
     const client = window.supabaseClient || supabaseClient;
 
     const [yearRes, termRes, assessmentRes] = await Promise.all([
-
       client
         .from("academic_years")
         .select("id, year_label")
@@ -529,7 +540,10 @@ async function handleLoadStudents(e) {
     gradeCreatorMarkup = await getCurrentGradeActorMarkup(client);
   } catch (err) {
     console.error("Error loading grade creator identity:", err);
-    showToast("Unable to load your profile details. Please try again.", "error");
+    showToast(
+      "Unable to load your profile details. Please try again.",
+      "error",
+    );
     return;
   }
 
@@ -796,7 +810,10 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
       .select("id, photo_url")
       .in("id", activeStudentIds);
     if (profilesError) {
-      console.error("Could not load grade roster profile photos:", profilesError);
+      console.error(
+        "Could not load grade roster profile photos:",
+        profilesError,
+      );
     }
     const photoByStudentId = new Map(
       (studentProfiles || []).map((profile) => [profile.id, profile.photo_url]),
@@ -1053,7 +1070,6 @@ async function loadGradesList() {
     if (typeof showToast === "function") {
       showToast(`Failed to load grades: ${err.message}`, "error");
     }
-
   }
 }
 
@@ -1154,17 +1170,13 @@ async function handleViewGrades(gradeId) {
       );
 
     if (records.length === 0) {
-
       tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student marks recorded.</td></tr>`;
     } else {
-
       tbody.innerHTML = records
         .map((rec) => {
           const snapshot = identitySnapshots.get(rec.student_id);
           const idDisplay = escapeHtml(
-            rec.students?.student_id ||
-              snapshot?.student_code_snapshot ||
-              "-",
+            rec.students?.student_id || snapshot?.student_code_snapshot || "-",
           );
           const studentName = escapeHtml(
             rec.students?.profiles?.full_name ||
@@ -1360,10 +1372,8 @@ async function handleEditGrades(gradeId) {
       );
 
     if (records.length === 0) {
-
       tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student records found.</td></tr>`;
     } else {
-
       tbody.innerHTML = records
         .map((rec) => {
           const snapshot = identitySnapshots.get(rec.student_id);
@@ -1373,9 +1383,7 @@ async function handleEditGrades(gradeId) {
               "-",
           );
           const studentId = escapeHtml(
-            rec.students?.student_id ||
-              snapshot?.student_code_snapshot ||
-              "-",
+            rec.students?.student_id || snapshot?.student_code_snapshot || "-",
           );
           const studentPhoto = escapeHtml(
             rec.students?.profiles?.photo_url ||
@@ -1442,7 +1450,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-
       btn.disabled = true;
 
       if (action === "view") {
@@ -1623,7 +1630,9 @@ async function populateToolbarDropdowns() {
   const client = window.supabaseClient || supabaseClient;
 
   try {
-    const { data: { user } } = await client.auth.getUser();
+    const {
+      data: { user },
+    } = await client.auth.getUser();
     let role = "admin";
     if (user) {
       const { data: profile } = await client
@@ -1639,7 +1648,9 @@ async function populateToolbarDropdowns() {
     if (role === "teacher" && user) {
       let query = client
         .from("teacher_assignments")
-        .select("class_id, classes(id, name, status), subject_id, subjects(id, name, status)")
+        .select(
+          "class_id, classes(id, name, status), subject_id, subjects(id, name, status)",
+        )
         .eq("teacher_id", user.id)
         .ilike("status", "active");
 
@@ -1649,17 +1660,27 @@ async function populateToolbarDropdowns() {
 
       const [{ data: assignments }, categoryRes] = await Promise.all([
         query,
-        client.from("assessment_categories").select("id, name").ilike("status", "active").order("name"),
+        client
+          .from("assessment_categories")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
       ]);
 
       const classMap = new Map();
       const subjectMap = new Map();
 
       (assignments || []).forEach((a) => {
-        if (a.classes?.id && (!a.classes.status || a.classes.status.toLowerCase() === "active")) {
+        if (
+          a.classes?.id &&
+          (!a.classes.status || a.classes.status.toLowerCase() === "active")
+        ) {
           classMap.set(a.classes.id, a.classes.name);
         }
-        if (a.subjects?.id && (!a.subjects.status || a.subjects.status.toLowerCase() === "active")) {
+        if (
+          a.subjects?.id &&
+          (!a.subjects.status || a.subjects.status.toLowerCase() === "active")
+        ) {
           subjectMap.set(a.subjects.id, a.subjects.name);
         }
       });
@@ -1708,9 +1729,21 @@ async function populateToolbarDropdowns() {
       }
     } else {
       const [classRes, subjectRes, categoryRes] = await Promise.all([
-        client.from("classes").select("id, name").ilike("status", "active").order("name"),
-        client.from("subjects").select("id, name").ilike("status", "active").order("name"),
-        client.from("assessment_categories").select("id, name").ilike("status", "active").order("name"),
+        client
+          .from("classes")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
+        client
+          .from("subjects")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
+        client
+          .from("assessment_categories")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
       ]);
 
       if (classFilter && classRes.data) {
@@ -1758,7 +1791,6 @@ function handleToolbarFilter() {
   const rows = document.querySelectorAll("#gradesTableBody tr");
 
   rows.forEach((row) => {
-
     const textContent = row.textContent.toLowerCase();
     const rowClassId = row.dataset.classId;
     const rowSubjectId = row.dataset.subjectId;
@@ -1791,5 +1823,6 @@ function initToolbarListeners() {
   if (subjectFilter) subjectFilter.addEventListener("change", loadGradesList);
   if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
   if (statusFilter) statusFilter.addEventListener("change", loadGradesList);
-  if (startDateFilter) startDateFilter.addEventListener("change", loadGradesList);
+  if (startDateFilter)
+    startDateFilter.addEventListener("change", loadGradesList);
 }
