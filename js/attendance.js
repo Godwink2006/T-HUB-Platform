@@ -3,7 +3,6 @@ let activeTermId = null;
 let activeAssessmentId = null;
 let currentTodayLessons = [];
 let currentAttendanceProfile = null;
-let attendancePeriodRequestId = 0;
 
 let currentAttendanceSession = {
   classId: null,
@@ -28,87 +27,6 @@ function getLocalDateString() {
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function getAttendanceErrorMessage(error, action = "load") {
-  const code = String(error?.code || "").toUpperCase();
-  const details = [error?.message, error?.details, error?.hint]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  if (!error) {
-    return action === "save"
-      ? "Attendance could not be saved. Please try again."
-      : "Attendance could not be loaded. Please try again.";
-  }
-  if (/choose an assessment before recording/.test(details)) {
-    return "Choose an assessment before recording attendance.";
-  }
-  if (/selected assessment does not exist/.test(details)) {
-    return "The selected assessment is no longer available. Refresh and choose an assessment again.";
-  }
-  if (/selected .* is no longer active|outside the assessment dates/.test(details)) {
-    return "One of the selected attendance options is inactive, or the date is outside the assessment window. Refresh and select active options.";
-  }
-  if (
-    (code === "23514" || code === "P0001") &&
-    /assessment is not active for entry today|assessment.*date range|date range.*assessment/.test(details)
-  ) {
-    return "Attendance is closed for this assessment. Ask an administrator to check that it is Active and that today is within its start and end dates.";
-  }
-  if (code === "42501" || /row-level security|permission denied|not authorized|not permitted/.test(details)) {
-    return action === "save"
-      ? "You do not have permission to save attendance. Check that your account is active and assigned to this school."
-      : "You do not have permission to view these attendance records. Check that your account is active and assigned to this school.";
-  }
-  if (/school.{0,30}(inactive|not active)|inactive.{0,30}school/.test(details)) {
-    return "This school is inactive, so attendance cannot be changed. Contact your school administrator.";
-  }
-  if (/graduated|transferred/.test(details) && /attendance|student/.test(details)) {
-    return "Attendance cannot be saved for a student who has graduated or transferred out.";
-  }
-  if (/does not belong to the selected class|not belong to.*class|wrong class/.test(details)) {
-    return "One or more selected students are no longer in this class. Reload the class roster and try again.";
-  }
-  if (code === "401" || code === "PGRST301" || /jwt expired|invalid jwt|not authenticated/.test(details)) {
-    return "Your session has expired. Sign in again, then retry.";
-  }
-  if (/failed to fetch|network|timed out|timeout|fetch error/.test(details)) {
-    return "The server could not be reached. Check your connection and try again.";
-  }
-  if (/duplicate key|already exists|unique constraint/.test(details)) {
-    return "Attendance has already been recorded for this class, period, and date. Refresh the page to see the latest record.";
-  }
-  if (/foreign key|violates.*constraint|invalid input syntax|invalid.*uuid/.test(details)) {
-    return "Some attendance details are no longer valid. Refresh the page and try again.";
-  }
-  if (code === "PGRST116") {
-    return "A required record could not be found. Refresh the page and try again.";
-  }
-  return action === "save"
-    ? "Attendance could not be saved. Please check your selections and try again."
-    : "Attendance could not be loaded. Please try again.";
-}
-
-function setAttendanceTableError(message) {
-  attendanceNeedsReconnectRefresh = true;
-  const tbody = document.getElementById("attendanceTableBody");
-  if (!tbody) return;
-  const row = document.createElement("tr");
-  const cell = document.createElement("td");
-  cell.colSpan = 8;
-  cell.style.cssText = "text-align:center; color:#dc2626; padding:16px;";
-  cell.textContent = message;
-  const retryButton = document.createElement("button");
-  retryButton.type = "button";
-  retryButton.textContent = "Try again";
-  retryButton.style.cssText = "display:block; margin:10px auto 0; cursor:pointer;";
-  retryButton.addEventListener("click", () => loadAttendanceTable());
-  cell.appendChild(document.createElement("br"));
-  cell.appendChild(retryButton);
-  row.appendChild(cell);
-  tbody.replaceChildren(row);
 }
 
 function lockAttendanceBodyScroll() {
@@ -138,6 +56,7 @@ function closeModal(modal) {
 document.addEventListener("DOMContentLoaded", () => {
   initModalEventListeners();
   initAttendanceModalLogic();
+  loadAcademicContext();
 });
 
 function initModalEventListeners() {
@@ -153,10 +72,7 @@ function initModalEventListeners() {
     ?.addEventListener("click", async () => {
       resetAttendanceModal();
       openModal(attendanceModal);
-        await Promise.all([
-          populateClassOptions(),
-          loadAcademicContext(),
-        ]);
+      await populateClassOptions();
     });
 
   document
@@ -194,151 +110,41 @@ function initModalEventListeners() {
 
 async function loadAcademicContext() {
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    if (!authData?.user) return;
-
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("school_id")
-      .eq("id", authData.user.id)
-      .maybeSingle();
-    if (profileError) throw profileError;
-    if (!profile?.school_id) return;
-
-    const { data: activeYear, error: yearError } = await supabaseClient
-      .from("academic_years")
-      .select("id")
-      .eq("school_id", profile.school_id)
-      .ilike("status", "active")
-      .limit(1)
-      .maybeSingle();
-    if (yearError) throw yearError;
-
-    activeAcademicYearId = activeYear?.id || null;
-    window.activeAcademicYearId = activeAcademicYearId;
-    activeTermId = null;
-    activeAssessmentId = null;
-
-    if (!activeAcademicYearId) return;
-
-    const [termRes, assessmentRes] = await Promise.all([
+    const [yearRes, termRes, assessmentRes] = await Promise.all([
+      supabaseClient
+        .from("academic_years")
+        .select("id")
+        .ilike("status", "Active")
+        .limit(1)
+        .maybeSingle(),
       supabaseClient
         .from("terms")
         .select("id")
-        .eq("school_id", profile.school_id)
-        .eq("academic_year_id", activeAcademicYearId)
-        .ilike("status", "active")
+        .ilike("status", "Active")
         .limit(1)
         .maybeSingle(),
       supabaseClient
         .from("assessments")
         .select("id")
-        .eq("school_id", profile.school_id)
-        .eq("academic_year_id", activeAcademicYearId)
-        .ilike("status", "active")
-        .lte("start_date", getLocalDateString())
-        .gte("end_date", getLocalDateString())
+        .ilike("status", "Active")
         .limit(1)
         .maybeSingle(),
     ]);
 
-    const contextError = termRes.error || assessmentRes.error;
-    if (contextError) throw contextError;
-
-    activeTermId = termRes.data?.id || null;
-    activeAssessmentId = assessmentRes.data?.id || null;
-    window.activeTermId = activeTermId;
-    window.activeAssessmentId = activeAssessmentId;
+    if (yearRes.data) {
+      activeAcademicYearId = yearRes.data.id;
+      window.activeAcademicYearId = yearRes.data.id;
+    }
+    if (termRes.data) {
+      activeTermId = termRes.data.id;
+      window.activeTermId = termRes.data.id;
+    }
+    if (assessmentRes.data) {
+      activeAssessmentId = assessmentRes.data.id;
+      window.activeAssessmentId = assessmentRes.data.id;
+    }
   } catch (err) {
     console.error("Error loading academic context:", err);
-    showToast(getAttendanceErrorMessage(err), "error");
-  }
-}
-
-async function validateActiveAttendanceContext(context, schoolId, dateStr) {
-  const client = window.supabaseClient || supabaseClient;
-  const checks = [
-    {
-      label: "class",
-      query: client
-        .from("classes")
-        .select("id")
-        .eq("id", context.classId)
-        .eq("school_id", schoolId)
-        .ilike("status", "active")
-        .maybeSingle(),
-    },
-    {
-      label: "period",
-      query: client
-        .from("periods")
-        .select("id")
-        .eq("id", context.periodId)
-        .eq("school_id", schoolId)
-        .ilike("status", "active")
-        .maybeSingle(),
-    },
-    {
-      label: "academic year",
-      query: client
-        .from("academic_years")
-        .select("id")
-        .eq("id", context.academicYearId)
-        .eq("school_id", schoolId)
-        .ilike("status", "active")
-        .maybeSingle(),
-    },
-    {
-      label: "term",
-      query: client
-        .from("terms")
-        .select("id")
-        .eq("id", context.termId)
-        .eq("school_id", schoolId)
-        .eq("academic_year_id", context.academicYearId)
-        .ilike("status", "active")
-        .maybeSingle(),
-    },
-    {
-      label: "assessment",
-      query: client
-        .from("assessments")
-        .select("id")
-        .eq("id", context.assessmentId)
-        .eq("school_id", schoolId)
-        .eq("academic_year_id", context.academicYearId)
-        .ilike("status", "active")
-        .lte("start_date", dateStr)
-        .gte("end_date", dateStr)
-        .maybeSingle(),
-    },
-  ];
-
-  if (context.subjectId) {
-    checks.push({
-      label: "subject",
-      query: client
-        .from("subjects")
-        .select("id")
-        .eq("id", context.subjectId)
-        .eq("school_id", schoolId)
-        .ilike("status", "active")
-        .maybeSingle(),
-    });
-  }
-
-  const results = await Promise.all(
-    checks.map(async ({ label, query }) => ({ label, ...(await query) })),
-  );
-  const failedQuery = results.find((result) => result.error);
-  if (failedQuery) throw failedQuery.error;
-
-  const inactive = results.find((result) => !result.data);
-  if (inactive) {
-    throw new Error(
-      `The selected ${inactive.label} is no longer active or is outside the assessment dates. Refresh and select active attendance details.`,
-    );
   }
 }
 
@@ -364,68 +170,51 @@ function initAttendanceModalLogic() {
       return;
     }
 
-    const originalButtonText = loadStudentsBtn.textContent;
-    loadStudentsBtn.disabled = true;
-    loadStudentsBtn.setAttribute("aria-busy", "true");
-    loadStudentsBtn.textContent = "Loading...";
-
-    try {
     let lesson = currentTodayLessons.find((l) => l.period_id === periodId);
     let subjectId = lesson ? lesson.subject_id : null;
     let subjectName = lesson?.subjects?.name || null;
 
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) {
-      showToast(getAttendanceErrorMessage(authError), "error");
-      return;
-    }
-    const user = authData?.user;
+    const user = (await supabaseClient.auth.getUser()).data?.user;
     let profile = null;
 
-    if (!user) {
-      showToast("Your session has expired. Sign in again, then retry.", "error");
-      return;
-    }
+    if (user) {
+      let assignQuery = supabaseClient
+        .from("teacher_assignments")
+        .select("subject_id, subjects(id, name, status)")
+        .eq("class_id", classId)
+        .eq("teacher_id", user.id)
+        .ilike("status", "active");
 
-    {
+      const activeYearId = activeAcademicYearId || window.activeAcademicYearId;
+      if (activeYearId) {
+        assignQuery = assignQuery.eq("academic_year_id", activeYearId);
+      }
+
       const [profileRes, assignmentRes] = await Promise.all([
         supabaseClient
           .from("profiles")
           .select("full_name, school_id, photo_url, teachers(staff_id)")
           .eq("id", user.id)
           .maybeSingle(),
-        supabaseClient
-          .from("teacher_assignments")
-          .select("subject_id, subjects(id, name)")
-          .eq("class_id", classId)
-          .eq("teacher_id", user.id)
-          .limit(1)
-          .maybeSingle(),
+        assignQuery.limit(1).maybeSingle(),
       ]);
 
-      if (profileRes.error) {
-        showToast(getAttendanceErrorMessage(profileRes.error), "error");
-        return;
-      }
-      if (assignmentRes.error) {
-        showToast(getAttendanceErrorMessage(assignmentRes.error), "error");
-        return;
-      }
-
       if (profileRes.data) profile = profileRes.data;
-      if (!profile?.school_id) {
-        showToast("Your account is not linked to a school. Contact your school administrator.", "error");
-        return;
-      }
       if (!subjectName && assignmentRes.data?.subjects) {
         subjectId = assignmentRes.data.subjects.id;
         subjectName = assignmentRes.data.subjects.name;
+      }
+
+      const role = String(profile?.role || "").toLowerCase();
+      if (role === "teacher" && (!assignmentRes.data || !subjectId)) {
+        showToast("You do not have an active assignment for this class/subject.", "error");
+        return;
       }
     }
 
     closeModal(document.getElementById("attendanceModal"));
 
-    await openStudentAttendanceModal({
+    openStudentAttendanceModal({
       classId: classId,
       className: className,
       periodId: periodId,
@@ -442,14 +231,6 @@ function initAttendanceModalLogic() {
       assessmentId: activeAssessmentId || window.activeAssessmentId,
       dateStr: getLocalDateString(),
     });
-    } catch (error) {
-      console.error("Could not load attendance students:", error);
-      showToast(getAttendanceErrorMessage(error), "error");
-    } finally {
-      loadStudentsBtn.disabled = false;
-      loadStudentsBtn.removeAttribute("aria-busy");
-      loadStudentsBtn.textContent = originalButtonText;
-    }
   });
 
   studentForm?.addEventListener("submit", async (e) => {
@@ -467,15 +248,10 @@ async function populateClassOptions() {
   if (!classSelect) return;
   classSelect.innerHTML = `<option value="">Select Class</option>`;
 
-  try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    const user = authData?.user;
-    if (!user) {
-      showToast("Your session has expired. Sign in again, then retry.", "error");
-      return;
-    }
+  const user = (await supabaseClient.auth.getUser()).data?.user;
+  if (!user) return;
 
+  try {
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("id, role, school_id")
@@ -496,26 +272,28 @@ async function populateClassOptions() {
         .from("classes")
         .select("id, name")
         .eq("school_id", profile.school_id)
-        .ilike("status", "active")
         .order("name");
       if (error) throw error;
       classes = data || [];
     } else if (role === "teacher") {
-      const { data: assignments, error } = await supabaseClient
+      let query = supabaseClient
         .from("teacher_assignments")
         .select("class_id, classes(id, name, status)")
-        .eq("teacher_id", user.id);
+        .eq("teacher_id", user.id)
+        .ilike("status", "active");
+
+      const activeYearId = activeAcademicYearId || window.activeAcademicYearId;
+      if (activeYearId) {
+        query = query.eq("academic_year_id", activeYearId);
+      }
+
+      const { data: assignments, error } = await query;
       if (error) throw error;
 
       classes = [
         ...new Map(
           (assignments || [])
-            .filter(
-              (assignment) =>
-                assignment.classes &&
-                String(assignment.classes.status || "").toLowerCase() ===
-                  "active",
-            )
+            .filter((assignment) => assignment.classes && (!assignment.classes.status || assignment.classes.status.toLowerCase() === "active"))
             .map((assignment) => [
               assignment.classes.id,
               assignment.classes,
@@ -534,18 +312,26 @@ async function populateClassOptions() {
     });
 
     if (classes.length === 0) {
+      classSelect.innerHTML = `<option value="">${role === "admin" ? "No classes available" : "No active class assignments"}</option>`;
+      classSelect.disabled = true;
+      const addBtn = document.getElementById("addAttendance");
+      if (role === "teacher" && addBtn) {
+        addBtn.disabled = true;
+        addBtn.title = "No active class assignments";
+      }
       showToast(
         role === "admin"
           ? "No classes are available for your school."
-          : "No classes are assigned to your account.",
-        "error",
+          : "You do not have any active class assignments.",
+        "warning",
       );
+    } else {
+      classSelect.disabled = false;
     }
   } catch (error) {
     currentAttendanceProfile = null;
     console.error("Error fetching attendance classes:", error);
-    classSelect.replaceChildren(new Option("Classes could not be loaded", ""));
-    showToast(getAttendanceErrorMessage(error), "error");
+    showToast(error.message || "Could not load classes for attendance.", "error");
   }
 }
 
@@ -553,54 +339,66 @@ async function handleClassSelectChange(classId) {
   const periodSelect = document.getElementById("attendancePeriodSelect");
   if (!periodSelect) return;
 
-  const requestId = ++attendancePeriodRequestId;
   periodSelect.innerHTML = `<option value="">Select Period</option>`;
   periodSelect.disabled = true;
   currentTodayLessons = [];
 
   if (!classId) return;
 
-  const todayName = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-  }).format(new Date());
+  const IS_DEV_MODE = true;
+
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+  ];
+  let todayName = days[new Date().getDay()];
+
+  if (IS_DEV_MODE && (todayName === "Saturday" || todayName === "Sunday")) {
+    console.warn("DEV MODE: Defaulting weekend to Monday for testing...");
+    todayName = "Monday";
+  }
+
+  console.log(`Checking timetable for Class: ${classId} on Day: ${todayName}`);
 
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    const user = authData?.user;
-    if (requestId !== attendancePeriodRequestId) return;
-    if (!user) return setPeriodSelectMessage(periodSelect, "Sign in to load periods.");
+    const user = (await supabaseClient.auth.getUser()).data?.user;
+    if (!user) {
+      await loadDefaultPeriods(periodSelect);
+      return;
+    }
     const profile =
       currentAttendanceProfile?.id === user.id
         ? currentAttendanceProfile
         : null;
-    const role = String(profile?.role || "").toLowerCase();
-    const isAdmin = role === "admin";
-    const isTeacher = role === "teacher";
-    if (!isAdmin && !isTeacher) {
-      return setPeriodSelectMessage(periodSelect, "Only teachers and administrators can take attendance.");
-    }
+    const isAdmin = String(profile?.role || "").toLowerCase() === "admin";
 
-    let timetablesQuery = supabaseClient
+    let ttQuery = supabaseClient
       .from("timetables")
-      .select("id, created_at")
+      .select("id")
       .eq("class_id", classId)
       .ilike("status", "active");
-    if (profile?.school_id) timetablesQuery = timetablesQuery.eq("school_id", profile.school_id);
 
-    const { data: timetables, error: ttError } = await timetablesQuery
-      .order("created_at", { ascending: false })
-      .limit(1);
-    if (requestId !== attendancePeriodRequestId) return;
-
-    if (ttError) {
-      console.error("Active timetable lookup failed:", ttError);
-      return setPeriodSelectMessage(periodSelect, "Could not load the class timetable.");
+    const activeYearId = activeAcademicYearId || window.activeAcademicYearId;
+    if (activeYearId) {
+      ttQuery = ttQuery.eq("academic_year_id", activeYearId);
     }
-    const timetable = timetables?.[0];
-    if (!timetable) {
-      if (isAdmin) await loadDefaultPeriods(periodSelect, requestId);
-      else setPeriodSelectMessage(periodSelect, "No active timetable is set for this class and academic year.");
+
+    const { data: timetable, error: ttError } = await ttQuery
+      .limit(1)
+      .maybeSingle();
+
+    if (ttError || !timetable) {
+      console.warn("No active timetable found for this class.");
+      if (isAdmin) {
+        await loadDefaultPeriods(periodSelect);
+      } else {
+        periodSelect.innerHTML = `<option value="">No active timetable for this class</option>`;
+        periodSelect.disabled = true;
+      }
       return;
     }
 
@@ -617,76 +415,74 @@ async function handleClassSelectChange(classId) {
       `,
       )
       .eq("timetable_id", timetable.id)
-      .ilike("day_of_week", todayName)
-      .ilike("periods.status", "active");
-    if (isTeacher) lessonsQuery = lessonsQuery.eq("teacher_id", user.id);
+      .ilike("day_of_week", todayName);
+    if (!isAdmin) lessonsQuery = lessonsQuery.eq("teacher_id", user.id);
 
     const { data: lessons, error: lError } = await lessonsQuery;
-    if (requestId !== attendancePeriodRequestId) return;
 
     if (lError) {
       console.error("Timetable query error:", lError);
-      setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(lError));
+      await loadDefaultPeriods(periodSelect);
       return;
     }
 
-    const teachingLessons = (lessons || []).filter((lesson) => !lesson.is_break && lesson.periods?.id);
-    if (teachingLessons.length === 0) {
-      setPeriodSelectMessage(
-        periodSelect,
-        isTeacher ? `You have no lessons scheduled for ${todayName}.` : `No lessons are scheduled for ${todayName}.`,
+    if (!lessons || lessons.length === 0) {
+      console.warn(
+        `No lessons found for teacher (${user.id}) on ${todayName}.`,
       );
+      if (isAdmin) {
+        await loadDefaultPeriods(periodSelect);
+      } else {
+        periodSelect.innerHTML = `<option value="">No active lessons scheduled for today</option>`;
+        periodSelect.disabled = true;
+      }
       return;
     }
 
-    currentTodayLessons = teachingLessons;
+    currentTodayLessons = lessons;
 
-    teachingLessons.forEach((lesson) => {
-      const period = lesson.periods;
-      const startTime = period.start_time ? period.start_time.slice(0, 5) : "";
-      const endTime = period.end_time ? period.end_time.slice(0, 5) : "";
-      const timeRange = startTime && endTime ? ` (${startTime} - ${endTime})` : "";
-      const subjectLabel = lesson.subjects?.name ? ` - ${lesson.subjects.name}` : "";
-      const opt = document.createElement("option");
-      opt.value = period.id;
-      opt.textContent = `${period.name || "Period"}${timeRange}${subjectLabel}`;
-      periodSelect.appendChild(opt);
+    lessons.forEach((l) => {
+      if (l.is_break === true) return;
+
+      if (l.periods) {
+        const periodName = l.periods.name || "";
+        const startTime = l.periods.start_time
+          ? l.periods.start_time.slice(0, 5)
+          : "";
+        const endTime = l.periods.end_time
+          ? l.periods.end_time.slice(0, 5)
+          : "";
+        const timeRange =
+          startTime && endTime ? ` (${startTime} - ${endTime})` : "";
+        const subjectLabel = l.subjects?.name ? ` - ${l.subjects.name}` : "";
+
+        const opt = document.createElement("option");
+        opt.value = l.periods.id;
+        opt.textContent = `${periodName}${timeRange}${subjectLabel}`;
+        periodSelect.appendChild(opt);
+      }
     });
 
     periodSelect.disabled = false;
   } catch (err) {
     console.error("Error in handleClassSelectChange:", err);
-    if (requestId === attendancePeriodRequestId) {
-      setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(err));
-    }
+    await loadDefaultPeriods(periodSelect);
   }
 }
 
-function setPeriodSelectMessage(periodSelect, message) {
-  periodSelect.replaceChildren(new Option(message, ""));
-  periodSelect.disabled = true;
-}
-
-async function loadDefaultPeriods(periodSelect, requestId) {
+async function loadDefaultPeriods(periodSelect) {
   if (!periodSelect) return;
 
   try {
     const { data: defaultPeriods, error } = await supabaseClient
       .from("periods")
       .select("id, name, start_time, end_time")
-      .eq("school_id", currentAttendanceProfile?.school_id)
-      .ilike("status", "active")
       .order("name", { ascending: true });
 
     if (error) {
       console.error("Error loading default periods:", error);
-      if (requestId === attendancePeriodRequestId) {
-        setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(error));
-      }
       return;
     }
-
-    if (requestId !== attendancePeriodRequestId) return;
 
     if (defaultPeriods && defaultPeriods.length > 0) {
       defaultPeriods.forEach((p) => {
@@ -710,13 +506,8 @@ async function loadDefaultPeriods(periodSelect, requestId) {
     }
   } catch (err) {
     console.error("Exception in loadDefaultPeriods:", err);
-    if (requestId === attendancePeriodRequestId) {
-      setPeriodSelectMessage(periodSelect, getAttendanceErrorMessage(err));
-    }
   } finally {
-    if (requestId === attendancePeriodRequestId) {
-      periodSelect.disabled = periodSelect.options.length <= 1;
-    }
+    periodSelect.disabled = false;
   }
 }
 
@@ -774,8 +565,7 @@ async function loadRosterIntoModal(classId) {
 
     if (studentErr) {
       console.error("Error fetching active students:", studentErr);
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">${escapeHtml(getAttendanceErrorMessage(studentErr))}</td></tr>`;
-      showToast(getAttendanceErrorMessage(studentErr), "error");
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Error loading students: ${escapeHtml(studentErr.message)}</td></tr>`;
       return;
     }
 
@@ -823,7 +613,7 @@ async function loadRosterIntoModal(classId) {
           </span>
         </td>
         <td style="padding: 10px 12px;">
-          <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 0.5px solid rgb(219, 215, 215); width: 100%;">
+          <select class="attendance-status-dropdown" data-student-id="${escapeHtml(student.id)}" style="padding: 6px 10px; border: 2px solid rgb(219, 215, 215); width: 100%;">
             <option value="present">Present</option>
             <option value="absent">Absent</option>
           </select>
@@ -833,9 +623,7 @@ async function loadRosterIntoModal(classId) {
     });
   } catch (err) {
     console.error("Roster exception:", err);
-    const message = getAttendanceErrorMessage(err);
-    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">${escapeHtml(message)}</td></tr>`;
-    showToast(message, "error");
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Failed to load roster.</td></tr>`;
   }
 }
 
@@ -854,9 +642,7 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
 
   try {
     const activeContext = currentAttendanceSession;
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    const user = authData?.user;
+    const user = (await supabaseClient.auth.getUser()).data?.user;
 
     if (!user) {
       showToast("Session expired. Please log in again.", "error");
@@ -872,12 +658,11 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
 
     let schoolId = activeContext.schoolId;
     if (!schoolId) {
-      const { data: profile, error: profileError } = await supabaseClient
+      const { data: profile } = await supabaseClient
         .from("profiles")
         .select("school_id")
         .eq("id", user.id)
         .maybeSingle();
-      if (profileError) throw profileError;
 
       schoolId = profile?.school_id;
     }
@@ -893,14 +678,13 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       window.activeAcademicYearId;
 
     if (!academicYearId) {
-      const { data: activeYear, error: yearError } = await supabaseClient
+      const { data: activeYear } = await supabaseClient
         .from("academic_years")
         .select("id")
         .eq("school_id", schoolId)
         .ilike("status", "Active")
         .limit(1)
         .maybeSingle();
-      if (yearError) throw yearError;
 
       academicYearId = activeYear?.id;
     }
@@ -913,14 +697,13 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
     let termId = activeContext.termId || activeTermId || window.activeTermId;
 
     if (!termId) {
-      const { data: activeTerm, error: termError } = await supabaseClient
+      const { data: activeTerm } = await supabaseClient
         .from("terms")
         .select("id")
         .eq("academic_year_id", academicYearId)
         .ilike("status", "Active")
         .limit(1)
         .maybeSingle();
-      if (termError) throw termError;
 
       termId = activeTerm?.id;
     }
@@ -936,14 +719,13 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       window.activeAssessmentId;
 
     if (!assessmentId) {
-      const { data: activeAssessment, error: assessmentError } = await supabaseClient
+      const { data: activeAssessment } = await supabaseClient
         .from("assessments")
         .select("id")
         .eq("term_id", termId)
         .ilike("status", "Active")
         .limit(1)
         .maybeSingle();
-      if (assessmentError) throw assessmentError;
 
       assessmentId = activeAssessment?.id;
     }
@@ -955,18 +737,6 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       );
       return;
     }
-
-    const attendanceDate = activeContext.dateStr || getLocalDateString();
-    await validateActiveAttendanceContext(
-      {
-        ...activeContext,
-        academicYearId,
-        termId,
-        assessmentId,
-      },
-      schoolId,
-      attendanceDate,
-    );
 
     const statusDropdowns = document.querySelectorAll(
       ".attendance-status-dropdown",
@@ -1000,14 +770,14 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
         p_teacher_id: user.id,
         p_academic_year_id: academicYearId,
         p_term_id: termId,
-        p_date: attendanceDate,
+        p_date: activeContext.dateStr || getLocalDateString(),
         p_status: workflowStatus,
         p_attendance_id: activeContext.id || null,
         p_records: recordsPayload,
       });
 
     if (rpcError) {
-      showToast(getAttendanceErrorMessage(rpcError, "save"), "error");
+      showToast(`Error saving attendance: ${rpcError.message}`, "error");
       return;
     }
 
@@ -1017,13 +787,11 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
     );
     closeModal(document.getElementById("studentAttendanceModal"));
 
-    await refreshAttendanceSessionRow(
-      savedAttendanceId || activeContext.id,
-      recordsPayload.length,
-    );
+    if (typeof loadAttendanceTable === "function") {
+      loadAttendanceTable();
+    }
   } catch (err) {
-    console.error("Attendance save failed:", err);
-    showToast(getAttendanceErrorMessage(err, "save"), "error");
+    showToast(`Failed to save attendance: ${err.message}`, "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -1034,62 +802,23 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
 }
 
 function resetAttendanceModal() {
-  attendancePeriodRequestId += 1;
   document.getElementById("attendanceForm")?.reset();
   const periodSelect = document.getElementById("attendancePeriodSelect");
   if (periodSelect) periodSelect.disabled = true;
   currentTodayLessons = [];
 }
 
-const ATTENDANCE_PAGE_SIZE = 30;
 let allAttendanceList = [];
-let attendanceOffset = 0;
-let attendanceHasMore = true;
-let attendanceTableLoading = false;
-let attendanceViewerRole = "";
-let attendanceNeedsReconnectRefresh = false;
-const attendanceStudentCounts = new Map();
 
-window.addEventListener("online", () => {
-  if (!attendanceNeedsReconnectRefresh) return;
-  attendanceNeedsReconnectRefresh = false;
-  loadAttendanceTable();
-});
-
-async function loadAttendanceTable({ loadMore = false } = {}) {
+async function loadAttendanceTable() {
   const tbody = document.getElementById("attendanceTableBody");
   if (!tbody) return;
-  if (attendanceTableLoading || (loadMore && !attendanceHasMore)) return;
-  attendanceTableLoading = true;
 
-  const loadMoreButton = document.getElementById("loadMoreAttendance");
-  if (!loadMore) {
-    attendanceOffset = 0;
-    attendanceHasMore = true;
-    allAttendanceList = [];
-    attendanceStudentCounts.clear();
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">Loading attendance records...</td></tr>`;
-  }
-  if (loadMoreButton) {
-    loadMoreButton.disabled = true;
-    loadMoreButton.textContent = "Loading…";
-    loadMoreButton.hidden =
-      !loadMore || !attendanceHasMore || allAttendanceList.length === 0;
-  }
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">Loading attendance records...</td></tr>`;
 
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    const user = authData?.user;
-    if (!user) {
-      attendanceHasMore = false;
-      if (!loadMore) {
-        setAttendanceTableError("Your session has expired. Sign in again to view attendance.");
-      } else {
-        showToast("Your session has expired. Sign in again, then retry.", "error");
-      }
-      return;
-    }
+    const user = (await supabaseClient.auth.getUser()).data?.user;
+    if (!user) return;
 
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
@@ -1099,15 +828,6 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
 
     if (profileError) {
       console.error("Error fetching profile role:", profileError);
-      if (!loadMore) setAttendanceTableError(getAttendanceErrorMessage(profileError));
-      else showToast(getAttendanceErrorMessage(profileError), "error");
-      return;
-    }
-    if (!profile?.role) {
-      const message = "Your account profile could not be verified. Contact your school administrator.";
-      if (!loadMore) setAttendanceTableError(message);
-      else showToast(message, "error");
-      return;
     }
 
     let query = supabaseClient.from("attendance").select(
@@ -1127,145 +847,107 @@ async function loadAttendanceTable({ loadMore = false } = {}) {
     );
 
     const role = String(profile?.role || "").toLowerCase();
-    attendanceViewerRole = role;
     if (role === "teacher") {
       query = query.eq("teacher_id", user.id);
     } else if (shouldFilterAttendanceToSubmitted(role)) {
       query = query.eq("status", "submitted");
     }
 
-    const { data: attendanceList, error } = await query
-      .order("date", { ascending: false })
-      .order("id", { ascending: true })
-      .range(attendanceOffset, attendanceOffset + ATTENDANCE_PAGE_SIZE - 1);
+    const { data: attendanceList, error } = await query.order("date", {
+      ascending: false,
+    });
 
     if (error) {
       console.error("Error loading attendance table:", error);
-      if (!loadMore) attendanceHasMore = false;
-      if (!loadMore) setAttendanceTableError(getAttendanceErrorMessage(error));
-      else showToast(getAttendanceErrorMessage(error), "error");
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Error: ${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
-    const records = attendanceList || [];
-    attendanceNeedsReconnectRefresh = false;
-    if (loadMore) allAttendanceList.push(...records);
-    else allAttendanceList = records;
-    attendanceOffset += records.length;
-    attendanceHasMore = records.length === ATTENDANCE_PAGE_SIZE;
-
-    if (!allAttendanceList.length) {
+    if (!attendanceList || attendanceList.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
-    } else {
-      if (!loadMore) {
-        populateAttendanceFilters(allAttendanceList);
-        setupAttendanceFilterListeners();
-      } else {
-        const selectedFilters = [
-          "attendanceClassFilter",
-          "attendanceSubjectFilter",
-          "attendanceAcademicYearFilter",
-          "attendanceSemesterFilter",
-        ].map((id) => [id, document.getElementById(id)?.value]);
-        populateAttendanceFilters(allAttendanceList);
-        selectedFilters.forEach(([id, value]) => {
-          const select = document.getElementById(id);
-          if (select && [...select.options].some((option) => option.value === value)) {
-            select.value = value;
-          }
-        });
-      }
-      await applyAttendanceFilters();
+      return;
     }
+
+    const attendanceIds = attendanceList.map((a) => a.id);
+    const { data: recordsData, error: countErr } = await supabaseClient
+      .from("attendance_records")
+      .select("attendance_id")
+      .in("attendance_id", attendanceIds);
+
+    const countsMap = new Map();
+    if (!countErr && recordsData) {
+      recordsData.forEach((rec) => {
+        countsMap.set(
+          rec.attendance_id,
+          (countsMap.get(rec.attendance_id) || 0) + 1,
+        );
+      });
+    }
+
+    tbody.innerHTML = "";
+    attendanceList.forEach((item) => {
+      const className = item.classes?.name || "N/A";
+      const classId = item.classes?.id || item.class_id || "";
+
+      const subjectName = item.subjects?.name || "General";
+      const subjectId = item.subjects?.id || item.subject_id || "";
+
+      const yearName = item.academic_years?.year_label || "N/A";
+      const yearId = item.academic_years?.id || item.academic_year_id || "";
+
+      const termName = item.terms?.name || "N/A";
+      const termId = item.terms?.id || item.term_id || "";
+
+      const studentCount = countsMap.get(item.id) || 0;
+      const formattedDate = formatDate(item.date);
+      const isDraft = item.status === "drafted";
+
+      const statusBadge = isDraft
+        ? `<span class="status-badge status-drafted">Drafted</span>`
+        : `<span class="status-badge status-submitted">Submitted</span>`;
+
+      const actionButton = isDraft
+        ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
+             <i class="fa-solid fa-pen-to-square"></i>
+           </button>`
+        : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
+             <i class="fa-solid fa-eye"></i>
+           </button>`;
+
+      const tr = document.createElement("tr");
+
+      tr.dataset.attendanceId = item.id;
+      tr.dataset.classId = classId;
+      tr.dataset.subjectId = subjectId;
+      tr.dataset.academicYearId = yearId;
+      tr.dataset.termId = termId;
+
+      tr.innerHTML = `
+        <td>${escapeHtml(className)}</td>
+        <td>${escapeHtml(subjectName)}</td>
+        <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
+        <td data-term-id="${termId}">${escapeHtml(termName)}</td>
+        <td>${formattedDate}</td>
+        <td>${studentCount}</td>
+        <td>${statusBadge}</td>
+        <td>${actionButton}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    allAttendanceList = attendanceList || [];
+
+    populateAttendanceFilters(allAttendanceList);
+
+    renderFilteredAttendanceTable(allAttendanceList);
+
+    setupAttendanceFilterListeners();
+
+    attachTableActionListeners();
   } catch (err) {
     console.error("Attendance table exception:", err);
-    if (!loadMore) {
-      setAttendanceTableError(getAttendanceErrorMessage(err));
-    } else {
-      showToast(getAttendanceErrorMessage(err), "error");
-    }
-  } finally {
-    attendanceTableLoading = false;
-    if (loadMoreButton) {
-      loadMoreButton.hidden = !attendanceHasMore || allAttendanceList.length === 0;
-      loadMoreButton.disabled = false;
-      loadMoreButton.textContent = "Next";
-    }
-  }
-}
-
-async function refreshAttendanceSessionRow(attendanceId, studentCount = null) {
-  if (!attendanceId) return false;
-
-  try {
-    const { data: row, error } = await supabaseClient
-      .from("attendance")
-      .select(`
-        id,
-        date,
-        status,
-        class_id,
-        subject_id,
-        academic_year_id,
-        term_id,
-        classes(id, name),
-        subjects(id, name),
-        academic_years(id, year_label),
-        terms(id, name)
-      `)
-      .eq("id", attendanceId)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    const existingIndex = allAttendanceList.findIndex(
-      (item) => String(item.id) === String(attendanceId),
-    );
-    if (existingIndex >= 0) allAttendanceList.splice(existingIndex, 1);
-
-    const wasAlreadyLoaded = existingIndex >= 0;
-    const shouldHide =
-      !row ||
-      (attendanceViewerRole &&
-        shouldFilterAttendanceToSubmitted(attendanceViewerRole) &&
-        String(row.status || "").toLowerCase() !== "submitted");
-
-    if (shouldHide) {
-      attendanceStudentCounts.delete(String(attendanceId));
-    } else {
-      allAttendanceList.push(row);
-      allAttendanceList.sort((a, b) => {
-        const dateOrder = String(b.date || "").localeCompare(String(a.date || ""));
-        return dateOrder || String(a.id).localeCompare(String(b.id));
-      });
-
-      if (Number.isInteger(studentCount)) {
-        attendanceStudentCounts.set(String(attendanceId), studentCount);
-      }
-
-      const loadedRowLimit = Math.max(ATTENDANCE_PAGE_SIZE, attendanceOffset);
-      if (allAttendanceList.length > loadedRowLimit) {
-        const removed = allAttendanceList.pop();
-        if (removed?.id) attendanceStudentCounts.delete(String(removed.id));
-        if (!wasAlreadyLoaded) attendanceHasMore = true;
-      }
-    }
-
-    attendanceOffset = allAttendanceList.length;
-    await applyAttendanceFilters();
-    const loadMoreButton = document.getElementById("loadMoreAttendance");
-    if (loadMoreButton) {
-      loadMoreButton.hidden = !attendanceHasMore || allAttendanceList.length === 0;
-    }
-    return true;
-  } catch (error) {
-    console.error("Could not refresh the saved attendance row:", error);
-    attendanceNeedsReconnectRefresh = true;
-    showToast(
-      "Attendance was saved, but the list could not update while the server was unavailable. It will retry when your connection returns; you do not need to reload the page.",
-      "error",
-    );
-    return false;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
   }
 }
 
@@ -1332,7 +1014,6 @@ function populateAttendanceFilters(records) {
 
 function setupAttendanceFilterListeners() {
   const searchInput = document.getElementById("attendanceSearchInput");
-  const loadMoreButton = document.getElementById("loadMoreAttendance");
   const filterIds = [
     "attendanceClassFilter",
     "attendanceSubjectFilter",
@@ -1342,9 +1023,6 @@ function setupAttendanceFilterListeners() {
     "attendanceDateFilter",
   ];
   if (searchInput) searchInput.oninput = applyAttendanceFilters;
-  if (loadMoreButton) {
-    loadMoreButton.onclick = () => loadAttendanceTable({ loadMore: true });
-  }
   filterIds.forEach((id) => {
     const select = document.getElementById(id);
     if (select) select.onchange = applyAttendanceFilters;
@@ -1376,7 +1054,7 @@ function matchesAttendanceFilters(item, filters) {
   );
 }
 
-async function applyAttendanceFilters() {
+function applyAttendanceFilters() {
   const filtered = allAttendanceList.filter((item) =>
     matchesAttendanceFilters(item, {
       search: document.getElementById("attendanceSearchInput")?.value || "",
@@ -1392,7 +1070,7 @@ async function applyAttendanceFilters() {
       date: document.getElementById("attendanceDateFilter")?.value || "",
     }),
   );
-  await renderFilteredAttendanceTable(filtered);
+  renderFilteredAttendanceTable(filtered);
 }
 
 async function renderFilteredAttendanceTable(attendanceList) {
@@ -1404,27 +1082,20 @@ async function renderFilteredAttendanceTable(attendanceList) {
     return;
   }
 
-  const attendanceIds = attendanceList.map((item) => item.id);
-  const missingCountIds = attendanceIds.filter((id) => !attendanceStudentCounts.has(id));
-  if (missingCountIds.length) {
-    const { data: recordsData, error: countErr } = await supabaseClient
-      .from("attendance_records")
-      .select("attendance_id")
-      .in("attendance_id", missingCountIds);
+  const attendanceIds = attendanceList.map((a) => a.id);
+  const { data: recordsData, error: countErr } = await supabaseClient
+    .from("attendance_records")
+    .select("attendance_id")
+    .in("attendance_id", attendanceIds);
 
-    if (!countErr) {
-      missingCountIds.forEach((id) => attendanceStudentCounts.set(id, 0));
-      (recordsData || []).forEach((record) => {
-        attendanceStudentCounts.set(
-          record.attendance_id,
-          (attendanceStudentCounts.get(record.attendance_id) || 0) + 1,
-        );
-      });
-    } else {
-      console.error("Could not load attendance student counts:", countErr);
-      missingCountIds.forEach((id) => attendanceStudentCounts.set(id, null));
-      showToast("Attendance loaded, but student totals could not be retrieved.", "error");
-    }
+  const countsMap = new Map();
+  if (!countErr && recordsData) {
+    recordsData.forEach((rec) => {
+      countsMap.set(
+        rec.attendance_id,
+        (countsMap.get(rec.attendance_id) || 0) + 1,
+      );
+    });
   }
 
   tbody.innerHTML = "";
@@ -1438,9 +1109,7 @@ async function renderFilteredAttendanceTable(attendanceList) {
     const termName = item.terms?.name || "N/A";
     const termId = item.terms?.id || item.term_id || "";
 
-    const studentCount = attendanceStudentCounts.has(item.id)
-      ? attendanceStudentCounts.get(item.id) ?? "—"
-      : "—";
+    const studentCount = countsMap.get(item.id) || 0;
     const formattedDate = formatDate(item.date);
     const isDraft = item.status === "drafted";
 
@@ -1595,11 +1264,9 @@ async function openViewAttendanceModal(attendanceId) {
 
     if (parentErr || !attendance) {
       console.error("Error fetching attendance details:", parentErr);
-      const message = getAttendanceErrorMessage(parentErr);
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">${escapeHtml(message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">Failed to load attendance metadata.</td></tr>`;
       }
-      showToast(message, "error");
       return;
     }
 
@@ -1653,11 +1320,9 @@ async function openViewAttendanceModal(attendanceId) {
 
     if (recordsErr) {
       console.error("Error fetching attendance student records:", recordsErr);
-      const message = getAttendanceErrorMessage(recordsErr);
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">${escapeHtml(message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">Failed to load student records.</td></tr>`;
       }
-      showToast(message, "error");
       return;
     }
 
@@ -1727,11 +1392,9 @@ async function openViewAttendanceModal(attendanceId) {
     }
   } catch (err) {
     console.error("View modal exception:", err);
-    const message = getAttendanceErrorMessage(err);
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">${escapeHtml(message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding: 12px;">An error occurred while loading details.</td></tr>`;
     }
-    showToast(message, "error");
   }
 }
 
@@ -1800,7 +1463,6 @@ async function openEditAttendanceModal(attendanceId) {
 
   if (!modal || !attendanceId) return;
   currentEditingAttendanceId = attendanceId;
-  initialEditState = null;
 
   if (creatorElement) creatorElement.textContent = "Loading...";
   if (tbody) {
@@ -1819,9 +1481,8 @@ async function openEditAttendanceModal(attendanceId) {
       .single();
 
     if (parentErr || !attendance) {
-      const message = getAttendanceErrorMessage(parentErr);
-      if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding:12px;">${escapeHtml(message)}</td></tr>`;
-      showToast(message, "error");
+      showToast("Error loading attendance record.", "error");
+      closeModal(modal);
       return;
     }
 
@@ -1854,14 +1515,9 @@ async function openEditAttendanceModal(attendanceId) {
       .select("student_id, status")
       .eq("attendance_id", attendanceId);
 
-    if (recordsErr) {
-      const message = getAttendanceErrorMessage(recordsErr);
-      if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding:12px;">${escapeHtml(message)}</td></tr>`;
-      showToast(message, "error");
-      return;
-    }
-    if (!records || records.length === 0) {
-      if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No student attendance records exist for this session.</td></tr>`;
+    if (recordsErr || !records || records.length === 0) {
+      if (tbody)
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students found.</td></tr>`;
       return;
     }
 
@@ -1928,9 +1584,6 @@ async function openEditAttendanceModal(attendanceId) {
     };
   } catch (err) {
     console.error("Edit modal error:", err);
-    const message = getAttendanceErrorMessage(err);
-    if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#dc2626; padding:12px;">${escapeHtml(message)}</td></tr>`;
-    showToast(message, "error");
   }
 }
 
@@ -1949,9 +1602,7 @@ async function handleSaveEditAttendance() {
   }
 
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    const user = authData?.user;
+    const user = (await supabaseClient.auth.getUser()).data?.user;
     if (!user) {
       showToast("Session expired. Please log in again.", "error");
       return;
@@ -1959,12 +1610,11 @@ async function handleSaveEditAttendance() {
 
     let schoolId = currentAttendanceSession?.schoolId;
     if (!schoolId) {
-      const { data: profile, error: profileError } = await supabaseClient
+      const { data: profile } = await supabaseClient
         .from("profiles")
         .select("school_id")
         .eq("id", user.id)
         .maybeSingle();
-      if (profileError) throw profileError;
 
       schoolId = profile?.school_id;
     }
@@ -2009,7 +1659,7 @@ async function handleSaveEditAttendance() {
     );
 
     if (rpcError) {
-      showToast(getAttendanceErrorMessage(rpcError, "save"), "error");
+      showToast(`Error: ${rpcError.message}`, "error");
       return;
     }
 
@@ -2020,13 +1670,11 @@ async function handleSaveEditAttendance() {
 
     closeModal(document.getElementById("editAttendanceModal"));
 
-    await refreshAttendanceSessionRow(
-      currentEditingAttendanceId,
-      recordsPayload.length,
-    );
+    if (typeof loadAttendanceTable === "function") {
+      loadAttendanceTable();
+    }
   } catch (err) {
-    console.error("Attendance update failed:", err);
-    showToast(getAttendanceErrorMessage(err, "save"), "error");
+    showToast(`Failed to update attendance: ${err.message}`, "error");
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;

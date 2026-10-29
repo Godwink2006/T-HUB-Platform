@@ -1,5 +1,3 @@
-
-
 create or replace function public.promote_grade9_students_transaction(
   p_school_id uuid,
   p_student_ids uuid[],
@@ -20,6 +18,8 @@ as $$
 declare
   v_count integer;
   v_student_count integer;
+  v_school_status text;
+  v_fee_currency_code text;
 begin
   if p_school_id is null or p_target_class_id is null or p_academic_year_id is null
      or p_term_id is null or p_fee_structure_id is null then
@@ -35,23 +35,41 @@ begin
     raise exception 'Duplicate student IDs were provided.' using errcode = '22023';
   end if;
 
+  -- 1. Ensure school exists and is active
+  select lower(btrim(coalesce(school.status::text, '')))
+  into v_school_status
+  from public.schools as school
+  where school.id = p_school_id
+  for share;
+
+  if not found then
+    raise exception 'The school could not be found.' using errcode = '23503';
+  end if;
+
+  if v_school_status <> 'active' then
+    raise exception 'The school is inactive and cannot promote students.' using errcode = '42501';
+  end if;
+
+  -- 2. Verify target class is active and belongs to school
   if not exists (
     select 1 from public.classes c
     where c.id = p_target_class_id and c.school_id = p_school_id
-      and c.status = 'active'
+      and lower(btrim(c.status::text)) = 'active'
   ) then
     raise exception 'Target class is inactive or does not belong to the requested school.' using errcode = '23503';
   end if;
 
+  -- 3. Verify academic year is active and belongs to school
   if not exists (
     select 1 from public.academic_years y
     where y.id = p_academic_year_id
       and y.school_id = p_school_id
-      and lower(y.status) = 'active'
+      and lower(btrim(y.status::text)) = 'active'
   ) then
     raise exception 'Academic year is not active for the requested school.' using errcode = '23503';
   end if;
 
+  -- 4. Verify term belongs to the active year and is second term
   if not exists (
     select 1 from public.terms t
     where t.id = p_term_id
@@ -62,18 +80,27 @@ begin
     raise exception 'Target term must be the second term in the active academic year and requested school.' using errcode = '23503';
   end if;
 
-  if not exists (
-    select 1 from public.fee_structures fs
-    where fs.id = p_fee_structure_id
-      and fs.school_id = p_school_id
-      and fs.class_id = p_target_class_id
-      and fs.academic_year_id = p_academic_year_id
-      and fs.term_id = p_term_id
-      and lower(fs.status) = 'active'
-  ) then
+  -- 5. Fetch and validate fee structure & currency code
+  select upper(btrim(coalesce(fs.currency_code, '')))
+  into v_fee_currency_code
+  from public.fee_structures fs
+  where fs.id = p_fee_structure_id
+    and fs.school_id = p_school_id
+    and fs.class_id = p_target_class_id
+    and fs.academic_year_id = p_academic_year_id
+    and fs.term_id = p_term_id
+    and lower(btrim(fs.status::text)) = 'active';
+
+  if not found then
     raise exception 'Fee structure does not match the school, class, year, and second term.' using errcode = '23503';
   end if;
 
+  if v_fee_currency_code not in ('LRD', 'USD') then
+    raise exception 'The active fee structure must have a valid currency (LRD or USD).'
+      using errcode = '23514';
+  end if;
+
+  -- 6. Lock student rows
   perform s.id
   from public.students s
   where s.id = any(p_student_ids) and s.school_id = p_school_id
@@ -88,6 +115,7 @@ begin
     raise exception 'One or more students do not belong to the requested school.' using errcode = '23503';
   end if;
 
+  -- 7. Ensure not already enrolled in target year/term
   if exists (
     select 1 from public.student_enrollments e
     where e.student_id = any(p_student_ids)
@@ -98,6 +126,7 @@ begin
     raise exception 'Student is already enrolled for this academic year and term.' using errcode = '23505';
   end if;
 
+  -- 8. Update profile
   update public.profiles p
   set email = p_email,
       role = 'student',
@@ -110,22 +139,27 @@ begin
     raise exception 'A student profile was not found.' using errcode = '23503';
   end if;
 
+  -- 9. Update student class
   update public.students s
   set class_id = p_target_class_id
   where s.id = any(p_student_ids) and s.school_id = p_school_id;
 
+  -- 10. Insert enrollment
   insert into public.student_enrollments (
     school_id, student_id, class_id, academic_year_id, term_id, enrollment_status
   )
   select p_school_id, student_id, p_target_class_id, p_academic_year_id, p_term_id, 'Promoted'
   from unnest(p_student_ids) as selected(student_id);
 
+  -- 11. Insert student fee with currency code
   insert into public.student_fees (
     school_id, student_id, class_id, academic_year_id, term_id,
-    fee_structure_id, total_fees, total_paid, status, fee_breakdown
+    fee_structure_id, total_fees, total_paid, status, fee_breakdown,
+    currency_code
   )
   select p_school_id, student_id, p_target_class_id, p_academic_year_id, p_term_id,
-         p_fee_structure_id, p_total_amount, 0, 'Unpaid', coalesce(p_fee_breakdown, '[]'::jsonb)
+         p_fee_structure_id, p_total_amount, 0, 'Unpaid', coalesce(p_fee_breakdown, '[]'::jsonb),
+         v_fee_currency_code
   from unnest(p_student_ids) as selected(student_id);
 
   return jsonb_build_object('success', true, 'student_count', cardinality(p_student_ids));

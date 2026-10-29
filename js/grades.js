@@ -3,88 +3,14 @@ let activeTermId = null;
 let activeAssessment = null;
 let currentGradeSession = null;
 let currentEditGradeId = null;
-const GRADE_LIST_PAGE_SIZE = 30;
-let gradeListOffset = 0;
-let gradeListHasMore = true;
-let gradeListRenderedCount = 0;
-let gradeListIsLoading = false;
-let gradeListRefreshPending = false;
-let loadedGradeRows = [];
 
-function getGradeErrorMessage(error, action = "load") {
-  if (error?.partialGradeUpdate) {
-    return "Some scores may have been updated before the error. Reload the grade record before trying again.";
-  }
-  const code = String(error?.code || "").toUpperCase();
-  const details = [error?.message, error?.details, error?.hint]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+document.addEventListener("DOMContentLoaded", async () => {
+  initGradeModalEventListeners();
+  initGradeFormListeners();
 
-  if (!error) {
-    return action === "save"
-      ? "Grades could not be saved. Please try again."
-      : "Grades could not be loaded. Please try again.";
-  }
-  if (/choose an assessment before recording/.test(details)) {
-    return "Choose an assessment before entering grades.";
-  }
-  if (/selected assessment does not exist/.test(details)) {
-    return "The selected assessment is no longer available. Refresh and choose an assessment again.";
-  }
-  if (
-    (code === "23514" || code === "P0001") &&
-    /assessment is not active for entry today|assessment.*date range|date range.*assessment/.test(details)
-  ) {
-    return "Grade entry is closed for this assessment. Ask an administrator to check that it is Active and that today is within its start and end dates.";
-  }
-  if (code === "42501" || /row-level security|permission denied|not authorized|not permitted/.test(details)) {
-    return action === "save"
-      ? "You do not have permission to change these grades. Check that your account is active and assigned to this school."
-      : "You do not have permission to view these grades. Check that your account is active and assigned to this school.";
-  }
-  if (/school.{0,30}(inactive|not active)|inactive.{0,30}school/.test(details)) {
-    return "This school is inactive, so grades cannot be changed. Contact your school administrator.";
-  }
-  if (code === "401" || code === "PGRST301" || /jwt expired|invalid jwt|not authenticated/.test(details)) {
-    return "Your session has expired. Sign in again, then retry.";
-  }
-  if (/failed to fetch|network|timed out|timeout|fetch error/.test(details)) {
-    return "The server could not be reached. Check your connection and try again.";
-  }
-  if (code === "23505" || /duplicate key|already exists|unique constraint/.test(details)) {
-    return "Grades for this class, subject, assessment, and category already exist. Open the existing grade record to make changes.";
-  }
-  if (/maximum|exceed.*mark|score.*limit/.test(details)) {
-    return "One or more scores exceed the maximum marks allowed for this assessment.";
-  }
-  if (/does not belong|not enrolled|wrong class|student.*class/.test(details)) {
-    return "One or more students are no longer eligible for this class. Reload the roster and try again.";
-  }
-  if (/not updated|access may have been removed|record.*changed/.test(details)) {
-    return "This grade record changed or your access was removed. Reload the grade record and try again.";
-  }
-  if (/invalid score|score.*number|only administrators and teachers/.test(details)) {
-    return /administrator|teacher/.test(details)
-      ? "Only school administrators and teachers can manage grades."
-      : "Enter a valid numeric score for each student.";
-  }
-  if (code === "PGRST116") return "This grade record is no longer available. Refresh the page and try again.";
-  return action === "save"
-    ? "Grades could not be saved. Check the scores and selections, then try again."
-    : "Grades could not be loaded. Refresh the page and try again.";
-}
-
-function setGradeTableMessage(tbody, message, colspan = 7) {
-  if (!tbody) return;
-  const row = document.createElement("tr");
-  const cell = document.createElement("td");
-  cell.colSpan = colspan;
-  cell.style.cssText = "text-align:center; padding:16px;";
-  cell.textContent = message;
-  row.appendChild(cell);
-  tbody.replaceChildren(row);
-}
+  await loadAcademicContext();
+  await populateClassOptions();
+});
 
 function openModal(modalEl) {
   if (!modalEl) return;
@@ -149,6 +75,35 @@ function initGradeModalEventListeners() {
     .getElementById("cancelEditGradeModal")
     ?.addEventListener("click", () => closeModal(editGradeModal));
 
+  document.addEventListener("click", (e) => {
+    const viewBtn = e.target.closest(".view");
+    const editBtn = e.target.closest(".edit");
+
+    if (viewBtn) {
+      const gradeId =
+        viewBtn.dataset.gradeId || viewBtn.closest("tr")?.dataset.gradeId;
+
+      if (gradeId) {
+        if (typeof handleViewGrades === "function") {
+          handleViewGrades(gradeId);
+        }
+        if (typeof openModal === "function") openModal(viewGradeModal);
+      }
+    }
+
+    if (editBtn) {
+      const gradeId =
+        editBtn.dataset.gradeId || editBtn.closest("tr")?.dataset.gradeId;
+
+      if (gradeId) {
+        if (typeof handleEditGrades === "function") {
+          handleEditGrades(gradeId);
+        }
+        if (typeof openModal === "function") openModal(editGradeModal);
+      }
+    }
+  });
+
   window.addEventListener("click", (e) => {
     if (e.target === gradeModal) closeModal(gradeModal);
     if (e.target === enterGradeModal) closeModal(enterGradeModal);
@@ -206,65 +161,68 @@ async function populateClassOptions() {
 
   try {
     const client = window.supabaseClient || supabaseClient;
-    const { data: authData, error: authError } = await client.auth.getUser();
-    if (authError) throw authError;
-    const user = authData?.user;
-    if (!user) {
-      showToast("Your session has expired. Sign in again to load classes.", "error");
-      classSelect.replaceChildren(new Option("Sign in to load classes", ""));
-      return;
-    }
+    const {
+      data: { user },
+    } = await client.auth.getUser();
+    if (!user) return;
 
-    const { data: profile, error: profileError } = await client
+    const { data: profile } = await client
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
-    if (profileError) throw profileError;
-    if (!profile?.role) {
-      throw new Error("Your account profile could not be verified.");
-    }
 
-    const role = String(profile.role).toLowerCase();
+    const role = profile?.role;
     let classesList = [];
 
     if (role === "admin") {
       const { data: allClasses, error } = await client
         .from("classes")
-        .select("id, name, status")
+        .select("id, name")
         .ilike("status", "active")
         .order("name", { ascending: true });
       if (error) throw error;
       classesList = allClasses || [];
-    } else if (role === "teacher") {
-      const { data: assignments, error } = await client
+    } else {
+      let query = client
         .from("teacher_assignments")
         .select("class_id, classes(id, name, status)")
-        .eq("teacher_id", user.id);
+        .eq("teacher_id", user.id)
+        .ilike("status", "active");
 
+      const activeYearId = window.activeAcademicYearId || activeAcademicYearId;
+      if (activeYearId) {
+        query = query.eq("academic_year_id", activeYearId);
+      }
+
+      const { data: assignments, error } = await query;
       if (error) throw error;
 
       classesList = [
         ...new Map(
           (assignments || [])
-            .filter((a) => a.classes && String(a.classes.status || "").toLowerCase() === "active")
+            .filter((a) => a.classes && (!a.classes.status || a.classes.status.toLowerCase() === "active"))
             .map((a) => [a.classes.id, a.classes]),
         ).values(),
       ];
 
       classesList.sort((a, b) => a.name.localeCompare(b.name));
-    } else {
-      throw new Error("Only administrators and teachers can manage grades.");
     }
 
-    classSelect.innerHTML = `<option value="">Select Class</option>`;
+    if (classesList.length === 0) {
+      classSelect.innerHTML = `<option value="">${role === "teacher" ? "No active class assignments" : "No classes available"}</option>`;
+      classSelect.disabled = true;
+    } else {
+      classSelect.disabled = false;
+      classSelect.innerHTML = `<option value="">Select Class</option>`;
 
-    classesList.forEach((cls) => {
-      const opt = document.createElement("option");
-      opt.value = cls.id;
-      opt.textContent = cls.name;
-      classSelect.appendChild(opt);
-    });
+      classesList.forEach((cls) => {
+        const opt = document.createElement("option");
+        opt.value = cls.id;
+        opt.textContent = cls.name;
+        classSelect.appendChild(opt);
+      });
+    }
 
     if (selectedValue) {
       classSelect.value = selectedValue;
@@ -279,8 +237,7 @@ async function populateClassOptions() {
     }
   } catch (err) {
     console.error("Error populating class options:", err);
-    classSelect.replaceChildren(new Option("Classes could not be loaded", ""));
-    showToast(getGradeErrorMessage(err), "error");
+    classSelect.innerHTML = `<option value="">Error loading classes</option>`;
   }
 }
 
@@ -295,68 +252,72 @@ async function handleClassSelectChange(classId) {
 
   try {
     const client = window.supabaseClient || supabaseClient;
-    const { data: authData, error: authError } = await client.auth.getUser();
-    if (authError) throw authError;
-    const user = authData?.user;
-    if (!user) {
-      subjectSelect.replaceChildren(new Option("Sign in to load subjects", ""));
-      showToast("Your session has expired. Sign in again, then retry.", "error");
-      return;
-    }
+    const {
+      data: { user },
+    } = await client.auth.getUser();
 
-    const { data: profile, error: profileError } = await client
+    if (!user) return;
+
+    const { data: profile } = await client
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
-    if (profileError) throw profileError;
-    if (!profile?.role) throw new Error("Your account profile could not be verified.");
 
-    const role = String(profile.role).toLowerCase();
+    const role = profile?.role;
     const subjectMap = new Map();
 
     if (role === "admin") {
-
-      const { data: assignedData, error: assignedErr } = await client
+      let assignedQuery = client
         .from("teacher_assignments")
         .select("subject_id, subjects(id, name, status)")
-        .eq("class_id", classId);
+        .eq("class_id", classId)
+        .ilike("status", "active");
 
-      if (assignedErr) throw assignedErr;
+      const activeYearId = window.activeAcademicYearId || activeAcademicYearId;
+      if (activeYearId) {
+        assignedQuery = assignedQuery.eq("academic_year_id", activeYearId);
+      }
+
+      const { data: assignedData, error: assignedErr } = await assignedQuery;
+      if (assignedErr) console.error("Admin subject query error:", assignedErr);
 
       (assignedData || []).forEach((item) => {
-        if (item.subjects?.id && String(item.subjects.status || "").toLowerCase() === "active") {
+        if (item.subjects?.id && (!item.subjects.status || item.subjects.status.toLowerCase() === "active")) {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
 
       if (subjectMap.size === 0) {
-        const { data: allSubjects, error: subjectsError } = await client
+        const { data: allSubjects } = await client
           .from("subjects")
           .select("id, name")
           .ilike("status", "active")
           .order("name", { ascending: true });
-        if (subjectsError) throw subjectsError;
 
         (allSubjects || []).forEach((s) => subjectMap.set(s.id, s.name));
       }
-    } else if (role === "teacher") {
-
-      const { data: teacherData, error: teacherErr } = await client
+    } else {
+      let teacherQuery = client
         .from("teacher_assignments")
         .select("subject_id, subjects(id, name, status)")
         .eq("class_id", classId)
-        .eq("teacher_id", user.id);
+        .eq("teacher_id", user.id)
+        .ilike("status", "active");
 
-      if (teacherErr) throw teacherErr;
+      const activeYearId = window.activeAcademicYearId || activeAcademicYearId;
+      if (activeYearId) {
+        teacherQuery = teacherQuery.eq("academic_year_id", activeYearId);
+      }
+
+      const { data: teacherData, error: teacherErr } = await teacherQuery;
+      if (teacherErr) console.error("Teacher subject query error:", teacherErr);
 
       (teacherData || []).forEach((item) => {
-        if (item.subjects?.id && String(item.subjects.status || "").toLowerCase() === "active") {
+        if (item.subjects?.id && (!item.subjects.status || item.subjects.status.toLowerCase() === "active")) {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
-    } else {
-      throw new Error("Only administrators and teachers can manage grades.");
     }
 
     if (subjectMap.size === 0) {
@@ -378,8 +339,7 @@ async function handleClassSelectChange(classId) {
     subjectSelect.disabled = false;
   } catch (err) {
     console.error("Error in handleClassSelectChange:", err);
-    subjectSelect.replaceChildren(new Option("Subjects could not be loaded", ""));
-    showToast(getGradeErrorMessage(err), "error");
+    subjectSelect.innerHTML = `<option value="">Error loading subjects</option>`;
   }
 }
 
@@ -399,13 +359,11 @@ async function loadAssessmentCategories() {
     const { data: categories, error } = await client
       .from("assessment_categories")
       .select("id, name, marks")
-      .ilike("status", "Active")
       .order("name", { ascending: true });
 
     if (error) {
       console.error("Error fetching assessment categories:", error);
-      assessmentSelect.replaceChildren(new Option("Categories could not be loaded", ""));
-      showToast(getGradeErrorMessage(error), "error");
+      assessmentSelect.innerHTML = `<option value="">Error loading categories</option>`;
       return;
     }
 
@@ -434,8 +392,7 @@ async function loadAssessmentCategories() {
     });
   } catch (err) {
     console.error("Error in loadAssessmentCategories:", err);
-    assessmentSelect.replaceChildren(new Option("Categories could not be loaded", ""));
-    showToast(getGradeErrorMessage(err), "error");
+    assessmentSelect.innerHTML = `<option value="">Error loading categories</option>`;
   }
 }
 
@@ -461,127 +418,47 @@ function populateAssessmentDropdown(assessments) {
 async function loadAcademicContext() {
   try {
     const client = window.supabaseClient || supabaseClient;
-    activeAcademicYearId = null;
-    activeTermId = null;
-    activeAssessment = [];
-    window.activeAcademicYearId = null;
-    window.activeAcademicYearLabel = "";
-    window.activeTermId = null;
-    window.activeTermLabel = "";
-    window.activeAssessment = [];
 
-    const yearRes = await client
-      .from("academic_years")
-      .select("id, year_label, status")
-      .ilike("status", "Active")
-      .maybeSingle();
-    if (yearRes.error) throw yearRes.error;
-    if (!yearRes.data) {
-      showToast("There is no active academic year. Ask an administrator to activate one.", "error");
-      return;
-    }
+    const [yearRes, termRes, assessmentRes] = await Promise.all([
 
-    const [termRes, assessmentRes] = await Promise.all([
       client
-        .from("terms")
-        .select("id, name, academic_year_id, status")
-        .eq("academic_year_id", yearRes.data.id)
+        .from("academic_years")
+        .select("id, year_label")
         .ilike("status", "Active")
         .maybeSingle(),
+
+      client
+        .from("terms")
+        .select("id, name")
+        .ilike("status", "Active")
+        .maybeSingle(),
+
       client
         .from("assessments")
-        .select("id, name, maximum_marks, academic_year_id, start_date, end_date, status")
-        .eq("academic_year_id", yearRes.data.id)
+        .select("id, name, maximum_marks")
         .ilike("status", "Active")
         .order("name", { ascending: true }),
     ]);
 
-    const contextError = termRes.error || assessmentRes.error;
-    if (contextError) throw contextError;
-
-    activeAcademicYearId = yearRes.data.id;
-    window.activeAcademicYearId = yearRes.data.id;
-    window.activeAcademicYearLabel = yearRes.data.year_label;
+    if (yearRes.data) {
+      window.activeAcademicYearId = yearRes.data.id;
+      window.activeAcademicYearLabel = yearRes.data.year_label;
+    }
 
     if (termRes.data) {
-      activeTermId = termRes.data.id;
       window.activeTermId = termRes.data.id;
       window.activeTermLabel = termRes.data.name;
     }
 
-    activeAssessment = assessmentRes.data || [];
-    window.activeAssessment = activeAssessment;
+    if (assessmentRes.data) {
+      window.activeAssessment = assessmentRes.data;
+    }
   } catch (err) {
     console.error("Error loading academic context for grades:", err);
     if (typeof showToast === "function") {
-      showToast(getGradeErrorMessage(err), "error");
+      showToast("Failed to load active academic context.", "error");
     }
   }
-}
-
-async function validateActiveGradeSetup({
-  classId,
-  subjectId,
-  categoryId,
-  academicYearId,
-  termId,
-  assessmentId,
-}) {
-  const client = window.supabaseClient || supabaseClient;
-  const [classResult, subjectResult, categoryResult, yearResult, termResult, assessmentResult] =
-    await Promise.all([
-      client.from("classes").select("id").eq("id", classId).ilike("status", "active").maybeSingle(),
-      client.from("subjects").select("id").eq("id", subjectId).ilike("status", "active").maybeSingle(),
-      client.from("assessment_categories").select("id").eq("id", categoryId).ilike("status", "active").maybeSingle(),
-      client.from("academic_years").select("id").eq("id", academicYearId).ilike("status", "active").maybeSingle(),
-      client.from("terms").select("id, academic_year_id").eq("id", termId).eq("academic_year_id", academicYearId).ilike("status", "active").maybeSingle(),
-      client.from("assessments").select("id, academic_year_id, start_date, end_date").eq("id", assessmentId).eq("academic_year_id", academicYearId).ilike("status", "active").maybeSingle(),
-    ]);
-
-  const queryError = [
-    classResult.error,
-    subjectResult.error,
-    categoryResult.error,
-    yearResult.error,
-    termResult.error,
-    assessmentResult.error,
-  ].find(Boolean);
-  if (queryError) {
-    console.error("Could not verify active grade setup selections:", queryError);
-    showToast(getGradeErrorMessage(queryError), "error");
-    return false;
-  }
-
-  const inactiveChoice = [
-    [classResult.data, "The selected class is no longer active. Refresh and choose an active class."],
-    [subjectResult.data, "The selected subject is no longer active. Refresh and choose an active subject."],
-    [categoryResult.data, "The selected assessment category is no longer active. Refresh and choose an active category."],
-    [yearResult.data, "There is no active academic year. Ask an administrator to activate one."],
-    [termResult.data, "There is no active term for the active academic year. Ask an administrator to check the term settings."],
-    [assessmentResult.data, "There is no active assessment for the active academic year. Ask an administrator to check the assessment settings."],
-  ].find(([record]) => !record);
-
-  if (inactiveChoice) {
-    showToast(inactiveChoice[1], "error");
-    return false;
-  }
-
-  const today = getGradeCurrentLocalDate();
-  const assessment = assessmentResult.data;
-  if (
-    !assessment.start_date ||
-    !assessment.end_date ||
-    today < assessment.start_date ||
-    today > assessment.end_date
-  ) {
-    showToast(
-      "The active assessment is outside its entry dates. Ask an administrator to check its start and end dates.",
-      "error",
-    );
-    return false;
-  }
-
-  return true;
 }
 
 async function handleLoadStudents(e) {
@@ -618,15 +495,6 @@ async function handleLoadStudents(e) {
     return;
   }
 
-  const loadStudentsBtn = document.getElementById("loadEnterGrade");
-  const originalButtonText = loadStudentsBtn?.textContent || "Load Students";
-  if (loadStudentsBtn) {
-    loadStudentsBtn.disabled = true;
-    loadStudentsBtn.setAttribute("aria-busy", "true");
-    loadStudentsBtn.textContent = "Loading...";
-  }
-
-  try {
   const classId = classSelect.value;
   const className = classSelect.options[classSelect.selectedIndex].text;
 
@@ -645,26 +513,6 @@ async function handleLoadStudents(e) {
 
   const assessmentId = selectedAssessment ? selectedAssessment.id : null;
   const assessmentName = selectedAssessment ? selectedAssessment.name : "";
-  const academicYearId = window.activeAcademicYearId || activeAcademicYearId || null;
-  const termId = window.activeTermId || activeTermId || null;
-
-  if (!academicYearId || !termId || !assessmentId) {
-    showToast(
-      "An active academic year, term, and assessment are required before loading students.",
-      "error",
-    );
-    return;
-  }
-
-  const setupIsActive = await validateActiveGradeSetup({
-    classId,
-    subjectId,
-    categoryId,
-    academicYearId,
-    termId,
-    assessmentId,
-  });
-  if (!setupIsActive) return;
 
   const categoriesList =
     window.activeCategories || window.activeAssessmentCategories || [];
@@ -709,8 +557,8 @@ async function handleLoadStudents(e) {
     categoryId,
     categoryName,
     maxMarks: finalMaxMarks,
-    academicYearId,
-    termId,
+    academicYearId: window.activeAcademicYearId || activeAcademicYearId || null,
+    termId: window.activeTermId || activeTermId || null,
   };
 
   const elYear = document.getElementById("enterGradeModalYear");
@@ -757,13 +605,6 @@ async function handleLoadStudents(e) {
   if (enterGradeModal) openModal(enterGradeModal);
 
   await loadStudentRosterForGrades(classId, finalMaxMarks);
-  } finally {
-    if (loadStudentsBtn) {
-      loadStudentsBtn.disabled = false;
-      loadStudentsBtn.removeAttribute("aria-busy");
-      loadStudentsBtn.textContent = originalButtonText;
-    }
-  }
 }
 
 async function handleSaveGrades(e) {
@@ -797,39 +638,30 @@ async function handleSaveGrades(e) {
   const scoreInputs = document.querySelectorAll(".student-score-input");
   const recordsPayload = [];
   let maxExceeded = false;
-  let invalidScore = false;
 
   scoreInputs.forEach((input) => {
     const studentId = input.dataset.studentId;
     const rawVal = input.value.trim();
-    const score = rawVal === "" ? 0 : Number(rawVal);
 
-    if (!Number.isFinite(score) || score < 0) {
-      invalidScore = true;
-      input.classList.add("is-invalid");
-      return;
+    if (rawVal !== "") {
+      const score = Number(rawVal);
+
+      if (
+        currentGradeSession.maxMarks !== null &&
+        score > currentGradeSession.maxMarks
+      ) {
+        maxExceeded = true;
+        input.classList.add("is-invalid");
+      } else {
+        input.classList.remove("is-invalid");
+      }
+
+      recordsPayload.push({
+        student_id: studentId,
+        score: score,
+      });
     }
-
-    if (
-      currentGradeSession.maxMarks !== null &&
-      score > currentGradeSession.maxMarks
-    ) {
-      maxExceeded = true;
-      input.classList.add("is-invalid");
-    } else {
-      input.classList.remove("is-invalid");
-    }
-
-    recordsPayload.push({
-      student_id: studentId,
-      score,
-    });
   });
-
-  if (invalidScore) {
-    showToast("Scores must be zero or a positive number.", "error");
-    return;
-  }
 
   if (maxExceeded) {
     showToast(
@@ -868,44 +700,45 @@ async function handleSaveGrades(e) {
 
     if (error) throw error;
 
+    showToast("Grades saved successfully!", "success");
+
     const enterGradeModal = document.getElementById("enterGradeModal");
     if (enterGradeModal && typeof closeModal === "function") {
       closeModal(enterGradeModal);
     }
 
-    const gradeRowRefreshed = await refreshGradeRow(gradeId, {
-      insertIfMissing: true,
-    });
+    if (typeof loadGradesList === "function") {
+      loadGradesList();
+    }
 
-    let notificationFailed = false;
     if (
       selectedStatus === "submitted" &&
-      typeof window.sendNotification === "function"
+      typeof window.sendNotification === "function" &&
+      schoolId
     ) {
-      const notificationResults = await Promise.allSettled(
-        recordsPayload.map((record) =>
-          window.sendNotification(
-            null,
+      await Promise.all(
+        recordsPayload.map(async (record) => {
+          return window.sendNotification(
+            schoolId,
             record.student_id,
             "New Grade Posted",
             `Your grade has been updated (Score: ${record.score}/${currentGradeSession.maxMarks || "N/A"}).`,
             "academic",
-          ),
-        ),
+          );
+        }),
       );
-      notificationFailed = notificationResults.some(
-        (result) => result.status === "rejected" || result.value?.success === false,
-      );
-    }
-
-    if (notificationFailed && gradeRowRefreshed) {
-      showToast("Grades were saved, but some student notifications could not be sent.", "error");
-    } else if (gradeRowRefreshed) {
-      showToast("Grades saved successfully!", "success");
     }
   } catch (err) {
     console.error("Error saving grade session:", err);
-    showToast(getGradeErrorMessage(err, "save"), "error");
+
+    if (err.code === "23505" || err.message?.includes("already exists")) {
+      showToast(
+        "A grade session for this Subject, Category, and Period already exists!",
+        "error",
+      );
+    } else {
+      showToast(`Failed to save grades: ${err.message}`, "error");
+    }
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -938,9 +771,7 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
 
     if (studentErr) {
       console.error("Error fetching active students:", studentErr);
-      const message = getGradeErrorMessage(studentErr);
-      setGradeTableMessage(tbody, message, 2);
-      showToast(message, "error");
+      tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 16px; color: #dc2626;">Error loading students: ${escapeHTML(studentErr.message)}</td></tr>`;
       return;
     }
 
@@ -955,6 +786,8 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
         : null;
 
     const maxAttr = numericMax !== null ? `max="${numericMax}"` : "";
+    const placeholderText =
+      numericMax !== null ? `0 - ${numericMax}` : "Enter grade";
 
     const activeStudentIds = activeStudents.map((student) => student.id);
     const { data: studentProfiles, error: profilesError } = await client
@@ -992,9 +825,7 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
             type="number"
             class="student-score-input"
             data-student-id="${escapeHTML(student.id)}"
-            value="0"
-            aria-label="Score for ${escapeHTML(displayName)}"
-            title="Enter a score, or leave 0 if no score was earned"
+            placeholder="${placeholderText}"
             min="0"
             ${maxAttr}
             step="0.01"
@@ -1006,9 +837,7 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
     });
   } catch (err) {
     console.error("Roster exception for grades:", err);
-    const message = getGradeErrorMessage(err);
-    setGradeTableMessage(tbody, message, 2);
-    showToast(message, "error");
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 16px; color: #dc2626;">Failed to load roster.</td></tr>`;
   }
 }
 
@@ -1016,13 +845,6 @@ function getGradeLocalDate(timestamp) {
   if (!timestamp) return "";
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return "";
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function getGradeCurrentLocalDate() {
-  const date = new Date();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${date.getFullYear()}-${month}-${day}`;
@@ -1081,33 +903,9 @@ function renderGradeCreator(profile) {
   return `<span class="grade-creator-cell"><img class="app-person-avatar" src="${escapeGradeHtml(photo)}" alt="" loading="lazy" /><span class="grade-creator-meta"><span class="grade-creator-name">${escapeGradeHtml(profile.full_name || "Unknown")}</span><small>${escapeGradeHtml(label)}</small></span></span>`;
 }
 
-async function loadGradesList(options = {}) {
+async function loadGradesList() {
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
-
-  const append = options?.append === true;
-  const nextButton = document.getElementById("nextGradesPage");
-
-  if (gradeListIsLoading) {
-    if (!append) gradeListRefreshPending = true;
-    return;
-  }
-  if (append && !gradeListHasMore) return;
-
-  if (!append) {
-    gradeListOffset = 0;
-    gradeListHasMore = true;
-    gradeListRenderedCount = 0;
-    loadedGradeRows = [];
-    tbody.innerHTML = "";
-  }
-
-  gradeListIsLoading = true;
-  if (nextButton) {
-    nextButton.disabled = true;
-    nextButton.hidden = !append;
-    nextButton.textContent = "Next";
-  }
 
   const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")
     .toLowerCase()
@@ -1142,8 +940,7 @@ async function loadGradesList(options = {}) {
         category_id,
         assessment_categories ( name ),
         classes ( name ),
-        subjects ( name ),
-        grade_records ( count )
+        subjects ( name )
       `,
       )
       .order("created_at", { ascending: false });
@@ -1158,235 +955,104 @@ async function loadGradesList(options = {}) {
       query = query.eq("category_id", selectedCategory);
     }
 
-    query = query
-      .order("id", { ascending: false })
-      .range(gradeListOffset, gradeListOffset + GRADE_LIST_PAGE_SIZE - 1);
-
     const { data: grades, error } = await query;
 
     if (error) throw error;
 
     if (!grades || grades.length === 0) {
-      gradeListHasMore = false;
-      if (gradeListRenderedCount === 0) {
-        tbody.innerHTML = `
-        <tr data-grade-empty="true">
-          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
             No grade records found.
           </td>
         </tr>`;
-      }
       return;
     }
 
-    gradeListOffset += grades.length;
-    gradeListHasMore = grades.length === GRADE_LIST_PAGE_SIZE;
+    const filteredGrades = grades.filter((item) => {
+      const normalizedStatus = (item.status || "drafted").toLowerCase();
+      const itemStatus = normalizedStatus.includes("draft")
+        ? "drafted"
+        : "submitted";
+      const itemDate = getGradeLocalDate(item.created_at);
+      if (selectedStatus && itemStatus !== selectedStatus) return false;
+      if (startDate && itemDate !== startDate) return false;
+      if (!searchQuery) return true;
 
-    loadedGradeRows.push(...grades);
-    const filteredGrades = filterLoadedGradeRows(grades, {
-      searchQuery,
-      selectedStatus,
-      startDate,
+      const categoryName = (
+        item.assessment_categories?.name || ""
+      ).toLowerCase();
+      const className = (item.classes?.name || "").toLowerCase();
+      const subjectName = (item.subjects?.name || "").toLowerCase();
+      const statusText = (item.status || "").toLowerCase();
+
+      return (
+        categoryName.includes(searchQuery) ||
+        className.includes(searchQuery) ||
+        subjectName.includes(searchQuery) ||
+        statusText.includes(searchQuery)
+      );
     });
 
     if (filteredGrades.length === 0) {
-      if (gradeListRenderedCount === 0) {
-        tbody.innerHTML = `
-        <tr data-grade-empty="true">
-          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
-            No grade records on this page match the selected filters.
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+            No grade records found matching filters.
           </td>
         </tr>`;
-      }
       return;
     }
 
-    tbody.querySelector('[data-grade-empty="true"]')?.remove();
-    tbody.insertAdjacentHTML(
-      "beforeend",
-      filteredGrades.map(renderGradeRow).join(""),
-    );
-    gradeListRenderedCount += filteredGrades.length;
+    tbody.innerHTML = filteredGrades
+      .map((item) => {
+        const gradeId = item.id || item.grade_id;
+
+        if (!gradeId) {
+          console.error("Missing ID for grade record:", item);
+        }
+
+        const rawStatus = (item.status || "draft").toLowerCase();
+        const isDraft = rawStatus.includes("draft");
+
+        const formattedDate = item.created_at
+          ? new Date(item.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+            })
+          : "N/A";
+
+        const categoryName = item.assessment_categories?.name || "N/A";
+        const className = item.classes?.name || "N/A";
+        const subjectName = item.subjects?.name || "N/A";
+        const displayStatus = isDraft ? "Drafted" : "Submitted";
+
+        const actionButtonHTML = isDraft
+          ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${gradeId}">
+               <i class="fa-solid fa-pen"></i>
+             </button>`
+          : `<button class="grades-actions-btn view" title="View Grades" data-action="view" data-grade-id="${gradeId}">
+               <i class="fa-solid fa-eye"></i>
+             </button>`;
+
+        return `
+          <tr data-grade-id="${gradeId}" data-class-id="${item.class_id || ""}" data-subject-id="${item.subject_id || ""}" data-category-id="${item.category_id || ""}">
+            <td>${categoryName}</td>
+            <td>${className}</td>
+            <td>${subjectName}</td>
+            <td>${formattedDate}</td>
+            <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
+            <td>${actionButtonHTML}</td>
+          </tr>
+        `;
+      })
+      .join("");
   } catch (err) {
     console.error("Error loading grades list:", err);
-    if (!append && gradeListRenderedCount === 0) {
-      gradeListHasMore = false;
-      setGradeTableMessage(tbody, getGradeErrorMessage(err));
-    }
     if (typeof showToast === "function") {
-      showToast(getGradeErrorMessage(err), "error");
-    }
-  } finally {
-    gradeListIsLoading = false;
-    if (nextButton) {
-      nextButton.hidden = !gradeListHasMore;
-      nextButton.disabled = false;
-      nextButton.textContent = "Next";
-    }
-    if (gradeListRefreshPending) {
-      gradeListRefreshPending = false;
-      loadGradesList();
-    }
-  }
-}
-
-function filterLoadedGradeRows(
-  rows = loadedGradeRows,
-  filters = {
-    searchQuery: (document.getElementById("gradeSearchInput")?.value || "")
-      .toLowerCase()
-      .trim(),
-    selectedStatus: document.getElementById("gradeToolbarStatusSelect")?.value,
-    startDate: document.getElementById("gradeToolbarStartDate")?.value,
-  },
-) {
-  const { searchQuery, selectedStatus, startDate } = filters;
-  return rows.filter((item) => {
-    const normalizedStatus = (item.status || "drafted").toLowerCase();
-    const itemStatus = normalizedStatus.includes("draft")
-      ? "drafted"
-      : "submitted";
-    if (selectedStatus && itemStatus !== selectedStatus) return false;
-    if (startDate && getGradeLocalDate(item.created_at) !== startDate) return false;
-    if (!searchQuery) return true;
-
-    const searchableFields = [
-      item.assessment_categories?.name,
-      item.classes?.name,
-      item.subjects?.name,
-      item.status,
-    ];
-    return searchableFields.some((value) =>
-      String(value || "").toLowerCase().includes(searchQuery),
-    );
-  });
-}
-
-function renderGradeRow(item) {
-  const gradeId = item.id || item.grade_id;
-  if (!gradeId) {
-    console.error("Missing ID for grade record:", item);
-    return "";
-  }
-
-  const isDraft = (item.status || "draft").toLowerCase().includes("draft");
-  const formattedDate = item.created_at
-    ? new Date(item.created_at).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-      })
-    : "N/A";
-  const actionButtonHTML = isDraft
-    ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${escapeGradeHtml(gradeId)}"><i class="fa-solid fa-pen"></i></button>`
-    : `<button class="grades-actions-btn view" title="View Grades" data-action="view" data-grade-id="${escapeGradeHtml(gradeId)}"><i class="fa-solid fa-eye"></i></button>`;
-
-  return `
-    <tr data-grade-id="${escapeGradeHtml(gradeId)}" data-class-id="${escapeGradeHtml(item.class_id || "")}" data-subject-id="${escapeGradeHtml(item.subject_id || "")}" data-category-id="${escapeGradeHtml(item.category_id || "")}">
-      <td>${escapeGradeHtml(item.assessment_categories?.name || "N/A")}</td>
-      <td>${escapeGradeHtml(item.classes?.name || "N/A")}</td>
-      <td>${escapeGradeHtml(item.subjects?.name || "N/A")}</td>
-      <td>${formattedDate}</td>
-      <td>${item.grade_records?.[0]?.count ?? 0}</td>
-      <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${isDraft ? "Drafted" : "Submitted"}</span></td>
-      <td>${actionButtonHTML}</td>
-    </tr>`;
-}
-
-function renderLoadedGradeRows() {
-  const tbody = document.getElementById("gradesTableBody");
-  if (!tbody) return;
-
-  const visibleRows = filterLoadedGradeRows();
-  if (!visibleRows.length) {
-    setGradeTableMessage(
-      tbody,
-      loadedGradeRows.length
-        ? "No grade records on this page match the selected filters."
-        : "No grade records found.",
-    );
-  } else {
-    tbody.innerHTML = visibleRows.map(renderGradeRow).join("");
-  }
-
-  gradeListRenderedCount = visibleRows.length;
-  const nextButton = document.getElementById("nextGradesPage");
-  if (nextButton) nextButton.hidden = !gradeListHasMore;
-}
-
-async function refreshGradeRow(gradeId, { insertIfMissing = false } = {}) {
-  if (!gradeId) return false;
-
-  try {
-    const client = window.supabaseClient || supabaseClient;
-    const { data: row, error } = await client
-      .from("grades")
-      .select(`
-        id,
-        status,
-        created_at,
-        created_by,
-        class_id,
-        subject_id,
-        category_id,
-        assessment_categories ( name ),
-        classes ( name ),
-        subjects ( name ),
-        grade_records ( count )
-      `)
-      .eq("id", gradeId)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    const existingIndex = loadedGradeRows.findIndex(
-      (item) => String(item.id) === String(gradeId),
-    );
-    if (!row) {
-      if (existingIndex >= 0) loadedGradeRows.splice(existingIndex, 1);
-      renderLoadedGradeRows();
-      return true;
+      showToast(`Failed to load grades: ${err.message}`, "error");
     }
 
-    const selectedClass = document.getElementById("gradeToolbarClassSelect")?.value;
-    const selectedSubject = document.getElementById("gradeToolbarSubjectSelect")?.value;
-    const selectedCategory = document.getElementById("gradeToolbarCategorySelect")?.value;
-    const matchesQueryFilters =
-      (!selectedClass || row.class_id === selectedClass) &&
-      (!selectedSubject || row.subject_id === selectedSubject) &&
-      (!selectedCategory || row.category_id === selectedCategory);
-
-    if (!matchesQueryFilters) {
-      if (existingIndex >= 0) loadedGradeRows.splice(existingIndex, 1);
-      renderLoadedGradeRows();
-      return true;
-    }
-
-    if (existingIndex >= 0) {
-      loadedGradeRows[existingIndex] = row;
-    } else if (insertIfMissing) {
-      loadedGradeRows.push(row);
-      loadedGradeRows.sort((a, b) => {
-        const dateOrder = String(b.created_at || "").localeCompare(String(a.created_at || ""));
-        return dateOrder || String(b.id).localeCompare(String(a.id));
-      });
-
-      const loadedRowLimit = Math.max(GRADE_LIST_PAGE_SIZE, gradeListOffset);
-      if (loadedGradeRows.length > loadedRowLimit) {
-        loadedGradeRows.pop();
-        gradeListHasMore = true;
-      }
-      gradeListOffset = loadedGradeRows.length;
-    }
-
-    renderLoadedGradeRows();
-    return true;
-  } catch (error) {
-    console.error("Could not refresh the saved grade row:", error);
-    showToast(
-      "Grades were saved, but the affected row could not be refreshed. Please refresh the page to see the latest record.",
-      "error",
-    );
-    return false;
   }
 }
 
@@ -1532,22 +1198,8 @@ async function handleViewGrades(gradeId) {
     openModal(modal);
   } catch (err) {
     console.error("Error opening view modal:", err);
-    const tbody = document.getElementById("viewGradeTableBody");
-    setGradeTableMessage(tbody, getGradeErrorMessage(err), 2);
-    [
-      "viewModalClass",
-      "viewModalSubject",
-      "viewModalAssessment",
-      "viewModalAssessmentPeriod",
-      "viewModalAcademicYear",
-      "viewModalSemester",
-      "viewModalDate",
-      "viewModalCreator",
-    ].forEach((id) => {
-      const element = document.getElementById(id);
-      if (element) element.textContent = "Unavailable";
-    });
-    if (typeof showToast === "function") showToast(getGradeErrorMessage(err), "error");
+    if (typeof showToast === "function")
+      showToast("Failed to view grade details", "error");
   }
 }
 
@@ -1585,7 +1237,7 @@ async function handleEditGrades(gradeId) {
   if (elMaxMarks) elMaxMarks.innerHTML = skeletonText;
 
   const tbody = document.getElementById("editGradeTableBody");
-  if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">Loading records...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">Loading records...</td></tr>`;
 
   openModal(modal);
 
@@ -1763,8 +1415,8 @@ async function handleEditGrades(gradeId) {
     }
   } catch (err) {
     console.error("Error opening edit modal:", err);
-    setGradeTableMessage(tbody, getGradeErrorMessage(err), 2);
-    if (typeof showToast === "function") showToast(getGradeErrorMessage(err), "error");
+    if (typeof showToast === "function")
+      showToast("Failed to load grade for editing", "error");
     closeModal(modal);
   }
 }
@@ -1793,7 +1445,6 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.disabled = true;
 
       if (action === "view") {
-        openModal(document.getElementById("viewGradeModal"));
         await handleViewGrades(gradeId);
       } else if (action === "edit") {
         await handleEditGrades(gradeId);
@@ -1865,6 +1516,15 @@ document
     try {
       const client = window.supabaseClient || supabaseClient;
 
+      if (hasStatusChanged) {
+        const { error: gradeErr } = await client
+          .from("grades")
+          .update({ status: currentStatus })
+          .eq("id", currentEditGradeId);
+
+        if (gradeErr) throw gradeErr;
+      }
+
       const { data: gradeDetails, error: detailsErr } = await client
         .from("grades")
         .select(
@@ -1888,47 +1548,42 @@ document
         gradeDetails?.assessment_categories?.name || "Assessment";
 
       const updatedRecordsInfo = [];
-      const recordsPayload = [];
 
-      Array.from(inputs).forEach((input) => {
+      const updatePromises = Array.from(inputs).map((input) => {
         const recordId = input.dataset.recordId;
         const studentId = input.dataset.studentId;
         const rawVal = input.value.trim();
-        const initialScore = input.dataset.initialValue ?? "";
 
-        if (rawVal === initialScore) return;
-
-        if (rawVal === "") {
-          throw new Error("A grade score cannot be left blank.");
-        }
-
-        const score = Number(rawVal);
-        if (!Number.isFinite(score) || score < 0) {
-          throw new Error("Enter a valid, non-negative grade score.");
+        let score = null;
+        if (rawVal !== "") {
+          const parsed = parseFloat(rawVal);
+          if (isNaN(parsed))
+            throw new Error(`Invalid score number for student record.`);
+          score = parsed;
         }
 
         updatedRecordsInfo.push({ student_id: studentId, score: score });
-        recordsPayload.push({ record_id: recordId, score: score });
+
+        return client
+          .from("grade_records")
+          .update({ score: score })
+          .eq("id", recordId)
+          .throwOnError();
       });
 
-      const { data: updatedGradeId, error: updateError } = await client.rpc(
-        "update_grade_session",
-        {
-          p_grade_id: currentEditGradeId,
-          p_status: hasStatusChanged ? currentStatus : null,
-          p_records: recordsPayload,
-        },
-      );
-      if (updateError) throw updateError;
-      if (!updatedGradeId) {
-        throw new Error("The grade record was not updated or access was removed.");
+      await Promise.all(updatePromises);
+
+      if (typeof showToast === "function") {
+        showToast("Grades updated successfully!", "success");
       }
 
+      closeModal(document.getElementById("editGradeModal"));
+      if (typeof loadGradesList === "function") loadGradesList();
+
       const isSubmittedState = currentStatus === "submitted";
-      let notificationFailed = false;
 
       if (isSubmittedState && typeof window.sendNotification === "function") {
-        const notificationResults = await Promise.allSettled(
+        await Promise.all(
           updatedRecordsInfo.map(async (record) => {
             if (!record.student_id) {
               return;
@@ -1945,25 +1600,11 @@ document
             );
           }),
         );
-        notificationFailed = notificationResults.some(
-          (result) => result.status === "rejected" || result.value?.success === false,
-        );
-      }
-
-      closeModal(document.getElementById("editGradeModal"));
-      const gradeRowRefreshed = await refreshGradeRow(currentEditGradeId);
-      if (gradeRowRefreshed && typeof showToast === "function") {
-        showToast(
-          notificationFailed
-            ? "Grades were updated, but some student notifications could not be sent."
-            : "Grades updated successfully!",
-          notificationFailed ? "error" : "success",
-        );
       }
     } catch (err) {
       console.error("Error saving updated grades:", err);
       if (typeof showToast === "function") {
-        showToast(getGradeErrorMessage(err, "save"), "error");
+        showToast(`Update failed: ${err.message}`, "error");
       }
     } finally {
       if (submitBtn) {
@@ -1979,51 +1620,124 @@ async function populateToolbarDropdowns() {
   const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
 
   const client = window.supabaseClient || supabaseClient;
-  let filterResults;
 
   try {
-    filterResults = await Promise.all([
-      client.from("classes").select("id, name").order("name"),
-      client.from("subjects").select("id, name").order("name"),
-      client.from("assessment_categories").select("id, name").order("name"),
-    ]);
-    const [classRes, subjectRes, categoryRes] = filterResults;
-
-    if (classFilter && classRes.data) {
-      classFilter.innerHTML = `<option value="">All Classes</option>`;
-      classRes.data.forEach((c) => {
-        classFilter.appendChild(new Option(c.name, c.id));
-      });
+    const { data: { user } } = await client.auth.getUser();
+    let role = "admin";
+    if (user) {
+      const { data: profile } = await client
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.role) role = String(profile.role).toLowerCase();
     }
 
-    if (subjectFilter && subjectRes.data) {
-      subjectFilter.innerHTML = `<option value="">All Subjects</option>`;
-      subjectRes.data.forEach((s) => {
-        subjectFilter.appendChild(new Option(s.name, s.id));
-      });
-    }
+    const activeYearId = window.activeAcademicYearId || activeAcademicYearId;
 
-    if (categoryFilter && categoryRes.data) {
-      categoryFilter.innerHTML = `<option value="">All Assessment Categories</option>`;
-      categoryRes.data.forEach((cat) => {
-        categoryFilter.appendChild(new Option(cat.name, cat.id));
+    if (role === "teacher" && user) {
+      let query = client
+        .from("teacher_assignments")
+        .select("class_id, classes(id, name, status), subject_id, subjects(id, name, status)")
+        .eq("teacher_id", user.id)
+        .ilike("status", "active");
+
+      if (activeYearId) {
+        query = query.eq("academic_year_id", activeYearId);
+      }
+
+      const [{ data: assignments }, categoryRes] = await Promise.all([
+        query,
+        client.from("assessment_categories").select("id, name").order("name"),
+      ]);
+
+      const classMap = new Map();
+      const subjectMap = new Map();
+
+      (assignments || []).forEach((a) => {
+        if (a.classes?.id && (!a.classes.status || a.classes.status.toLowerCase() === "active")) {
+          classMap.set(a.classes.id, a.classes.name);
+        }
+        if (a.subjects?.id && (!a.subjects.status || a.subjects.status.toLowerCase() === "active")) {
+          subjectMap.set(a.subjects.id, a.subjects.name);
+        }
       });
+
+      if (classFilter) {
+        if (classMap.size === 0) {
+          classFilter.innerHTML = `<option value="">No Active Classes</option>`;
+          classFilter.disabled = true;
+        } else {
+          classFilter.disabled = false;
+          classFilter.innerHTML = `<option value="">All Classes</option>`;
+          [...classMap.entries()]
+            .sort((a, b) => a[1].localeCompare(b[1]))
+            .forEach(([id, name]) => {
+              classFilter.appendChild(new Option(name, id));
+            });
+        }
+      }
+
+      if (subjectFilter) {
+        if (subjectMap.size === 0) {
+          subjectFilter.innerHTML = `<option value="">No Active Subjects</option>`;
+          subjectFilter.disabled = true;
+        } else {
+          subjectFilter.disabled = false;
+          subjectFilter.innerHTML = `<option value="">All Subjects</option>`;
+          [...subjectMap.entries()]
+            .sort((a, b) => a[1].localeCompare(b[1]))
+            .forEach(([id, name]) => {
+              subjectFilter.appendChild(new Option(name, id));
+            });
+        }
+      }
+
+      if (categoryFilter && categoryRes.data) {
+        categoryFilter.innerHTML = `<option value="">All Assessment Categories</option>`;
+        categoryRes.data.forEach((cat) => {
+          categoryFilter.appendChild(new Option(cat.name, cat.id));
+        });
+      }
+
+      const addBtn = document.getElementById("addGrade");
+      if (classMap.size === 0 && addBtn) {
+        addBtn.disabled = true;
+        addBtn.title = "No active class assignments";
+      }
+    } else {
+      const [classRes, subjectRes, categoryRes] = await Promise.all([
+        client.from("classes").select("id, name").ilike("status", "active").order("name"),
+        client.from("subjects").select("id, name").ilike("status", "active").order("name"),
+        client.from("assessment_categories").select("id, name").order("name"),
+      ]);
+
+      if (classFilter && classRes.data) {
+        classFilter.disabled = false;
+        classFilter.innerHTML = `<option value="">All Classes</option>`;
+        classRes.data.forEach((c) => {
+          classFilter.appendChild(new Option(c.name, c.id));
+        });
+      }
+
+      if (subjectFilter && subjectRes.data) {
+        subjectFilter.disabled = false;
+        subjectFilter.innerHTML = `<option value="">All Subjects</option>`;
+        subjectRes.data.forEach((s) => {
+          subjectFilter.appendChild(new Option(s.name, s.id));
+        });
+      }
+
+      if (categoryFilter && categoryRes.data) {
+        categoryFilter.innerHTML = `<option value="">All Assessment Categories</option>`;
+        categoryRes.data.forEach((cat) => {
+          categoryFilter.appendChild(new Option(cat.name, cat.id));
+        });
+      }
     }
   } catch (err) {
     console.error("Error populating toolbar filters:", err);
-    showToast(getGradeErrorMessage(err), "error");
-    return;
   }
-
-  const [classRes, subjectRes, categoryRes] = filterResults;
-  const failedFilter = [classRes.error, subjectRes.error, categoryRes.error].find(Boolean);
-  if (failedFilter) {
-    console.error("One or more grade filters could not be loaded:", failedFilter);
-    showToast(getGradeErrorMessage(failedFilter), "error");
-  }
-  if (classFilter && classRes.error) classFilter.replaceChildren(new Option("Classes unavailable", ""));
-  if (subjectFilter && subjectRes.error) subjectFilter.replaceChildren(new Option("Subjects unavailable", ""));
-  if (categoryFilter && categoryRes.error) categoryFilter.replaceChildren(new Option("Categories unavailable", ""));
 }
 
 function handleToolbarFilter() {
@@ -2070,7 +1784,6 @@ function initToolbarListeners() {
   const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
   const statusFilter = document.getElementById("gradeToolbarStatusSelect");
   const startDateFilter = document.getElementById("gradeToolbarStartDate");
-  const nextButton = document.getElementById("nextGradesPage");
 
   if (searchInput) searchInput.addEventListener("input", loadGradesList);
   if (classFilter) classFilter.addEventListener("change", loadGradesList);
@@ -2078,7 +1791,4 @@ function initToolbarListeners() {
   if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
   if (statusFilter) statusFilter.addEventListener("change", loadGradesList);
   if (startDateFilter) startDateFilter.addEventListener("change", loadGradesList);
-  if (nextButton) {
-    nextButton.addEventListener("click", () => loadGradesList({ append: true }));
-  }
 }

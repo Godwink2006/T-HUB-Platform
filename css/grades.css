@@ -213,31 +213,6 @@ body {
   overflow: hidden;
 }
 
-.grades-pagination {
-  display: flex;
-  justify-content: center;
-  padding: 18px 0 28px;
-}
-
-.grades-pagination button {
-  border: 0;
-  padding: 11px 24px;
-  background: #2563eb;
-  color: #fff;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.grades-pagination button:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-
-.grades-pagination button:disabled {
-  opacity: 0.65;
-  cursor: wait;
-}
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -268,6 +243,7 @@ tr {
   display: inline-flex;
   align-items: center;
   padding: 5px 10px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
 }
@@ -531,6 +507,7 @@ tr {
 }
 
 @media screen and (max-width: 768px) {
+
   .enterGrade-modal-content,
   .editGrade-modal-content {
     display: flex;
@@ -740,7 +717,7 @@ tr {
     height: 34px;
     width: 34px;
     font-size: 16px;
-    border-radius: 10px !important;
+    border-radius: 8px !important;
   }
 
   .grade-modal-body,
@@ -797,14 +774,14 @@ tr {
   .grades-actions-btn {
     width: 34px;
     height: 34px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .enterGrade-modal-content,
   .editGrade-modal-content,
   .grade-modal-content,
   .view-grade-modal-content {
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
   }
 
@@ -812,8 +789,8 @@ tr {
   .editGrade-modal-header,
   .grade-modal-header,
   .view-grade-modal-header {
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
   }
 
   .cancel-btn,
@@ -822,14 +799,20 @@ tr {
   .back-grades-btn,
   .toolbar input,
   .toolbar select,
-  .grades-actions-btn,
-  .grades-pagination button,
-  .badge {
-    border-radius: 10px;
+  .grades-actions-btn {
+    border-radius: 8px;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 0;
+    width: auto;
   }
 }
 
 @media screen and (max-width: 380px) {
+
   .toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
