@@ -732,20 +732,25 @@ async function handleSaveGrades(e) {
 
     if (
       selectedStatus === "submitted" &&
-      typeof window.sendNotification === "function" &&
-      schoolId
+      typeof window.sendNotification === "function"
     ) {
-      await Promise.all(
-        recordsPayload.map(async (record) => {
-          return window.sendNotification(
-            schoolId,
-            record.student_id,
-            "New Grade Posted",
-            `Your grade has been updated (Score: ${record.score}/${currentGradeSession.maxMarks || "N/A"}).`,
-            "academic",
-          );
-        }),
-      );
+      try {
+        const targetSchoolId =
+          (typeof window !== "undefined" && window.currentSchoolId) || null;
+        await Promise.all(
+          recordsPayload.map(async (record) => {
+            return window.sendNotification(
+              targetSchoolId,
+              record.student_id,
+              "New Grade Posted",
+              `Your grade has been updated (Score: ${record.score}/${currentGradeSession.maxMarks || "N/A"}).`,
+              "academic",
+            );
+          }),
+        );
+      } catch (notifErr) {
+        console.warn("Failed to dispatch grade notifications:", notifErr);
+      }
     }
   } catch (err) {
     console.error("Error saving grade session:", err);
@@ -1581,11 +1586,13 @@ document
         gradeDetails?.assessment_categories?.name || "Assessment";
 
       const updatedRecordsInfo = [];
+      const changedInputs = [];
 
-      const updatePromises = Array.from(inputs).map((input) => {
+      inputs.forEach((input) => {
         const recordId = input.dataset.recordId;
         const studentId = input.dataset.studentId;
         const rawVal = input.value.trim();
+        const initialScore = input.dataset.initialValue ?? "";
 
         let score = null;
         if (rawVal !== "") {
@@ -1597,14 +1604,20 @@ document
 
         updatedRecordsInfo.push({ student_id: studentId, score: score });
 
-        return client
-          .from("grade_records")
-          .update({ score: score })
-          .eq("id", recordId)
-          .throwOnError();
+        if (initialScore !== rawVal) {
+          changedInputs.push({ recordId, score });
+        }
       });
 
-      await Promise.all(updatePromises);
+      // Update changed records sequentially to avoid parallel lock contention and statement timeouts
+      for (const item of changedInputs) {
+        const { error: recordErr } = await client
+          .from("grade_records")
+          .update({ score: item.score })
+          .eq("id", item.recordId);
+
+        if (recordErr) throw recordErr;
+      }
 
       if (typeof showToast === "function") {
         showToast("Grades updated successfully!", "success");
@@ -1616,23 +1629,29 @@ document
       const isSubmittedState = currentStatus === "submitted";
 
       if (isSubmittedState && typeof window.sendNotification === "function") {
-        await Promise.all(
-          updatedRecordsInfo.map(async (record) => {
-            if (!record.student_id) {
-              return;
-            }
-            const scoreText = record.score !== null ? record.score : "N/A";
-            const message = `Your grade for ${subjectName} (${categoryName}) has been updated. New Score: ${scoreText}.`;
+        try {
+          const targetSchoolId =
+            (typeof window !== "undefined" && window.currentSchoolId) || null;
+          await Promise.all(
+            updatedRecordsInfo.map(async (record) => {
+              if (!record.student_id) {
+                return;
+              }
+              const scoreText = record.score !== null ? record.score : "N/A";
+              const message = `Your grade for ${subjectName} (${categoryName}) has been updated. New Score: ${scoreText}.`;
 
-            return window.sendNotification(
-              null,
-              record.student_id,
-              "Grade Updated",
-              message,
-              "academic",
-            );
-          }),
-        );
+              return window.sendNotification(
+                targetSchoolId,
+                record.student_id,
+                "Grade Updated",
+                message,
+                "academic",
+              );
+            }),
+          );
+        } catch (notifErr) {
+          console.warn("Failed to dispatch grade update notifications:", notifErr);
+        }
       }
     } catch (err) {
       console.error("Error saving updated grades:", err);
