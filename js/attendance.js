@@ -416,29 +416,25 @@ async function handleClassSelectChange(classId) {
 
     let lessonsQuery = supabaseClient
       .from("timetable_lessons")
-      .select(
-        `
-        period_id,
-        subject_id,
-        teacher_id,
-        is_break,
-        periods:period_id(id, name, start_time, end_time),
-        subjects:subject_id(id, name)
-      `,
-      )
+      .select("id, period_id, subject_id, teacher_id, is_break")
       .eq("timetable_id", timetable.id)
       .ilike("day_of_week", todayName);
     if (!isAdmin) lessonsQuery = lessonsQuery.eq("teacher_id", user.id);
 
-    const { data: lessons, error: lError } = await lessonsQuery;
+    const { data: rawLessons, error: lError } = await lessonsQuery;
 
     if (lError) {
       console.error("Timetable query error:", lError);
-      await loadDefaultPeriods(periodSelect);
+      if (isAdmin) {
+        await loadDefaultPeriods(periodSelect);
+      } else {
+        periodSelect.innerHTML = `<option value="">No active lessons scheduled for today</option>`;
+        periodSelect.disabled = true;
+      }
       return;
     }
 
-    if (!lessons || lessons.length === 0) {
+    if (!rawLessons || rawLessons.length === 0) {
       console.warn(
         `No lessons found for teacher (${user.id}) on ${todayName}.`,
       );
@@ -450,6 +446,37 @@ async function handleClassSelectChange(classId) {
       }
       return;
     }
+
+    const periodIds = [
+      ...new Set(rawLessons.map((l) => l.period_id).filter(Boolean)),
+    ];
+    const subjectIds = [
+      ...new Set(rawLessons.map((l) => l.subject_id).filter(Boolean)),
+    ];
+
+    const [periodsRes, subjectsRes] = await Promise.all([
+      periodIds.length > 0
+        ? supabaseClient
+            .from("periods")
+            .select("id, name, start_time, end_time")
+            .in("id", periodIds)
+        : { data: [] },
+      subjectIds.length > 0
+        ? supabaseClient
+            .from("subjects")
+            .select("id, name")
+            .in("id", subjectIds)
+        : { data: [] },
+    ]);
+
+    const periodMap = new Map((periodsRes.data || []).map((p) => [p.id, p]));
+    const subjectMap = new Map((subjectsRes.data || []).map((s) => [s.id, s]));
+
+    const lessons = rawLessons.map((l) => ({
+      ...l,
+      periods: periodMap.get(l.period_id) || null,
+      subjects: subjectMap.get(l.subject_id) || null,
+    }));
 
     currentTodayLessons = lessons;
 
