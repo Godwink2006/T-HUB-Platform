@@ -476,6 +476,9 @@ async function loadAcademicContext() {
 async function handleLoadStudents(e) {
   if (e) e.preventDefault();
 
+  const loadBtn = document.getElementById("loadEnterGrade");
+  const originalBtnText = loadBtn ? loadBtn.textContent.trim() : "Load Students";
+
   const classSelect =
     document.getElementById("gradesClassSelect") ||
     document.getElementById("gradeClassSelect");
@@ -507,119 +510,131 @@ async function handleLoadStudents(e) {
     return;
   }
 
-  const classId = classSelect.value;
-  const className = classSelect.options[classSelect.selectedIndex].text;
-
-  const subjectId = subjectSelect.value;
-  const subjectName = subjectSelect.options[subjectSelect.selectedIndex].text;
-
-  const categoryId = categorySelect.value;
-  const categoryName =
-    categorySelect.options[categorySelect.selectedIndex].text;
-
-  const assessmentsList = window.activeAssessment || activeAssessment || [];
-  const selectedAssessment =
-    Array.isArray(assessmentsList) && assessmentsList.length > 0
-      ? assessmentsList[0]
-      : null;
-
-  const assessmentId = selectedAssessment ? selectedAssessment.id : null;
-  const assessmentName = selectedAssessment ? selectedAssessment.name : "";
-
-  const categoriesList =
-    window.activeCategories || window.activeAssessmentCategories || [];
-
-  const selectedCategory = categoriesList.find((c) => c.id === categoryId);
-
-  const selectedCategoryOption =
-    categorySelect.options[categorySelect.selectedIndex];
-
-  let gradeCreatorMarkup;
-  try {
-    const client = window.supabaseClient || supabaseClient;
-    gradeCreatorMarkup = await getCurrentGradeActorMarkup(client);
-  } catch (err) {
-    console.error("Error loading grade creator identity:", err);
-    showToast(
-      "Unable to load your profile details. Please try again.",
-      "error",
-    );
-    return;
+  if (loadBtn) {
+    loadBtn.disabled = true;
+    loadBtn.textContent = "Loading Students...";
   }
 
-  const periodMax =
-    selectedAssessment && selectedAssessment.maximum_marks != null
-      ? Number(selectedAssessment.maximum_marks)
-      : Infinity;
+  try {
+    const classId = classSelect.value;
+    const className = classSelect.options[classSelect.selectedIndex].text;
 
-  const categoryMax =
-    selectedCategory && selectedCategory.marks != null
-      ? Number(selectedCategory.marks)
-      : selectedCategoryOption && selectedCategoryOption.dataset.marks
-        ? Number(selectedCategoryOption.dataset.marks)
+    const subjectId = subjectSelect.value;
+    const subjectName = subjectSelect.options[subjectSelect.selectedIndex].text;
+
+    const categoryId = categorySelect.value;
+    const categoryName =
+      categorySelect.options[categorySelect.selectedIndex].text;
+
+    const assessmentsList = window.activeAssessment || activeAssessment || [];
+    const selectedAssessment =
+      Array.isArray(assessmentsList) && assessmentsList.length > 0
+        ? assessmentsList[0]
+        : null;
+
+    const assessmentId = selectedAssessment ? selectedAssessment.id : null;
+    const assessmentName = selectedAssessment ? selectedAssessment.name : "";
+
+    const categoriesList =
+      window.activeCategories || window.activeAssessmentCategories || [];
+
+    const selectedCategory = categoriesList.find((c) => c.id === categoryId);
+
+    const selectedCategoryOption =
+      categorySelect.options[categorySelect.selectedIndex];
+
+    let gradeCreatorMarkup;
+    try {
+      const client = window.supabaseClient || supabaseClient;
+      gradeCreatorMarkup = await getCurrentGradeActorMarkup(client);
+    } catch (err) {
+      console.error("Error loading grade creator identity:", err);
+      showToast("Unable to load your profile details. Please try again.", "error");
+      return;
+    }
+
+    const periodMax =
+      selectedAssessment && selectedAssessment.maximum_marks != null
+        ? Number(selectedAssessment.maximum_marks)
         : Infinity;
 
-  const effectiveMaxMarks = Math.min(periodMax, categoryMax);
-  const finalMaxMarks = isFinite(effectiveMaxMarks) ? effectiveMaxMarks : null;
+    const categoryMax =
+      selectedCategory && selectedCategory.marks != null
+        ? Number(selectedCategory.marks)
+        : selectedCategoryOption && selectedCategoryOption.dataset.marks
+          ? Number(selectedCategoryOption.dataset.marks)
+          : Infinity;
 
-  currentGradeSession = {
-    classId,
-    className,
-    subjectId,
-    subjectName,
-    assessmentId,
-    assessmentName,
-    categoryId,
-    categoryName,
-    maxMarks: finalMaxMarks,
-    academicYearId: window.activeAcademicYearId || activeAcademicYearId || null,
-    termId: window.activeTermId || activeTermId || null,
-  };
+    const effectiveMaxMarks = Math.min(periodMax, categoryMax);
+    const finalMaxMarks = isFinite(effectiveMaxMarks) ? effectiveMaxMarks : null;
 
-  const elYear = document.getElementById("enterGradeModalYear");
-  const elTerm = document.getElementById("enterGradeModalTerm");
-  const elClass = document.getElementById("enterGradeModalClass");
-  const elSubject = document.getElementById("enterGradeModalSubject");
-  const elCategory = document.getElementById("enterGradeModalCategory");
-  const elPeriod = document.getElementById("enterGradeModalAssessmentPeriod");
-  const elDate = document.getElementById("enterGradeModalDate");
-  const elCreator = document.getElementById("enterGradeModalCreator");
+    currentGradeSession = {
+      classId,
+      className,
+      subjectId,
+      subjectName,
+      assessmentId,
+      assessmentName,
+      categoryId,
+      categoryName,
+      maxMarks: finalMaxMarks,
+      academicYearId: window.activeAcademicYearId || activeAcademicYearId || null,
+      termId: window.activeTermId || activeTermId || null,
+    };
 
-  if (elClass) elClass.textContent = className;
-  if (elSubject) elSubject.textContent = subjectName;
-  if (elCategory) {
-    elCategory.textContent = `${categoryName} (Max Allowed: ${finalMaxMarks ?? "-"} marks)`;
+    const elYear = document.getElementById("enterGradeModalYear");
+    const elTerm = document.getElementById("enterGradeModalTerm");
+    const elClass = document.getElementById("enterGradeModalClass");
+    const elSubject = document.getElementById("enterGradeModalSubject");
+    const elCategory = document.getElementById("enterGradeModalCategory");
+    const elPeriod = document.getElementById("enterGradeModalAssessmentPeriod");
+    const elDate = document.getElementById("enterGradeModalDate");
+    const elCreator = document.getElementById("enterGradeModalCreator");
+
+    if (elClass) elClass.textContent = className;
+    if (elSubject) elSubject.textContent = subjectName;
+    if (elCategory) {
+      elCategory.textContent = `${categoryName} (Max Allowed: ${finalMaxMarks ?? "-"} marks)`;
+    }
+
+    if (elPeriod) {
+      const periodMarks =
+        selectedAssessment?.maximum_marks != null
+          ? ` (${selectedAssessment.maximum_marks} marks)`
+          : "";
+      elPeriod.textContent = assessmentName
+        ? `${assessmentName}${periodMarks}`
+        : "-";
+    }
+    if (elDate) {
+      elDate.textContent = new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    }
+    if (elCreator) elCreator.innerHTML = gradeCreatorMarkup;
+
+    if (elYear)
+      elYear.textContent = window.activeAcademicYearLabel || "Active Year";
+    if (elTerm) elTerm.textContent = window.activeTermLabel || "Active Term";
+
+    const setupModal = document.getElementById("gradeModal");
+    const enterGradeModal = document.getElementById("enterGradeModal");
+
+    if (setupModal) closeModal(setupModal);
+    if (enterGradeModal) openModal(enterGradeModal);
+
+    await loadStudentRosterForGrades(classId, finalMaxMarks);
+  } catch (err) {
+    console.error("Error loading students:", err);
+    showToast("Error loading students: " + (err.message || err), "error");
+  } finally {
+    if (loadBtn) {
+      loadBtn.disabled = false;
+      loadBtn.textContent = originalBtnText;
+    }
   }
-
-  if (elPeriod) {
-    const periodMarks =
-      selectedAssessment?.maximum_marks != null
-        ? ` (${selectedAssessment.maximum_marks} marks)`
-        : "";
-    elPeriod.textContent = assessmentName
-      ? `${assessmentName}${periodMarks}`
-      : "-";
-  }
-  if (elDate) {
-    elDate.textContent = new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  }
-  if (elCreator) elCreator.innerHTML = gradeCreatorMarkup;
-
-  if (elYear)
-    elYear.textContent = window.activeAcademicYearLabel || "Active Year";
-  if (elTerm) elTerm.textContent = window.activeTermLabel || "Active Term";
-
-  const setupModal = document.getElementById("gradeModal");
-  const enterGradeModal = document.getElementById("enterGradeModal");
-
-  if (setupModal) closeModal(setupModal);
-  if (enterGradeModal) openModal(enterGradeModal);
-
-  await loadStudentRosterForGrades(classId, finalMaxMarks);
 }
 
 async function handleSaveGrades(e) {
