@@ -359,6 +359,7 @@ async function loadAssessmentCategories() {
     const { data: categories, error } = await client
       .from("assessment_categories")
       .select("id, name, marks")
+      .ilike("status", "active")
       .order("name", { ascending: true });
 
     if (error) {
@@ -1648,7 +1649,7 @@ async function populateToolbarDropdowns() {
 
       const [{ data: assignments }, categoryRes] = await Promise.all([
         query,
-        client.from("assessment_categories").select("id, name").order("name"),
+        client.from("assessment_categories").select("id, name").ilike("status", "active").order("name"),
       ]);
 
       const classMap = new Map();
@@ -1709,7 +1710,7 @@ async function populateToolbarDropdowns() {
       const [classRes, subjectRes, categoryRes] = await Promise.all([
         client.from("classes").select("id, name").ilike("status", "active").order("name"),
         client.from("subjects").select("id, name").ilike("status", "active").order("name"),
-        client.from("assessment_categories").select("id, name").order("name"),
+        client.from("assessment_categories").select("id, name").ilike("status", "active").order("name"),
       ]);
 
       if (classFilter && classRes.data) {
