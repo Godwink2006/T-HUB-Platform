@@ -243,7 +243,6 @@ tr {
   display: inline-flex;
   align-items: center;
   padding: 5px 10px;
-  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
 }
