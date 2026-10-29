@@ -980,7 +980,7 @@ async function loadGradesList() {
     if (!grades || grades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records found.
           </td>
         </tr>`;
@@ -1015,11 +1015,23 @@ async function loadGradesList() {
     if (filteredGrades.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
+          <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
             No grade records found matching filters.
           </td>
         </tr>`;
       return;
+    }
+
+    const gradeIds = filteredGrades.map((item) => item.id || item.grade_id).filter(Boolean);
+    const countsMap = new Map();
+    if (gradeIds.length > 0) {
+      const { data: countData } = await client
+        .from("grade_records")
+        .select("grade_id")
+        .in("grade_id", gradeIds);
+      (countData || []).forEach((r) => {
+        countsMap.set(r.grade_id, (countsMap.get(r.grade_id) || 0) + 1);
+      });
     }
 
     tbody.innerHTML = filteredGrades
@@ -1059,6 +1071,7 @@ async function loadGradesList() {
             <td>${className}</td>
             <td>${subjectName}</td>
             <td>${formattedDate}</td>
+            <td>${countsMap.get(gradeId) || 0}</td>
             <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
             <td>${actionButtonHTML}</td>
           </tr>
