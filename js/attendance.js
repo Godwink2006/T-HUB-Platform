@@ -824,11 +824,10 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       `Attendance successfully ${workflowStatus === "drafted" ? "saved as Draft" : "Submitted"}!`,
       "success",
     );
+    const savedId = savedAttendanceId || activeContext.id;
     closeModal(document.getElementById("studentAttendanceModal"));
 
-    if (typeof loadAttendanceTable === "function") {
-      loadAttendanceTable();
-    }
+    if (savedId) await refreshAttendanceTableRecord(savedId);
   } catch (err) {
     showToast(`Failed to save attendance: ${err.message}`, "error");
   } finally {
@@ -848,6 +847,8 @@ function resetAttendanceModal() {
 }
 
 let allAttendanceList = [];
+let attendanceViewerRole = "";
+let attendanceViewerId = "";
 
 async function loadAttendanceTable() {
   const tbody = document.getElementById("attendanceTableBody");
@@ -886,6 +887,8 @@ async function loadAttendanceTable() {
     );
 
     const role = String(profile?.role || "").toLowerCase();
+    attendanceViewerRole = role;
+    attendanceViewerId = user.id;
     if (role === "teacher") {
       query = query.eq("teacher_id", user.id);
     } else if (shouldFilterAttendanceToSubmitted(role)) {
@@ -902,88 +905,11 @@ async function loadAttendanceTable() {
       return;
     }
 
-    if (!attendanceList || attendanceList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
-      return;
-    }
-
-    const attendanceIds = attendanceList.map((a) => a.id);
-    const { data: recordsData, error: countErr } = await supabaseClient
-      .from("attendance_records")
-      .select("attendance_id")
-      .in("attendance_id", attendanceIds);
-
-    const countsMap = new Map();
-    if (!countErr && recordsData) {
-      recordsData.forEach((rec) => {
-        countsMap.set(
-          rec.attendance_id,
-          (countsMap.get(rec.attendance_id) || 0) + 1,
-        );
-      });
-    }
-
-    tbody.innerHTML = "";
-    attendanceList.forEach((item) => {
-      const className = item.classes?.name || "N/A";
-      const classId = item.classes?.id || item.class_id || "";
-
-      const subjectName = item.subjects?.name || "General";
-      const subjectId = item.subjects?.id || item.subject_id || "";
-
-      const yearName = item.academic_years?.year_label || "N/A";
-      const yearId = item.academic_years?.id || item.academic_year_id || "";
-
-      const termName = item.terms?.name || "N/A";
-      const termId = item.terms?.id || item.term_id || "";
-
-      const studentCount = countsMap.get(item.id) || 0;
-      const formattedDate = formatDate(item.date);
-      const isDraft = item.status === "drafted";
-
-      const statusBadge = isDraft
-        ? `<span class="status-badge status-drafted">Drafted</span>`
-        : `<span class="status-badge status-submitted">Submitted</span>`;
-
-      const actionButton = isDraft
-        ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
-             <i class="fa-solid fa-pen-to-square"></i>
-           </button>`
-        : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
-             <i class="fa-solid fa-eye"></i>
-           </button>`;
-
-      const tr = document.createElement("tr");
-
-      tr.dataset.attendanceId = item.id;
-      tr.dataset.classId = classId;
-      tr.dataset.subjectId = subjectId;
-      tr.dataset.academicYearId = yearId;
-      tr.dataset.termId = termId;
-
-      tr.innerHTML = `
-        <td>${escapeHtml(className)}</td>
-        <td>${escapeHtml(subjectName)}</td>
-        <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
-        <td data-term-id="${termId}">${escapeHtml(termName)}</td>
-        <td>${formattedDate}</td>
-        <td>${studentCount}</td>
-        <td>${statusBadge}</td>
-        <td>${actionButton}</td>
-      `;
-
-      tbody.appendChild(tr);
-    });
-
     allAttendanceList = attendanceList || [];
 
     populateAttendanceFilters(allAttendanceList);
-
-    renderFilteredAttendanceTable(allAttendanceList);
-
     setupAttendanceFilterListeners();
-
-    attachTableActionListeners();
+    await renderFilteredAttendanceTable(allAttendanceList);
   } catch (err) {
     console.error("Attendance table exception:", err);
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
@@ -1094,22 +1020,190 @@ function matchesAttendanceFilters(item, filters) {
 }
 
 function applyAttendanceFilters() {
+  const filters = getCurrentAttendanceFilters();
   const filtered = allAttendanceList.filter((item) =>
-    matchesAttendanceFilters(item, {
-      search: document.getElementById("attendanceSearchInput")?.value || "",
-      classId: document.getElementById("attendanceClassFilter")?.value || "all",
-      subjectId:
-        document.getElementById("attendanceSubjectFilter")?.value || "all",
-      academicYearId:
-        document.getElementById("attendanceAcademicYearFilter")?.value ||
-        "all",
-      semesterId:
-        document.getElementById("attendanceSemesterFilter")?.value || "all",
-      status: document.getElementById("attendanceStatusFilter")?.value || "all",
-      date: document.getElementById("attendanceDateFilter")?.value || "",
-    }),
+    matchesAttendanceFilters(item, filters),
   );
   renderFilteredAttendanceTable(filtered);
+}
+
+function getCurrentAttendanceFilters() {
+  return {
+    search: document.getElementById("attendanceSearchInput")?.value || "",
+    classId: document.getElementById("attendanceClassFilter")?.value || "all",
+    subjectId:
+      document.getElementById("attendanceSubjectFilter")?.value || "all",
+    academicYearId:
+      document.getElementById("attendanceAcademicYearFilter")?.value || "all",
+    semesterId:
+      document.getElementById("attendanceSemesterFilter")?.value || "all",
+    status: document.getElementById("attendanceStatusFilter")?.value || "all",
+    date: document.getElementById("attendanceDateFilter")?.value || "",
+  };
+}
+
+function createAttendanceTableRow(item, studentCount = 0) {
+  const className = item.classes?.name || "N/A";
+  const classId = item.classes?.id || item.class_id || "";
+  const subjectName = item.subjects?.name || "General";
+  const subjectId = item.subjects?.id || item.subject_id || "";
+  const yearName = item.academic_years?.year_label || "N/A";
+  const yearId = item.academic_years?.id || item.academic_year_id || "";
+  const termName = item.terms?.name || "N/A";
+  const termId = item.terms?.id || item.term_id || "";
+  const isDraft = String(item.status || "").toLowerCase() === "drafted";
+  const statusBadge = isDraft
+    ? `<span class="status-badge status-drafted">Drafted</span>`
+    : `<span class="status-badge status-submitted">Submitted</span>`;
+  const actionButton = isDraft
+    ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
+         <i class="fa-solid fa-pen-to-square"></i>
+       </button>`
+    : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
+         <i class="fa-solid fa-eye"></i>
+       </button>`;
+
+  const row = document.createElement("tr");
+  row.dataset.attendanceId = item.id;
+  row.dataset.classId = classId;
+  row.dataset.subjectId = subjectId;
+  row.dataset.academicYearId = yearId;
+  row.dataset.termId = termId;
+  row.dataset.date = String(item.date || "").split("T")[0];
+  row.innerHTML = `
+    <td>${escapeHtml(className)}</td>
+    <td>${escapeHtml(subjectName)}</td>
+    <td data-year-id="${escapeHtml(yearId)}">${escapeHtml(yearName)}</td>
+    <td data-term-id="${escapeHtml(termId)}">${escapeHtml(termName)}</td>
+    <td>${formatDate(item.date)}</td>
+    <td>${studentCount}</td>
+    <td>${statusBadge}</td>
+    <td>${actionButton}</td>
+  `;
+  return row;
+}
+
+function addAttendanceFilterOptionsForRecord(item) {
+  [
+    ["attendanceClassFilter", "classes", "class_id"],
+    ["attendanceSubjectFilter", "subjects", "subject_id"],
+    ["attendanceAcademicYearFilter", "academic_years", "academic_year_id"],
+    ["attendanceSemesterFilter", "terms", "term_id"],
+  ].forEach(([selectId, relationName, idField]) => {
+    const select = document.getElementById(selectId);
+    const relation = item[relationName];
+    const id = relation?.id || item[idField];
+    const label = relation?.name || relation?.year_label;
+    if (!select || !id || !label) return;
+
+    const value = String(id);
+    if (![...select.options].some((option) => option.value === value)) {
+      select.add(new Option(label, value));
+    }
+  });
+}
+
+async function ensureAttendanceStudentCounts(records) {
+  const missingCounts = records.filter(
+    (item) => !Number.isFinite(item._studentCount),
+  );
+  if (!missingCounts.length) return;
+
+  const attendanceIds = missingCounts.map((item) => item.id);
+  const { data: recordsData, error } = await supabaseClient
+    .from("attendance_records")
+    .select("attendance_id")
+    .in("attendance_id", attendanceIds);
+
+  const counts = new Map();
+  if (error) {
+    console.error("Error loading attendance student counts:", error);
+  } else {
+    (recordsData || []).forEach(({ attendance_id: id }) => {
+      const key = String(id);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+  }
+
+  // Cache zero counts too, so typing in the filters never repeats this query.
+  missingCounts.forEach((item) => {
+    item._studentCount = counts.get(String(item.id)) || 0;
+  });
+}
+
+async function refreshAttendanceTableRecord(attendanceId) {
+  const tbody = document.getElementById("attendanceTableBody");
+  if (!tbody || !attendanceId) return;
+
+  let query = supabaseClient
+    .from("attendance")
+    .select(
+      `id, date, status, class_id, subject_id, academic_year_id, term_id,
+       classes(id, name), subjects(id, name),
+       academic_years(id, year_label), terms(id, name)`,
+    )
+    .eq("id", attendanceId);
+
+  if (attendanceViewerRole === "teacher") {
+    query = query.eq("teacher_id", attendanceViewerId);
+  } else if (shouldFilterAttendanceToSubmitted(attendanceViewerRole)) {
+    query = query.eq("status", "submitted");
+  }
+
+  const { data: item, error } = await query.maybeSingle();
+  if (error) {
+    console.error("Error refreshing saved attendance row:", error);
+    showToast(
+      "Attendance saved, but its table row could not be refreshed.",
+      "error",
+    );
+    return;
+  }
+
+  let studentCount = 0;
+  if (item) {
+    const { count, error: countError } = await supabaseClient
+      .from("attendance_records")
+      .select("id", { count: "exact", head: true })
+      .eq("attendance_id", attendanceId);
+    if (countError) {
+      console.error("Error counting saved attendance students:", countError);
+      studentCount = 0;
+    } else {
+      studentCount = count || 0;
+    }
+  }
+
+  allAttendanceList = allAttendanceList.filter(
+    (entry) => String(entry.id) !== String(attendanceId),
+  );
+  if (item) {
+    item._studentCount = studentCount;
+    allAttendanceList.push(item);
+    allAttendanceList.sort((a, b) =>
+      String(b.date || "").localeCompare(String(a.date || "")),
+    );
+    addAttendanceFilterOptionsForRecord(item);
+  }
+
+  const existingRow = [...tbody.querySelectorAll("tr[data-attendance-id]")].find(
+    (row) => row.dataset.attendanceId === String(attendanceId),
+  );
+  existingRow?.remove();
+  if (item && matchesAttendanceFilters(item, getCurrentAttendanceFilters())) {
+    tbody
+      .querySelectorAll("tr:not([data-attendance-id])")
+      .forEach((row) => row.remove());
+    const newRow = createAttendanceTableRow(item, studentCount);
+    const rows = [...tbody.querySelectorAll("tr[data-attendance-id]")];
+    const insertBefore = rows.find((row) => row.dataset.date < newRow.dataset.date);
+    tbody.insertBefore(newRow, insertBefore || null);
+    attachTableActionListeners(newRow);
+  }
+
+  if (!tbody.querySelector("tr[data-attendance-id]")) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">No attendance records found.</td></tr>`;
+  }
 }
 
 async function renderFilteredAttendanceTable(attendanceList) {
@@ -1121,77 +1215,18 @@ async function renderFilteredAttendanceTable(attendanceList) {
     return;
   }
 
-  const attendanceIds = attendanceList.map((a) => a.id);
-  const { data: recordsData, error: countErr } = await supabaseClient
-    .from("attendance_records")
-    .select("attendance_id")
-    .in("attendance_id", attendanceIds);
+  await ensureAttendanceStudentCounts(attendanceList);
 
-  const countsMap = new Map();
-  if (!countErr && recordsData) {
-    recordsData.forEach((rec) => {
-      countsMap.set(
-        rec.attendance_id,
-        (countsMap.get(rec.attendance_id) || 0) + 1,
-      );
-    });
-  }
-
-  tbody.innerHTML = "";
-  attendanceList.forEach((item) => {
-    const className = item.classes?.name || "N/A";
-    const classId = item.classes?.id || item.class_id || "";
-    const subjectName = item.subjects?.name || "General";
-    const subjectId = item.subjects?.id || item.subject_id || "";
-    const yearName = item.academic_years?.year_label || "N/A";
-    const yearId = item.academic_years?.id || item.academic_year_id || "";
-    const termName = item.terms?.name || "N/A";
-    const termId = item.terms?.id || item.term_id || "";
-
-    const studentCount = countsMap.get(item.id) || 0;
-    const formattedDate = formatDate(item.date);
-    const isDraft = item.status === "drafted";
-
-    const statusBadge = isDraft
-      ? `<span class="status-badge status-drafted">Drafted</span>`
-      : `<span class="status-badge status-submitted">Submitted</span>`;
-
-    const actionButton = isDraft
-      ? `<button class="attendances-actions-btn edit-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="Edit Draft">
-           <i class="fa-solid fa-pen-to-square"></i>
-         </button>`
-      : `<button class="attendances-actions-btn view-attendance-btn" data-attendance-id="${escapeHtml(item.id)}" title="View Details">
-           <i class="fa-solid fa-eye"></i>
-         </button>`;
-
-    const tr = document.createElement("tr");
-    tr.dataset.attendanceId = item.id;
-    tr.dataset.classId = classId;
-    tr.dataset.subjectId = subjectId;
-    tr.dataset.academicYearId = yearId;
-    tr.dataset.termId = termId;
-
-    tr.innerHTML = `
-      <td>${escapeHtml(className)}</td>
-      <td>${escapeHtml(subjectName)}</td>
-      <td data-year-id="${yearId}">${escapeHtml(yearName)}</td>
-      <td data-term-id="${termId}">${escapeHtml(termName)}</td>
-      <td>${formattedDate}</td>
-      <td>${studentCount}</td>
-      <td>${statusBadge}</td>
-      <td>${actionButton}</td>
-    `;
-
-    tbody.appendChild(tr);
-  });
-
-  if (typeof attachTableActionListeners === "function") {
-    attachTableActionListeners();
-  }
+  tbody.replaceChildren(
+    ...attendanceList.map((item) =>
+      createAttendanceTableRow(item, item._studentCount || 0),
+    ),
+  );
+  attachTableActionListeners(tbody);
 }
 
-function attachTableActionListeners() {
-  document.querySelectorAll(".edit-attendance-btn").forEach((btn) => {
+function attachTableActionListeners(root = document) {
+  root.querySelectorAll(".edit-attendance-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const attendanceId = e.currentTarget.getAttribute("data-attendance-id");
       if (typeof openEditAttendanceModal === "function") {
@@ -1200,7 +1235,7 @@ function attachTableActionListeners() {
     });
   });
 
-  document.querySelectorAll(".view-attendance-btn").forEach((btn) => {
+  root.querySelectorAll(".view-attendance-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       const attendanceId = e.currentTarget.getAttribute("data-attendance-id");
       if (typeof openViewAttendanceModal === "function") {
@@ -1707,10 +1742,11 @@ async function handleSaveEditAttendance() {
       "success",
     );
 
+    const updatedAttendanceId = currentEditingAttendanceId;
     closeModal(document.getElementById("editAttendanceModal"));
 
-    if (typeof loadAttendanceTable === "function") {
-      loadAttendanceTable();
+    if (updatedAttendanceId) {
+      await refreshAttendanceTableRecord(updatedAttendanceId);
     }
   } catch (err) {
     showToast(`Failed to update attendance: ${err.message}`, "error");

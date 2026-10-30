@@ -465,7 +465,7 @@ function clearDraftStorage() {
 
       const { data: lessons, error: lessonsErr } = await supabaseClient
         .from("timetable_lessons")
-        .select("id, day_of_week, subject_id, period_id, teacher_id")
+        .select("id, day_of_week, subject_id, period_id, teacher_id, is_break")
         .eq("timetable_id", timetableId);
 
       if (lessonsErr) throw lessonsErr;
@@ -484,6 +484,7 @@ function clearDraftStorage() {
         return {
           id: l.id,
           day: l.day_of_week,
+          is_break: Boolean(l.is_break),
           subject_id: l.subject_id,
           subject_name: subjectObj ? subjectObj.name : "-",
           period_id: l.period_id,
@@ -710,14 +711,19 @@ function clearDraftStorage() {
     function handleLessonTableActions(e, lessonList, renderFn, isEditContext) {
       const editBtn = e.target.closest(".edit-lesson");
       const deleteBtn = e.target.closest(".delete-lesson");
+      if (!editBtn && !deleteBtn) return;
+
       const tr = e.target.closest("tr");
       if (!tr) return;
 
       const lessonId = tr.dataset.id;
       const rowIndex = Array.from(tr.parentNode.children).indexOf(tr);
+      const targetIndex = lessonId
+        ? lessonList.findIndex((lesson) => lesson.id === lessonId)
+        : -1;
 
       // Prefer ID-based lookup; fall back to row index only for locally-added rows with no saved ID
-      const index = (targetIndex !== -1) ? targetIndex : (lessonId ? -1 : rowIndex);
+      const index = targetIndex !== -1 ? targetIndex : lessonId ? -1 : rowIndex;
 
       if (index === -1 || !lessonList[index]) return;
 
