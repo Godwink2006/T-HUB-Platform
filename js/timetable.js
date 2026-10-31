@@ -569,6 +569,9 @@ function clearDraftStorage() {
                 <button class="timetables-actions-btn edit" data-id="${escapeHTML(item.id)}" title="Edit">
                   <i class="fa-solid fa-pen"></i>
                 </button>
+                <button class="timetables-actions-btn copy" data-id="${escapeHTML(item.id)}" title="Copy to active academic year" aria-label="Copy timetable to active academic year">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
               </td>
             </tr>
           `;
@@ -607,6 +610,14 @@ function clearDraftStorage() {
         if (timetableId && timetableId !== "undefined") {
           openEditTimetableModal(timetableId);
         }
+      }
+
+      const copyTrigger = e.target.closest(".timetables-actions-btn.copy");
+      if (copyTrigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        const timetableId = copyTrigger.dataset.id;
+        if (timetableId) copyTimetableToActiveYear(timetableId, copyTrigger);
       }
 
     });
@@ -1117,6 +1128,51 @@ function clearDraftStorage() {
     setupPeriodTimeDisplay("addLessonPeriod", "addLessonTimeDisplay");
     setupPeriodTimeDisplay("editLessonPeriod", "editLessonTimeDisplay");
   }
+
+  async function copyTimetableToActiveYear(timetableId, button) {
+    if (!supabaseClient) {
+      showToast("Database connection is unavailable.", "error");
+      return;
+    }
+
+    const originalTitle = button?.title || "Copy to active academic year";
+    if (button) {
+      button.disabled = true;
+      button.title = "Copying timetable...";
+    }
+
+    try {
+      const { data, error } = await supabaseClient.rpc(
+        "copy_timetable_to_active_year",
+        { p_timetable_id: timetableId },
+      );
+      if (error) throw error;
+
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result?.timetable_id) {
+        throw new Error("The copy completed without returning a timetable.");
+      }
+
+      const replacedCount = Number(result.replaced_timetables || 0);
+      const lessonCount = Number(result.copied_lessons || 0);
+      const replacedMessage = replacedCount
+        ? ` Replaced ${replacedCount} active timetable${replacedCount === 1 ? "" : "s"} for this class in the active year.`
+        : "";
+      showToast(
+        `Timetable copied with ${lessonCount} lesson${lessonCount === 1 ? "" : "s"}.${replacedMessage}`,
+        "success",
+      );
+      await loadTimetables();
+    } catch (err) {
+      console.error("Failed to copy timetable:", err.message);
+      showToast(err.message || "Failed to copy timetable.", "error");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.title = originalTitle;
+      }
+    }
+  }
   async function initApp() {
     bindEvents();
     await fetchUserProfileAndSchool();
@@ -1196,6 +1252,9 @@ function clearDraftStorage() {
             </button>
             <button class="timetables-actions-btn edit" data-id="${escapeHTML(item.id)}" title="Edit">
               <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="timetables-actions-btn copy" data-id="${escapeHTML(item.id)}" title="Copy to active academic year" aria-label="Copy timetable to active academic year">
+              <i class="fa-solid fa-copy"></i>
             </button>
           </td>
         </tr>

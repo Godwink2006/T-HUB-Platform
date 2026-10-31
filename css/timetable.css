@@ -24,6 +24,11 @@ body {
   color: #2563eb;
 }
 
+.copy {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .delete-lesson {
   background: #fee2e2;
   color: #dc2626;
