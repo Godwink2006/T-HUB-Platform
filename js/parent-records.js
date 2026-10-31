@@ -465,8 +465,8 @@ function getParentRecordContext(row, type) {
       yearName: item.academic_years?.year_label,
       className: item.classes?.name,
       termName: item.terms?.name,
-      periodId: undefined,
-      periodName: undefined,
+      periodId: item.period_id,
+      periodName: item.periods?.name,
       subjectId: item.subject_id,
       subjectName: item.subjects?.name,
     };
@@ -556,7 +556,7 @@ function buildParentRecordFilters() {
   if (yearField) yearField.hidden = false;
   if (classField) classField.hidden = false;
   if (termField) termField.hidden = false;
-  if (periodFilterField) periodFilterField.hidden = type !== "grades";
+  if (periodFilterField) periodFilterField.hidden = !["grades", "attendance"].includes(type);
   if (subjectFilterField) subjectFilterField.hidden = type === "fees";
 
   const rows =
@@ -571,12 +571,12 @@ function buildParentRecordFilters() {
     ["recordYearFilter", "yearId", "yearName", "All academic years"],
     ["recordClassFilter", "classId", "className", "All classes"],
   ];
-  if (type === "grades") {
+  if (type === "grades" || type === "attendance") {
     filterSets.push([
       "recordPeriodFilter",
       "periodId",
       "periodName",
-      "All periods",
+      type === "attendance" ? "All class periods" : "All assessment periods",
     ]);
   }
   if (type === "grades" || type === "attendance")
@@ -638,7 +638,7 @@ function renderParentRecords() {
     classId: document.getElementById("recordClassFilter").value,
     semesterNumber: Number(document.getElementById("recordTermFilter").value || 0),
     periodId:
-      type === "grades"
+      type === "grades" || type === "attendance"
         ? document.getElementById("recordPeriodFilter").value
         : "",
     subjectId:
