@@ -204,10 +204,12 @@ function populateDropdownFilters(records) {
   const yearFilter = document.getElementById("academicYearFilter");
   const termFilter = document.getElementById("termFilter");
   const classFilter = document.getElementById("classFilter");
+  const periodFilter = document.getElementById("periodFilter");
 
   const subjects = new Map();
   const years = new Map();
   const classes = new Map();
+  const periods = new Map();
 
   records.forEach((record) => {
     const attendance = record.attendance;
@@ -220,11 +222,16 @@ function populateDropdownFilters(records) {
     if (attendance.class_id) {
       classes.set(String(attendance.class_id), attendance.classes?.name || "Class");
     }
+    const periodId = attendance.period_id || attendance.periods?.id;
+    if (periodId) {
+      periods.set(String(periodId), attendance.periods?.name || "Period");
+    }
   });
 
   fillAttendanceFilter(subjectFilter, "All Subjects", subjects);
   fillAttendanceFilter(yearFilter, "All Academic Years", years);
   fillAttendanceFilter(classFilter, "All Classes", classes);
+  fillAttendanceFilter(periodFilter, "All Periods", periods);
 
   if (termFilter) {
     termFilter.innerHTML = `
@@ -338,6 +345,7 @@ function applyFiltersAndRender() {
   const selectedSemester = document.getElementById("termFilter")?.value || "all";
   const selectedClass = document.getElementById("classFilter")?.value || "all";
   const selectedSubject = document.getElementById("subjectFilter")?.value || "all";
+  const selectedPeriod = document.getElementById("periodFilter")?.value || "all";
   const selectedStatus = document.getElementById("statusFilter")?.value || "all";
 
   const filteredRecords = allAttendanceRecords.filter((record) => {
@@ -348,6 +356,7 @@ function applyFiltersAndRender() {
       (selectedSemester === "all" || getSemesterNumber(attendance.terms?.name) === Number(selectedSemester)) &&
       (selectedClass === "all" || String(attendance.class_id) === selectedClass) &&
       (selectedSubject === "all" || String(attendance.subject_id) === selectedSubject) &&
+      (selectedPeriod === "all" || String(attendance.period_id || attendance.periods?.id) === selectedPeriod) &&
       (selectedStatus === "all" || status === selectedStatus.toLowerCase())
     );
   });
