@@ -492,17 +492,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       gradeTable = `<div class="table-wrap"><table class="grade-table"><thead><tr><th rowspan="2">Subject</th>${assessmentGroups.map((group) => `<th colspan="${group.count}">${escapeHTML(group.label)}</th>`).join("")}</tr><tr>${assessmentList.map((assessment) => `<th>${escapeHTML(assessment.name)}</th>`).join("")}</tr></thead><tbody>${subjectRows}<tr class="overall-average-row"><th>Average</th>${blankAverageCells}<th>${Number.isFinite(overallAverage) ? `${overallAverage.toFixed(1)}%` : "—"}</th></tr></tbody></table></div><p class="report-note">Overall average is the simple average of available subject assessment percentages. No school-specific weighting or pass threshold is applied.</p>`;
     }
 
-    const statusesByDay = new Map();
-    for (const record of attendanceRows) {
-      if (!record.date) continue;
-      if (!statusesByDay.has(record.date)) statusesByDay.set(record.date, new Set());
-      const state = String(record.status || "unmarked").trim().toLowerCase();
-      statusesByDay.get(record.date).add(state);
-    }
-    const presentDays = [...statusesByDay.values()].filter((statuses) => statuses.has("present")).length;
-    const absentDays = [...statusesByDay.values()].filter((statuses) => statuses.has("absent")).length;
-    const attendanceHtml = statusesByDay.size
-      ? `<div class="attendance-summary attendance-summary-days"><div class="attendance-stat"><b>${presentDays}</b><span>Days with present marks</span></div><div class="attendance-stat"><b>${absentDays}</b><span>Days with absent marks</span></div></div><p class="report-note">Each total counts dates containing that mark. A date may count in both totals when the student was present in some class sessions and absent in others.</p>`
+    const attendanceStatuses = attendanceRows.map((record) =>
+      String(record.status || "unmarked").trim().toLowerCase(),
+    );
+    const presentCount = attendanceStatuses.filter((status) => status === "present").length;
+    const absentCount = attendanceStatuses.filter((status) => status === "absent").length;
+    const attendanceHtml = attendanceRows.length
+      ? `<div class="attendance-summary"><div class="attendance-stat"><b>${presentCount}</b><span>Present</span></div><div class="attendance-stat"><b>${absentCount}</b><span>Absent</span></div></div><p class="report-note">Totals count submitted attendance marks for the selected class, term, and academic year.</p>`
       : '<div class="empty-report">No submitted attendance is available for this student in the selected period.</div>';
 
     const address = [school.address, school.city, school.country].filter(Boolean).join(", ");
