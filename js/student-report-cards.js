@@ -358,7 +358,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }));
   }
 
-  async function loadStudentAttendance({ yearId, termId, classId, studentId }) {
+  async function loadStudentAttendance({ yearId, termId, assessmentId, classId, studentId }) {
     // Start with this student's small set of marks, then resolve just those
     // session headers. This avoids the wide nested join that was timing out.
     const marks = [];
@@ -382,7 +382,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     for (let offset = 0; offset < sessionIds.length; offset += idBatchSize) {
       let query = client
         .from("attendance")
-        .select("id,date")
+        .select("id,date,assessment_id")
         .in("id", sessionIds.slice(offset, offset + idBatchSize))
         .eq("school_id", schoolId)
         .eq("academic_year_id", yearId)
@@ -390,6 +390,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         .order("date", { ascending: true });
       if (classId) query = query.eq("class_id", classId);
       if (termId) query = query.eq("term_id", termId);
+      if (assessmentId) query = query.eq("assessment_id", assessmentId);
       const { data, error } = await query;
       if (error) return { data: null, error };
       (data || []).forEach((session) => matchingSessions.set(session.id, session.date));
