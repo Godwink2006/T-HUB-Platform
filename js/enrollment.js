@@ -1232,17 +1232,17 @@ document.addEventListener("DOMContentLoaded", () => {
           return pattern.test(name || "");
         };
 
-        const activeSecondTerms = (activeTerms || []).filter((term) =>
-          matchesTerm(term.name, 2),
+        const activeFirstTerms = (activeTerms || []).filter((term) =>
+          matchesTerm(term.name, 1),
         );
 
-        if (activeSecondTerms.length !== 1) {
+        if (activeFirstTerms.length !== 1) {
           throw new Error(
-            "The active academic year must have exactly one second term.",
+            "The active academic year must have exactly one first term.",
           );
         }
 
-        const sourceSecondTermId = activeSecondTerms[0].id;
+        const sourceFirstTermId = activeFirstTerms[0].id;
 
         const { data: sourceRows, error: sourceError } = await client
           .from("student_enrollments")
@@ -1272,9 +1272,9 @@ document.addEventListener("DOMContentLoaded", () => {
             "Select a student enrolled in the active academic year.",
           );
         }
-        if (String(sourceEnrollment.term_id) !== String(sourceSecondTermId)) {
+        if (String(sourceEnrollment.term_id) !== String(sourceFirstTermId)) {
           throw new Error(
-            "Select a student enrolled in the active year's second term.",
+            "Select a student enrolled in the active year's first term.",
           );
         }
         if (sourceGrade !== 9) {

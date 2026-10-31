@@ -31,12 +31,15 @@ function teacherAssignmentErrorMessage(error, action = "load") {
   ) {
     return action === "load"
       ? "You do not have permission to view teacher assignments. Contact your school administrator."
-      : `Teacher assignments could not be ${action === "update" ? "updated" : "saved"}. The school may be inactive, or your account may not have permission. Contact your school administrator.`;
+      : `Teacher assignments could not be ${action === "update" ? "updated" : action === "copy" ? "copied" : "saved"}. The school may be inactive, or your account may not have permission. Contact your school administrator.`;
   }
   if (/failed to fetch|fetch failed|network|connection|timeout|timed out/.test(details)) {
     return "Teacher assignments could not be reached. Check your internet connection and try again.";
   }
   if (code === "23505" || /duplicate key|already exists|unique constraint/.test(details)) {
+    if (/class already has an active class teacher|another active class teacher/.test(details)) {
+      return "This class already has a different class teacher for the active academic year.";
+    }
     if (details.includes("idx_unique_class_teacher_per_class")) {
       return "This class already has a class teacher for the selected academic year.";
     }
@@ -287,6 +290,11 @@ async function handleCreateAssignment(e) {
       .select(
         `
         id,
+        school_id,
+        teacher_id,
+        subject_id,
+        class_id,
+        academic_year_id,
         is_class_teacher,
         status,
         created_at,
@@ -528,9 +536,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (tableBody) {
     tableBody.addEventListener("click", (e) => {
       const editBtn = e.target.closest(".assigns-actions-btn.edit");
+      const copyBtn = e.target.closest(".assigns-actions-btn.copy");
       if (editBtn) {
         const id = editBtn.getAttribute("data-id");
         openEditModal(id);
+      } else if (copyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = copyBtn.getAttribute("data-id");
+        if (id) copyTeacherAssignmentToActiveYear(id, copyBtn);
       }
     });
   }
@@ -662,6 +676,11 @@ async function loadAssignmentsTable(options = {}) {
       .select(
         `
         id,
+        school_id,
+        teacher_id,
+        subject_id,
+        class_id,
+        academic_year_id,
         is_class_teacher,
         status,
         created_at,
@@ -836,6 +855,9 @@ function renderAssignmentsTable(assignments) {
         <button class="assigns-actions-btn edit" data-id="${escapeHTML(assign.id)}">
           <i class="fa-solid fa-pen"></i>
         </button>
+        <button class="assigns-actions-btn copy" data-id="${escapeHTML(assign.id)}" title="Copy to active academic year" aria-label="Copy assignment to active academic year">
+          <i class="fa-solid fa-copy"></i>
+        </button>
       </td>
     `;
 
@@ -852,6 +874,49 @@ function renderAssignmentsTable(assignments) {
       { once: true },
     );
   });
+}
+
+async function copyTeacherAssignmentToActiveYear(assignmentId, button) {
+  if (!window.supabaseClient) {
+    showTeacherAssignmentError(new Error("Supabase client is unavailable"), "copy");
+    return;
+  }
+
+  const originalTitle = button?.title || "Copy to active academic year";
+  if (button) {
+    button.disabled = true;
+    button.title = "Copying assignment...";
+  }
+
+  try {
+    const { data, error } = await window.supabaseClient.rpc(
+      "copy_teacher_assignment_to_active_year",
+      { p_assignment_id: assignmentId },
+    );
+    if (error) throw error;
+
+    const result = Array.isArray(data) ? data[0] : data;
+    if (!result?.assignment_id) {
+      throw new Error("The copy completed without returning an assignment.");
+    }
+
+    const replacedCount = Number(result.replaced_assignments || 0);
+    const replacedMessage = replacedCount
+      ? ` Replaced ${replacedCount} active duplicate${replacedCount === 1 ? "" : "s"} for this teacher, subject, and class.`
+      : "";
+    showToast(
+      `Teacher assignment copied to the active academic year.${replacedMessage}`,
+      "success",
+    );
+    await loadAssignmentsTable();
+  } catch (err) {
+    showTeacherAssignmentError(err, "copy");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.title = originalTitle;
+    }
+  }
 }
 
 function filterAssignments() {

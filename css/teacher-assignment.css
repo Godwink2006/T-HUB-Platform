@@ -180,6 +180,11 @@ tr {
   color: #d97706;
 }
 
+.copy {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .modal-assign {
   position: fixed;
   top: 0;

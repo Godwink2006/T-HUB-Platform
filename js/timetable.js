@@ -1023,11 +1023,6 @@ function clearDraftStorage() {
         return;
       }
 
-      if (state.editLessons.length === 0) {
-        showToast("Please add at least one lesson before updating.", "error");
-        return;
-      }
-
       const statusVal = getEl("editTimetableStatusSelect")?.value || "Active";
 
       const hasStatusChanged =
@@ -1038,6 +1033,11 @@ function clearDraftStorage() {
 
       if (!hasStatusChanged && !hasLessonsChanged) {
         showToast("No changes detected.", "info");
+        return;
+      }
+
+      if (hasLessonsChanged && state.editLessons.length === 0) {
+        showToast("Please add at least one lesson before updating.", "error");
         return;
       }
 
@@ -1056,6 +1056,17 @@ function clearDraftStorage() {
         })),
       };
 
+      const statusOnlyChange = hasStatusChanged && !hasLessonsChanged;
+      const rpcName = statusOnlyChange
+        ? "set_timetable_status"
+        : "update_timetable_with_lessons";
+      const rpcPayload = statusOnlyChange
+        ? {
+            p_timetable_id: state.editingTimetableId,
+            p_status: statusVal,
+          }
+        : payload;
+
       const submitBtn = getEl("editTimetableForm")?.querySelector(
         "button[type='submit']",
       );
@@ -1067,10 +1078,7 @@ function clearDraftStorage() {
       }
 
       try {
-        const { error } = await supabaseClient.rpc(
-          "update_timetable_with_lessons",
-          payload,
-        );
+        const { error } = await supabaseClient.rpc(rpcName, rpcPayload);
 
         if (error) {
           let customMessage = error.message;
@@ -1156,7 +1164,7 @@ function clearDraftStorage() {
       const replacedCount = Number(result.replaced_timetables || 0);
       const lessonCount = Number(result.copied_lessons || 0);
       const replacedMessage = replacedCount
-        ? ` Replaced ${replacedCount} active timetable${replacedCount === 1 ? "" : "s"} for this class in the active year.`
+        ? ` Marked ${replacedCount} existing timetable${replacedCount === 1 ? "" : "s"} inactive.`
         : "";
       showToast(
         `Timetable copied with ${lessonCount} lesson${lessonCount === 1 ? "" : "s"}.${replacedMessage}`,

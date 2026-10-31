@@ -12,7 +12,7 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = ''
+set search_path = pg_catalog, public
 as $$
 declare
   v_school_id uuid;
@@ -79,9 +79,14 @@ begin
   update public.timetables as existing
   set status = 'Inactive'
   where existing.school_id = v_school_id
-    and existing.class_id = v_class_id
-    and existing.academic_year_id = v_active_year_id
-    and lower(btrim(existing.status)) = 'active';
+    and lower(btrim(existing.status)) = 'active'
+    and (
+      existing.id = p_timetable_id
+      or (
+        existing.class_id = v_class_id
+        and existing.academic_year_id = v_active_year_id
+      )
+    );
 
   get diagnostics v_replaced_timetables = row_count;
 
@@ -106,8 +111,7 @@ begin
     period_id,
     is_break,
     subject_id,
-    teacher_id,
-    status
+    teacher_id
   )
   select
     lesson.school_id,
@@ -116,8 +120,7 @@ begin
     lesson.period_id,
     lesson.is_break,
     lesson.subject_id,
-    lesson.teacher_id,
-    lesson.status
+    lesson.teacher_id
   from public.timetable_lessons as lesson
   where lesson.timetable_id = p_timetable_id
     and lesson.school_id = v_school_id;
