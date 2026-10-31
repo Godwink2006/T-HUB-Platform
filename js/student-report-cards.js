@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const yearSelect = document.getElementById("reportYear");
   const termSelect = document.getElementById("reportTerm");
   const assessmentSelect = document.getElementById("reportAssessment");
+  const classPeriodSelect = document.getElementById("reportClassPeriod");
   const classSelect = document.getElementById("reportClass");
   const searchInput = document.getElementById("studentSearch");
   const rowsBody = document.getElementById("studentRows");
@@ -78,10 +79,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   async function loadFilters() {
-    const [yearResult, termResult, classResult] = await Promise.all([
+    const [yearResult, termResult, classResult, periodResult] = await Promise.all([
       client.from("academic_years").select("id,year_label,status").eq("school_id", schoolId).order("year_label", { ascending: false }),
       client.from("terms").select("id,name,academic_year_id,status,is_archived,start_date,end_date").eq("school_id", schoolId).order("start_date", { ascending: true }),
       client.from("classes").select("id,name,status,is_archived").eq("school_id", schoolId).order("name"),
+      client.from("periods").select("id,name").order("name"),
     ]);
     const failure = yearResult.error || termResult.error || classResult.error;
     if (failure) {
@@ -94,6 +96,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const classes = (classResult.data || []).filter((item) => !item.is_archived);
     ReportsCommon.populateSelect(yearSelect, years, { placeholder: "Choose academic year", labelKey: "year_label" });
     ReportsCommon.populateSelect(classSelect, classes, { placeholder: "All classes" });
+    if (periodResult.error) console.warn("Could not load class periods:", periodResult.error.message);
+    ReportsCommon.populateSelect(classPeriodSelect, periodResult.data || [], { placeholder: "All class periods", labelKey: "name" });
 
     const activeYear = years.find((year) => String(year.status || "").trim().toLowerCase() === "active");
     if (activeYear) yearSelect.value = activeYear.id;
@@ -279,6 +283,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       yearId,
       termId: termSelect.value,
       assessmentId: assessmentSelect.value,
+      classPeriodId: classPeriodSelect.value,
       classId: student.class_id,
       studentId: student.student_id,
     };
@@ -299,6 +304,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const assessmentLabel = assessmentSelect.value
         ? assessmentSelect.options[assessmentSelect.selectedIndex]?.text
         : null;
+      const classPeriodLabel = classPeriodSelect.value
+        ? classPeriodSelect.options[classPeriodSelect.selectedIndex]?.text
+        : null;
       reportContent.innerHTML = renderReport(
         { ...student, ...(identityResult.data || {}) },
         schoolResult.data || {},
@@ -307,10 +315,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         yearLabel,
         termLabel,
         assessmentLabel,
+        classPeriodLabel,
       );
       document.getElementById("dialogTitle").textContent =
         identityResult.data?.student_name_snapshot || student.student_name_snapshot || "Student Report Card";
-      document.getElementById("dialogSubtitle").textContent = `${student.classes?.name || "Class not recorded"} · ${yearLabel}${termLabel ? ` · ${termLabel}` : ""}${assessmentLabel ? ` · ${assessmentLabel}` : ""}`;
+      document.getElementById("dialogSubtitle").textContent = `${student.classes?.name || "Class not recorded"} · ${yearLabel}${termLabel ? ` · ${termLabel}` : ""}${assessmentLabel ? ` · ${assessmentLabel}` : ""}${classPeriodLabel ? ` · ${classPeriodLabel}` : ""}`;
       if (printAfterLoad) window.setTimeout(() => window.print(), 100);
     } catch (error) {
       console.error("Could not prepare student report card:", error);
@@ -358,7 +367,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }));
   }
 
-  async function loadStudentAttendance({ yearId, termId, assessmentId, classId, studentId }) {
+  async function loadStudentAttendance({ yearId, termId, classPeriodId, classId, studentId }) {
     // Start with this student's small set of marks, then resolve just those
     // session headers. This avoids the wide nested join that was timing out.
     const marks = [];
@@ -382,7 +391,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     for (let offset = 0; offset < sessionIds.length; offset += idBatchSize) {
       let query = client
         .from("attendance")
-        .select("id,date,assessment_id")
+        .select("id,date,period_id")
         .in("id", sessionIds.slice(offset, offset + idBatchSize))
         .eq("school_id", schoolId)
         .eq("academic_year_id", yearId)
@@ -390,7 +399,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         .order("date", { ascending: true });
       if (classId) query = query.eq("class_id", classId);
       if (termId) query = query.eq("term_id", termId);
-      if (assessmentId) query = query.eq("assessment_id", assessmentId);
+      if (classPeriodId) query = query.eq("period_id", classPeriodId);
       const { data, error } = await query;
       if (error) return { data: null, error };
       (data || []).forEach((session) => matchingSessions.set(session.id, session.date));
@@ -405,7 +414,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
   }
 
-  function renderReport(student, school, gradeRows, attendanceRows, yearLabel, termLabel, assessmentLabel) {
+  function renderReport(student, school, gradeRows, attendanceRows, yearLabel, termLabel, assessmentLabel, classPeriodLabel) {
     const assessments = new Map();
     const subjects = new Map();
     const getTermLabel = (termId) => terms.find((term) => term.id === termId)?.name || "Unassigned term";
@@ -499,7 +508,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const presentCount = attendanceStatuses.filter((status) => status === "present").length;
     const absentCount = attendanceStatuses.filter((status) => status === "absent").length;
     const attendanceHtml = attendanceRows.length
-      ? `<div class="attendance-summary"><div class="attendance-stat"><b>${presentCount}</b><span>Present</span></div><div class="attendance-stat"><b>${absentCount}</b><span>Absent</span></div></div><p class="report-note">Totals count submitted attendance marks for the selected class, term, and academic year.</p>`
+      ? `<div class="attendance-summary"><div class="attendance-stat"><b>${presentCount}</b><span>Present</span></div><div class="attendance-stat"><b>${absentCount}</b><span>Absent</span></div></div><p class="report-note">Totals count submitted attendance marks for the selected class, term, academic year, and attendance class period.</p>`
       : '<div class="empty-report">No submitted attendance is available for this student in the selected period.</div>';
 
     const address = [school.address, school.city, school.country].filter(Boolean).join(", ");
@@ -507,7 +516,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const logo = school.logo_url ? `<img class="sheet-logo" src="${escapeHTML(school.logo_url)}" alt="School logo" />` : "";
     return `<article>
       <header class="sheet-heading">${logo}<div class="sheet-school"><h2>${escapeHTML(school.school_name || "School")}</h2>${school.school_motto ? `<p>${escapeHTML(school.school_motto)}</p>` : ""}${address ? `<p>${escapeHTML(address)}</p>` : ""}</div></header>
-      <div class="sheet-title"><h3>Student Report Card</h3><p>${escapeHTML(yearLabel)}${termLabel ? ` · ${escapeHTML(termLabel)}` : ""}${assessmentLabel ? ` · ${escapeHTML(assessmentLabel)}` : ""}</p></div>
+      <div class="sheet-title"><h3>Student Report Card</h3><p>${escapeHTML(yearLabel)}${termLabel ? ` · ${escapeHTML(termLabel)}` : ""}${assessmentLabel ? ` · Assessment: ${escapeHTML(assessmentLabel)}` : ""}${classPeriodLabel ? ` · Class period: ${escapeHTML(classPeriodLabel)}` : ""}</p></div>
       <section class="student-meta"><div><strong>Student:</strong> ${escapeHTML(student.student_name_snapshot || "Student")}</div><div><strong>Student ID:</strong> ${escapeHTML(student.student_code_snapshot || "—")}</div><div><strong>Class:</strong> ${escapeHTML(className)}</div><div><strong>Enrollment:</strong> ${escapeHTML(student.enrollment_status || "Enrolled")}</div><div><strong>Academic year:</strong> ${escapeHTML(yearLabel)}</div><div><strong>Term:</strong> ${escapeHTML(termLabel || "All terms")}</div></section>
       <h4 class="section-title">Grades</h4>${gradeTable}<h4 class="section-title">Attendance</h4>${attendanceHtml}
       <div class="signature-row"><div class="signature-line">Class teacher</div><div class="signature-line">Principal / school administrator</div></div>
