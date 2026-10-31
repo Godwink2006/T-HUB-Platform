@@ -213,6 +213,33 @@ body {
   overflow: hidden;
 }
 
+.grades-table-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  color: #52627a;
+  font-size: 14px;
+}
+
+.grades-table-loading[hidden] {
+  display: none;
+}
+
+.grades-loading-spinner {
+  width: 17px;
+  height: 17px;
+  border: 2px solid #dbe5f3;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: grades-table-spin 0.75s linear infinite;
+}
+
+@keyframes grades-table-spin {
+  to { transform: rotate(360deg); }
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

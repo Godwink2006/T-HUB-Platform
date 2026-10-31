@@ -3,6 +3,8 @@ let activeTermId = null;
 let activeAssessment = null;
 let currentGradeSession = null;
 let currentEditGradeId = null;
+let gradesListRequestId = 0;
+let gradeSearchDebounceTimer = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
   initGradeModalEventListeners();
@@ -932,6 +934,16 @@ async function loadGradesList() {
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
 
+  const requestId = ++gradesListRequestId;
+  const loadingIndicator = document.getElementById("gradesTableLoading");
+  const setLoadingMessage = (message) => {
+    if (!loadingIndicator) return;
+    loadingIndicator.querySelector("span:last-child").textContent = message;
+    loadingIndicator.hidden = false;
+  };
+  setLoadingMessage("Loading grade records…");
+  tbody.setAttribute("aria-busy", "true");
+
   const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")
     .toLowerCase()
     .trim();
@@ -983,6 +995,7 @@ async function loadGradesList() {
     const { data: grades, error } = await query;
 
     if (error) throw error;
+    if (requestId !== gradesListRequestId) return;
 
     if (!grades || grades.length === 0) {
       tbody.innerHTML = `
@@ -1031,39 +1044,21 @@ async function loadGradesList() {
 
     const gradeIds = filteredGrades.map((item) => item.id || item.grade_id).filter(Boolean);
     const countsMap = new Map();
-    if (gradeIds.length > 0) {
-      const { data: countData } = await client
-        .from("grade_records")
-        .select("grade_id")
-        .in("grade_id", gradeIds);
-      (countData || []).forEach((r) => {
-        countsMap.set(r.grade_id, (countsMap.get(r.grade_id) || 0) + 1);
-      });
-    }
-
     tbody.innerHTML = filteredGrades
       .map((item) => {
         const gradeId = item.id || item.grade_id;
-
-        if (!gradeId) {
-          console.error("Missing ID for grade record:", item);
-        }
-
         const rawStatus = (item.status || "draft").toLowerCase();
         const isDraft = rawStatus.includes("draft");
-
         const formattedDate = item.created_at
           ? new Date(item.created_at).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",
             })
           : "N/A";
-
         const categoryName = item.assessment_categories?.name || "N/A";
         const className = item.classes?.name || "N/A";
         const subjectName = item.subjects?.name || "N/A";
         const displayStatus = isDraft ? "Drafted" : "Submitted";
-
         const actionButtonHTML = isDraft
           ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${gradeId}">
                <i class="fa-solid fa-pen"></i>
@@ -1078,19 +1073,50 @@ async function loadGradesList() {
             <td>${className}</td>
             <td>${subjectName}</td>
             <td>${formattedDate}</td>
-            <td>${countsMap.get(gradeId) || 0}</td>
+            <td class="grade-student-count">—</td>
             <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>
             <td>${actionButtonHTML}</td>
           </tr>
         `;
       })
       .join("");
+
+    if (gradeIds.length > 0) {
+      setLoadingMessage("Loading student totals…");
+      const { data: countData } = await client
+        .from("grade_records")
+        .select("grade_id")
+        .in("grade_id", gradeIds);
+      if (requestId !== gradesListRequestId) return;
+      (countData || []).forEach((r) => {
+        countsMap.set(r.grade_id, (countsMap.get(r.grade_id) || 0) + 1);
+      });
+    }
+
+    if (requestId !== gradesListRequestId) return;
+    tbody.querySelectorAll("tr[data-grade-id]").forEach((row) => {
+      row.querySelector(".grade-student-count").textContent =
+        countsMap.get(row.dataset.gradeId) || 0;
+    });
   } catch (err) {
+    if (requestId !== gradesListRequestId) return;
     console.error("Error loading grades list:", err);
+    if (!tbody.querySelector("tr[data-grade-id]")) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; color: #b91c1c; padding: 20px;">
+            Could not load grade records. Please try again.
+          </td>
+        </tr>`;
+    }
     if (typeof showToast === "function") {
       showToast(`Failed to load grades: ${err.message}`, "error");
     }
-
+  } finally {
+    if (requestId === gradesListRequestId) {
+      tbody.removeAttribute("aria-busy");
+      if (loadingIndicator) loadingIndicator.hidden = true;
+    }
   }
 }
 
@@ -1837,7 +1863,12 @@ function initToolbarListeners() {
   const statusFilter = document.getElementById("gradeToolbarStatusSelect");
   const startDateFilter = document.getElementById("gradeToolbarStartDate");
 
-  if (searchInput) searchInput.addEventListener("input", loadGradesList);
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      clearTimeout(gradeSearchDebounceTimer);
+      gradeSearchDebounceTimer = setTimeout(loadGradesList, 250);
+    });
+  }
   if (classFilter) classFilter.addEventListener("change", loadGradesList);
   if (subjectFilter) subjectFilter.addEventListener("change", loadGradesList);
   if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
