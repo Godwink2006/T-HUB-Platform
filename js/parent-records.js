@@ -17,6 +17,7 @@ let parentRecordState = {
   gradeCreators: new Map(),
   timetable: null,
   timetableLessons: [],
+  timetableBlockedForEnrollment: false,
   student: null,
   schools: new Map(),
   timetableTeachers: new Map(),
@@ -165,7 +166,25 @@ async function loadParentRecordData(
     parentRecordState.timetable = null;
     parentRecordState.timetableLessons = [];
     parentRecordState.timetableTeachers = new Map();
+    parentRecordState.timetableBlockedForEnrollment = false;
     if (!student?.class_id || !student?.school_id) return;
+
+    const { data: enrollments, error: enrollmentError } = await client
+      .from("student_enrollments")
+      .select("enrollment_status")
+      .eq("student_id", studentId)
+      .eq("school_id", student.school_id);
+    if (enrollmentError) throw enrollmentError;
+
+    parentRecordState.timetableBlockedForEnrollment = (enrollments || []).some(
+      (enrollment) =>
+        ["graduated", "transferred"].includes(
+          String(enrollment.enrollment_status || "")
+            .trim()
+            .toLowerCase(),
+        ),
+    );
+    if (parentRecordState.timetableBlockedForEnrollment) return;
 
     const { data: timetables, error: timetableError } = await client
       .from("timetables")
@@ -662,7 +681,15 @@ function renderParentRecords() {
 }
 
 function renderParentTimetable() {
-  const { timetable, timetableLessons, student } = parentRecordState;
+  const {
+    timetable,
+    timetableLessons,
+    timetableBlockedForEnrollment,
+    student,
+  } = parentRecordState;
+  if (timetableBlockedForEnrollment) {
+    return '<p class="parent-empty">This student’s timetable is unavailable because their enrollment at this school is marked graduated or transferred.</p>';
+  }
   if (!student?.class_id) {
     return '<p class="parent-empty">This student is not currently assigned to a class.</p>';
   }

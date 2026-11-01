@@ -27,6 +27,14 @@ as $$
         and lower(timetable.status) = 'active'
         and link.parent_user_id = (select auth.uid())
         and link.status = 'active'
+        and not exists (
+          select 1
+          from public.student_enrollments as enrollment
+          where enrollment.student_id = student.id
+            and enrollment.school_id = student.school_id
+            and lower(btrim(coalesce(enrollment.enrollment_status, '')))
+              in ('graduated', 'transferred')
+        )
     );
 $$;
 
