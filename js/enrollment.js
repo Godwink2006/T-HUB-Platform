@@ -45,6 +45,12 @@ function enrollmentErrorMessage(error, action = "general") {
   if (/fee structure|fee.{0,20}(missing|invalid|match)/.test(raw)) {
     return "The selected fee structure is unavailable for that class, term, or academic year. Choose a valid fee structure and try again.";
   }
+  if (/select a student enrolled in the active academic year/.test(raw)) {
+    return "This promotion requires an enrollment from the school's active academic year. Change the Academic year filter to the active year and select that enrollment.";
+  }
+  if (/active year's first term/.test(raw)) {
+    return "This promotion requires an enrollment from the active academic year's first term. Select a first-term enrollment and try again.";
+  }
   if (/active academic year|active year|first term|second term|semester term/.test(raw)) {
     return "The required active academic year or term could not be found. Check the school’s academic setup.";
   }
@@ -1172,7 +1178,7 @@ document.addEventListener("DOMContentLoaded", () => {
       modalTitle.textContent =
         "Promote Grade 9 to Grade 10 (New Academic Year)";
       modalBody.innerHTML =
-        "<p>Loading the selected student and available target years...</p>";
+        "<p>Loading the selected student and the active target year...</p>";
       modalConfirm.style.display = "none";
       openModal();
 
@@ -1223,17 +1229,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (activeTermsError) throw activeTermsError;
 
-        const matchesTerm = (name, termNumber) => {
-          const pattern =
-            termNumber === 1
-              ? /\b(?:1(?:st)?|first|term\s*1|semester\s*1|one|i)\b/i
-              : /\b(?:2(?:nd)?|second|term\s*2|semester\s*2|two|ii)\b/i;
-
-          return pattern.test(name || "");
-        };
-
         const activeFirstTerms = (activeTerms || []).filter((term) =>
-          matchesTerm(term.name, 1),
+          /\b(?:1(?:st)?|first|term\s*1|semester\s*1|one|i)\b/i.test(
+            term.name || "",
+          ),
         );
 
         if (activeFirstTerms.length !== 1) {
@@ -1242,7 +1241,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
-        const sourceFirstTermId = activeFirstTerms[0].id;
+        const targetFirstTermId = activeFirstTerms[0].id;
 
         const { data: sourceRows, error: sourceError } = await client
           .from("student_enrollments")
@@ -1265,57 +1264,13 @@ document.addEventListener("DOMContentLoaded", () => {
             "The selected student does not belong to this school.",
           );
         }
-        if (
-          String(sourceEnrollment.academic_year_id) !== String(activeYear.id)
-        ) {
-          throw new Error(
-            "Select a student enrolled in the active academic year.",
-          );
-        }
-        if (String(sourceEnrollment.term_id) !== String(sourceFirstTermId)) {
-          throw new Error(
-            "Select a student enrolled in the active year's first term.",
-          );
-        }
         if (sourceGrade !== 9) {
           throw new Error("The selected student is not in Grade 9.");
         }
-
-        const { data: years, error: yearsError } = await client
-          .from("academic_years")
-          .select("id, year_label, status")
-          .eq("school_id", schoolId)
-          .order("year_label", { ascending: false });
-
-        if (yearsError) throw yearsError;
-
-        const { data: allTerms, error: termsError } = await client
-          .from("terms")
-          .select("id, name, academic_year_id")
-          .eq("school_id", schoolId);
-
-        if (termsError) throw termsError;
-
-        const targetYears = (years || [])
-          .filter((year) => String(year.id) !== String(activeYear.id))
-          .map((year) => {
-            const firstTerms = (allTerms || []).filter(
-              (term) =>
-                String(term.academic_year_id) === String(year.id) &&
-                matchesTerm(term.name, 1),
-            );
-
-            return firstTerms.length === 1
-              ? { ...year, firstTermId: firstTerms[0].id }
-              : null;
-          })
-          .filter(Boolean);
-
-        if (!targetYears.length) {
-          throw new Error(
-            "No other academic year with exactly one first term is available.",
-          );
-        }
+        const targetYear = {
+          ...activeYear,
+          firstTermId: targetFirstTermId,
+        };
 
         const { data: allClasses, error: classesError } = await client
           .from("classes")
@@ -1336,8 +1291,6 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
-        const targetFirstTermIds = targetYears.map((year) => year.firstTermId);
-
         const { data: feeStructures, error: feesError } = await client
           .from("fee_structures")
           .select(
@@ -1345,31 +1298,20 @@ document.addEventListener("DOMContentLoaded", () => {
           )
           .eq("school_id", schoolId)
           .ilike("status", "active")
-          .in("term_id", targetFirstTermIds);
+          .eq("academic_year_id", targetYear.id)
+          .eq("term_id", targetYear.firstTermId);
 
         if (feesError) throw feesError;
 
         modalBody.innerHTML = `
         <p style="margin-bottom: 15px; color: #555;">
-          Promote <b>${escapeHtml(sourceClassName)}</b> enrollment from
-          <b>${escapeHtml(activeYear.year_label)}</b> into Grade 10 in the
-          target academic year's first term.
+          Promote this Grade 9 student into Grade 10 for
+          <b>${escapeHtml(targetYear.year_label)}</b> (first term).
         </p>
 
         <div style="margin-bottom: 15px;">
-          <label for="yearlyTargetYearSelect"><b>Target Academic Year:</b></label>
-          <select id="yearlyTargetYearSelect" class="form-control">
-            <option value="">-- Select Target Academic Year --</option>
-            ${targetYears
-              .map(
-                (year) => `
-                  <option value="${escapeHtml(year.id)}">
-                    ${escapeHtml(year.year_label)}
-                  </option>
-                `,
-              )
-              .join("")}
-          </select>
+          <b>Target Academic Year:</b>
+          <span>${escapeHtml(targetYear.year_label)} (Active)</span>
         </div>
 
         <div style="margin-bottom: 15px;">
@@ -1394,7 +1336,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="margin-bottom: 15px;">
           <label for="yearlyTargetFeeSelect"><b>First-Term Fee Structure:</b></label>
           <select id="yearlyTargetFeeSelect" class="form-control" disabled>
-            <option value="">-- Select Year and Class First --</option>
+          <option value="">-- Select Target Class First --</option>
           </select>
         </div>
 
@@ -1439,7 +1381,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ></div>
       `;
 
-        const yearSelect = document.getElementById("yearlyTargetYearSelect");
         const classSelect = document.getElementById("yearlyTargetClassSelect");
         const feeSelect = document.getElementById("yearlyTargetFeeSelect");
         const capacityMessage = document.getElementById(
@@ -1447,24 +1388,18 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         const updateTargetOptions = async () => {
-          const targetYearId = yearSelect.value;
           const targetClassId = classSelect.value;
 
           feeSelect.innerHTML =
-            '<option value="">-- Select Year and Class First --</option>';
+            '<option value="">-- Select Target Class First --</option>';
           feeSelect.disabled = true;
           capacityMessage.textContent = "";
 
-          if (!targetYearId || !targetClassId) return;
-
-          const targetYear = targetYears.find(
-            (year) => String(year.id) === String(targetYearId),
-          );
-          if (!targetYear) return;
+          if (!targetClassId) return;
 
           const matchingFees = (feeStructures || []).filter(
             (fee) =>
-              String(fee.academic_year_id) === String(targetYearId) &&
+              String(fee.academic_year_id) === String(targetYear.id) &&
               String(fee.term_id) === String(targetYear.firstTermId) &&
               String(fee.class_id) === String(targetClassId),
           );
@@ -1489,7 +1424,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .select("*", { count: "exact", head: true })
             .eq("school_id", schoolId)
             .eq("class_id", targetClassId)
-            .eq("academic_year_id", targetYearId)
+            .eq("academic_year_id", targetYear.id)
             .eq("term_id", targetYear.firstTermId);
 
           const selectedClass = classSelect.selectedOptions[0];
@@ -1511,14 +1446,13 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         };
 
-        yearSelect.addEventListener("change", updateTargetOptions);
         classSelect.addEventListener("change", updateTargetOptions);
 
         modalConfirm.style.display = "inline-block";
         modalConfirm.disabled = false;
 
         modalConfirm.onclick = async () => {
-          const targetYearId = yearSelect.value;
+          const targetYearId = targetYear.id;
           const targetClassId = classSelect.value;
           const feeStructureId = feeSelect.value;
           const email = document
@@ -1531,14 +1465,13 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("yearlyStudentPhone").value.trim() || null;
 
           if (
-            !targetYearId ||
             !targetClassId ||
             !feeStructureId ||
             !email ||
             !password
           ) {
             showToast(
-              "Select the target year, class, and fee structure, then enter the student's email and password.",
+              "Select the target class and fee structure, then enter the student's email and password.",
               "info",
             );
             return;

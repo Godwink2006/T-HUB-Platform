@@ -247,6 +247,27 @@ async function loadParentAnnouncements(student) {
   container.setAttribute("aria-busy", "true");
   container.innerHTML = '<p class="parent-state">Loading announcements…</p>';
   try {
+    const { data: enrollments, error: enrollmentError } = await window.supabaseClient
+      .from("student_enrollments")
+      .select("enrollment_status")
+      .eq("student_id", student.id)
+      .eq("school_id", student.school_id);
+    if (enrollmentError) throw enrollmentError;
+    if (requestId !== parentAnnouncementRequestId) return;
+
+    const hasTerminalEnrollment = (enrollments || []).some((enrollment) =>
+      ["graduated", "transferred"].includes(
+        String(enrollment.enrollment_status || "")
+          .trim()
+          .toLowerCase(),
+      ),
+    );
+    if (hasTerminalEnrollment) {
+      container.innerHTML =
+        '<p class="parent-state">Announcements are unavailable for this student because their enrollment at this school is marked graduated or transferred.</p>';
+      return;
+    }
+
     const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await window.supabaseClient
       .from("announcements")
