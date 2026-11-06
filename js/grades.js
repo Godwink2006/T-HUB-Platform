@@ -115,7 +115,6 @@ function initGradeModalEventListeners() {
 }
 
 function resetGradeModal() {
-
   const form =
     document.getElementById("gradeForm") ||
     document.getElementById("gradeSetupForm");
@@ -203,7 +202,12 @@ async function populateClassOptions() {
       classesList = [
         ...new Map(
           (assignments || [])
-            .filter((a) => a.classes && (!a.classes.status || a.classes.status.toLowerCase() === "active"))
+            .filter(
+              (a) =>
+                a.classes &&
+                (!a.classes.status ||
+                  a.classes.status.toLowerCase() === "active"),
+            )
             .map((a) => [a.classes.id, a.classes]),
         ).values(),
       ];
@@ -285,7 +289,11 @@ async function handleClassSelectChange(classId) {
       if (assignedErr) console.error("Admin subject query error:", assignedErr);
 
       (assignedData || []).forEach((item) => {
-        if (item.subjects?.id && (!item.subjects.status || item.subjects.status.toLowerCase() === "active")) {
+        if (
+          item.subjects?.id &&
+          (!item.subjects.status ||
+            item.subjects.status.toLowerCase() === "active")
+        ) {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
@@ -316,7 +324,11 @@ async function handleClassSelectChange(classId) {
       if (teacherErr) console.error("Teacher subject query error:", teacherErr);
 
       (teacherData || []).forEach((item) => {
-        if (item.subjects?.id && (!item.subjects.status || item.subjects.status.toLowerCase() === "active")) {
+        if (
+          item.subjects?.id &&
+          (!item.subjects.status ||
+            item.subjects.status.toLowerCase() === "active")
+        ) {
           subjectMap.set(item.subjects.id, item.subjects.name);
         }
       });
@@ -423,7 +435,6 @@ async function loadAcademicContext() {
     const client = window.supabaseClient || supabaseClient;
 
     const [yearRes, termRes, assessmentRes] = await Promise.all([
-
       client
         .from("academic_years")
         .select("id, year_label")
@@ -468,7 +479,9 @@ async function handleLoadStudents(e) {
   if (e) e.preventDefault();
 
   const loadBtn = document.getElementById("loadEnterGrade");
-  const originalBtnText = loadBtn ? loadBtn.textContent.trim() : "Load Students";
+  const originalBtnText = loadBtn
+    ? loadBtn.textContent.trim()
+    : "Load Students";
 
   const classSelect =
     document.getElementById("gradesClassSelect") ||
@@ -540,7 +553,10 @@ async function handleLoadStudents(e) {
       gradeCreatorMarkup = await getCurrentGradeActorMarkup(client);
     } catch (err) {
       console.error("Error loading grade creator identity:", err);
-      showToast("Unable to load your profile details. Please try again.", "error");
+      showToast(
+        "Unable to load your profile details. Please try again.",
+        "error",
+      );
       return;
     }
 
@@ -557,7 +573,9 @@ async function handleLoadStudents(e) {
           : Infinity;
 
     const effectiveMaxMarks = Math.min(periodMax, categoryMax);
-    const finalMaxMarks = isFinite(effectiveMaxMarks) ? effectiveMaxMarks : null;
+    const finalMaxMarks = isFinite(effectiveMaxMarks)
+      ? effectiveMaxMarks
+      : null;
 
     currentGradeSession = {
       classId,
@@ -569,7 +587,8 @@ async function handleLoadStudents(e) {
       categoryId,
       categoryName,
       maxMarks: finalMaxMarks,
-      academicYearId: window.activeAcademicYearId || activeAcademicYearId || null,
+      academicYearId:
+        window.activeAcademicYearId || activeAcademicYearId || null,
       termId: window.activeTermId || activeTermId || null,
     };
 
@@ -821,7 +840,10 @@ async function loadStudentRosterForGrades(classId, maxMarks = null) {
       .select("id, photo_url")
       .in("id", activeStudentIds);
     if (profilesError) {
-      console.error("Could not load grade roster profile photos:", profilesError);
+      console.error(
+        "Could not load grade roster profile photos:",
+        profilesError,
+      );
     }
     const photoByStudentId = new Map(
       (studentProfiles || []).map((profile) => [profile.id, profile.photo_url]),
@@ -953,6 +975,8 @@ async function loadGradesList() {
   const selectedSubject = document.getElementById(
     "gradeToolbarSubjectSelect",
   )?.value;
+  const selectedYear = document.getElementById("gradeToolbarYearSelect")?.value;
+  const selectedTerm = document.getElementById("gradeToolbarTermSelect")?.value;
   const selectedCategory = document.getElementById(
     "gradeToolbarCategorySelect",
   )?.value;
@@ -975,6 +999,8 @@ async function loadGradesList() {
         class_id,
         subject_id,
         category_id,
+        academic_year_id,
+        term_id,
         assessment_categories ( name ),
         classes ( name ),
         subjects ( name )
@@ -987,6 +1013,12 @@ async function loadGradesList() {
     }
     if (selectedSubject) {
       query = query.eq("subject_id", selectedSubject);
+    }
+    if (selectedYear) {
+      query = query.eq("academic_year_id", selectedYear);
+    }
+    if (selectedTerm) {
+      query = query.eq("term_id", selectedTerm);
     }
     if (selectedCategory) {
       query = query.eq("category_id", selectedCategory);
@@ -1042,7 +1074,9 @@ async function loadGradesList() {
       return;
     }
 
-    const gradeIds = filteredGrades.map((item) => item.id || item.grade_id).filter(Boolean);
+    const gradeIds = filteredGrades
+      .map((item) => item.id || item.grade_id)
+      .filter(Boolean);
     const countsMap = new Map();
     tbody.innerHTML = filteredGrades
       .map((item) => {
@@ -1217,17 +1251,13 @@ async function handleViewGrades(gradeId) {
       );
 
     if (records.length === 0) {
-
       tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student marks recorded.</td></tr>`;
     } else {
-
       tbody.innerHTML = records
         .map((rec) => {
           const snapshot = identitySnapshots.get(rec.student_id);
           const idDisplay = escapeHtml(
-            rec.students?.student_id ||
-              snapshot?.student_code_snapshot ||
-              "-",
+            rec.students?.student_id || snapshot?.student_code_snapshot || "-",
           );
           const studentName = escapeHtml(
             rec.students?.profiles?.full_name ||
@@ -1423,10 +1453,8 @@ async function handleEditGrades(gradeId) {
       );
 
     if (records.length === 0) {
-
       tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #888;">No student records found.</td></tr>`;
     } else {
-
       tbody.innerHTML = records
         .map((rec) => {
           const snapshot = identitySnapshots.get(rec.student_id);
@@ -1436,9 +1464,7 @@ async function handleEditGrades(gradeId) {
               "-",
           );
           const studentId = escapeHtml(
-            rec.students?.student_id ||
-              snapshot?.student_code_snapshot ||
-              "-",
+            rec.students?.student_id || snapshot?.student_code_snapshot || "-",
           );
           const studentPhoto = escapeHtml(
             rec.students?.profiles?.photo_url ||
@@ -1505,7 +1531,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-
       btn.disabled = true;
 
       if (action === "view") {
@@ -1676,7 +1701,10 @@ document
             }),
           );
         } catch (notifErr) {
-          console.warn("Failed to dispatch grade update notifications:", notifErr);
+          console.warn(
+            "Failed to dispatch grade update notifications:",
+            notifErr,
+          );
         }
       }
     } catch (err) {
@@ -1696,11 +1724,63 @@ async function populateToolbarDropdowns() {
   const classFilter = document.getElementById("gradeToolbarClassSelect");
   const subjectFilter = document.getElementById("gradeToolbarSubjectSelect");
   const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
+  const yearFilter = document.getElementById("gradeToolbarYearSelect");
+  const termFilter = document.getElementById("gradeToolbarTermSelect");
 
   const client = window.supabaseClient || supabaseClient;
 
   try {
-    const { data: { user } } = await client.auth.getUser();
+    const [yearsResult, termsResult] = await Promise.all([
+      client
+        .from("academic_years")
+        .select("id, year_label")
+        .order("year_label", { ascending: false }),
+      client.from("terms").select("id, name, academic_year_id").order("name"),
+    ]);
+    if (yearsResult.error) throw yearsResult.error;
+    if (termsResult.error) throw termsResult.error;
+
+    const terms = termsResult.data || [];
+    const renderTerms = () => {
+      if (!termFilter) return;
+      const selectedTerm = termFilter.value;
+      const selectedYear = yearFilter?.value;
+      const visibleTerms = selectedYear
+        ? terms.filter(
+            (term) => String(term.academic_year_id) === String(selectedYear),
+          )
+        : terms;
+      termFilter.innerHTML = `<option value="">All Semesters</option>`;
+      visibleTerms.forEach((term) =>
+        termFilter.appendChild(new Option(term.name, term.id)),
+      );
+      termFilter.disabled = visibleTerms.length === 0;
+      if (visibleTerms.some((term) => String(term.id) === selectedTerm)) {
+        termFilter.value = selectedTerm;
+      }
+    };
+    if (yearFilter && yearsResult.data) {
+      yearFilter.innerHTML = `<option value="">All Academic Years</option>`;
+      yearsResult.data.forEach((year) =>
+        yearFilter.appendChild(new Option(year.year_label, year.id)),
+      );
+    }
+    renderTerms();
+    if (yearFilter && !yearFilter.dataset.listenerBound) {
+      yearFilter.addEventListener("change", () => {
+        renderTerms();
+        loadGradesList();
+      });
+      yearFilter.dataset.listenerBound = "true";
+    }
+    if (termFilter && !termFilter.dataset.listenerBound) {
+      termFilter.addEventListener("change", loadGradesList);
+      termFilter.dataset.listenerBound = "true";
+    }
+
+    const {
+      data: { user },
+    } = await client.auth.getUser();
     let role = "admin";
     if (user) {
       const { data: profile } = await client
@@ -1716,7 +1796,9 @@ async function populateToolbarDropdowns() {
     if (role === "teacher" && user) {
       let query = client
         .from("teacher_assignments")
-        .select("class_id, classes(id, name, status), subject_id, subjects(id, name, status)")
+        .select(
+          "class_id, classes(id, name, status), subject_id, subjects(id, name, status)",
+        )
         .eq("teacher_id", user.id)
         .ilike("status", "active");
 
@@ -1726,17 +1808,27 @@ async function populateToolbarDropdowns() {
 
       const [{ data: assignments }, categoryRes] = await Promise.all([
         query,
-        client.from("assessment_categories").select("id, name").ilike("status", "active").order("name"),
+        client
+          .from("assessment_categories")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
       ]);
 
       const classMap = new Map();
       const subjectMap = new Map();
 
       (assignments || []).forEach((a) => {
-        if (a.classes?.id && (!a.classes.status || a.classes.status.toLowerCase() === "active")) {
+        if (
+          a.classes?.id &&
+          (!a.classes.status || a.classes.status.toLowerCase() === "active")
+        ) {
           classMap.set(a.classes.id, a.classes.name);
         }
-        if (a.subjects?.id && (!a.subjects.status || a.subjects.status.toLowerCase() === "active")) {
+        if (
+          a.subjects?.id &&
+          (!a.subjects.status || a.subjects.status.toLowerCase() === "active")
+        ) {
           subjectMap.set(a.subjects.id, a.subjects.name);
         }
       });
@@ -1785,9 +1877,21 @@ async function populateToolbarDropdowns() {
       }
     } else {
       const [classRes, subjectRes, categoryRes] = await Promise.all([
-        client.from("classes").select("id, name").ilike("status", "active").order("name"),
-        client.from("subjects").select("id, name").ilike("status", "active").order("name"),
-        client.from("assessment_categories").select("id, name").ilike("status", "active").order("name"),
+        client
+          .from("classes")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
+        client
+          .from("subjects")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
+        client
+          .from("assessment_categories")
+          .select("id, name")
+          .ilike("status", "active")
+          .order("name"),
       ]);
 
       if (classFilter && classRes.data) {
@@ -1835,7 +1939,6 @@ function handleToolbarFilter() {
   const rows = document.querySelectorAll("#gradesTableBody tr");
 
   rows.forEach((row) => {
-
     const textContent = row.textContent.toLowerCase();
     const rowClassId = row.dataset.classId;
     const rowSubjectId = row.dataset.subjectId;
@@ -1873,5 +1976,6 @@ function initToolbarListeners() {
   if (subjectFilter) subjectFilter.addEventListener("change", loadGradesList);
   if (categoryFilter) categoryFilter.addEventListener("change", loadGradesList);
   if (statusFilter) statusFilter.addEventListener("change", loadGradesList);
-  if (startDateFilter) startDateFilter.addEventListener("change", loadGradesList);
+  if (startDateFilter)
+    startDateFilter.addEventListener("change", loadGradesList);
 }
