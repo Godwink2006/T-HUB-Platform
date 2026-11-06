@@ -847,3 +847,13 @@ tr {
     font-size: 22px;
   }
 }
+
+.gradebook-card { margin: 18px 0; overflow: hidden; }
+.gradebook-heading { padding: 18px 20px 8px; }
+.gradebook-heading h2 { margin: 0; font-size: 18px; }
+.gradebook-heading p { margin: 5px 0 0; color: #64748b; font-size: 13px; }
+.gradebook-scroll { overflow-x: auto; }
+.gradebook-table { min-width: 720px; }
+.gradebook-table th, .gradebook-table td { white-space: nowrap; }
+.gradebook-table tbody td:first-child { min-width: 180px; white-space: normal; }
+.gradebook-table tbody td:first-child small { display: block; color: #64748b; }

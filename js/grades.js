@@ -956,6 +956,8 @@ async function loadGradesList() {
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
 
+  loadGradebook();
+
   const requestId = ++gradesListRequestId;
   const loadingIndicator = document.getElementById("gradesTableLoading");
   const setLoadingMessage = (message) => {
@@ -1151,6 +1153,90 @@ async function loadGradesList() {
       tbody.removeAttribute("aria-busy");
       if (loadingIndicator) loadingIndicator.hidden = true;
     }
+  }
+}
+
+async function loadGradebook() {
+  const head = document.getElementById("gradebookHead");
+  const body = document.getElementById("gradebookBody");
+  const hint = document.getElementById("gradebookHint");
+  if (!head || !body || !hint) return;
+
+  const classId = document.getElementById("gradeToolbarClassSelect")?.value;
+  const subjectId = document.getElementById("gradeToolbarSubjectSelect")?.value;
+  if (!classId || !subjectId) {
+    head.innerHTML = "";
+    body.innerHTML = `<tr><td>Choose a class and subject to view the gradebook.</td></tr>`;
+    hint.textContent = "Choose a class and subject to compare student marks across assessments.";
+    return;
+  }
+
+  hint.textContent = "Loading student marks…";
+  try {
+    const client = window.supabaseClient || supabaseClient;
+    let query = client.from("grades").select(`
+      id, status, created_at, category_id, academic_year_id, term_id,
+      assessment_categories(name, marks), assessments(name, maximum_marks),
+      grade_records(student_id, score, students(student_id, profiles(full_name)))
+    `).eq("class_id", classId).eq("subject_id", subjectId).order("created_at", { ascending: true });
+    const yearId = document.getElementById("gradeToolbarYearSelect")?.value;
+    const termId = document.getElementById("gradeToolbarTermSelect")?.value;
+    if (yearId) query = query.eq("academic_year_id", yearId);
+    if (termId) query = query.eq("term_id", termId);
+
+    const { data: sessions, error } = await query;
+    if (error) throw error;
+    if (!sessions?.length) {
+      head.innerHTML = "";
+      body.innerHTML = `<tr><td>No assessment marks found for these filters.</td></tr>`;
+      hint.textContent = "No marks found for this class, subject, year, and term.";
+      return;
+    }
+
+    const sessionMaximum = (session) => {
+      const categoryMarks = Number(session.assessment_categories?.marks);
+      const assessmentMarks = Number(session.assessments?.maximum_marks);
+      if (Number.isFinite(categoryMarks) && categoryMarks > 0) return categoryMarks;
+      if (Number.isFinite(assessmentMarks) && assessmentMarks > 0) return assessmentMarks;
+      return null;
+    };
+    const totalPossible = sessions.reduce((sum, session) => sum + (sessionMaximum(session) || 0), 0);
+    const students = new Map();
+    sessions.forEach((session) => (session.grade_records || []).forEach((record) => {
+      if (!students.has(record.student_id)) {
+        students.set(record.student_id, {
+          name: record.students?.profiles?.full_name || "Student",
+          studentCode: record.students?.student_id || "",
+          marks: new Map(), points: 0, possible: 0,
+        });
+      }
+      const student = students.get(record.student_id);
+      student.marks.set(session.id, record.score);
+      const score = Number(record.score);
+      if (record.score !== null && record.score !== "" && Number.isFinite(score)) {
+        student.points += score;
+      }
+    }));
+
+    const sessionLabel = (session) => `${session.assessment_categories?.name || "Assessment"}${session.assessments?.name ? ` · ${session.assessments.name}` : ""}`;
+    head.innerHTML = `<tr><th>Student</th>${sessions.map((s) => `<th>${escapeGradeHtml(sessionLabel(s))}${s.status === "drafted" ? " · Draft" : ""}</th>`).join("")}<th>Points</th></tr>`;
+    body.innerHTML = [...students.values()].sort((a, b) => a.name.localeCompare(b.name)).map((student) => {
+      const name = escapeGradeHtml(student.name);
+      const code = escapeGradeHtml(student.studentCode);
+      const scoreCells = sessions.map((session) => {
+        const score = student.marks.get(session.id);
+        const maximum = sessionMaximum(session);
+        return `<td>${score === null || score === undefined || score === "" ? "—" : escapeGradeHtml(score)}${maximum ? ` / ${escapeGradeHtml(maximum)}` : ""}</td>`;
+      }).join("");
+      const points = totalPossible ? `${student.points} / ${totalPossible}` : `${student.points} pts`;
+      return `<tr><td><strong>${name}</strong>${code ? `<small>${code}</small>` : ""}</td>${scoreCells}<td><strong>${escapeGradeHtml(points)}</strong></td></tr>`;
+    }).join("");
+    hint.textContent = `${students.size} students · ${sessions.length} assessment records. Draft marks are labeled in the column headings.`;
+  } catch (error) {
+    console.error("Error loading gradebook:", error);
+    head.innerHTML = "";
+    body.innerHTML = `<tr><td>Could not load the gradebook.</td></tr>`;
+    hint.textContent = "There was a problem loading marks.";
   }
 }
 
