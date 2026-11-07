@@ -1139,6 +1139,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .includes(profile.role);
     if (enrollmentCard) enrollmentCard.hidden = !canViewEnrollmentStats;
     if (canViewEnrollmentStats) loadEnrollmentStats("year");
+    subscribeToNotificationBadge(user.id);
     updateNotificationBadge(user.id);
   } catch (err) {
     console.error("Error loading dashboard data:", err);
@@ -1190,6 +1191,59 @@ async function updateNotificationBadge(userId) {
   } catch (err) {
     console.error("Error fetching notifications:", err);
   }
+}
+
+let notificationBadgeChannel = null;
+let notificationBadgeUserId = null;
+let notificationBadgeRefreshTimer = null;
+
+function subscribeToNotificationBadge(userId) {
+  const client = window.supabaseClient;
+  if (!client || !userId) return;
+  if (notificationBadgeChannel && notificationBadgeUserId === userId) return;
+
+  if (notificationBadgeChannel) {
+    void client.removeChannel(notificationBadgeChannel);
+    notificationBadgeChannel = null;
+  }
+
+  notificationBadgeUserId = userId;
+  notificationBadgeChannel = client
+    .channel(`notification-badge:${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${userId}`,
+      },
+      () => refreshNotificationBadgeSoon(userId),
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${userId}`,
+      },
+      () => refreshNotificationBadgeSoon(userId),
+    )
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        updateNotificationBadge(userId);
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn(`Notification badge realtime subscription status: ${status}`);
+      }
+    });
+}
+
+function refreshNotificationBadgeSoon(userId) {
+  clearTimeout(notificationBadgeRefreshTimer);
+  notificationBadgeRefreshTimer = setTimeout(() => {
+    updateNotificationBadge(userId);
+  }, 120);
 }
 
 async function loadEnrollmentStats(
