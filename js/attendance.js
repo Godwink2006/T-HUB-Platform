@@ -820,6 +820,26 @@ async function handleSaveAttendance(passedWorkflowStatus = "submitted") {
       return;
     }
 
+    if (
+      workflowStatus === "submitted" &&
+      typeof window.sendNotification === "function"
+    ) {
+      const notificationResults = await Promise.all(
+        recordsPayload.map((record) =>
+          window.sendNotification(
+            schoolId,
+            record.student_id,
+            "Attendance Recorded",
+            "Your attendance has been recorded.",
+            "attendance",
+          ),
+        ),
+      );
+      if (notificationResults.some((result) => !result?.success)) {
+        console.warn("Some attendance notifications could not be saved.");
+      }
+    }
+
     showToast(
       `Attendance successfully ${workflowStatus === "drafted" ? "saved as Draft" : "Submitted"}!`,
       "success",
@@ -1735,6 +1755,26 @@ async function handleSaveEditAttendance() {
     if (rpcError) {
       showToast(`Error: ${rpcError.message}`, "error");
       return;
+    }
+
+    if (
+      newWorkflowStatus === "submitted" &&
+      typeof window.sendNotification === "function"
+    ) {
+      const notificationResults = await Promise.all(
+        recordsPayload.map((record) =>
+          window.sendNotification(
+            schoolId,
+            record.student_id,
+            "Attendance Updated",
+            "Your attendance has been updated.",
+            "attendance",
+          ),
+        ),
+      );
+      if (notificationResults.some((result) => !result?.success)) {
+        console.warn("Some attendance update notifications could not be saved.");
+      }
     }
 
     showToast(

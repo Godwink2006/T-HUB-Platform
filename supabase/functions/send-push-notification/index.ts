@@ -56,15 +56,48 @@ Deno.serve(async (request) => {
     return json({ skipped: true, reason: "Notification has no recipient or title" });
   }
 
+  // Notifications addressed to a student also reach their active linked parents.
+  // Parent pushes are generic and open the parent dashboard; no parent inbox row
+  // is needed. The database lookup runs here with the service-role client so the
+  // browser never needs permission to enumerate parent links.
+  const { data: parentLinks, error: parentLinksError } = await adminClient
+    .from("parent_student_links")
+    .select("parent_user_id")
+    .eq("student_id", notification.user_id)
+    .eq("status", "active");
+  if (parentLinksError) {
+    console.error("Could not load linked parents:", parentLinksError.message);
+    return json({ error: "Could not load linked parents" }, 500);
+  }
+
+  const parentUserIds = [...new Set((parentLinks || []).map((link) => link.parent_user_id))];
+  const parentUserIdSet = new Set(parentUserIds);
+  const recipientIds = [...new Set([notification.user_id, ...parentUserIds])];
   const { data: subscriptions, error } = await adminClient
     .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth_key")
-    .eq("user_id", notification.user_id);
+    .select("id, user_id, endpoint, p256dh, auth_key")
+    .in("user_id", recipientIds);
   if (error) {
     console.error("Could not load push subscriptions:", error.message);
     return json({ error: "Could not load push subscriptions" }, 500);
   }
   if (!subscriptions?.length) return json({ sent: 0, expired: 0 });
+
+  const parentTitle = notification.type === "academic"
+    ? "Academic Update"
+    : notification.type === "attendance"
+      ? "Attendance Update"
+      : "Student Update";
+  const parentPayload = {
+    title: parentTitle,
+    body: "There is a new update for your student. Sign in to T-HUB to view it.",
+    url: "/html/parent-dashboard.html",
+  };
+  const studentPayload = {
+    title: notification.title,
+    body: notification.message || "You have a new notification.",
+    url: "/html/notifications.html",
+  };
 
   const publicKeyBytes = base64UrlToBytes(vapidPublicKey);
   if (publicKeyBytes.length !== 65 || publicKeyBytes[0] !== 4) {
@@ -93,19 +126,16 @@ Deno.serve(async (request) => {
     contactInformation: vapidSubject,
     vapidKeys,
   });
-  const payload = JSON.stringify({
-    title: notification.title,
-    body: notification.message || "You have a new notification.",
-    url: "/html/notifications.html",
-  });
-
   const results = await Promise.all(subscriptions.map(async (subscription) => {
     try {
+      const payload = parentUserIdSet.has(subscription.user_id)
+        ? parentPayload
+        : studentPayload;
       const subscriber = applicationServer.subscribe({
         endpoint: subscription.endpoint,
         keys: { p256dh: subscription.p256dh, auth: subscription.auth_key },
       });
-      await subscriber.pushTextMessage(payload, { ttl: 60 * 60 });
+      await subscriber.pushTextMessage(JSON.stringify(payload), { ttl: 60 * 60 });
       return { id: subscription.id, sent: true };
     } catch (pushError) {
       const expired = pushError instanceof webpush.PushMessageError && pushError.isGone();
