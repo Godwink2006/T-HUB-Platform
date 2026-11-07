@@ -221,6 +221,12 @@ i {
   cursor: pointer;
 }
 
+.login-btn i,
+.login-btn .fa,
+.login-btn svg {
+  color: #ffffff !important;
+}
+
 .home-screen-guide {
   margin-top: 24px;
   padding: 16px;

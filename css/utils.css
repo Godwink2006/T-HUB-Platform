@@ -238,3 +238,13 @@ tbody tr:hover {
 .details-item.full-width {
   grid-column: span 2;
 }
+/* Keep button icons in sync with their button text, including white icons on blue buttons. */
+button i,
+button .fa,
+button svg,
+a[class*="btn"] i,
+a[class*="btn"] .fa,
+a[class*="btn"] svg {
+  color: inherit !important;
+}
+
