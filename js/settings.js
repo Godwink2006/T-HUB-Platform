@@ -150,10 +150,10 @@ async function initSettingsPage() {
         </div>
 
         <div class="setting-card">
-          <h4>Log Out &amp; Clear Browser Data</h4>
-          <p>Sign out on this device and remove saved data for this site, including cached files and local settings. School records are not deleted.</p>
+          <h4>Log Out</h4>
+          <p>Sign out on this device and remove saved data for this site.</p>
           <button id="clearBrowserDataBtn" type="button" class="manage-btn clear-browser-data-btn">
-            Log Out &amp; Clear Data <i class="fa-solid fa-right-from-bracket"></i>
+            Log Out<i class="fa-solid fa-right-from-bracket"></i>
           </button>
         </div>
       `;
@@ -243,8 +243,8 @@ async function initPushNotificationSetup() {
       ? `Disable on This Device <i class="fa-solid fa-bell-slash"></i>`
       : `Enable on This Device <i class="fa-solid fa-bell"></i>`;
     status.textContent = isEnabled
-      ? "This device subscription is saved. Push delivery will start after the server sender is connected."
-      : "T-HUB notifications are off on this device. You can enable them whenever you are ready.";
+      ? "This device subscription is saved. grades, attendance and other updates will be delivered."
+      : "Notifications are off on this device. You can enable them to receive updates whenever you are ready.";
   };
 
   try {
@@ -316,9 +316,9 @@ async function initPushNotificationSetup() {
           }, { onConflict: "endpoint" });
           if (error) throw error;
           isEnabled = true;
-          status.textContent = "This device is registered. Push delivery will be active once the server sender is connected.";
+          status.textContent = "This device is registered.";
         } else {
-          status.textContent = "Notifications were not enabled. You can try again whenever you are ready.";
+          status.textContent = "Notifications were not enabled.";
         }
       }
     } catch (error) {
