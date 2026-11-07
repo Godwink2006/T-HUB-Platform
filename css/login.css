@@ -7,7 +7,8 @@
 
 body {
   background: #f4f7fb;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body::before {
@@ -37,7 +38,7 @@ body::after {
 .login-container {
   display: flex;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .left-panel {
@@ -86,6 +87,8 @@ body::after {
   justify-content: center;
   align-items: center;
   background: #fff;
+  min-height: 100vh;
+  padding: 24px;
 }
 
 .login-card {
@@ -216,13 +219,51 @@ i {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
-  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.25);
 }
 
 .login-btn:hover {
   background: #1d4ed8;
   transform: translateY(-2px);
+}
+
+.home-screen-guide {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid #dbe5f3;
+  border-radius: 12px;
+  background: #f8faff;
+  color: #374151;
+}
+
+.home-screen-guide h3 {
+  margin: 0 0 5px;
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.home-screen-guide > p {
+  margin: 0 0 10px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.home-screen-guide details {
+  padding: 9px 0;
+  border-top: 1px solid #e5eaf2;
+  font-size: 12px;
+}
+
+.home-screen-guide summary {
+  color: #1d4ed8;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home-screen-guide ol {
+  margin: 8px 0 0 20px;
+  padding: 0;
+  line-height: 1.7;
 }
 
 @media (max-width: 992px) {
