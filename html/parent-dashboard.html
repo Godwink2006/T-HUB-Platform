@@ -104,6 +104,15 @@
           </div>
         </div>
       </section>
+      <section class="parent-push-card" aria-labelledby="parentPushTitle">
+        <div class="parent-push-copy">
+          <h2 id="parentPushTitle"><i class="fa-solid fa-bell" aria-hidden="true"></i> Notifications on this device</h2>
+          <p id="parentPushStatus" aria-live="polite">Enable push notifications to hear about updates for your linked students.</p>
+        </div>
+        <button id="parentPushToggle" class="parent-push-toggle" type="button">
+          Enable on This Device <i class="fa-solid fa-bell" aria-hidden="true"></i>
+        </button>
+      </section>
       <section class="children-section" aria-labelledby="childrenTitle">
         <div class="section-heading">
           <div>
@@ -203,6 +212,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
     <script src="/js/supabase.js"></script>
     <script src="/js/utils.js"></script>
+    <script src="/js/push-config.js"></script>
+    <script src="/js/push-notifications.js"></script>
     <script src="/js/parent-portal.js"></script>
     <script src="/js/parent-dashboard.js"></script>
     <script src="/js/app-icons.js"></script>
