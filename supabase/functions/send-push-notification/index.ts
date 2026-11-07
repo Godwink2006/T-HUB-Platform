@@ -73,6 +73,27 @@ Deno.serve(async (request) => {
   const parentUserIds = [...new Set((parentLinks || []).map((link) => link.parent_user_id))];
   const parentUserIdSet = new Set(parentUserIds);
   const recipientIds = [...new Set([notification.user_id, ...parentUserIds])];
+
+  let studentName = "your student";
+  if (parentUserIds.length) {
+    const { data: student, error: studentError } = await adminClient
+      .from("students")
+      .select("profiles(full_name)")
+      .eq("id", notification.user_id)
+      .maybeSingle();
+    if (studentError) {
+      console.warn("Could not load student name for parent push:", studentError.message);
+    } else {
+      const profile = Array.isArray(student?.profiles)
+        ? student.profiles[0]
+        : student?.profiles;
+      const fullName = typeof profile?.full_name === "string"
+        ? profile.full_name.trim()
+        : "";
+      if (fullName) studentName = fullName;
+    }
+  }
+
   const { data: subscriptions, error } = await adminClient
     .from("push_subscriptions")
     .select("id, user_id, endpoint, p256dh, auth_key")
@@ -83,14 +104,27 @@ Deno.serve(async (request) => {
   }
   if (!subscriptions?.length) return json({ sent: 0, expired: 0 });
 
-  const parentTitle = notification.type === "academic"
-    ? "Academic Update"
+  const notificationCategory = notification.type === "academic"
+    ? "grade"
     : notification.type === "attendance"
+      ? "attendance"
+      : ["fee", "fees", "finance", "financial"].includes(
+          String(notification.type || "").toLowerCase(),
+        )
+        ? "fees"
+        : "student";
+  const parentTitle = notificationCategory === "grade"
+    ? "Grade Update"
+    : notificationCategory === "attendance"
       ? "Attendance Update"
-      : "Student Update";
+      : notificationCategory === "fees"
+        ? "Fees Update"
+        : "Student Update";
   const parentPayload = {
     title: parentTitle,
-    body: "There is a new update for your student. Sign in to T-HUB to view it.",
+    body: notificationCategory === "student"
+      ? `There is a new update for ${studentName}. Sign in to T-HUB to view it.`
+      : `There is a new ${notificationCategory} update for ${studentName}. Sign in to T-HUB to view it.`,
     url: "/html/parent-dashboard.html",
   };
   const studentPayload = {

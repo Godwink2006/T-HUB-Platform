@@ -1127,6 +1127,19 @@ if (savePaymentBtn) {
 
       if (error) throw error;
 
+      if (activeStudentId && typeof window.sendNotification === "function") {
+        const notificationResult = await window.sendNotification(
+          window.currentSchoolId || null,
+          activeStudentId,
+          "Fee Payment Recorded",
+          "A fee payment has been recorded on your account.",
+          "fees",
+        );
+        if (!notificationResult?.success) {
+          console.warn("The fee payment was saved, but its notification could not be created.");
+        }
+      }
+
       showToast("Itemized payment saved successfully!", "success");
 
       const recordModal = document.getElementById("addRecordPaymentModal");
