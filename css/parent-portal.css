@@ -65,9 +65,7 @@ body.parent-portal {
 .parent-push-card {
   align-items: center;
   background: #fff;
-  border: 1px solid #dbe4f0;
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(23, 32, 51, 0.04);
+  border: 0.5px solid #dbe4f0;
   display: flex;
   gap: 20px;
   justify-content: space-between;
@@ -93,7 +91,6 @@ body.parent-portal {
   align-items: center;
   background: #2563eb;
   border: 0;
-  border-radius: 9px;
   color: #fff;
   cursor: pointer;
   display: inline-flex;
@@ -106,7 +103,7 @@ body.parent-portal {
   min-height: 44px;
   padding: 0 16px;
 }
-.parent-push-toggle:hover:not(:disabled) { background: #1d4ed8; }
+
 .parent-push-toggle:disabled { cursor: not-allowed; opacity: 0.65; }
 .parent-welcome {
   margin-bottom: 32px;
@@ -993,7 +990,9 @@ body.parent-portal {
   .parent-portal .parent-brand > i {
     border-radius: 10px;
   }
-  .parent-portal .parent-signout {
+  .parent-portal .parent-signout,
+  .parent-push-card,
+.parent-push-toggle {
     border-radius: 10px;
   }
   .parent-portal .children-section,
