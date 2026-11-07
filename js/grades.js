@@ -979,6 +979,7 @@ async function loadGradesList() {
   )?.value;
   const selectedYear = document.getElementById("gradeToolbarYearSelect")?.value;
   const selectedTerm = document.getElementById("gradeToolbarTermSelect")?.value;
+  const selectedAssessment = document.getElementById("gradeToolbarAssessmentSelect")?.value;
   const selectedCategory = document.getElementById(
     "gradeToolbarCategorySelect",
   )?.value;
@@ -1003,6 +1004,7 @@ async function loadGradesList() {
         category_id,
         academic_year_id,
         term_id,
+        assessment_id,
         assessment_categories ( name ),
         classes ( name ),
         subjects ( name )
@@ -1021,6 +1023,9 @@ async function loadGradesList() {
     }
     if (selectedTerm) {
       query = query.eq("term_id", selectedTerm);
+    }
+    if (selectedAssessment) {
+      query = query.eq("assessment_id", selectedAssessment);
     }
     if (selectedCategory) {
       query = query.eq("category_id", selectedCategory);
@@ -1181,8 +1186,10 @@ async function loadGradebook() {
     `).eq("class_id", classId).eq("subject_id", subjectId).order("created_at", { ascending: true });
     const yearId = document.getElementById("gradeToolbarYearSelect")?.value;
     const termId = document.getElementById("gradeToolbarTermSelect")?.value;
+    const assessmentId = document.getElementById("gradeToolbarAssessmentSelect")?.value;
     if (yearId) query = query.eq("academic_year_id", yearId);
     if (termId) query = query.eq("term_id", termId);
+    if (assessmentId) query = query.eq("assessment_id", assessmentId);
 
     const { data: sessions, error } = await query;
     if (error) throw error;
@@ -1812,21 +1819,25 @@ async function populateToolbarDropdowns() {
   const categoryFilter = document.getElementById("gradeToolbarCategorySelect");
   const yearFilter = document.getElementById("gradeToolbarYearSelect");
   const termFilter = document.getElementById("gradeToolbarTermSelect");
+  const assessmentFilter = document.getElementById("gradeToolbarAssessmentSelect");
 
   const client = window.supabaseClient || supabaseClient;
 
   try {
-    const [yearsResult, termsResult] = await Promise.all([
+    const [yearsResult, termsResult, assessmentsResult] = await Promise.all([
       client
         .from("academic_years")
         .select("id, year_label")
         .order("year_label", { ascending: false }),
       client.from("terms").select("id, name, academic_year_id").order("name"),
+      client.from("assessments").select("id, name, academic_year_id").order("name"),
     ]);
     if (yearsResult.error) throw yearsResult.error;
     if (termsResult.error) throw termsResult.error;
+    if (assessmentsResult.error) throw assessmentsResult.error;
 
     const terms = termsResult.data || [];
+    const assessments = assessmentsResult.data || [];
     const renderTerms = () => {
       if (!termFilter) return;
       const selectedTerm = termFilter.value;
@@ -1845,6 +1856,17 @@ async function populateToolbarDropdowns() {
         termFilter.value = selectedTerm;
       }
     };
+    const renderAssessments = () => {
+      if (!assessmentFilter) return;
+      const selected = assessmentFilter.value;
+      const selectedYear = yearFilter?.value;
+      const visible = selectedYear
+        ? assessments.filter((a) => String(a.academic_year_id) === String(selectedYear))
+        : assessments;
+      assessmentFilter.innerHTML = `<option value="">All Periods</option>`;
+      visible.forEach((a) => assessmentFilter.appendChild(new Option(a.name, a.id)));
+      if (visible.some((a) => String(a.id) === selected)) assessmentFilter.value = selected;
+    };
     if (yearFilter && yearsResult.data) {
       yearFilter.innerHTML = `<option value="">All Academic Years</option>`;
       yearsResult.data.forEach((year) =>
@@ -1852,9 +1874,11 @@ async function populateToolbarDropdowns() {
       );
     }
     renderTerms();
+    renderAssessments();
     if (yearFilter && !yearFilter.dataset.listenerBound) {
       yearFilter.addEventListener("change", () => {
         renderTerms();
+        renderAssessments();
         loadGradesList();
       });
       yearFilter.dataset.listenerBound = "true";
@@ -1862,6 +1886,10 @@ async function populateToolbarDropdowns() {
     if (termFilter && !termFilter.dataset.listenerBound) {
       termFilter.addEventListener("change", loadGradesList);
       termFilter.dataset.listenerBound = "true";
+    }
+    if (assessmentFilter && !assessmentFilter.dataset.listenerBound) {
+      assessmentFilter.addEventListener("change", loadGradesList);
+      assessmentFilter.dataset.listenerBound = "true";
     }
 
     const {
