@@ -36,14 +36,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#2563eb" />
-      <link rel="stylesheet" href="/css/app-visuals.css" />
+    <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
   <body class="parent-portal">
     <header class="parent-topbar">
-      <a class="parent-brand"
-        ><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i
-        ><span>HSMS <small>Family Portal</small></span></a
-      >
+      <a class="parent-brand">
+        <img src="/icons/app-icon-192.png" alt="" />
+        <span>HSMS <small>Family Portal</small></span>
+      </a>
       <button id="parentSignOut" class="parent-signout" type="button">
         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
         Sign out
@@ -55,7 +55,7 @@
           ><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All
           students</a
         >
-        <p class="parent-eyebrow">Selected student</p>
+        <p class="parent-badges">Selected student</p>
         <div class="record-student-heading">
           <span
             id="recordStudentPhoto"
@@ -110,7 +110,7 @@
           >
           <label id="recordYearFilterField"
             >Academic year<select id="recordYearFilter">
-              <option value="">All academic years</option>
+              <option value="">All years</option>
             </select></label
           >
           <label id="recordClassFilterField"
@@ -127,7 +127,7 @@
           >
           <label id="recordPeriodFilterField" hidden
             >Assessment period<select id="recordPeriodFilter">
-              <option value="">All assessment periods</option>
+              <option value="">All assessment</option>
             </select></label
           >
           <label id="recordSubjectFilterField" hidden
@@ -141,7 +141,11 @@
             </select></label
           >
           <div class="parent-record-filter-actions">
-            <button id="applyParentRecordFilters" type="button" class="parent-record-filter-button">
+            <button
+              id="applyParentRecordFilters"
+              type="button"
+              class="parent-record-filter-button"
+            >
               <i class="fa-solid fa-filter" aria-hidden="true"></i>
               View records
             </button>
@@ -168,11 +172,29 @@
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </span>
         <h2 id="parentSignOutTitle">Sign out?</h2>
-        <p id="parentSignOutDescription">Are you sure you want to sign out of the Family Portal?</p>
-        <p id="parentSignOutMessage" class="parent-signout-dialog-message" aria-live="polite"></p>
+        <p id="parentSignOutDescription">
+          Are you sure you want to sign out of the Family Portal?
+        </p>
+        <p
+          id="parentSignOutMessage"
+          class="parent-signout-dialog-message"
+          aria-live="polite"
+        ></p>
         <div class="parent-signout-dialog-actions">
-          <button id="cancelParentSignOut" class="parent-signout-cancel" type="button">Stay signed in</button>
-          <button id="confirmParentSignOut" class="parent-signout-confirm" type="button">Sign out</button>
+          <button
+            id="cancelParentSignOut"
+            class="parent-signout-cancel"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            id="confirmParentSignOut"
+            class="parent-signout-confirm"
+            type="button"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </dialog>
@@ -184,6 +206,6 @@
     <script src="/js/utils.js"></script>
     <script src="/js/parent-portal.js"></script>
     <script src="/js/parent-records.js"></script>
-      <script src="/js/app-icons.js"></script>
+    <script src="/js/app-icons.js"></script>
   </body>
 </html>

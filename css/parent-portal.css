@@ -79,14 +79,11 @@ body.parent-auth-checking .parent-auth-loading {
   gap: 12px;
   text-decoration: none;
 }
-.parent-brand > i {
-  align-items: center;
-  background: #eaf1ff;
+.parent-brand > img {
   border-radius: 12px;
-  color: #2563eb;
-  display: flex;
+  display: block;
   height: 42px;
-  justify-content: center;
+  object-fit: cover;
   width: 42px;
 }
 .parent-brand small {
@@ -170,6 +167,21 @@ body.parent-auth-checking .parent-auth-loading {
   margin: 0 0 8px;
   text-transform: uppercase;
 }
+
+.parent-badges {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+
+  color: #2563eb;
+  background-color: #eff6ff;
+  padding: 2px 8px;
+  margin-bottom: 10px;
+  width: fit-content;
+}
+
 .parent-welcome h1 {
   font-size: clamp(1.8rem, 4vw, 2.5rem);
   line-height: 1.2;
@@ -888,11 +900,6 @@ body.parent-portal {
   min-height: 64px;
   padding: 10px 15px;
 }
-.parent-portal .parent-brand > i {
-  background: #1d4ed8;
-  border-radius: 0;
-  color: #fff;
-}
 .parent-portal .parent-signout {
 
   background: #b42318;
@@ -1021,7 +1028,7 @@ body.parent-portal {
   .parent-child-card button {
     width: 100%;
   }
-  .parent-portal .parent-brand > i {
+  .parent-portal .parent-brand > img {
     border-radius: 10px;
   }
   .parent-portal .parent-signout,
