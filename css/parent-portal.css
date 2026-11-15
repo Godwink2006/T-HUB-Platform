@@ -155,7 +155,10 @@ body.parent-auth-checking .parent-auth-loading {
   padding: 0 16px;
 }
 
-.parent-push-toggle:disabled { cursor: not-allowed; opacity: 0.65; }
+.parent-push-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
 .parent-welcome {
   margin-bottom: 32px;
 }
@@ -619,13 +622,22 @@ body.parent-auth-checking .parent-auth-loading {
   color: #16a36a;
   font-size: 1.6rem;
 }
+
 .parent-record-links,
 .parent-record-tabs {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  grid-template-columns: repeat(2, 1fr);
   margin-top: 20px;
 }
+
+@media (min-width: 600px) {
+  .parent-record-links,
+  .parent-record-tabs {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+}
+
 .parent-record-link,
 .parent-record-tabs a {
   align-items: center;
@@ -741,7 +753,9 @@ body.parent-auth-checking .parent-auth-loading {
   justify-content: center;
   min-height: 40px;
   padding: 9px 16px;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .parent-record-filter-button:hover {
@@ -1013,7 +1027,9 @@ body.parent-portal {
     gap: 14px;
     padding: 18px;
   }
-  .parent-push-toggle { width: 100%; }
+  .parent-push-toggle {
+    width: 100%;
+  }
   .parent-topbar {
     min-height: 64px;
     padding: 10px 15px;
@@ -1043,7 +1059,7 @@ body.parent-portal {
   }
   .parent-portal .parent-signout,
   .parent-push-card,
-.parent-push-toggle {
+  .parent-push-toggle {
     border-radius: 10px;
   }
   .parent-portal .children-section,
