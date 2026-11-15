@@ -602,7 +602,7 @@ function buildParentRecordFilters() {
   const context = rows.map((row) => getParentRecordContext(row, type));
   const filterSets = [
     ["recordSchoolFilter", "schoolId", "schoolName", "All schools"],
-    ["recordYearFilter", "yearId", "yearName", "All academic years"],
+    ["recordYearFilter", "yearId", "yearName", "All years"],
     ["recordClassFilter", "classId", "className", "All classes"],
   ];
   if (type === "grades" || type === "attendance") {

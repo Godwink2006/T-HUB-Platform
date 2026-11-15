@@ -442,7 +442,8 @@ body.parent-auth-checking .parent-auth-loading {
   .parent-child-card button,
   .parent-primary-button,
   .parent-portal .parent-link-row,
-  .parent-link-row button {
+  .parent-link-row button,
+  .parent-badges {
     border-radius: 10px;
   }
 }
@@ -1041,7 +1042,8 @@ body.parent-portal {
   }
   .parent-portal .parent-signout,
   .parent-push-card,
-  .parent-push-toggle {
+  .parent-push-toggle,
+  .parent-badges {
     border-radius: 10px;
   }
   .parent-portal .children-section,
