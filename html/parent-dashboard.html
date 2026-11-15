@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="auth-welcome-open">
   <head>
     <meta
       http-equiv="Cache-Control"
@@ -38,7 +38,14 @@
     <meta name="theme-color" content="#2563eb" />
     <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
-  <body class="parent-portal">
+  <body class="parent-portal parent-auth-checking">
+    <div class="parent-auth-loading" role="status" aria-live="polite">
+      <div class="parent-auth-loading__content">
+        <img src="/icons/app-icon-192.png" alt="" />
+        <h1>Welcome to T-HUB HSMS</h1>
+        <p>Preparing your account…</p>
+      </div>
+    </div>
     <header class="parent-topbar">
       <a class="parent-brand"
         ><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i

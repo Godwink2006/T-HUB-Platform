@@ -239,7 +239,8 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-function finishDashboardAccessCheck() {
+async function finishDashboardAccessCheck() {
+  await window.completeAuthWelcome?.();
   document.body.classList.remove("dashboard-auth-checking");
   document.body.classList.remove("dashboard-auth-error-open");
   document.getElementById("dashboardAuthLoading")?.remove();
@@ -478,7 +479,8 @@ async function loadDashboardRecentActivities(schoolId) {
   }
 }
 
-function showDashboardAccessCheckError(message, actionLabel = "Continue to view other information") {
+async function showDashboardAccessCheckError(message, actionLabel = "Continue to view other information") {
+  await window.completeAuthWelcome?.();
   const loadingScreen = document.getElementById("dashboardAuthLoading");
   if (!loadingScreen) return;
 
@@ -1087,6 +1089,7 @@ async function loadDashboardStats(schoolId) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  window.beginAuthWelcome?.();
   try {
 
     const {

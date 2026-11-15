@@ -3,7 +3,14 @@ let parentAnnouncementRequestId = 0;
 
 document.addEventListener("DOMContentLoaded", loadParentDashboard);
 
+async function finishParentDashboardWelcome() {
+  await window.completeAuthWelcome?.();
+  document.body.classList.remove("parent-auth-checking");
+  document.querySelector(".parent-auth-loading")?.remove();
+}
+
 async function loadParentDashboard() {
+  window.beginAuthWelcome?.();
   const container = document.getElementById("parentChildren");
   const client = window.supabaseClient;
   if (!container || !client) return;
@@ -61,6 +68,7 @@ async function loadParentDashboard() {
 `;
       sessionStorage.removeItem(selectedParentStudentStorageKey);
       container.setAttribute("aria-busy", "false");
+      await finishParentDashboardWelcome();
       return;
     }
 
@@ -89,6 +97,7 @@ async function loadParentDashboard() {
       container.innerHTML =
         '<p class="parent-state">No linked student records are available. Contact the school to review the invitation.</p>';
       container.setAttribute("aria-busy", "false");
+      await finishParentDashboardWelcome();
       return;
     }
 
@@ -102,11 +111,13 @@ async function loadParentDashboard() {
       );
     }
     container.setAttribute("aria-busy", "false");
+    await finishParentDashboardWelcome();
   } catch (error) {
     console.error("Could not load parent dashboard:", error);
     container.innerHTML =
       '<p class="parent-state">The dashboard could not load. Refresh the page or contact the school.</p>';
     container.setAttribute("aria-busy", "false");
+    await finishParentDashboardWelcome();
   }
 }
 

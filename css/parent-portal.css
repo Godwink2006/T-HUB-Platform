@@ -9,6 +9,57 @@ body.parent-portal {
   font-family: Poppins, Arial, sans-serif;
 }
 
+body.parent-auth-checking {
+  background: #fff;
+  overflow: hidden;
+}
+
+body.parent-auth-checking > .parent-topbar,
+body.parent-auth-checking > .parent-main {
+  visibility: hidden;
+}
+
+.parent-auth-loading {
+  display: none;
+}
+
+body.parent-auth-checking .parent-auth-loading {
+  align-items: center;
+  background: #fff;
+  color: #334155;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 9999;
+}
+
+.parent-auth-loading__content {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.parent-auth-loading__content img {
+  border-radius: 22px;
+  height: 92px;
+  width: 92px;
+}
+
+.parent-auth-loading__content h1 {
+  color: #172554;
+  font-size: clamp(20px, 5vw, 26px);
+  margin: 0;
+}
+
+.parent-auth-loading__content p {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
 .parent-topbar {
   align-items: center;
   background: #ffffff;

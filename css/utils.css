@@ -248,3 +248,10 @@ a[class*="btn"] svg {
   color: inherit !important;
 }
 
+html.auth-welcome-open,
+html.auth-welcome-open body {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none;
+}
+
