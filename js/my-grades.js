@@ -87,29 +87,46 @@ async function initStudentContext() {
       .filter((record) => record.grades);
 
     cachedStudentGradeCreators = new Map();
-    const gradeClassIds = [
-      ...new Set(
-        cachedStudentGrades
-          .map((record) => record.grades.class_id)
-          .filter(Boolean)
-          .map(String),
-      ),
-    ];
-    const teacherNameResults = await Promise.all(
-      gradeClassIds.map((classId) =>
-        client.rpc("student_timetable_teacher_names", { p_class_id: classId }),
-      ),
+    const { data: gradeCreators, error: gradeCreatorsError } = await client.rpc(
+      "student_grade_creator_names",
     );
-    for (const result of teacherNameResults) {
-      if (result.error) {
-        console.warn("Could not load assigned teacher names for grades:", result.error);
-        continue;
+    if (gradeCreatorsError) {
+      console.warn("Could not load grade author names:", gradeCreatorsError);
+      // Keep teacher names available on deployments before the new creator
+      // lookup function has been installed.
+      const gradeClassIds = [
+        ...new Set(
+          cachedStudentGrades
+            .map((record) => record.grades.class_id)
+            .filter(Boolean)
+            .map(String),
+        ),
+      ];
+      const teacherNameResults = await Promise.all(
+        gradeClassIds.map((classId) =>
+          client.rpc("student_timetable_teacher_names", { p_class_id: classId }),
+        ),
+      );
+      for (const result of teacherNameResults) {
+        if (result.error) {
+          console.warn("Could not load assigned teacher names for grades:", result.error);
+          continue;
+        }
+        for (const teacher of result.data || []) {
+          if (teacher?.teacher_id && teacher.full_name) {
+            cachedStudentGradeCreators.set(String(teacher.teacher_id), {
+              full_name: teacher.full_name,
+              role: "teacher",
+            });
+          }
+        }
       }
-      for (const teacher of result.data || []) {
-        if (teacher?.teacher_id && teacher.full_name) {
-          cachedStudentGradeCreators.set(String(teacher.teacher_id), {
-            full_name: teacher.full_name,
-            role: "teacher",
+    } else {
+      for (const creator of gradeCreators || []) {
+        if (creator?.creator_id && creator.full_name) {
+          cachedStudentGradeCreators.set(String(creator.creator_id), {
+            full_name: creator.full_name,
+            role: creator.author_role || "staff",
           });
         }
       }
