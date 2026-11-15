@@ -691,13 +691,21 @@ body.parent-auth-checking .parent-auth-loading {
   font-size: 1.25rem;
   margin: 0;
 }
+
 .parent-record-filters {
   align-items: end;
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  grid-template-columns: repeat(2, 1fr);
   margin-bottom: 20px;
 }
+
+@media (min-width: 600px) {
+  .parent-record-filters {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
 .parent-record-filters[hidden] {
   display: none !important;
 }
@@ -920,7 +928,7 @@ body.parent-portal {
   color: #111827;
   font-size: 20px;
   line-height: 1.2;
-  margin-bottom: -15px;
+  margin-bottom: -5px;
 }
 
 .parent-portal .parent-eyebrow {
