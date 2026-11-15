@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const selectedYear = yearSelect.value;
     const yearTerms = terms.filter((term) => !selectedYear || term.academic_year_id === selectedYear);
     const previous = termSelect.value;
-    ReportsCommon.populateSelect(termSelect, yearTerms, { placeholder: "All terms / semesters" });
+    ReportsCommon.populateSelect(termSelect, yearTerms, { placeholder: "All semesters" });
     if (yearTerms.some((term) => term.id === previous)) termSelect.value = previous;
   }
 
@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const version = ++assessmentRequestVersion;
     const yearId = yearSelect.value;
     if (!yearId) {
-      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessment periods" });
+      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessments" });
       return;
     }
     const { data, error } = await client
@@ -226,14 +226,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (version !== assessmentRequestVersion) return;
     if (error) {
       console.warn("Could not load assessment filters:", error.message);
-      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessment periods" });
+      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessments" });
       return;
     }
     const assessments = data || [];
     setAssessmentPeriodOptions(
       assessmentSelect,
       assessments,
-      "All assessment periods",
+      "All assessments",
     );
   }
 

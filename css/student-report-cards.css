@@ -10,9 +10,8 @@ body {
   margin: 0;
 }
 .report-cards-page {
-  max-width: 1440px;
   margin: 0 auto;
-  padding: 32px;
+  padding: 15px;
 }
 .page-header {
   display: flex;
@@ -21,14 +20,18 @@ body {
   margin-bottom: 24px;
 }
 .back-link {
-  display: inline-flex;
+  height: 30px;
+  padding: 5px;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  color: #2563eb;
+  cursor: pointer;
+  margin-top: 10px;
+  border: 0.5px solid rgb(219, 215, 215);
+  width: 70px;
+  justify-content: space-between;
+  background: #1f2937;
+  color: #f9fafb;
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 10px;
 }
 .page-header h1 {
   margin: 0;
@@ -39,6 +42,7 @@ body {
   margin: 6px 0 0;
   color: #64748b;
 }
+
 .filters {
   display: grid;
   grid-template-columns: repeat(5, minmax(140px, 1fr));
@@ -46,9 +50,21 @@ body {
   background: #fff;
   padding: 18px;
   border: 1px solid #e3e8f0;
-  border-radius: 12px;
   margin-bottom: 20px;
 }
+
+/* 2. Forces 2 columns ONLY when the screen is small (mobile/narrow) */
+@media (max-width: 768px) {
+  .filters {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  /* Make sure search or full-width elements span across both columns */
+  .report-search-field {
+    grid-column: 1 / -1 !important;
+  }
+}
+
 .filters label {
   display: flex;
   flex-direction: column;
@@ -62,25 +78,25 @@ body {
   height: 43px;
   width: 100%;
   padding: 0 12px;
-  border: 1px solid #d7deea;
-  border-radius: 7px;
+  border: 0.5px solid #d7deea;
   background: #fff;
   color: #172033;
   font: inherit;
   font-weight: 400;
 }
+
 .roster-card {
   background: #fff;
-  border: 1px solid #e3e8f0;
-  border-radius: 12px;
+  border: 0.5px solid #e3e8f0;
   overflow: hidden;
 }
+
 .roster-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px 20px;
-  border-bottom: 1px solid #e9edf4;
+  border-bottom: 0.5px solid #e9edf4;
 }
 .roster-heading h2 {
   margin: 0;
@@ -98,11 +114,11 @@ body {
 .row-button {
   font: inherit;
   cursor: pointer;
-  border-radius: 7px;
 }
+
 .secondary-button {
   background: white;
-  border: 1px solid #d7deea;
+  border: 0.5px solid #d7deea;
   padding: 9px 12px;
   color: #334155;
 }
@@ -118,7 +134,7 @@ th,
 td {
   text-align: left;
   padding: 13px 16px;
-  border-bottom: 1px solid #edf0f5;
+  border-bottom: 0.5px solid #edf0f5;
   font-size: 13px;
 }
 th {
@@ -141,12 +157,12 @@ td {
 .status-pill {
   display: inline-flex;
   padding: 4px 9px;
-  border-radius: 20px;
   background: #eef2f7;
   color: #566276;
   font-size: 11px;
   text-transform: capitalize;
 }
+
 .row-button {
   border: 0;
   background: #2563eb;
@@ -172,7 +188,7 @@ td {
   padding: 16px;
 }
 .pagination button {
-  border: 1px solid #d7deea;
+  border: 0.5px solid #d7deea;
   background: white;
   padding: 8px 12px;
   color: #334155;
@@ -208,10 +224,10 @@ td {
   width: min(100%, 1000px);
   min-height: 80vh;
   background: #eef1f5;
-  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 20px 70px rgba(0, 0, 0, 0.25);
 }
+
 .dialog-toolbar {
   position: sticky;
   top: 0;
@@ -221,7 +237,7 @@ td {
   justify-content: space-between;
   padding: 14px 20px;
   background: #fff;
-  border-bottom: 1px solid #e3e8f0;
+  border-bottom: 0.5px solid #e3e8f0;
 }
 .dialog-toolbar h2 {
   font-size: 17px;
@@ -247,7 +263,7 @@ td {
 .icon-button {
   width: 38px;
   height: 38px;
-  border: 1px solid #d7deea;
+  border: 0.5px solid #d7deea;
   background: #fff;
   color: #334155;
 }
@@ -307,7 +323,7 @@ td {
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr;
   gap: 9px 16px;
-  border: 1px solid #9aa4b2;
+  border: 0.5px solid #9aa4b2;
   padding: 12px;
   margin-bottom: 18px;
   font-size: 12px;
@@ -319,7 +335,7 @@ td {
   font-size: 14px;
   margin: 18px 0 8px;
   padding-bottom: 5px;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 0.5px solid #cbd5e1;
 }
 .grade-table,
 .attendance-table {
@@ -331,7 +347,7 @@ td {
 .attendance-table th,
 .attendance-table td {
   padding: 8px 9px;
-  border: 1px solid #cbd5e1;
+  border: 0.5px solid #cbd5e1;
   font-size: 11px;
 }
 .grade-table th,
@@ -349,7 +365,7 @@ td {
 .overall-average-row th,
 .overall-average-row td {
   background: #f1f5f9;
-  border-top: 2px solid #94a3b8;
+  border-top: 0.5px solid #94a3b8;
   font-weight: 700;
 }
 .attendance-summary {
@@ -386,13 +402,13 @@ td {
   font-size: 11px;
 }
 .signature-line {
-  border-top: 1px solid #475569;
+  border-top: 0.5px solid #475569;
   padding-top: 5px;
   text-align: center;
 }
 .empty-report {
   padding: 14px;
-  border: 1px dashed #cbd5e1;
+  border: 2px dashed #cbd5e1;
   color: #64748b;
   text-align: center;
   font-size: 12px;
@@ -443,7 +459,23 @@ td {
     border-radius: 0;
     min-height: 100vh;
   }
+
+  .back-link,
+  .filters,
+  .filters select,
+  .filters input,
+  .roster-card,
+  .secondary-button,
+  .pagination button,
+  .primary-button,
+  .icon-button,
+  .row-button,
+  .status-pill,
+  .report-dialog {
+    border-radius: 10px;
+  }
 }
+
 @media (max-width: 480px) {
   .filters {
     grid-template-columns: 1fr;
@@ -454,6 +486,21 @@ td {
   }
   .attendance-summary {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .back-link,
+  .filters,
+  .filters select,
+  .filters input,
+  .roster-card,
+  .secondary-button,
+  .pagination button,
+  .primary-button,
+  .icon-button,
+  .row-button,
+  .status-pill,
+  .report-dialog {
+    border-radius: 10px;
   }
 }
 @media print {
