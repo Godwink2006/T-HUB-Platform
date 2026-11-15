@@ -341,10 +341,6 @@ body.parent-auth-checking .parent-auth-loading {
   width: 100%;
 }
 
-.parent-portal .parent-link-search:focus {
-  border-color: #2563eb;
-  outline: 0.5px solid rgb(37 99 235 / 20%);
-}
 .parent-links-list {
   display: grid;
   gap: 10px;
@@ -502,10 +498,7 @@ body.parent-auth-checking .parent-auth-loading {
   border: 0.5px solid #b91c1c;
   color: white;
 }
-.parent-unlink-dialog-actions button:focus-visible {
-  outline: 0.5px solid rgb(37 99 235 / 45%);
-  outline-offset: 2px;
-}
+
 .parent-portal .parent-signout-dialog {
   border: 0;
   box-shadow: 0 24px 70px rgb(15 23 42 / 28%);
@@ -522,8 +515,8 @@ body.parent-auth-checking .parent-auth-loading {
 }
 .parent-signout-dialog-icon {
   align-items: center;
-  background: #eff6ff;
-  color: #2563eb;
+  background: #fee2e2;
+  color: #dc2626;
   display: inline-flex;
   height: 42px;
   justify-content: center;
@@ -562,23 +555,16 @@ body.parent-auth-checking .parent-auth-loading {
   opacity: 0.65;
 }
 .parent-signout-cancel {
-  background: #fff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: #1f2937;
+  border: 0.5px solid #cbd5e1;
+  color: white;
 }
 .parent-signout-confirm {
-  background: #1d4ed8;
-  border: 1px solid #1d4ed8;
-  color: #fff;
+  background: #b42318;
+  border: 0.5px solid #dc2626;
+  color: white;
 }
-.parent-signout-confirm:hover {
-  background: #1e40af;
-  border-color: #1e40af;
-}
-.parent-signout-dialog-actions button:focus-visible {
-  outline: 2px solid rgb(37 99 235 / 35%);
-  outline-offset: 2px;
-}
+
 .parent-announcements {
   border-top: 0.5px solid rgb(219, 215, 215);
   margin-top: 22px;
@@ -762,11 +748,6 @@ body.parent-auth-checking .parent-auth-loading {
   background: #1d4ed8;
 }
 
-.parent-record-filter-button:focus-visible {
-  outline: 2px solid rgb(37 99 235 / 35%);
-  outline-offset: 2px;
-}
-
 .parent-record-content {
   width: 100%;
 }
@@ -873,14 +854,6 @@ body.parent-auth-checking .parent-auth-loading {
   width: 100%;
 }
 
-.parent-form input:focus,
-.parent-form select:focus,
-.parent-child-card button:focus-visible,
-.parent-primary-button:focus-visible,
-.parent-signout:focus-visible {
-  outline: 0.5px solid rgb(37 99 235 / 30%);
-  outline-offset: 2px;
-}
 .parent-form-hint {
   color: #60708a;
   font-size: 0.78rem;
@@ -921,10 +894,13 @@ body.parent-portal {
   color: #fff;
 }
 .parent-portal .parent-signout {
-  background: #1f2937;
+
+  background: #b42318;
+  border: 0.5px solid #dc2626;
+  color: white;
+
   border: 0;
   border-radius: 0;
-  color: #fff;
 }
 .parent-portal .parent-signout:hover {
   background: #111827;
@@ -1208,7 +1184,6 @@ body.parent-portal {
   background: #ffffff;
   border: 0.5px solid rgb(219, 215, 215);
   padding: 24px;
-  margin-bottom: 24px;
 }
 
 .parent-profile-main {
