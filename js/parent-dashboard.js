@@ -205,7 +205,6 @@ function renderParentChildren(children) {
         <span>Student ID: ${escapeParentPortal(child.student_id || "Not assigned")}</span>
         <span>Class: ${escapeParentPortal(child.classes?.name || "Not assigned")}</span>
         <span>School: ${escapeParentPortal(child.schools?.school_name || "Not available")}</span>
-        <span>${escapeParentPortal(child.relationship)}</span>
       </div>
       <button type="button" data-select-student="${escapeParentPortal(child.id)}" aria-pressed="false">Choose student</button>
     </article>

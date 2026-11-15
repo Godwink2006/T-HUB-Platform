@@ -49,7 +49,7 @@
     <header class="parent-topbar">
       <a class="parent-brand"
         ><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i
-        ><span>HSMS <small>Family Portal</small></span></a
+        ><span>HSMS</span></a
       >
       <button id="parentSignOut" class="parent-signout" type="button">
         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
@@ -59,7 +59,6 @@
     <main class="parent-main">
       <section class="parent-welcome" aria-labelledby="parentWelcomeTitle">
         <div class="parent-profile-header-card">
-
           <div class="parent-profile-main">
             <span
               id="parentPhoto"
@@ -75,9 +74,6 @@
               <h1 id="parentWelcomeTitle">
                 Welcome, <span id="parentName">Loading...</span>
               </h1>
-              <p class="parent-subtitle">
-                Choose a student to see their school information.
-              </p>
             </div>
           </div>
 
@@ -113,18 +109,26 @@
       </section>
       <section class="parent-push-card" aria-labelledby="parentPushTitle">
         <div class="parent-push-copy">
-          <h2 id="parentPushTitle"><i class="fa-solid fa-bell" aria-hidden="true"></i> Notifications on this device</h2>
-          <p id="parentPushStatus" aria-live="polite">Enable push notifications to hear about updates for your linked students.</p>
+          <h2 id="parentPushTitle">
+            <i class="fa-solid fa-bell" aria-hidden="true"></i> Notifications on
+            this device
+          </h2>
+          <p id="parentPushStatus" aria-live="polite">
+            Enable push notifications to hear about updates for your linked
+            students.
+          </p>
         </div>
         <button id="parentPushToggle" class="parent-push-toggle" type="button">
-          Enable on This Device <i class="fa-solid fa-bell" aria-hidden="true"></i>
+          Enable <i class="fa-solid fa-bell" aria-hidden="true"></i>
         </button>
       </section>
       <section class="children-section" aria-labelledby="childrenTitle">
         <div class="section-heading">
           <div>
             <h2 id="childrenTitle">Your students</h2>
-            <p>Choose a student to set the portal's active student.</p>
+            <p class="parent-subtitle">
+              Choose a student to see their school information.
+            </p>
           </div>
         </div>
         <div
@@ -153,7 +157,7 @@
               <span class="parent-student-avatar-initials"></span>
             </span>
             <div>
-              <p class="parent-eyebrow">Selected student</p>
+              <p class="parent-badge">SELECTED STUDENT</p>
               <h2 id="selectedStudentName"></h2>
               <p id="selectedStudentDetails"></p>
             </div>
@@ -208,11 +212,29 @@
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </span>
         <h2 id="parentSignOutTitle">Sign out?</h2>
-        <p id="parentSignOutDescription">Are you sure you want to sign out of the Family Portal?</p>
-        <p id="parentSignOutMessage" class="parent-signout-dialog-message" aria-live="polite"></p>
+        <p id="parentSignOutDescription">
+          Are you sure you want to sign out of the Family Portal?
+        </p>
+        <p
+          id="parentSignOutMessage"
+          class="parent-signout-dialog-message"
+          aria-live="polite"
+        ></p>
         <div class="parent-signout-dialog-actions">
-          <button id="cancelParentSignOut" class="parent-signout-cancel" type="button">Stay signed in</button>
-          <button id="confirmParentSignOut" class="parent-signout-confirm" type="button">Sign out</button>
+          <button
+            id="cancelParentSignOut"
+            class="parent-signout-cancel"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            id="confirmParentSignOut"
+            class="parent-signout-confirm"
+            type="button"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </dialog>

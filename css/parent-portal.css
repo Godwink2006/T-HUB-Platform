@@ -637,7 +637,7 @@ body.parent-auth-checking .parent-auth-loading {
   font-weight: 600;
   gap: 10px;
   justify-content: center;
-  padding: 14px;
+  padding: 5px;
   text-decoration: none;
 }
 
