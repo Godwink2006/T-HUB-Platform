@@ -35,6 +35,26 @@ async function initMyTimetable() {
     const schoolId = profile.school_id;
 
     if (role === "student") {
+      let enrollmentQuery = supabaseClient
+        .from("student_enrollments")
+        .select("enrollment_status")
+        .eq("student_id", user.id);
+      if (schoolId) enrollmentQuery = enrollmentQuery.eq("school_id", schoolId);
+
+      const { data: enrollments, error: enrollmentError } = await enrollmentQuery;
+      if (enrollmentError) throw enrollmentError;
+
+      const hasGraduatedEnrollment = (enrollments || []).some((enrollment) =>
+        ["graduated", "transferred", "transfered"].includes(
+          String(enrollment.enrollment_status || "").trim().toLowerCase(),
+        ),
+      );
+
+      if (hasGraduatedEnrollment) {
+        showGraduatedTimetableNotice();
+        return;
+      }
+
       const { data: studentData, error: studentErr } = await supabaseClient
         .from("students")
         .select("class_id, school_id")
@@ -71,6 +91,27 @@ async function initMyTimetable() {
     console.error("Timetable Load Error:", err);
     renderEmptyState("Failed to load timetable schedule.");
   }
+}
+
+function showGraduatedTimetableNotice() {
+  const content = document.getElementById("timetableContent");
+  const notice = document.getElementById("timetablePageNotice");
+  if (content) content.hidden = true;
+  if (!notice) return;
+
+  notice.replaceChildren();
+  notice.dataset.type = "graduated";
+
+  const icon = document.createElement("i");
+  icon.className = "fa-solid fa-graduation-cap";
+  icon.setAttribute("aria-hidden", "true");
+
+  const message = document.createElement("span");
+  message.textContent =
+    "Your timetable is unavailable because your enrollment at this school is marked as graduated or transferred. Contact your school administrator if you think this is a mistake.";
+
+  notice.append(icon, message);
+  notice.hidden = false;
 }
 
 async function loadStudentClassSchedule(classId, schoolId) {

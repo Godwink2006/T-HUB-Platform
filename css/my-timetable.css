@@ -42,6 +42,33 @@
   padding: 10px;
 }
 
+.timetable-page-notice {
+  align-items: center;
+  background: #eff6ff;
+  border: 2px solid #bfdbfe;
+  color: #1e40af;
+  display: flex;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  font-weight: 600;
+  gap: 0.8rem;
+  justify-content: center;
+  line-height: 1.6;
+  margin: 48px auto;
+  max-width: 95%;
+  min-height: 260px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.timetable-page-notice[hidden],
+#timetableContent[hidden] {
+  display: none;
+}
+
+.timetable-page-notice i {
+  flex: 0 0 auto;
+}
+
 .timetable-header {
   display: flex;
   justify-content: space-between;
