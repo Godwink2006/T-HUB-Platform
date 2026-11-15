@@ -26,14 +26,15 @@
     <main class="report-cards-page">
       <header class="page-header">
         <div>
-          <a class="back-link" href="reports.html"
-            ><i class="fa-solid fa-arrow-left"></i> Reports</a
-          >
           <h1>Student Report Cards</h1>
           <p>
             Print each student’s submitted grades and attendance for an academic
             year or term.
           </p>
+
+          <a class="back-link" href="reports.html"
+            ><i class="fa-solid fa-arrow-left"></i> Back</a
+          >
         </div>
       </header>
 
@@ -44,18 +45,13 @@
           </select></label
         >
         <label
-          >Term / semester<select id="reportTerm">
-            <option value="">All terms</option>
+          >Semester<select id="reportTerm">
+            <option value="">All semesters</option>
           </select></label
         >
         <label
-          >Grade assessment period<select id="reportAssessment">
-            <option value="">All assessment periods</option>
-          </select></label
-        >
-        <label
-          >Attendance class period<select id="reportClassPeriod">
-            <option value="">All class periods</option>
+          >Grade assessments<select id="reportAssessment">
+            <option value="">All assessments</option>
           </select></label
         >
         <label
@@ -91,7 +87,7 @@
                 <th>Student</th>
                 <th>Student ID</th>
                 <th>Class</th>
-              <th>Account status</th>
+                <th>Enrollment Status</th>
                 <th>Report</th>
               </tr>
             </thead>
