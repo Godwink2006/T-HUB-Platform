@@ -980,6 +980,7 @@ async function loadGradesList() {
   const selectedYear = document.getElementById("gradeToolbarYearSelect")?.value;
   const selectedTerm = document.getElementById("gradeToolbarTermSelect")?.value;
   const selectedAssessment = document.getElementById("gradeToolbarAssessmentSelect")?.value;
+  const selectedAssessmentIds = parseAssessmentPeriodIds(selectedAssessment);
   const selectedCategory = document.getElementById(
     "gradeToolbarCategorySelect",
   )?.value;
@@ -1024,8 +1025,8 @@ async function loadGradesList() {
     if (selectedTerm) {
       query = query.eq("term_id", selectedTerm);
     }
-    if (selectedAssessment) {
-      query = query.eq("assessment_id", selectedAssessment);
+    if (selectedAssessmentIds.length) {
+      query = query.in("assessment_id", selectedAssessmentIds);
     }
     if (selectedCategory) {
       query = query.eq("category_id", selectedCategory);
@@ -1192,9 +1193,10 @@ async function loadGradebook() {
     const yearId = document.getElementById("gradeToolbarYearSelect")?.value;
     const termId = document.getElementById("gradeToolbarTermSelect")?.value;
     const assessmentId = document.getElementById("gradeToolbarAssessmentSelect")?.value;
+    const assessmentIds = parseAssessmentPeriodIds(assessmentId);
     if (yearId) query = query.eq("academic_year_id", yearId);
     if (termId) query = query.eq("term_id", termId);
-    if (assessmentId) query = query.eq("assessment_id", assessmentId);
+    if (assessmentIds.length) query = query.in("assessment_id", assessmentIds);
 
     const { data: sessions, error } = await query;
     if (error) throw error;
@@ -1863,14 +1865,15 @@ async function populateToolbarDropdowns() {
     };
     const renderAssessments = () => {
       if (!assessmentFilter) return;
-      const selected = assessmentFilter.value;
       const selectedYear = yearFilter?.value;
       const visible = selectedYear
         ? assessments.filter((a) => String(a.academic_year_id) === String(selectedYear))
         : assessments;
-      assessmentFilter.innerHTML = `<option value="">All Periods</option>`;
-      visible.forEach((a) => assessmentFilter.appendChild(new Option(a.name, a.id)));
-      if (visible.some((a) => String(a.id) === selected)) assessmentFilter.value = selected;
+      setAssessmentPeriodOptions(
+        assessmentFilter,
+        visible,
+        "All Assessment Periods",
+      );
     };
     if (yearFilter && yearsResult.data) {
       yearFilter.innerHTML = `<option value="">All Academic Years</option>`;

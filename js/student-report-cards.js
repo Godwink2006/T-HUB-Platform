@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const version = ++assessmentRequestVersion;
     const yearId = yearSelect.value;
     if (!yearId) {
-      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessments / periods" });
+      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessment periods" });
       return;
     }
     const { data, error } = await client
@@ -230,18 +230,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (version !== assessmentRequestVersion) return;
     if (error) {
       console.warn("Could not load assessment filters:", error.message);
-      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessments / periods" });
+      ReportsCommon.populateSelect(assessmentSelect, [], { placeholder: "All assessment periods" });
       return;
     }
-    const previous = assessmentSelect.value;
     const assessments = data || [];
-    ReportsCommon.populateSelect(assessmentSelect, assessments, {
-      placeholder: "All assessments / periods",
-      labelKey: "name",
-    });
-    if (assessments.some((assessment) => assessment.id === previous)) {
-      assessmentSelect.value = previous;
-    }
+    setAssessmentPeriodOptions(
+      assessmentSelect,
+      assessments,
+      "All assessment periods",
+    );
   }
 
   assessmentSelect.addEventListener("change", () => {
@@ -338,7 +335,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       .order("date_recorded", { referencedTable: "grades", ascending: true });
     if (classId) query = query.eq("grades.class_id", classId);
     if (termId) query = query.eq("grades.term_id", termId);
-    if (assessmentId) query = query.eq("grades.assessment_id", assessmentId);
+    const assessmentIds = parseAssessmentPeriodIds(assessmentId);
+    if (assessmentIds.length) query = query.in("grades.assessment_id", assessmentIds);
     return query;
   }
 

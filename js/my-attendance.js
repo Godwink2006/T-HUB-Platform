@@ -212,7 +212,7 @@ function populateDropdownFilters(records) {
   const subjects = new Map();
   const years = new Map();
   const classes = new Map();
-  const periods = new Map();
+  const assessments = [];
 
   records.forEach((record) => {
     const attendance = record.attendance;
@@ -226,18 +226,20 @@ function populateDropdownFilters(records) {
       classes.set(String(attendance.class_id), attendance.classes?.name || "Class");
     }
     const assessmentId = attendance.assessment_id || attendance.assessments?.id;
-    if (assessmentId) {
-      periods.set(
-        String(assessmentId),
-        attendance.assessments?.name || "Assessment period",
-      );
+    if (assessmentId && attendance.assessments?.name) {
+      assessments.push({ id: assessmentId, name: attendance.assessments.name });
     }
   });
 
   fillAttendanceFilter(subjectFilter, "All Subjects", subjects);
   fillAttendanceFilter(yearFilter, "All Academic Years", years);
   fillAttendanceFilter(classFilter, "All Classes", classes);
-  fillAttendanceFilter(periodFilter, "All Periods", periods);
+  setAssessmentPeriodOptions(
+    periodFilter,
+    assessments,
+    "All Assessment Periods",
+    "all",
+  );
 
   if (termFilter) {
     termFilter.innerHTML = `
@@ -353,6 +355,7 @@ function applyFiltersAndRender() {
   const selectedSubject = document.getElementById("subjectFilter")?.value || "all";
   const selectedPeriod = document.getElementById("periodFilter")?.value || "all";
   const selectedStatus = document.getElementById("statusFilter")?.value || "all";
+  const selectedAssessmentIds = parseAssessmentPeriodIds(selectedPeriod);
 
   const filteredRecords = allAttendanceRecords.filter((record) => {
     const attendance = record.attendance;
@@ -362,7 +365,7 @@ function applyFiltersAndRender() {
       (selectedSemester === "all" || getSemesterNumber(attendance.terms?.name) === Number(selectedSemester)) &&
       (selectedClass === "all" || String(attendance.class_id) === selectedClass) &&
       (selectedSubject === "all" || String(attendance.subject_id) === selectedSubject) &&
-      (selectedPeriod === "all" || String(attendance.assessment_id || attendance.assessments?.id) === selectedPeriod) &&
+      (selectedPeriod === "all" || selectedAssessmentIds.includes(String(attendance.assessment_id || attendance.assessments?.id))) &&
       (selectedStatus === "all" || status === selectedStatus.toLowerCase())
     );
   });

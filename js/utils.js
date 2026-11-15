@@ -830,6 +830,105 @@ async function subscribeToRecentActivities(schoolId, userRole) {
     .subscribe();
 }
 
+function getAssessmentPeriodNumber(name) {
+  const value = String(name || "").trim().toLowerCase();
+  const wordNumbers = {
+    first: 1,
+    one: 1,
+    second: 2,
+    two: 2,
+    third: 3,
+    three: 3,
+    fourth: 4,
+    four: 4,
+    fifth: 5,
+    five: 5,
+    sixth: 6,
+    six: 6,
+  };
+  const match =
+    value.match(/\bperiod\s*(\d+|first|one|second|two|third|three|fourth|four|fifth|five|sixth|six)\b/) ||
+    value.match(/\b(\d+)(?:st|nd|rd|th)?\s*period\b/) ||
+    value.match(/\b(first|one|second|two|third|three|fourth|four|fifth|five|sixth|six)\s+period\b/);
+  if (!match) return null;
+
+  const token = match[1] ?? match[0].match(/\d+|first|one|second|two|third|three|fourth|four|fifth|five|sixth|six/)?.[0];
+  const number = /^\d+$/.test(token) ? Number(token) : wordNumbers[token];
+  return Number.isInteger(number) ? number : null;
+}
+
+function getAssessmentPeriodKey(name) {
+  const number = getAssessmentPeriodNumber(name);
+  if (number !== null) return `period-${number}`;
+  return `name-${String(name || "").trim().toLocaleLowerCase()}`;
+}
+
+function getAssessmentPeriodLabel(name) {
+  const number = getAssessmentPeriodNumber(name);
+  if (number === null) return String(name || "Assessment period");
+  const suffix =
+    number % 100 >= 11 && number % 100 <= 13
+      ? "th"
+      : { 1: "st", 2: "nd", 3: "rd" }[number % 10] || "th";
+  return `${number}${suffix} Period`;
+}
+
+function groupAssessmentPeriods(assessments) {
+  const groups = new Map();
+  (assessments || []).forEach((assessment) => {
+    if (!assessment?.id || !assessment?.name) return;
+    const number = getAssessmentPeriodNumber(assessment.name);
+    if (number !== null && (number < 1 || number > 6)) return;
+
+    const key = getAssessmentPeriodKey(assessment.name);
+    const group = groups.get(key) || {
+      key,
+      number,
+      label: getAssessmentPeriodLabel(assessment.name),
+      ids: [],
+    };
+    const id = String(assessment.id);
+    if (!group.ids.includes(id)) group.ids.push(id);
+    groups.set(key, group);
+  });
+
+  return [...groups.values()]
+    .sort((a, b) => {
+      if (a.number !== null && b.number !== null) return a.number - b.number;
+      if (a.number !== null) return -1;
+      if (b.number !== null) return 1;
+      return a.label.localeCompare(b.label, undefined, { sensitivity: "base" });
+    })
+    .slice(0, 6);
+}
+
+function setAssessmentPeriodOptions(
+  select,
+  assessments,
+  placeholder,
+  placeholderValue = "",
+) {
+  if (!select) return;
+  const previousValue = select.value;
+  select.replaceChildren(new Option(placeholder, placeholderValue));
+  groupAssessmentPeriods(assessments).forEach((group) => {
+    select.add(new Option(group.label, JSON.stringify(group.ids)));
+  });
+  if ([...select.options].some((option) => option.value === previousValue)) {
+    select.value = previousValue;
+  }
+}
+
+function parseAssessmentPeriodIds(value) {
+  if (!value) return [];
+  try {
+    const ids = JSON.parse(value);
+    return Array.isArray(ids) ? ids.map(String) : [String(value)];
+  } catch {
+    return [String(value)];
+  }
+}
+
 function prependActivityToUI(activity) {
   const listContainer = document.getElementById("recentActivitiesList");
   if (!listContainer) return;

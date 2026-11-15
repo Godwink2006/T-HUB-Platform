@@ -167,7 +167,11 @@ async function initStudentContext() {
     });
 
     fillFilterSelect(yearSelect, "Select Academic Year", years, true);
-    fillFilterSelect(assessmentSelect, "All Assessments", assessments);
+    setAssessmentPeriodOptions(
+      assessmentSelect,
+      [...assessments.entries()].map(([id, name]) => ({ id, name })),
+      "All Assessment Periods",
+    );
     fillFilterSelect(classSelect, "All Classes", classes);
     fillFilterSelect(subjectSelect, "All Subjects", subjects);
 
@@ -271,6 +275,7 @@ async function loadStudentGrades(authUserId) {
   const yearId = document.getElementById("studentAcademicYearSelect")?.value || "";
   const semesterNumber = Number(document.getElementById("studentTermSelect")?.value || 0);
   const assessmentId = document.getElementById("studentAssessmentSelect")?.value || "";
+  const assessmentIds = parseAssessmentPeriodIds(assessmentId);
   const classId = document.getElementById("studentClassSelect")?.value || "";
   const subjectId = document.getElementById("studentSubjectSelect")?.value || "";
 
@@ -310,7 +315,7 @@ async function loadStudentGrades(authUserId) {
       const term = getOneRelation(grade.terms);
       const matchesYear = String(grade.academic_year_id) === String(yearId);
       const matchesSemester = getSemesterNumber(term?.name) === semesterNumber;
-      const matchesAssessment = !assessmentId || String(grade.assessment_id) === String(assessmentId);
+      const matchesAssessment = !assessmentIds.length || assessmentIds.includes(String(grade.assessment_id));
       const matchesClass = !classId || String(grade.class_id) === String(classId);
       const matchesSubject = !subjectId || String(grade.subject_id) === String(subjectId);
 

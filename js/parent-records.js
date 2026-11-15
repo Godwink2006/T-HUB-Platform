@@ -490,8 +490,12 @@ function getParentRecordContext(row, type) {
       yearName: item.academic_years?.year_label,
       className: item.classes?.name,
       termName: item.terms?.name,
-      periodId: item.assessment_id,
-      periodName: item.assessments?.name,
+      periodId: item.assessment_id
+        ? getAssessmentPeriodKey(item.assessments?.name || String(item.assessment_id))
+        : "",
+      periodName: item.assessments?.name
+        ? getAssessmentPeriodLabel(item.assessments.name)
+        : "",
       subjectId: item.subject_id,
       subjectName: item.subjects?.name,
     };
@@ -506,8 +510,12 @@ function getParentRecordContext(row, type) {
     yearName: item.academic_years?.year_label,
     className: item.classes?.name,
     termName: item.terms?.name,
-    periodId: item.assessment_id,
-    periodName: item.assessments?.name,
+    periodId: item.assessment_id
+      ? getAssessmentPeriodKey(item.assessments?.name || String(item.assessment_id))
+      : "",
+    periodName: item.assessments?.name
+      ? getAssessmentPeriodLabel(item.assessments.name)
+      : "",
     subjectId: item.subject_id,
     subjectName: item.subjects?.name,
   };
@@ -602,7 +610,7 @@ function buildParentRecordFilters() {
       "recordPeriodFilter",
       "periodId",
       "periodName",
-      type === "attendance" ? "All periods" : "All periods",
+      "All assessment periods",
     ]);
   }
   if (type === "grades" || type === "attendance")
@@ -625,10 +633,17 @@ function buildParentRecordFilters() {
     const selected = select.value;
     const options = new Map();
     context.forEach((row) => {
-      if (row[idKey])
+      const periodNumber =
+        idKey === "periodId" ? getAssessmentPeriodNumber(row[labelKey]) : null;
+      if (
+        row[idKey] &&
+        !(idKey === "periodId" && periodNumber !== null && (periodNumber < 1 || periodNumber > 6))
+      )
         options.set(
           String(row[idKey]),
-          row[labelKey] ||
+          (idKey === "periodId"
+            ? getAssessmentPeriodLabel(row[labelKey])
+            : row[labelKey]) ||
             (idKey === "schoolId"
               ? `School ${String(row[idKey]).slice(0, 8)}`
               : "Record"),
@@ -636,9 +651,17 @@ function buildParentRecordFilters() {
     });
     select.replaceChildren(new Option(defaultLabel, ""));
     [...options.entries()]
-      .sort((a, b) =>
-        a[1].localeCompare(b[1], undefined, { sensitivity: "base" }),
-      )
+      .sort((a, b) => {
+        if (idKey === "periodId") {
+          const numberA = getAssessmentPeriodNumber(a[1]);
+          const numberB = getAssessmentPeriodNumber(b[1]);
+          if (numberA !== null && numberB !== null) return numberA - numberB;
+          if (numberA !== null) return -1;
+          if (numberB !== null) return 1;
+        }
+        return a[1].localeCompare(b[1], undefined, { sensitivity: "base" });
+      })
+      .slice(0, idKey === "periodId" ? 6 : undefined)
       .forEach(([id, label]) => select.add(new Option(label, id)));
     if (options.has(selected)) select.value = selected;
   });
