@@ -93,27 +93,29 @@ p.subtitle {
   font-family: inherit;
 }
 
-.toolbar input:focus,
-.toolbar select:focus {
-  outline: none;
-  border-color: #94a3b8;
+.toolbar {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+  margin-bottom: 12px; /* Slight spacing before the button wrapper */
 }
 
-.history-result-count {
-  flex: 1 1 100%;
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
+/* Revert back to auto-fit on wider desktop screens */
+@media (min-width: 600px) {
+  .toolbar {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
 }
 
+/* This makes the button's wrapper container span the full width across both columns */
 .history-filter-actions {
-  display: flex;
-  flex: 1 1 100%;
-  justify-content: flex-end;
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-bottom: 20px;
 }
 
 .history-filter-button {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -127,10 +129,14 @@ p.subtitle {
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+  width: 100%;
 }
 
-.history-filter-button:hover {
-  background: #1d4ed8;
+.history-result-count {
+  flex: 1 1 100%;
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .history-filter-button:disabled {

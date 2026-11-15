@@ -1,5 +1,5 @@
 let myTransferHistory = [];
-let myHistoryRows = []; // flat rows for filtering + tables
+let myHistoryRows = [];
 
 document.addEventListener("DOMContentLoaded", loadMyTransferHistory);
 

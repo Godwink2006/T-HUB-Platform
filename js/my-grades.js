@@ -166,7 +166,7 @@ async function initStudentContext() {
       if (subject?.id) subjects.set(String(subject.id), subject.name || "Subject");
     });
 
-    fillFilterSelect(yearSelect, "Select Academic Year", years, true);
+    fillFilterSelect(yearSelect, "All Academic Years", years);
     setAssessmentPeriodOptions(
       assessmentSelect,
       [...assessments.entries()].map(([id, name]) => ({ id, name })),
@@ -177,13 +177,13 @@ async function initStudentContext() {
 
     if (termSelect) {
       termSelect.innerHTML = `
-        <option value="">Select Semester</option>
+        <option value="">All Semesters</option>
         <option value="1">1st Semester</option>
         <option value="2">2nd Semester</option>`;
     }
 
     if (statusBadge) {
-      statusBadge.textContent = "Choose filters";
+      statusBadge.textContent = "Multiple periods";
       statusBadge.className = "status-badge normal";
     }
 
@@ -197,7 +197,7 @@ async function initStudentContext() {
     } else if (reportContainer) {
       reportContainer.innerHTML = `
         <p style="text-align:center;color:#888;padding:20px;">
-          Choose an academic year and semester, adjust any other filters, then select View grades.
+          All academic years and semesters are selected. Adjust any filters, then select View grades.
         </p>`;
     }
   } catch (error) {
@@ -273,7 +273,8 @@ async function loadStudentGrades(authUserId) {
   const reportContainer = document.getElementById("studentGradesReport");
   const applyButton = document.getElementById("applyStudentGradeFilters");
   const yearId = document.getElementById("studentAcademicYearSelect")?.value || "";
-  const semesterNumber = Number(document.getElementById("studentTermSelect")?.value || 0);
+  const semesterValue = document.getElementById("studentTermSelect")?.value || "";
+  const semesterNumber = Number(semesterValue);
   const assessmentId = document.getElementById("studentAssessmentSelect")?.value || "";
   const assessmentIds = parseAssessmentPeriodIds(assessmentId);
   const classId = document.getElementById("studentClassSelect")?.value || "";
@@ -281,24 +282,13 @@ async function loadStudentGrades(authUserId) {
 
   if (!reportContainer) return;
 
-  if (!yearId || ![1, 2].includes(semesterNumber)) {
-    reportContainer.innerHTML = `
-      <p style="text-align:center;color:#888;padding:20px;">
-        Please choose an academic year and either the 1st or 2nd semester.
-      </p>`;
-    const badge = document.getElementById("studentStatusBadge");
-    if (badge) {
-      badge.textContent = "Choose filters";
-      badge.className = "status-badge normal";
-    }
-    return;
-  }
-
-  const selectedTerm = studentTerms.find(
-    (term) =>
-      String(term.academic_year_id) === String(yearId) &&
-      getSemesterNumber(term.name) === semesterNumber,
-  );
+  const selectedTerm = yearId && [1, 2].includes(semesterNumber)
+    ? studentTerms.find(
+        (term) =>
+          String(term.academic_year_id) === String(yearId) &&
+          getSemesterNumber(term.name) === semesterNumber,
+      )
+    : null;
 
   if (applyButton) {
     applyButton.disabled = true;
@@ -308,13 +298,21 @@ async function loadStudentGrades(authUserId) {
     <p style="text-align:center;color:#888;padding:20px;">Loading your grades...</p>`;
 
   try {
-    await loadStudentStatusForTerm(authUserId, yearId, selectedTerm?.id);
+    if (yearId && [1, 2].includes(semesterNumber)) {
+      await loadStudentStatusForTerm(authUserId, yearId, selectedTerm?.id);
+    } else {
+      const badge = document.getElementById("studentStatusBadge");
+      if (badge) {
+        badge.textContent = "Multiple periods";
+        badge.className = "status-badge normal";
+      }
+    }
 
     const records = cachedStudentGrades.filter((record) => {
       const grade = record.grades;
       const term = getOneRelation(grade.terms);
-      const matchesYear = String(grade.academic_year_id) === String(yearId);
-      const matchesSemester = getSemesterNumber(term?.name) === semesterNumber;
+      const matchesYear = !yearId || String(grade.academic_year_id) === String(yearId);
+      const matchesSemester = ![1, 2].includes(semesterNumber) || getSemesterNumber(term?.name) === semesterNumber;
       const matchesAssessment = !assessmentIds.length || assessmentIds.includes(String(grade.assessment_id));
       const matchesClass = !classId || String(grade.class_id) === String(classId);
       const matchesSubject = !subjectId || String(grade.subject_id) === String(subjectId);
