@@ -610,7 +610,7 @@ function buildParentRecordFilters() {
       "recordPeriodFilter",
       "periodId",
       "periodName",
-      "All assessment periods",
+      "All assessment",
     ]);
   }
   if (type === "grades" || type === "attendance")
