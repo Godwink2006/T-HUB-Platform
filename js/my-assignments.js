@@ -74,8 +74,8 @@ function renderScheduleCards(assignments) {
         <div class="assignment-card">
           <div>
             <div class="card-top">
-              <h3 class="subject-title">${subjectName}</h3>
-              <span class="class-badge">${className}</span>
+              <h3 class="subject-title">${escapeHTML(subjectName)}</h3>
+              <span class="class-badge">${escapeHTML(className)}</span>
             </div>
 
             <div class="role-tag ${isClassTeacher ? "class-teacher" : "subject-teacher"}">
@@ -86,7 +86,7 @@ function renderScheduleCards(assignments) {
             <div class="card-details">
               <div class="detail-item">
                 <i class="fa-solid fa-calendar-day"></i>
-                <span>${yearName}</span>
+                <span>${escapeHTML(yearName)}</span>
               </div>
               ${
                 item.description
@@ -134,9 +134,9 @@ function populateFilterDropdowns(assignments) {
 }
 
 function populateOptions(selectElem, mapData, defaultText) {
-  selectElem.innerHTML = `<option value="">${defaultText}</option>`;
+  selectElem.replaceChildren(new Option(defaultText, ""));
   mapData.forEach((label, id) => {
-    selectElem.innerHTML += `<option value="${id}">${label}</option>`;
+    selectElem.add(new Option(String(label ?? ""), String(id ?? "")));
   });
 }
 

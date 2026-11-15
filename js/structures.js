@@ -335,9 +335,11 @@ async function populateInitialDropdowns() {
 
       if (yearsErr) throw yearsErr;
 
-      academicYearSelect.innerHTML = `<option value="">Select Academic Year</option>`;
+      academicYearSelect.replaceChildren(new Option("Select Academic Year", ""));
       years?.forEach((yr) => {
-        academicYearSelect.innerHTML += `<option value="${yr.id}">${yr.year_label}</option>`;
+        academicYearSelect.add(
+          new Option(String(yr.year_label ?? ""), String(yr.id ?? "")),
+        );
       });
     }
 

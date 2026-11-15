@@ -1101,18 +1101,23 @@ async function loadGradesList() {
         const subjectName = item.subjects?.name || "N/A";
         const displayStatus = isDraft ? "Drafted" : "Submitted";
         const actionButtonHTML = isDraft
-          ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${gradeId}">
+          ? `<button class="grades-actions-btn edit" title="Edit Grades" data-action="edit" data-grade-id="${escapeGradeHtml(gradeId)}">
                <i class="fa-solid fa-pen"></i>
              </button>`
-          : `<button class="grades-actions-btn view" title="View Grades" data-action="view" data-grade-id="${gradeId}">
+          : `<button class="grades-actions-btn view" title="View Grades" data-action="view" data-grade-id="${escapeGradeHtml(gradeId)}">
                <i class="fa-solid fa-eye"></i>
              </button>`;
 
         return `
-          <tr data-grade-id="${gradeId}" data-class-id="${item.class_id || ""}" data-subject-id="${item.subject_id || ""}" data-category-id="${item.category_id || ""}">
-            <td>${categoryName}</td>
-            <td>${className}</td>
-            <td>${subjectName}</td>
+          <tr
+            data-grade-id="${escapeGradeHtml(gradeId)}"
+            data-class-id="${escapeGradeHtml(item.class_id || "")}"
+            data-subject-id="${escapeGradeHtml(item.subject_id || "")}"
+            data-category-id="${escapeGradeHtml(item.category_id || "")}"
+          >
+            <td>${escapeGradeHtml(categoryName)}</td>
+            <td>${escapeGradeHtml(className)}</td>
+            <td>${escapeGradeHtml(subjectName)}</td>
             <td>${formattedDate}</td>
             <td class="grade-student-count">—</td>
             <td><span class="badge ${isDraft ? "badge-drafted" : "badge-submitted"}">${displayStatus}</span></td>

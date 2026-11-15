@@ -2635,7 +2635,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <label for="newAcademicYearSelect">Target Academic Year:</label>
         <select id="newAcademicYearSelect" class="form-control">
           <option value="">-- Select Academic Year --</option>
-          ${eligibleYears.map((ay) => `<option value="${ay.id}">${ay.year_label}</option>`).join("")}
+          ${eligibleYears
+            .map(
+              (ay) =>
+                `<option value="${escapeHtml(ay.id)}">${escapeHtml(ay.year_label)}</option>`,
+            )
+            .join("")}
         </select>
       </div>
     `;

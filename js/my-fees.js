@@ -205,18 +205,23 @@ function renderFeesTable(fees, container) {
       }
     }
 
-    const statusValue = (fee.status || "Unpaid").toLowerCase();
-    const statusDisplay = fee.status || "Unpaid";
+    const statusDisplay = String(fee.status || "Unpaid");
+    const normalizedStatus = statusDisplay.toLowerCase();
+    const statusClass = ["paid", "unpaid", "partial"].includes(
+      normalizedStatus,
+    )
+      ? normalizedStatus
+      : "unknown";
 
     html += `
       <tr>
-        <td><strong>${yearLabel}</strong><br><span style="color: var(--text-muted); font-size: 13px;">${termName}</span></td>
-        <td>${className}</td>
+        <td><strong>${escapeHTML(yearLabel)}</strong><br><span style="color: var(--text-muted); font-size: 13px;">${escapeHTML(termName)}</span></td>
+        <td>${escapeHTML(className)}</td>
         <td>${breakdownHtml}</td>
         <td class="amount-bold">${window.formatSchoolMoney(fee.total_fees, fee.currency_code)}</td>
         <td class="amount-paid">${window.formatSchoolMoney(fee.total_paid, fee.currency_code)}</td>
         <td class="amount-balance">${window.formatSchoolMoney(fee.balance, fee.currency_code)}</td>
-        <td><span class="badge ${statusValue}">${statusDisplay}</span></td>
+        <td><span class="badge ${statusClass}">${escapeHTML(statusDisplay)}</span></td>
       </tr>
     `;
   });
