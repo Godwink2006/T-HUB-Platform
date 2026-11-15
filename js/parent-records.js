@@ -6,7 +6,7 @@ const parentRecordViews = new Set([
   "timetable",
 ]);
 function getOneRelation(value) {
-  return Array.isArray(value) ? value[0] ?? null : value ?? null;
+  return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 }
 let parentRecordState = {
   view: "fees",
@@ -137,16 +137,18 @@ async function initializeParentRecords() {
     const applyFiltersButton = document.getElementById(
       "applyParentRecordFilters",
     );
-    const actionLabel = parentRecordState.view === "timetable"
-      ? "View timetable"
-      : `View ${parentRecordState.view === "fees" ? "fees and payments" : parentRecordState.view}`;
+    const actionLabel =
+      parentRecordState.view === "timetable"
+        ? "View timetable"
+        : `View ${parentRecordState.view === "fees" ? "fees and payments" : parentRecordState.view}`;
     if (applyFiltersButton) {
       applyFiltersButton.innerHTML = `<i class="fa-solid fa-filter" aria-hidden="true"></i> ${parentEscape(actionLabel)}`;
       applyFiltersButton.addEventListener("click", renderParentRecords);
     }
-    const prompt = parentRecordState.view === "timetable"
-      ? "Choose a day if you want to narrow the timetable, then select View timetable."
-      : `Choose your filters, then select ${actionLabel}.`;
+    const prompt =
+      parentRecordState.view === "timetable"
+        ? "Choose a day if you want to narrow the timetable, then select View timetable."
+        : `Choose your filters, then select ${actionLabel}.`;
     content.setAttribute("aria-busy", "false");
     content.innerHTML = `<p class="parent-state">${parentEscape(prompt)}</p>`;
   } catch (error) {
@@ -210,7 +212,10 @@ async function loadParentRecordData(
       .select(
         "id, timetable_id, day_of_week, is_break, period_id, subject_id, teacher_id, periods:period_id(id,name,start_time,end_time), subjects:subject_id(name)",
       )
-      .in("timetable_id", candidates.map((item) => item.id));
+      .in(
+        "timetable_id",
+        candidates.map((item) => item.id),
+      );
     if (lessonsError) throw lessonsError;
 
     // Admin can display active or inactive timetable records. Match its
@@ -222,9 +227,11 @@ async function loadParentRecordData(
       const placed = lessons.filter(
         (lesson) => lesson.period_id && lesson.periods?.id,
       );
-      const periodCount = new Set(placed.map((lesson) => lesson.period_id)).size;
+      const periodCount = new Set(placed.map((lesson) => lesson.period_id))
+        .size;
       const subjectCount = placed.filter((lesson) => lesson.subject_id).length;
-      const isActive = String(timetable.status || "").toLowerCase() === "active";
+      const isActive =
+        String(timetable.status || "").toLowerCase() === "active";
       return [periodCount, placed.length, subjectCount, Number(isActive)];
     };
     const timetable = candidates.reduce((best, candidate) => {
@@ -289,7 +296,7 @@ async function loadParentRecordData(
     const result = await client
       .from("attendance_records")
       .select(
-        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,teacher_id,classes(name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name),schools:school_id(id,school_name),profiles:teacher_id(full_name,role,teachers(staff_id)))",
+        "id, status, created_at, student_id, attendance_id, attendance!inner(id,date,school_id,academic_year_id,term_id,class_id,subject_id,period_id,teacher_id, assessment_id,classes(name),assessments(id,name),academic_years(id,year_label),terms(id,name),subjects(name),periods(name, start_time, end_time),schools:school_id(id,school_name),profiles:teacher_id(full_name,role,teachers(staff_id)))",
       )
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
@@ -434,8 +441,7 @@ function setRecordStudentPhoto(shell, photoUrl, name) {
         image.src = parsedPhotoUrl.href;
         image.hidden = false;
       }
-    } catch {
-    }
+    } catch {}
   }
   image.onerror = () => {
     image.onerror = null;
@@ -484,8 +490,8 @@ function getParentRecordContext(row, type) {
       yearName: item.academic_years?.year_label,
       className: item.classes?.name,
       termName: item.terms?.name,
-      periodId: item.period_id,
-      periodName: item.periods?.name,
+      periodId: item.assessment_id,
+      periodName: item.assessments?.name,
       subjectId: item.subject_id,
       subjectName: item.subjects?.name,
     };
@@ -575,7 +581,8 @@ function buildParentRecordFilters() {
   if (yearField) yearField.hidden = false;
   if (classField) classField.hidden = false;
   if (termField) termField.hidden = false;
-  if (periodFilterField) periodFilterField.hidden = !["grades", "attendance"].includes(type);
+  if (periodFilterField)
+    periodFilterField.hidden = !["grades", "attendance"].includes(type);
   if (subjectFilterField) subjectFilterField.hidden = type === "fees";
 
   const rows =
@@ -595,7 +602,7 @@ function buildParentRecordFilters() {
       "recordPeriodFilter",
       "periodId",
       "periodName",
-      type === "attendance" ? "All class periods" : "All assessment periods",
+      type === "attendance" ? "All periods" : "All periods",
     ]);
   }
   if (type === "grades" || type === "attendance")
@@ -655,7 +662,9 @@ function renderParentRecords() {
     schoolId: document.getElementById("recordSchoolFilter").value,
     yearId: document.getElementById("recordYearFilter").value,
     classId: document.getElementById("recordClassFilter").value,
-    semesterNumber: Number(document.getElementById("recordTermFilter").value || 0),
+    semesterNumber: Number(
+      document.getElementById("recordTermFilter").value || 0,
+    ),
     periodId:
       type === "grades" || type === "attendance"
         ? document.getElementById("recordPeriodFilter").value
@@ -705,9 +714,6 @@ function renderParentTimetable() {
     String(value || "")
       .trim()
       .toLowerCase();
-  // Keep the parent view aligned with the timetable grid used by school staff.
-  // Lessons without a linked period cannot be placed on that grid, so don't
-  // show them as extra rows with missing period/time values.
   const scheduledLessons = timetableLessons.filter(
     (lesson) => lesson.period_id && lesson.periods?.id,
   );
@@ -751,7 +757,9 @@ function renderParentTimetable() {
         Boolean(breakLesson) ||
         String(period.period_type || period.type || "").toLowerCase() ===
           "break" ||
-        String(period.name || "").toLowerCase().includes("break");
+        String(period.name || "")
+          .toLowerCase()
+          .includes("break");
       const time =
         [period.start_time, period.end_time]
           .filter(Boolean)
@@ -805,21 +813,21 @@ function renderParentTimetable() {
 }
 
 function matchesParentRecordFilters(context, filters) {
-  return Object.entries(filters).every(
-    ([key, value]) => {
-      if (!value) return true;
-      if (key === "semesterNumber") {
-        return getParentSemesterNumber(context.termName) === value;
-      }
-      return String(context[key] || "") === value;
-    },
-  );
+  return Object.entries(filters).every(([key, value]) => {
+    if (!value) return true;
+    if (key === "semesterNumber") {
+      return getParentSemesterNumber(context.termName) === value;
+    }
+    return String(context[key] || "") === value;
+  });
 }
 
 function getParentSemesterNumber(termName) {
   const name = String(termName || "");
-  if (/\b(?:1(?:st)?|first|term\s*1|semester\s*1|one|i)\b/i.test(name)) return 1;
-  if (/\b(?:2(?:nd)?|second|term\s*2|semester\s*2|two|ii)\b/i.test(name)) return 2;
+  if (/\b(?:1(?:st)?|first|term\s*1|semester\s*1|one|i)\b/i.test(name))
+    return 1;
+  if (/\b(?:2(?:nd)?|second|term\s*2|semester\s*2|two|ii)\b/i.test(name))
+    return 2;
   return null;
 }
 
@@ -921,7 +929,7 @@ function renderAttendance(records) {
       const session = row.attendance || {};
       const ctx = getParentRecordContext(row, "attendance");
       const status = row.status || "-";
-      return `<tr><td>${parentDate(session.date)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(session.subjects?.name || "-")}</td><td>${parentEscape(session.periods?.name || "-")}</td><td>${renderParentRecordAuthor(session.profiles)}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
+      return `<tr><td>${parentDate(session.date)}</td><td>${parentEscape(ctx.schoolName || "-")}</td><td>${parentEscape(ctx.yearName || "-")}</td><td>${parentEscape(ctx.termName || "-")}</td><td>${parentEscape(ctx.className || "-")}</td><td>${parentEscape(session.subjects?.name || "-")}</td><td>${parentEscape(session.periods?.start_time && session.periods?.end_time ? `${session.periods.start_time} to ${session.periods.end_time}` : session.periods?.name || "-")}</td><td>${renderParentRecordAuthor(session.profiles)}</td><td><span class="status-pill ${parentStatusClass(status)}">${parentEscape(status)}</span></td></tr>`;
     })
     .join("");
 
