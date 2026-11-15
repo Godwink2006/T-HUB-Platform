@@ -93,7 +93,9 @@ async function loadStudentAttendanceData(userId, historyIndex, client) {
         class_id,
         teacher_id,
         subject_id,
+        assessment_id,
         periods ( id, name ),
+        assessments ( id, name ),
         terms ( id, name ),
         academic_years ( id, year_label ),
         classes ( id, name ),
@@ -118,6 +120,7 @@ async function loadStudentAttendanceData(userId, historyIndex, client) {
       attendance: {
         ...record.attendance,
         periods: getOneRelation(record.attendance.periods),
+        assessments: getOneRelation(record.attendance.assessments),
         terms: getOneRelation(record.attendance.terms),
         academic_years: getOneRelation(record.attendance.academic_years),
         classes: getOneRelation(record.attendance.classes),
@@ -222,9 +225,12 @@ function populateDropdownFilters(records) {
     if (attendance.class_id) {
       classes.set(String(attendance.class_id), attendance.classes?.name || "Class");
     }
-    const periodId = attendance.period_id || attendance.periods?.id;
-    if (periodId) {
-      periods.set(String(periodId), attendance.periods?.name || "Period");
+    const assessmentId = attendance.assessment_id || attendance.assessments?.id;
+    if (assessmentId) {
+      periods.set(
+        String(assessmentId),
+        attendance.assessments?.name || "Assessment period",
+      );
     }
   });
 
@@ -274,7 +280,7 @@ function renderAttendanceHistory(records) {
       <td>${escapeHTML(dateStr)}</td>
       <td>${escapeHTML(attendance?.subjects?.name || "-")}</td>
       <td>${escapeHTML(teacherName)}</td>
-      <td>${escapeHTML(attendance?.periods?.name || "1st Period")}</td>
+      <td>${escapeHTML(attendance?.assessments?.name || "-")}</td>
       <td><span class="status-tag ${statusClass}">${escapeHTML(status)}</span></td>
     `;
     tbody.appendChild(tr);
@@ -356,7 +362,7 @@ function applyFiltersAndRender() {
       (selectedSemester === "all" || getSemesterNumber(attendance.terms?.name) === Number(selectedSemester)) &&
       (selectedClass === "all" || String(attendance.class_id) === selectedClass) &&
       (selectedSubject === "all" || String(attendance.subject_id) === selectedSubject) &&
-      (selectedPeriod === "all" || String(attendance.period_id || attendance.periods?.id) === selectedPeriod) &&
+      (selectedPeriod === "all" || String(attendance.assessment_id || attendance.assessments?.id) === selectedPeriod) &&
       (selectedStatus === "all" || status === selectedStatus.toLowerCase())
     );
   });
