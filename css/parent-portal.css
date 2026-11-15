@@ -902,9 +902,7 @@ body.parent-portal {
   border: 0;
   border-radius: 0;
 }
-.parent-portal .parent-signout:hover {
-  background: #111827;
-}
+
 .parent-portal .parent-form-main {
   max-width: 760px;
 }
@@ -913,13 +911,11 @@ body.parent-portal {
 }
 .parent-portal .parent-welcome h1 {
   color: #111827;
-  font-size: 28px;
-  line-height: 1.3;
+  font-size: 20px;
+  line-height: 1.2;
+  margin-bottom: -15px;
 }
-.parent-portal .parent-welcome > p:last-child {
-  color: #484545;
-  font-size: 15px;
-}
+
 .parent-portal .parent-eyebrow {
   color: #1d4ed8;
 }
