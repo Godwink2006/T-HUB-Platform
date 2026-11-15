@@ -5,6 +5,52 @@ function togglePassword(id) {
 
 const form = document.getElementById("loginForm");
 
+async function redirectIfAlreadySignedIn() {
+  const client = window.supabaseClient;
+  if (!client?.auth) {
+    document.body.classList.remove("login-auth-checking");
+    return;
+  }
+
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await client.auth.getUser();
+    if (userError) throw userError;
+    if (!user) {
+      document.body.classList.remove("login-auth-checking");
+      return;
+    }
+
+    const { data: profile, error: profileError } = await client
+      .from("profiles")
+      .select("role, status")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profileError) throw profileError;
+
+    if (!profile || String(profile.status || "").toLowerCase() !== "active") {
+      await client.auth.signOut();
+      document.body.classList.remove("login-auth-checking");
+      return;
+    }
+
+    const destination =
+      String(profile.role || "").toLowerCase() === "parent"
+        ? "/html/parent-dashboard.html"
+        : "/html/dashboard.html";
+    window.location.replace(destination);
+    return;
+  } catch (error) {
+    console.warn("Could not restore the signed-in user's role:", error);
+  }
+
+  document.body.classList.remove("login-auth-checking");
+}
+
+redirectIfAlreadySignedIn();
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 

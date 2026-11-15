@@ -1110,6 +1110,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       .eq("id", user.id)
       .single();
 
+    if (!profileError && String(profile?.role || "").toLowerCase() === "parent") {
+      window.location.replace("/html/parent-dashboard.html");
+      return;
+    }
+
     if (profileError || !profile || !profile.school_id) {
       console.error("Could not determine user school ID:", profileError);
       showDashboardAccessCheckError(

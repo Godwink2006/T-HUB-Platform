@@ -28,7 +28,7 @@
     <meta name="theme-color" content="#2563eb" />
       <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
-  <body>
+  <body class="login-auth-checking">
     <div class="login-container">
       <div class="Left-panel">
         <div class="logo">
@@ -219,6 +219,10 @@
     </div>
 
     <div id="toastContainer" class="toast-container"></div>
+    <div class="login-session-check" role="status" aria-live="polite">
+      <span class="login-session-check__spinner" aria-hidden="true"></span>
+      <span>Checking your sign-in...</span>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
     <script src="/js/supabase.js"></script>

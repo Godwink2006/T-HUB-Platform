@@ -600,14 +600,25 @@ window.addEventListener("pageshow", async (event) => {
   ) {
     if (!window.supabaseClient) return;
 
+    if (isLoginPage()) {
+      document.body.classList.add("login-auth-checking");
+    }
+
     window.clearAuthContext?.();
     const authCtx = await window.getAuthContext(true);
     const user = authCtx?.user;
     const profile = authCtx?.profile;
 
-    if (isLoginPage() && user) {
-      window.location.replace("/html/dashboard.html");
-      return;
+    if (isLoginPage()) {
+      if (user) {
+        const destination =
+          String(profile?.role || "").toLowerCase() === "parent"
+            ? "/html/parent-dashboard.html"
+            : "/html/dashboard.html";
+        window.location.replace(destination);
+        return;
+      }
+      document.body.classList.remove("login-auth-checking");
     }
 
     if (!isLoginPage() && !user) {

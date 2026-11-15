@@ -11,6 +11,50 @@ body {
   overflow-y: auto;
 }
 
+body.login-auth-checking {
+  background: #fff;
+  overflow: hidden;
+}
+
+body.login-auth-checking::before,
+body.login-auth-checking::after,
+body.login-auth-checking .login-container,
+body.login-auth-checking #toastContainer {
+  display: none !important;
+}
+
+.login-session-check {
+  display: none;
+}
+
+body.login-auth-checking .login-session-check {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #fff;
+  color: #334155;
+  font-size: 15px;
+  z-index: 9999;
+}
+
+.login-session-check__spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #dbeafe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: login-session-spin 0.8s linear infinite;
+}
+
+@keyframes login-session-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 body::before {
   content: "";
   position: fixed;
