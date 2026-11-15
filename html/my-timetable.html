@@ -40,7 +40,11 @@
     <meta name="theme-color" content="#2563eb" />
     <link rel="stylesheet" href="/css/app-visuals.css" />
   </head>
-  <body>
+  <body class="timetable-access-checking">
+    <div id="timetableAccessLoading" class="timetable-access-loading" role="status" aria-live="polite">
+      <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+      <span>Loading...</span>
+    </div>
     <div class="timetable-container">
       <header class="timetable-header">
         <div class="header-titles">

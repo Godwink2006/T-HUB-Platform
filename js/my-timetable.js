@@ -90,6 +90,10 @@ async function initMyTimetable() {
   } catch (err) {
     console.error("Timetable Load Error:", err);
     renderEmptyState("Failed to load timetable schedule.");
+  } finally {
+    document.body.classList.remove("timetable-access-checking");
+    const loading = document.getElementById("timetableAccessLoading");
+    if (loading) loading.hidden = true;
   }
 }
 
