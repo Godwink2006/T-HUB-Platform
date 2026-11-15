@@ -128,28 +128,41 @@ async function loadStudentAttendanceData(userId, historyIndex, client) {
       },
     }));
 
-  const classIds = [
-    ...new Set(
-      allAttendanceRecords
-        .map((record) => record.attendance.class_id)
-        .filter(Boolean)
-        .map(String),
-    ),
-  ];
   const teacherNameMap = new Map();
-  const teacherNameResults = await Promise.all(
-    classIds.map((classId) =>
-      client.rpc("student_timetable_teacher_names", { p_class_id: classId }),
-    ),
+  const { data: attendanceCreators, error: attendanceCreatorsError } = await client.rpc(
+    "student_attendance_creator_names",
   );
-  for (const result of teacherNameResults) {
-    if (result.error) {
-      console.warn("Could not load assigned teacher names for attendance:", result.error);
-      continue;
+  if (attendanceCreatorsError) {
+    console.warn("Could not load attendance author names:", attendanceCreatorsError);
+    // Keep teacher names available on deployments before the scoped lookup is installed.
+    const classIds = [
+      ...new Set(
+        allAttendanceRecords
+          .map((record) => record.attendance.class_id)
+          .filter(Boolean)
+          .map(String),
+      ),
+    ];
+    const teacherNameResults = await Promise.all(
+      classIds.map((classId) =>
+        client.rpc("student_timetable_teacher_names", { p_class_id: classId }),
+      ),
+    );
+    for (const result of teacherNameResults) {
+      if (result.error) {
+        console.warn("Could not load assigned teacher names for attendance:", result.error);
+        continue;
+      }
+      for (const teacher of result.data || []) {
+        if (teacher?.teacher_id && teacher.full_name) {
+          teacherNameMap.set(String(teacher.teacher_id), teacher.full_name);
+        }
+      }
     }
-    for (const teacher of result.data || []) {
-      if (teacher?.teacher_id && teacher.full_name) {
-        teacherNameMap.set(String(teacher.teacher_id), teacher.full_name);
+  } else {
+    for (const creator of attendanceCreators || []) {
+      if (creator?.creator_id && creator.full_name) {
+        teacherNameMap.set(String(creator.creator_id), creator.full_name);
       }
     }
   }
