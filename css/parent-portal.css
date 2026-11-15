@@ -956,12 +956,7 @@ body.parent-portal {
   min-height: 40px;
   padding: 8px 10px;
 }
-.parent-portal .parent-form input:focus,
-.parent-portal .parent-form select:focus,
-.parent-portal .parent-record-filters select:focus {
-  border-color: #2563eb;
-  outline: 0.5px solid rgb(37 99 235 / 20%);
-}
+
 .parent-portal .parent-record-filters select {
   border-radius: 8px;
   min-height: 44px;
