@@ -55,7 +55,7 @@ function showPeriodError(error, action) {
 async function openAddPeriodModal() {
   const modal = document.getElementById("periodModal");
   const form = document.getElementById("periodForm");
-  const editIdInput = document.getElementById("editPeriodId");
+  const editIdInput = document.getElementById("periodId");
   const title = document.getElementById("periodModalTitle");
 
   if (form) form.reset();
@@ -168,7 +168,7 @@ function convert12to24(timeStr) {
 async function handleSavePeriod(event) {
   event.preventDefault();
 
-  const periodId = document.getElementById("editPeriodId")?.value;
+  const periodId = document.getElementById("periodId")?.value;
   const schoolLevelSelect = document.getElementById("schoolLevelSelect");
   const schoolLevel = schoolLevelSelect?.value;
 
