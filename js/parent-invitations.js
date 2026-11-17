@@ -291,8 +291,6 @@ async function sendParentInvitation(event) {
     ""
   ).trim();
 
-  // Print to console to prove it's being sent
-  console.log("PAYLOAD SENT TO EDGE FUNCTION:", body);
   showParentInviteMessage("Sending the invitation…");
   button.disabled = true;
 

@@ -374,8 +374,6 @@ async function handleClassSelectChange(classId) {
     todayName = "Monday";
   }
 
-  console.log(`Checking timetable for Class: ${classId} on Day: ${todayName}`);
-
   try {
     const user = (await supabaseClient.auth.getUser()).data?.user;
     if (!user) {
@@ -595,8 +593,6 @@ async function loadRosterIntoModal(classId) {
 
   try {
     const cleanClassId = classId ? classId.trim() : "";
-    console.log("Querying active students via RPC for class_id:", cleanClassId);
-
     const { data: activeStudents, error: studentErr } =
       await supabaseClient.rpc("get_active_class_students", {
         p_class_id: cleanClassId,
@@ -607,8 +603,6 @@ async function loadRosterIntoModal(classId) {
       tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">Error loading students: ${escapeHtml(studentErr.message)}</td></tr>`;
       return;
     }
-
-    console.log("Filtered active students from database:", activeStudents);
 
     if (!activeStudents || activeStudents.length === 0) {
       tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding: 12px; color: #dc2626;">No active students found for this class.</td></tr>`;

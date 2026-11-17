@@ -1,8 +1,21 @@
 const SUPABASE_URL = "https://xlwrdsrjdgzfqpbigphv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsd3Jkc3JqZGd6ZnFwYmlncGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2ODkyMjIsImV4cCI6MjEwMTI2NTIyMn0.53HUz-sMEdBLpH4OehUA0_50r0wgEmo-pYgDnTMzYbY";
 
-// Cache successful Supabase table reads briefly so repeat renders and button
-// clicks can reuse results. Writes and auth changes invalidate the cache.
+const isLocalDevelopmentHost = ["localhost", "127.0.0.1", "::1"].includes(
+    window.location.hostname,
+);
+const appDiagnosticsEnabled =
+    isLocalDevelopmentHost &&
+    new URLSearchParams(window.location.search).get("debug") === "1";
+if (!appDiagnosticsEnabled) {
+    ["log", "debug", "info", "warn", "error", "trace", "table", "dir"].forEach(
+        (method) => {
+            console[method] = () => {};
+        },
+    );
+}
+
+
 const SUPABASE_READ_TTL = 20_000;
 const SUPABASE_READ_CACHE_LIMIT = 120;
 const supabaseReadCache = new Map();

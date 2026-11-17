@@ -606,7 +606,6 @@ document.addEventListener("DOMContentLoaded", initializeFinanceFilters);
 let feeDetailsRequestId = 0;
 
 async function viewFeeDetails(feeId) {
-  console.log("Opening fee details for fee.id:", feeId);
   if (!feeId || feeId === "undefined") {
     console.error("Invalid feeId passed to viewFeeDetails!");
     showToast("Error: Invalid fee record ID.", "error");
@@ -1097,16 +1096,6 @@ if (savePaymentBtn) {
       showToast("Please enter an amount for at least one fee item.", "info");
       return;
     }
-    console.log("Found recordPaymentBtn element:", recordPaymentBtn);
-    console.log(
-      "Attribute data-fee-id:",
-      recordPaymentBtn?.getAttribute("data-fee-id"),
-    );
-    console.log(
-      "Attribute data-student-id:",
-      recordPaymentBtn?.getAttribute("data-student-id"),
-    );
-
     savePaymentBtn.disabled = true;
     const originalButtonText = savePaymentBtn.textContent;
     savePaymentBtn.textContent = "Saving...";
