@@ -404,6 +404,12 @@ async function checkPageAccess() {
     return;
   }
 
+  const accountStatus = String(profile?.status || "").trim().toLowerCase();
+  if (accountStatus !== "active") {
+    await window.forceLogout();
+    return;
+  }
+
   const role = profile?.role;
 
   if (isParentOnly && role !== "parent") {
