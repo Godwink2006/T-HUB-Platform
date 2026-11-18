@@ -1314,4 +1314,16 @@ body.parent-portal {
   .parent-stats-grid > .parent-stat-card:only-child {
     grid-column: 1 / -1;
   }
+
+  .parent-stat-label {
+    font-size: 0.68rem;
+  }
+
+  .parent-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .parent-stat-sub {
+    font-size: 0.7rem;
+  }
 }

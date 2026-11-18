@@ -815,6 +815,19 @@ body.dashboard-auth-error-open .dashboard-auth-loading__content {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .dashboard-cards .dashboard-card h4 {
+    font-size: 16px;
+  }
+
+  .dashboard-cards .dashboard-card h2 {
+    margin-top: 10px;
+    font-size: 22px;
+  }
+
+  .dashboard-cards .dashboard-card p {
+    font-size: 12px !important;
+  }
+
   .announcement-cards,
   .cancel-btn,
   .save-btn,

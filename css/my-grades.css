@@ -284,4 +284,16 @@
   .stats-grid > .stat-card:only-child {
     grid-column: 1 / -1;
   }
+
+  .stats-grid .stat-label {
+    font-size: 11px;
+  }
+
+  .stats-grid .stat-value {
+    font-size: 22px;
+  }
+
+  .stats-grid .stat-sub {
+    font-size: 10px;
+  }
 }
