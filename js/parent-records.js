@@ -261,9 +261,35 @@ async function loadParentRecordData(
       parentRecordState.timetableTeachers = new Map(
         (teachers || []).map((t) => [
           String(t.teacher_id),
-          { full_name: t.full_name, staff_id: t.staff_id },
+          {
+            full_name: t.full_name,
+            staff_id: t.staff_id,
+            is_class_teacher:
+              t.is_class_teacher === true ||
+              String(t.is_class_teacher).toLowerCase() === "true",
+          },
         ]),
       );
+    }
+
+    const { data: classTeacherData, error: classTeacherError } =
+      await client.rpc("student_timetable_teacher_names", {
+        p_class_id: student.class_id,
+      });
+    if (classTeacherError) {
+      console.warn("Parent class teacher lookup unavailable:", classTeacherError);
+    } else {
+      for (const teacher of classTeacherData || []) {
+        const teacherId = String(teacher.teacher_id);
+        const existing = parentRecordState.timetableTeachers.get(teacherId);
+        parentRecordState.timetableTeachers.set(teacherId, {
+          full_name: existing?.full_name || teacher.full_name,
+          staff_id: existing?.staff_id,
+          is_class_teacher:
+            teacher.is_class_teacher === true ||
+            String(teacher.is_class_teacher).toLowerCase() === "true",
+        });
+      }
     }
   } else if (parentRecordState.view === "fees") {
     const [feeResult, paymentResult] = await Promise.all([
@@ -756,7 +782,13 @@ function renderParentTimetable() {
 
   const className = student.classes?.name || "Student’s class";
   const yearLabel = timetable.academic_years?.year_label;
-  const summary = `<p class="parent-timetable-summary"><strong>${parentEscape(className)}</strong>${yearLabel ? ` · ${parentEscape(yearLabel)}` : ""}</p>`;
+  const classTeacher = [...parentRecordState.timetableTeachers.values()].find(
+    (teacher) => teacher.is_class_teacher,
+  );
+  const classTeacherSummary = classTeacher?.full_name
+    ? `<span class="parent-timetable-class-teacher"><i class="fa-solid fa-user-tie" aria-hidden="true"></i><span>Class teacher / sponsor</span><strong>${parentEscape(classTeacher.full_name)}</strong></span>`
+    : "";
+  const summary = `<div class="parent-timetable-summary"><strong>${parentEscape(className)}</strong>${yearLabel ? ` · ${parentEscape(yearLabel)}` : ""}${classTeacherSummary}</div>`;
 
   if (!scheduledLessons.length || !periods.length) {
     return `${summary}<p class="parent-empty">The active timetable has no lessons assigned to a period yet.</p>`;
@@ -809,7 +841,10 @@ function renderParentTimetable() {
               const meta = teacher.staff_id
                 ? `<small>${parentEscape(teacher.staff_id)}</small>`
                 : "";
-              teacherCell = `<span class="parent-record-author"><strong>${parentEscape(teacher.full_name)}</strong>${meta}</span>`;
+              const classTeacherBadge = teacher.is_class_teacher
+                ? '<small class="parent-class-teacher-badge">Class teacher / sponsor</small>'
+                : "";
+              teacherCell = `<span class="parent-record-author"><strong>${parentEscape(teacher.full_name)}</strong>${classTeacherBadge}${meta}</span>`;
             } else {
               teacherCell = '<span class="table-muted">Assigned</span>';
             }

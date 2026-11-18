@@ -23,6 +23,21 @@ as $$
     where student.id = (select auth.uid())
       and lower(private.current_profile_role()) = 'student'
       and public.check_school_access(student.school_id, 'premium'::text)
+
+    union
+
+    select student.id as student_id, student.class_id, student.school_id
+    from public.parent_student_links as link
+    join public.students as student
+      on student.id = link.student_id
+     and student.school_id = link.school_id
+    join public.profiles as parent_profile
+      on parent_profile.id = link.parent_user_id
+     and lower(parent_profile.role) = 'parent'
+     and lower(parent_profile.status) = 'active'
+    where link.parent_user_id = (select auth.uid())
+      and link.status = 'active'
+      and lower(private.current_profile_role()) = 'parent'
   ),
   authorized_class as (
     select caller.class_id, caller.school_id

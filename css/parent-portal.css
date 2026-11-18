@@ -332,9 +332,45 @@ body.parent-auth-checking .parent-auth-loading {
   color: #60708a;
   font-size: 0.72rem;
 }
+.parent-record-author .parent-class-teacher-badge {
+  align-self: flex-start;
+  border: 0.5px solid #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 3px 7px;
+}
+.parent-timetable-summary {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-bottom: 14px;
+}
+.parent-timetable-class-teacher {
+  align-items: center;
+  background: #ecfdf5;
+  border: 0.5px solid #a7f3d0;
+  color: #047857;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 8px 12px;
+}
+.parent-timetable-class-teacher > span {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.parent-timetable-class-teacher strong {
+  color: #065f46;
+  font-size: 0.85rem;
+}
 .parent-linked-parents {
   margin-top: 22px;
 }
+ 
 .parent-link-search-label {
   color: #475569;
   display: block;
@@ -1062,7 +1098,9 @@ body.parent-portal {
   .parent-badge,
   .contact-pill,
   .contact-pill i,
-  .btn-change-profile {
+  .btn-change-profile,
+  .parent-record-author .parent-class-teacher-badge,
+.parent-timetable-class-teacher {
     border-radius: 10px;
   }
   .parent-record-filter-button {
