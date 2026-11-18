@@ -256,6 +256,10 @@ th {
     margin: 16px 0;
   }
 
+  .stats-grid > .stat-card:only-child {
+    grid-column: 1 / -1;
+  }
+
   .stat-card {
     padding: 12px;
     border-radius: 10px;
