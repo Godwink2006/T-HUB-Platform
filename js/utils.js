@@ -1,3 +1,70 @@
+const THUB_THEME_STORAGE_KEY = "tHubTheme";
+
+function applySavedAppTheme() {
+  const savedTheme =
+    localStorage.getItem(THUB_THEME_STORAGE_KEY) ||
+    localStorage.getItem("tHubDashboardTheme") ||
+    "light";
+  const isDark = savedTheme === "dark";
+  document.body.classList.toggle("app-dark", isDark);
+
+  let toggle = document.getElementById("dashboardThemeToggle");
+  if (!toggle) {
+    toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "app-theme-toggle app-theme-toggle--floating";
+    toggle.id = "appThemeToggle";
+    document.body.append(toggle);
+  } else {
+    toggle.classList.add("app-theme-toggle");
+  }
+
+  const updateToggle = (dark) => {
+    const label = dark ? "Switch to light mode" : "Switch to dark mode";
+    toggle.setAttribute("aria-pressed", String(dark));
+    toggle.setAttribute("aria-label", label);
+    toggle.title = label;
+    toggle.innerHTML = dark
+      ? '<i class="fa-solid fa-sun" aria-hidden="true"></i><span>Light mode</span>'
+      : '<i class="fa-solid fa-moon" aria-hidden="true"></i><span>Dark mode</span>';
+  };
+
+  updateToggle(isDark);
+  window.setAppTheme = (theme) => {
+    const dark = theme === true || theme === "dark";
+    localStorage.setItem(THUB_THEME_STORAGE_KEY, dark ? "dark" : "light");
+    document.body.classList.toggle("app-dark", dark);
+    document.querySelectorAll(".app-theme-toggle").forEach((themeToggle) => {
+      themeToggle.setAttribute("aria-pressed", String(dark));
+      const label = dark ? "Switch to light mode" : "Switch to dark mode";
+      themeToggle.setAttribute("aria-label", label);
+      themeToggle.title = label;
+      themeToggle.innerHTML = dark
+        ? '<i class="fa-solid fa-sun" aria-hidden="true"></i><span>Light mode</span>'
+        : '<i class="fa-solid fa-moon" aria-hidden="true"></i><span>Dark mode</span>';
+    });
+  };
+  if (!toggle.dataset.themeBound) {
+    toggle.dataset.themeBound = "true";
+    toggle.addEventListener("click", () => {
+      const dark = !document.body.classList.contains("app-dark");
+      window.setAppTheme(dark);
+    });
+  }
+}
+
+function ensureAppThemeStylesheet() {
+  if (document.querySelector('link[data-app-theme="true"]')) return;
+  const themeStylesheet = document.createElement("link");
+  themeStylesheet.rel = "stylesheet";
+  themeStylesheet.href = "/css/app-theme.css";
+  themeStylesheet.dataset.appTheme = "true";
+  document.head.append(themeStylesheet);
+}
+
+ensureAppThemeStylesheet();
+applySavedAppTheme();
+
 window.formatSchoolMoney = function (amount, currencyCode) {
   const numericAmount = Number(amount);
   if (!Number.isFinite(numericAmount)) return "—";

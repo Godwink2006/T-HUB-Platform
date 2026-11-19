@@ -238,6 +238,25 @@ body.dashboard-auth-error-open .dashboard-auth-loading__content {
   gap: 25px;
 }
 
+.dashboard-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0.5px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-theme-toggle i {
+  font-size: 15px;
+}
+
 .top-right i {
   font-size: 22px;
   color: #6b7280;
@@ -811,6 +830,21 @@ body.dashboard-auth-error-open .dashboard-auth-loading__content {
 }
 
 @media screen and (max-width: 768px) {
+  .dashboard-theme-toggle {
+    width: 40px;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .dashboard-theme-toggle span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
   .dashboard-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -854,7 +888,8 @@ body.dashboard-auth-error-open .dashboard-auth-loading__content {
   .announcement-confirm-actions button,
   .dashboard-error-retry,
   body.dashboard-auth-error-open .dashboard-auth-loading__content,
-.dashboard-auth-loading__retry {
+.dashboard-auth-loading__retry,
+.dashboard-theme-toggle {
     border-radius: 10px;
   }
 
@@ -863,6 +898,196 @@ body.dashboard-auth-error-open .dashboard-auth-loading__content {
     max-width: 95%;
     width: 100%;
   }
+}
+
+body.app-dark {
+  background: #000;
+  color: #fff;
+  color-scheme: dark;
+}
+
+body.app-dark .dashboard-main-content {
+  background: #000;
+}
+
+body.app-dark .sidebar {
+  background: #000;
+  border-right: 1px solid #333;
+}
+
+body.app-dark .menu li.active a {
+  background: #222;
+  color: #fff;
+}
+
+body.app-dark .menu li a:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.app-dark .topbar h1,
+body.app-dark .dashboard-card h2,
+body.app-dark .card-header h3,
+body.app-dark .dashboard-card-header h3,
+body.app-dark .announcement-item h4,
+body.app-dark .announcement-confirm-copy h2 {
+  color: #fff;
+}
+
+body.app-dark .topbar p,
+body.app-dark #welcomeUserText,
+body.app-dark .top-right i,
+body.app-dark .dashboard-card h4,
+body.app-dark .dashboard-card p,
+body.app-dark .dashboard-card-header,
+body.app-dark .dashboard-activity-list li,
+body.app-dark .dashboard-activity-empty,
+body.app-dark .announcement-item p,
+body.app-dark .announcement-confirm-copy p,
+body.app-dark .form-group label {
+  color: #fff;
+}
+
+body.app-dark #welcomeUserText,
+body.app-dark .dashboard-card p {
+  color: #fff !important;
+}
+
+body.app-dark .dashboard-card,
+body.app-dark .announcement-cards,
+body.app-dark .dashboard-chart-card,
+body.app-dark .dashboard-activity-card,
+body.app-dark .announcement-item,
+body.app-dark .filter-menu,
+body.app-dark .announcement-modal-content,
+body.app-dark .date-modal-content,
+body.app-dark .announcement-confirm-modal,
+body.app-dark .dashboard-theme-toggle {
+  background: #111;
+  border-color: #333;
+  color: #fff;
+}
+
+body.app-dark .dashboard-card,
+body.app-dark .announcement-cards,
+body.app-dark .dashboard-chart-card,
+body.app-dark .dashboard-activity-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+body.app-dark .announcement-item {
+  border-bottom-color: #333;
+}
+
+body.app-dark .announcement-item[style],
+body.app-dark .announcement-item.empty-state {
+  background: #111 !important;
+  border-color: #333 !important;
+  color: #fff !important;
+}
+
+body.app-dark .announcement-item h4[style] {
+  color: #fff !important;
+}
+
+body.app-dark .announcement-item p[style],
+body.app-dark .announcement-item > div[style] {
+  color: #fff !important;
+}
+
+body.app-dark .announcement-item.empty-state i[style] {
+  color: #ccc !important;
+}
+
+body.app-dark .announcement-item.empty-state p[style] {
+  color: #fff !important;
+}
+
+body.app-dark .announcement-item.empty-state h4[style] {
+  color: #fff !important;
+}
+
+body.app-dark .sub-stats-grid {
+  border-top-color: #333;
+}
+
+body.app-dark .enrollment-stats-body {
+  border-color: #333;
+}
+
+body.app-dark .sub-stat-item {
+  background: #1a1a1a;
+}
+
+body.app-dark .main-stat-number,
+body.app-dark .sub-value {
+  color: #fff;
+}
+
+body.app-dark .main-stat-label,
+body.app-dark .sub-label {
+  color: #fff;
+}
+
+body.app-dark .dashboard-activity-list li {
+  border-bottom-color: #333;
+}
+
+body.app-dark .filter-menu a {
+  color: #fff;
+  border-bottom-color: #333;
+}
+
+body.app-dark .filter-menu a:hover {
+  background: #222;
+}
+
+body.app-dark .dashboard-theme-toggle:hover,
+body.app-dark .announcement-error-retry:hover,
+body.app-dark .dashboard-error-retry:hover,
+body.app-dark .announcement-delete-btn:hover:not(:disabled) {
+  background: #222;
+}
+
+body.app-dark .announcement-modal-header,
+body.app-dark .date-modal-header {
+  border-color: #333;
+}
+
+body.app-dark .announcement-modal-header h2,
+body.app-dark .date-modal-header h2 {
+  color: #fff;
+}
+
+body.app-dark .form-group input,
+body.app-dark .form-group select,
+body.app-dark .form-group textarea,
+body.app-dark .filter-menu,
+body.app-dark .announcement-error-retry,
+body.app-dark .dashboard-error-retry,
+body.app-dark .announcement-confirm-cancel,
+body.app-dark .announcement-delete-btn {
+  background: #000;
+  border-color: #444;
+  color: #fff;
+}
+
+body.app-dark .announcement-confirm-icon {
+  background: #3b2028;
+}
+
+body.app-dark .cancel-btn {
+  background: #222;
+  border-color: #444;
+  color: #fff;
+}
+
+body.app-dark .dashboard-auth-loading {
+  background: #000;
+  color: #fff;
+}
+
+body.app-dark .dashboard-auth-loading__content h1 {
+  color: #fff;
 }
 
 .date-modal-header {
