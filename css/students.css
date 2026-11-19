@@ -1035,6 +1035,41 @@ body.app-dark .student-delete-modal {
   background: #111;
   border-color: #333;
   color: #fff;
+  color-scheme: dark;
+}
+
+body.app-dark .student-modal-content input,
+body.app-dark .student-modal-content select,
+body.app-dark .student-modal-content textarea,
+body.app-dark .edit-student-modal-content input,
+body.app-dark .edit-student-modal-content select,
+body.app-dark .edit-student-modal-content textarea {
+  background-color: #222 !important;
+  border-color: #444 !important;
+  color: #fff !important;
+  color-scheme: dark;
+}
+
+body.app-dark .student-modal-content input::placeholder,
+body.app-dark .student-modal-content textarea::placeholder,
+body.app-dark .edit-student-modal-content input::placeholder,
+body.app-dark .edit-student-modal-content textarea::placeholder {
+  color: #aaa;
+}
+
+body.app-dark .student-modal-content select option,
+body.app-dark .edit-student-modal-content select option {
+  background: #111;
+  color: #fff;
+}
+
+body.app-dark .student-modal-content input:focus,
+body.app-dark .student-modal-content select:focus,
+body.app-dark .student-modal-content textarea:focus,
+body.app-dark .edit-student-modal-content input:focus,
+body.app-dark .edit-student-modal-content select:focus,
+body.app-dark .edit-student-modal-content textarea:focus {
+  border-color: #3b82f6 !important;
 }
 
 body.app-dark .student-modal-header,
@@ -1066,6 +1101,19 @@ body.app-dark th {
   color: #fff;
 }
 
+body.app-dark .toolbar input,
+body.app-dark .toolbar select {
+  background-color: #222 !important;
+  border-color: #444 !important;
+  color: #fff !important;
+  color-scheme: dark;
+}
+
+body.app-dark .toolbar select option {
+  background: #111;
+  color: #fff;
+}
+
 /* Keep student rows dark even after the shared light-mode row hover is restored
    during an SPA page visit. Apply the hover color to cells as well because
    table-cell backgrounds can hide the parent row's background. */
@@ -1077,7 +1125,7 @@ body.app-dark #studentsTableBody td {
 
 body.app-dark #studentsTableBody tr:hover,
 body.app-dark #studentsTableBody tr:hover td {
-  background-color: #222 !important;
+  background-color: #181818 !important;
 }
 
 body.app-dark #studentsTableBody td[style] {
@@ -1123,7 +1171,7 @@ body.app-dark .student-delete-cancel {
 body.app-dark .students-actions-btn.view,
 body.app-dark .students-actions-btn.edit,
 body.app-dark .students-actions-btn.delete {
-  background: #222;
+  background: #333;
   color: #fff;
 }
 
@@ -1131,7 +1179,7 @@ body.app-dark .students-status-active,
 body.app-dark .students-status-inactive,
 body.app-dark .view-student-status,
 body.app-dark .view-student-status.status-inactive {
-  background: #222;
+  background: #333;
   color: #fff;
 }
 
