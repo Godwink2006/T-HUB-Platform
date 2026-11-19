@@ -8,14 +8,8 @@ function applySavedAppTheme() {
   const isDark = savedTheme === "dark";
   document.body.classList.toggle("app-dark", isDark);
 
-  let toggle = document.getElementById("dashboardThemeToggle");
-  if (!toggle) {
-    toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.className = "app-theme-toggle app-theme-toggle--floating";
-    toggle.id = "appThemeToggle";
-    document.body.append(toggle);
-  } else {
+  const toggle = document.getElementById("dashboardThemeToggle");
+  if (toggle) {
     toggle.classList.add("app-theme-toggle");
   }
 
@@ -29,7 +23,7 @@ function applySavedAppTheme() {
       : '<i class="fa-solid fa-moon" aria-hidden="true"></i><span>Dark mode</span>';
   };
 
-  updateToggle(isDark);
+  if (toggle) updateToggle(isDark);
   window.setAppTheme = (theme) => {
     const dark = theme === true || theme === "dark";
     localStorage.setItem(THUB_THEME_STORAGE_KEY, dark ? "dark" : "light");
@@ -44,7 +38,7 @@ function applySavedAppTheme() {
         : '<i class="fa-solid fa-moon" aria-hidden="true"></i><span>Dark mode</span>';
     });
   };
-  if (!toggle.dataset.themeBound) {
+  if (toggle && !toggle.dataset.themeBound) {
     toggle.dataset.themeBound = "true";
     toggle.addEventListener("click", () => {
       const dark = !document.body.classList.contains("app-dark");
@@ -53,8 +47,13 @@ function applySavedAppTheme() {
   }
 }
 
+window.applySavedAppTheme = applySavedAppTheme;
+
 function ensureAppThemeStylesheet() {
-  if (document.querySelector('link[data-app-theme="true"]')) return;
+  if (
+    document.querySelector('link[data-app-theme="true"]') ||
+    document.querySelector('link[href="/css/app-theme.css"]')
+  ) return;
   const themeStylesheet = document.createElement("link");
   themeStylesheet.rel = "stylesheet";
   themeStylesheet.href = "/css/app-theme.css";
@@ -62,8 +61,15 @@ function ensureAppThemeStylesheet() {
   document.head.append(themeStylesheet);
 }
 
-ensureAppThemeStylesheet();
-applySavedAppTheme();
+if (isLoginPage()) {
+  document.body.classList.remove("app-dark");
+  document.querySelectorAll(".app-theme-toggle").forEach((toggle) => {
+    toggle.remove();
+  });
+} else {
+  ensureAppThemeStylesheet();
+  applySavedAppTheme();
+}
 
 window.formatSchoolMoney = function (amount, currencyCode) {
   const numericAmount = Number(amount);

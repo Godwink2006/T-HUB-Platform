@@ -586,7 +586,7 @@ async function loadDashboardAnnouncements() {
 
   previewContainer.innerHTML = `
 
-     <div style="padding: 24px; text-align: center; color: #64748b; background: #fff;  border: 1px solid rgb(219, 215, 215);">
+     <div class="dashboard-announcements-loading">
         <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
         Loading announcements...
       </div>
@@ -702,10 +702,10 @@ async function loadDashboardAnnouncements() {
 
     if (filteredAnnouncements.length === 0) {
       previewContainer.innerHTML = `
-     <div class="announcement-item empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; height: 280px; color: #64748b;">
-  <i class="fas fa-bullhorn fa-7x" style="color: #cbd5e1; margin-bottom: 16px;"></i>
-  <h4 style="margin: 0 0 8px 0; color: #334155; font-size: 22px; font-weight: 600;">No announcements found</h4>
-  <p style="margin: 0; font-size: 15px; color: #64748b;">Published announcements will appear here.</p>
+     <div class="announcement-item empty-state dashboard-announcement-empty">
+  <i class="fas fa-bullhorn fa-7x" aria-hidden="true"></i>
+  <h4>No announcements found</h4>
+  <p>Published announcements will appear here.</p>
 </div>
       `;
       return;
@@ -729,13 +729,13 @@ async function loadDashboardAnnouncements() {
         }
 
         return `
-        <div class="announcement-item" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; margin-bottom: 12px; background: #fff; border: 0.5px solid rgb(219, 215, 215);">
+        <div class="announcement-item dashboard-announcement" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; margin-bottom: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-            <h4 style="margin: 0; font-size: 1.05rem; color: #0f172a; font-weight: 600;">${escapeHtml(ann.title)}</h4>
+            <h4 style="margin: 0; font-size: 1.05rem; font-weight: 600;">${escapeHtml(ann.title)}</h4>
             <span class="announcement-status" style="font-size: 0.75rem; padding: 3px 10px; background: ${statusBg}; color: ${statusColor}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;">${escapeHtml(ann.status)}</span>
           </div>
-          <p style="margin: 0; font-size: 0.95rem; color: #334155; line-height: 1.7; white-space: pre-wrap;">${escapeHtml(ann.message)}</p>
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; font-size: 0.8rem; color: #64748b; border-top: 0.5px solid rgb(219, 215, 215);">
+          <p style="margin: 0; font-size: 0.95rem; line-height: 1.7; white-space: pre-wrap;">${escapeHtml(ann.message)}</p>
+          <div class="dashboard-announcement-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; font-size: 0.8rem;">
             <span><i class="fa-solid fa-users" style="margin-right: 4px;"></i> Target: ${escapeHtml(ann.target_audience)}</span>
             <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> ${ann.expiry_date || "No expiry date"}</span>
             ${dashboardCanDeleteAnnouncements ? `<button type="button" class="announcement-delete-btn" data-announcement-id="${escapeHtml(ann.id)}" aria-label="Delete announcement: ${escapeHtml(ann.title)}"><i class="fa-solid fa-trash" aria-hidden="true"></i> Delete</button>` : ""}

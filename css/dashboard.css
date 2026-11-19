@@ -388,6 +388,61 @@ body.dashboard-auth-error-open .dashboard-auth-loading__content {
   white-space: pre-wrap;
 }
 
+.dashboard-announcements-loading {
+  padding: 24px;
+  border: 1px solid rgb(219, 215, 215);
+  background: #fff;
+  color: #64748b;
+  text-align: center;
+}
+
+.dashboard-announcement {
+  background: #fff;
+  border: 0.5px solid rgb(219, 215, 215);
+}
+
+.dashboard-announcement h4 {
+  color: #0f172a;
+}
+
+.dashboard-announcement p {
+  color: #334155;
+}
+
+.dashboard-announcement-footer {
+  border-top: 0.5px solid rgb(219, 215, 215);
+  color: #64748b;
+}
+
+.dashboard-announcement-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 280px;
+  padding: 40px 20px;
+  color: #64748b;
+  text-align: center;
+}
+
+.dashboard-announcement-empty .fa-bullhorn {
+  margin-bottom: 16px;
+  color: #cbd5e1;
+}
+
+.dashboard-announcement-empty h4 {
+  margin: 0 0 8px;
+  color: #334155;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.dashboard-announcement-empty p {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
 .announcement-delete-btn {
   display: inline-flex;
   align-items: center;
@@ -901,17 +956,17 @@ body.dashboard-auth-error-open .dashboard-auth-loading__content {
 }
 
 body.app-dark {
-  background: #000;
+  background: #111;
   color: #fff;
   color-scheme: dark;
 }
 
 body.app-dark .dashboard-main-content {
-  background: #000;
+  background: #111;
 }
 
 body.app-dark .sidebar {
-  background: #000;
+  background: #111 !important;
   border-right: 1px solid #333;
 }
 
@@ -985,6 +1040,26 @@ body.app-dark .announcement-item.empty-state {
   color: #fff !important;
 }
 
+body.app-dark .dashboard-announcements-loading {
+  background: #222;
+  border-color: #333;
+  color: #fff;
+}
+
+body.app-dark .dashboard-announcement-footer {
+  border-top-color: #333;
+  color: #fff !important;
+}
+
+body.app-dark .dashboard-announcement .announcement-status {
+  background: #222 !important;
+  color: #fff !important;
+}
+
+body.app-dark .dashboard-announcement-empty .fa-bullhorn {
+  color: #ccc;
+}
+
 body.app-dark .announcement-item h4[style] {
   color: #fff !important;
 }
@@ -1053,6 +1128,16 @@ body.app-dark .date-modal-header {
   border-color: #333;
 }
 
+body.app-dark .checkbox-group {
+  background: #222 !important;
+  border-color: #333 !important;
+  color: #fff;
+}
+
+body.app-dark .checkbox-group label {
+  color: #fff !important;
+}
+
 body.app-dark .announcement-modal-header h2,
 body.app-dark .date-modal-header h2 {
   color: #fff;
@@ -1066,7 +1151,7 @@ body.app-dark .announcement-error-retry,
 body.app-dark .dashboard-error-retry,
 body.app-dark .announcement-confirm-cancel,
 body.app-dark .announcement-delete-btn {
-  background: #000;
+  background: #222;
   border-color: #444;
   color: #fff;
 }
@@ -1082,7 +1167,7 @@ body.app-dark .cancel-btn {
 }
 
 body.app-dark .dashboard-auth-loading {
-  background: #000;
+  background: #222;
   color: #fff;
 }
 

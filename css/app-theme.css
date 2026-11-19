@@ -25,14 +25,6 @@
   outline-offset: 2px;
 }
 
-.app-theme-toggle--floating {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 900;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.18);
-}
-
 body.app-dark {
   background: #000 !important;
   color: #fff;
@@ -94,14 +86,17 @@ body.app-dark tbody tr:hover {
   background: #222;
 }
 
-body.app-dark :is(input, select, textarea) {
+body.app-dark input,
+body.app-dark select,
+body.app-dark textarea {
   background-color: #222;
   border-color: #444;
   color: #fff;
   color-scheme: dark;
 }
 
-body.app-dark :is(input, select, textarea)::placeholder {
+body.app-dark input::placeholder,
+body.app-dark textarea::placeholder {
   color: #ccc;
 }
 
@@ -114,23 +109,3 @@ body.app-dark .app-theme-toggle {
 body.app-dark .app-theme-toggle:hover {
   background: #222;
 }
-
-@media screen and (max-width: 768px) {
-  .app-theme-toggle--floating {
-    right: 14px;
-    bottom: 14px;
-    min-width: 42px;
-    min-height: 42px;
-    padding: 8px;
-  }
-
-  .app-theme-toggle--floating span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
-}
-

@@ -997,3 +997,144 @@ tr {
   cursor: wait;
   opacity: 0.65;
 }
+
+body.app-dark .students-main-content {
+  background: #111;
+}
+
+body.app-dark .sidebar {
+  background: #111 !important;
+  border-right: 1px solid #333;
+}
+
+body.app-dark .menu li.active a {
+  background: #222;
+  color: #fff;
+}
+
+body.app-dark .menu li a:hover {
+  background: #222;
+}
+
+body.app-dark .topbar h1,
+body.app-dark .topbar p,
+body.app-dark .form-group label,
+body.app-dark .details-item label,
+body.app-dark .details-item p,
+body.app-dark .file-name-text,
+body.app-dark .avatar-upload-group .form-label {
+  color: #fff;
+}
+
+body.app-dark .students-table-card,
+body.app-dark .student-modal-content,
+body.app-dark .edit-student-modal-content,
+body.app-dark .view-student-modal-content,
+body.app-dark .confirm-modal,
+body.app-dark .student-delete-modal {
+  background: #111;
+  border-color: #333;
+  color: #fff;
+}
+
+body.app-dark .student-modal-header,
+body.app-dark .edit-student-modal-header,
+body.app-dark .view-student-modal-header {
+  border-color: #333;
+}
+
+body.app-dark .student-modal-header h2,
+body.app-dark .edit-student-modal-header h2,
+body.app-dark .view-student-modal-header h2,
+body.app-dark .confirm-modal h2,
+body.app-dark .student-delete-copy h2 {
+  color: #fff;
+}
+
+body.app-dark thead {
+  background: #111;
+  border-color: #333;
+}
+
+body.app-dark th,
+body.app-dark td,
+body.app-dark tr {
+  border-color: #333;
+}
+
+body.app-dark th {
+  color: #fff;
+}
+
+/* Keep student rows dark even after the shared light-mode row hover is restored
+   during an SPA page visit. Apply the hover color to cells as well because
+   table-cell backgrounds can hide the parent row's background. */
+body.app-dark #studentsTableBody tr,
+body.app-dark #studentsTableBody td {
+  background-color: #111 !important;
+  color: #fff;
+}
+
+body.app-dark #studentsTableBody tr:hover,
+body.app-dark #studentsTableBody tr:hover td {
+  background-color: #222 !important;
+}
+
+body.app-dark #studentsTableBody td[style] {
+  background: #111;
+  color: #fff !important;
+}
+
+body.app-dark #studentRole {
+  background-color: #222 !important;
+  border-color: #444;
+  color: #fff;
+}
+
+body.app-dark .toggle-password,
+body.app-dark .avatar-upload-group .form-label,
+body.app-dark .student-delete-copy p,
+body.app-dark .confirm-modal p {
+  color: #fff;
+}
+
+body.app-dark .avatar-edit-container {
+  background: #111;
+  border-color: #333;
+}
+
+body.app-dark .avatar-preview-wrapper {
+  background: #000;
+  border-color: #444;
+}
+
+body.app-dark .student-delete-icon,
+body.app-dark .confirm-icon {
+  background: #222;
+  color: #fff;
+}
+
+body.app-dark .student-delete-cancel {
+  background: #111;
+  border-color: #444 !important;
+  color: #fff;
+}
+
+body.app-dark .students-actions-btn.view,
+body.app-dark .students-actions-btn.edit,
+body.app-dark .students-actions-btn.delete {
+  background: #222;
+  color: #fff;
+}
+
+body.app-dark .students-status-active,
+body.app-dark .students-status-inactive,
+body.app-dark .view-student-status,
+body.app-dark .view-student-status.status-inactive {
+  background: #222;
+  color: #fff;
+}
+
+body.app-dark .students-actions-btn:hover {
+  background: #333;
+}
