@@ -5,6 +5,15 @@ let currentGradeSession = null;
 let currentEditGradeId = null;
 let gradesListRequestId = 0;
 let gradeSearchDebounceTimer = null;
+let gradebookRequestId = 0;
+const gradebookLoadedKeys = new Set();
+const gradebookPendingKeys = new Map();
+
+function invalidateGradebookCache() {
+  gradebookLoadedKeys.clear();
+  gradebookPendingKeys.clear();
+  gradebookRequestId += 1;
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   initGradeModalEventListeners();
@@ -741,6 +750,7 @@ async function handleSaveGrades(e) {
     if (error) throw error;
 
     showToast("Grades saved successfully!", "success");
+    invalidateGradebookCache();
 
     const enterGradeModal = document.getElementById("enterGradeModal");
     if (enterGradeModal && typeof closeModal === "function") {
@@ -1128,6 +1138,11 @@ async function loadGradesList() {
       })
       .join("");
 
+    // The grade rows are useful before the separate student-count query finishes.
+    // Let users work with the page while those counts fill in.
+    tbody.removeAttribute("aria-busy");
+    if (loadingIndicator) loadingIndicator.hidden = true;
+
     if (gradeIds.length > 0) {
       setLoadingMessage("Loading student totals…");
       const { data: countData } = await client
@@ -1182,28 +1197,42 @@ async function loadGradebook() {
     return;
   }
 
+  const yearId = document.getElementById("gradeToolbarYearSelect")?.value;
+  const termId = document.getElementById("gradeToolbarTermSelect")?.value;
+  const assessmentId = document.getElementById("gradeToolbarAssessmentSelect")?.value;
+  const assessmentIds = parseAssessmentPeriodIds(assessmentId);
+  const queryKey = JSON.stringify([classId, subjectId, yearId, termId, assessmentIds]);
+  if (gradebookLoadedKeys.has(queryKey) || gradebookPendingKeys.has(queryKey)) return;
+  const requestId = ++gradebookRequestId;
+  gradebookPendingKeys.set(queryKey, requestId);
+
   hint.textContent = "Loading student marks…";
   try {
     const client = window.supabaseClient || supabaseClient;
+    const authContext = await window.getAuthContext();
+    const schoolId = authContext?.profile?.school_id;
+    if (!schoolId) throw new Error("Your account is not linked to a school.");
     let query = client.from("grades").select(`
       id, status, created_at, category_id, academic_year_id, term_id,
       assessment_categories(name, marks), assessments(name, maximum_marks),
       grade_records(student_id, score, students(student_id, profiles(full_name)))
-    `).eq("class_id", classId).eq("subject_id", subjectId).order("created_at", { ascending: true });
-    const yearId = document.getElementById("gradeToolbarYearSelect")?.value;
-    const termId = document.getElementById("gradeToolbarTermSelect")?.value;
-    const assessmentId = document.getElementById("gradeToolbarAssessmentSelect")?.value;
-    const assessmentIds = parseAssessmentPeriodIds(assessmentId);
+    `).eq("school_id", schoolId)
+      .eq("class_id", classId)
+      .eq("subject_id", subjectId)
+      .eq("grade_records.school_id", schoolId)
+      .order("created_at", { ascending: true });
     if (yearId) query = query.eq("academic_year_id", yearId);
     if (termId) query = query.eq("term_id", termId);
     if (assessmentIds.length) query = query.in("assessment_id", assessmentIds);
 
     const { data: sessions, error } = await query;
     if (error) throw error;
+    if (requestId !== gradebookRequestId) return;
     if (!sessions?.length) {
       head.innerHTML = "";
       body.innerHTML = `<tr><td>No assessment marks found for these filters.</td></tr>`;
       hint.textContent = "No marks found for this class, subject, year, and term.";
+      gradebookLoadedKeys.add(queryKey);
       return;
     }
 
@@ -1246,11 +1275,17 @@ async function loadGradebook() {
       return `<tr><td><strong>${name}</strong>${code ? `<small>${code}</small>` : ""}</td>${scoreCells}<td><strong>${escapeGradeHtml(points)}</strong></td></tr>`;
     }).join("");
     hint.textContent = `${students.size} students · ${sessions.length} assessment records. Draft marks are labeled in the column headings.`;
+    gradebookLoadedKeys.add(queryKey);
   } catch (error) {
+    if (requestId !== gradebookRequestId) return;
     console.error("Error loading gradebook:", error);
     head.innerHTML = "";
     body.innerHTML = `<tr><td>Could not load the gradebook.</td></tr>`;
     hint.textContent = "There was a problem loading marks.";
+  } finally {
+    if (gradebookPendingKeys.get(queryKey) === requestId) {
+      gradebookPendingKeys.delete(queryKey);
+    }
   }
 }
 
@@ -1774,6 +1809,7 @@ document
         showToast("Grades updated successfully!", "success");
       }
 
+      invalidateGradebookCache();
       closeModal(document.getElementById("editGradeModal"));
       if (typeof loadGradesList === "function") loadGradesList();
 
