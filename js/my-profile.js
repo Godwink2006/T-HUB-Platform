@@ -579,46 +579,5 @@ document.addEventListener("DOMContentLoaded", async function () {
 document.addEventListener("DOMContentLoaded", async () => {
   const backBtn = document.getElementById("backBtn");
   if (!backBtn) return;
-
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("from") === "parent") {
-    backBtn.onclick = () => {
-      window.location.href = "parent-dashboard.html";
-    };
-    return;
-  }
-
-  try {
-    const { data, error: authError } = await supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    const user = data?.user;
-
-    if (user) {
-      const { data: profile, error } = await supabaseClient
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      if (error) showMyProfileError(error, "profile", "load");
-
-      const role = profile?.role?.toLowerCase();
-
-      backBtn.onclick = () => {
-        if (role === "parent") {
-          window.location.replace("parent-dashboard.html"); // Prevents back-swipe
-        } else {
-          window.location.replace("settings.html");
-        }
-      };
-    } else {
-      backBtn.onclick = () => {
-        window.location.replace("settings.html");
-      };
-    }
-  } catch (err) {
-    showMyProfileError(err, "profile", "load");
-    backBtn.onclick = () => {
-      window.location.href = "settings.html";
-    };
-  }
+  backBtn.onclick = () => window.location.replace("settings.html");
 });

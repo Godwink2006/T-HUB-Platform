@@ -9,7 +9,7 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-const appSiteUrl = Deno.env.get("APP_SITE_URL");
+const parentAppUrl = "https://thub-platform-for-parents.vercel.app";
 
 const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -54,8 +54,6 @@ Deno.serve(async (request) => {
   if (schoolIsActive !== true) {
     return respond({ success: false, message: "This school is inactive. Parent invitations are unavailable until the school is reactivated." }, 403);
   }
-  if (!appSiteUrl) return respond({ success: false, message: "Parent invitations are not configured. Contact the system administrator." }, 503);
-
   let invitedAuthUserId: string | null = null;
   try {
     const body = await request.json();
@@ -107,7 +105,7 @@ Deno.serve(async (request) => {
     } else {
       const { data: invitation, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
         data: { full_name: fullName },
-        redirectTo: new URL("/html/parent-set-password.html", appSiteUrl).toString(),
+        redirectTo: new URL("/html/parent-set-password.html", parentAppUrl).toString(),
       });
       if (inviteError || !invitation.user) {
         const message = /already|registered|exists/i.test(inviteError?.message || "")

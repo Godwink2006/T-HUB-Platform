@@ -311,32 +311,6 @@ async function checkDashboardAvailability(user, profile) {
       return "Your account is inactive. Contact your school administrator to restore access.";
     }
 
-    if (String(profile.role || "").trim().toLowerCase() === "student") {
-      const { data: schoolIsActive, error: schoolError } =
-        await window.supabaseClient.rpc("is_school_active", {
-          target_school_id: profile.school_id,
-        });
-      if (schoolError) throw schoolError;
-      if (schoolIsActive !== true) return null;
-
-      const { data: enrollments, error: enrollmentError } =
-        await window.supabaseClient
-          .from("student_enrollments")
-          .select("enrollment_status")
-          .eq("student_id", user.id)
-          .eq("school_id", profile.school_id);
-      if (enrollmentError) throw enrollmentError;
-
-      const hasEndedEnrollment = (enrollments || []).some((enrollment) =>
-        ["graduated", "transferred", "transfered"].includes(
-          String(enrollment.enrollment_status || "").trim().toLowerCase(),
-        ),
-      );
-      if (hasEndedEnrollment) {
-        return "Your enrollment at this school is marked as graduated or transferred, so this dashboard is no longer available. Contact the school if you think this is a mistake.";
-      }
-    }
-
     return null;
   })();
 
@@ -625,11 +599,6 @@ async function loadDashboardAnnouncements() {
       throw error;
     }
 
-    if (profile.role === "parent") {
-      window.location.replace("/html/parent-dashboard.html");
-      return;
-    }
-
     if (!profile.role) {
       const error = new Error("Role is missing from profile");
       error.dashboardMessage = "Your school account is missing a role. Ask a school administrator to check your account.";
@@ -659,13 +628,13 @@ async function loadDashboardAnnouncements() {
       if (openTeacherBtn) openTeacherBtn.style.display = "block";
     }
 
-    const allowedStaffRoles = ["admin", "teacher", "accountant", "librarian"];
+    const allowedStaffRoles = ["admin", "teacher", "accountant"];
 
     if (allowedStaffRoles.includes(profile.role)) {
       if (openEnrollmentBtn) openEnrollmentBtn.style.display = "block";
     }
 
-    const allowedAttendanceRoles = ["admin", "teacher", "student"];
+    const allowedAttendanceRoles = ["admin", "teacher"];
 
     if (allowedAttendanceRoles.includes(profile.role)) {
       if (openAttendanceBtn) openAttendanceBtn.style.display = "block";
@@ -1113,11 +1082,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       .eq("id", user.id)
       .single();
 
-    if (!profileError && String(profile?.role || "").toLowerCase() === "parent") {
-      window.location.replace("/html/parent-dashboard.html");
-      return;
-    }
-
     if (profileError || !profile || !profile.school_id) {
       console.error("Could not determine user school ID:", profileError);
       showDashboardAccessCheckError(
@@ -1143,7 +1107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     loadDashboardStats(schoolId);
     const enrollmentCard = document.getElementById("enrollment-dashboard-card");
-    const canViewEnrollmentStats = ["admin", "teacher", "accountant", "librarian"]
+    const canViewEnrollmentStats = ["admin", "teacher", "accountant"]
       .includes(profile.role);
     if (enrollmentCard) enrollmentCard.hidden = !canViewEnrollmentStats;
     if (canViewEnrollmentStats) loadEnrollmentStats("year");

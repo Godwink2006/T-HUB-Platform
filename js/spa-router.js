@@ -422,7 +422,6 @@
       swapPageBody(targetDoc);
       pageSwapped = true;
       document.body.className = targetDoc.body.className;
-      window.applySavedAppTheme?.();
       document.title = targetDoc.title;
       activeView = { url: targetURL, safe: true };
       activeScope = createScope();

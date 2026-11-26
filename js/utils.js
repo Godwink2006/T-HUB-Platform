@@ -1,76 +1,3 @@
-const THUB_THEME_STORAGE_KEY = "tHubTheme";
-
-function applySavedAppTheme() {
-  const savedTheme =
-    localStorage.getItem(THUB_THEME_STORAGE_KEY) ||
-    localStorage.getItem("tHubDashboardTheme") ||
-    "light";
-  const isDark = savedTheme === "dark";
-  document.body.classList.toggle("app-dark", isDark);
-
-  const toggle = document.getElementById("dashboardThemeToggle");
-  if (toggle) {
-    toggle.classList.add("app-theme-toggle");
-  }
-
-  const updateToggle = (dark) => {
-    const label = dark ? "Switch to light mode" : "Switch to dark mode";
-    toggle.setAttribute("aria-pressed", String(dark));
-    toggle.setAttribute("aria-label", label);
-    toggle.title = label;
-    toggle.innerHTML = dark
-      ? '<i class="fa-solid fa-sun" aria-hidden="true"></i><span>Light mode</span>'
-      : '<i class="fa-solid fa-moon" aria-hidden="true"></i><span>Dark mode</span>';
-  };
-
-  if (toggle) updateToggle(isDark);
-  window.setAppTheme = (theme) => {
-    const dark = theme === true || theme === "dark";
-    localStorage.setItem(THUB_THEME_STORAGE_KEY, dark ? "dark" : "light");
-    document.body.classList.toggle("app-dark", dark);
-    document.querySelectorAll(".app-theme-toggle").forEach((themeToggle) => {
-      themeToggle.setAttribute("aria-pressed", String(dark));
-      const label = dark ? "Switch to light mode" : "Switch to dark mode";
-      themeToggle.setAttribute("aria-label", label);
-      themeToggle.title = label;
-      themeToggle.innerHTML = dark
-        ? '<i class="fa-solid fa-sun" aria-hidden="true"></i><span>Light mode</span>'
-        : '<i class="fa-solid fa-moon" aria-hidden="true"></i><span>Dark mode</span>';
-    });
-  };
-  if (toggle && !toggle.dataset.themeBound) {
-    toggle.dataset.themeBound = "true";
-    toggle.addEventListener("click", () => {
-      const dark = !document.body.classList.contains("app-dark");
-      window.setAppTheme(dark);
-    });
-  }
-}
-
-window.applySavedAppTheme = applySavedAppTheme;
-
-function ensureAppThemeStylesheet() {
-  if (
-    document.querySelector('link[data-app-theme="true"]') ||
-    document.querySelector('link[href="/css/app-theme.css"]')
-  ) return;
-  const themeStylesheet = document.createElement("link");
-  themeStylesheet.rel = "stylesheet";
-  themeStylesheet.href = "/css/app-theme.css";
-  themeStylesheet.dataset.appTheme = "true";
-  document.head.append(themeStylesheet);
-}
-
-if (isLoginPage()) {
-  document.body.classList.remove("app-dark");
-  document.querySelectorAll(".app-theme-toggle").forEach((toggle) => {
-    toggle.remove();
-  });
-} else {
-  ensureAppThemeStylesheet();
-  applySavedAppTheme();
-}
-
 window.formatSchoolMoney = function (amount, currencyCode) {
   const numericAmount = Number(amount);
   if (!Number.isFinite(numericAmount)) return "—";
@@ -94,20 +21,6 @@ function renderNavigation(userRole) {
   const isAdmin = userRole === "admin";
   const isAccountant = userRole === "accountant";
   const isTeacher = userRole === "teacher";
-  const isStudent = userRole === "student";
-  const isLibrarian = userRole === "librarian";
-
-  if (isAdmin || isStudent || isTeacher || isAccountant) {
-    document.querySelectorAll(".exclude-librarian").forEach((el) => {
-      el.style.setProperty("display", "list-item", "important");
-    });
-  }
-
-  if (isAdmin || isLibrarian) {
-    document.querySelectorAll(".admin-librarian-only").forEach((el) => {
-      el.style.setProperty("display", "list-item", "important");
-    });
-  }
 
   if (isAdmin) {
     document.querySelectorAll(".admin-only").forEach((el) => {
@@ -133,17 +46,6 @@ function renderNavigation(userRole) {
     });
   }
 
-  if (isStudent) {
-    document.querySelectorAll(".student-only").forEach((el) => {
-      el.style.setProperty("display", "list-item", "important");
-    });
-  }
-
-  if (isTeacher || isStudent) {
-    document.querySelectorAll(".teacher-student-only").forEach((el) => {
-      el.style.setProperty("display", "list-item", "important");
-    });
-  }
 }
 
 const ADMIN_ONLY_PAGES = [
@@ -160,6 +62,8 @@ const ADMIN_ONLY_PAGES = [
   "teacher-assignment.html",
   "teachers.html",
   "timetable.html",
+  "library.html",
+  "library-reports.html",
 ];
 
 const ADMIN_ACCOUNTANT_PAGES = [
@@ -169,23 +73,15 @@ const ADMIN_ACCOUNTANT_PAGES = [
   "enrollment.html",
 ];
 
-const PARENT_ONLY_PAGES = ["parent-dashboard.html", "parent-records.html"];
-
 const ADMIN_TEACHER_PAGES = [
   "attendance.html",
   "grades.html",
   "student-report-cards.html",
 ];
 
-const TEACHER_ONLY_PAGES = ["my-assignments.html"];
-
-const STUDENT_ONLY_PAGES = ["my-attendance.html"];
-
-const TEACHER_STUDENT_ONLY_PAGES = ["my-timetable.html"];
-
-const TEACHER_LIBRARIAN_ONLY_PAGES = ["library.html"];
-
-const EXCLUDE_LIBRARIAN_PAGE = ["academics.html"];
+const TEACHER_ONLY_PAGES = ["my-assignments.html", "my-timetable.html"];
+// Student, parent, and librarian accounts use their own dedicated apps.
+const SEPARATE_APP_ROLES = new Set(["student", "parent", "librarian"]);
 
 window.DEFAULT_PROFILE_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'><circle cx='64' cy='64' r='64' fill='%23E4E6EB'/><circle cx='64' cy='46' r='22' fill='%23B0B3B8'/><path d='M24 112c0-22 18-40 40-40s40 18 40 40' fill='%23B0B3B8'/></svg>";
@@ -438,24 +334,9 @@ async function checkPageAccess() {
   const isAdminOrAccountantOnly = ADMIN_ACCOUNTANT_PAGES.includes(currentPage);
   const isAdminOrTeacherOnly = ADMIN_TEACHER_PAGES.includes(currentPage);
   const isTeacherOnly = TEACHER_ONLY_PAGES.includes(currentPage);
-  const isStudentOnly = STUDENT_ONLY_PAGES.includes(currentPage);
-  const isTeacherOrStudentOnly =
-    TEACHER_STUDENT_ONLY_PAGES.includes(currentPage);
-  const isAdminOrLibrarianOnly =
-    TEACHER_LIBRARIAN_ONLY_PAGES.includes(currentPage);
-  const isExcludeLibrarian = EXCLUDE_LIBRARIAN_PAGE.includes(currentPage);
-  const isParentOnly = PARENT_ONLY_PAGES.includes(currentPage);
 
   const isProtectedPage =
-    isAdminOnly ||
-    isAdminOrAccountantOnly ||
-    isAdminOrTeacherOnly ||
-    isTeacherOnly ||
-    isStudentOnly ||
-    isAdminOrLibrarianOnly ||
-    isExcludeLibrarian ||
-    isParentOnly ||
-    isTeacherOrStudentOnly;
+    isAdminOnly || isAdminOrAccountantOnly || isAdminOrTeacherOnly || isTeacherOnly;
 
   if (!isProtectedPage) {
     return;
@@ -485,11 +366,6 @@ async function checkPageAccess() {
 
   const role = profile?.role;
 
-  if (isParentOnly && role !== "parent") {
-    await window.forceLogout();
-    return;
-  }
-
   if (isAdminOnly && role !== "admin") {
     await window.forceLogout();
     return;
@@ -500,38 +376,12 @@ async function checkPageAccess() {
     return;
   }
 
-  if (isAdminOrLibrarianOnly && role !== "admin" && role !== "librarian") {
-    await window.forceLogout();
-    return;
-  }
-
   if (isAdminOrTeacherOnly && role !== "admin" && role !== "teacher") {
     await window.forceLogout();
     return;
   }
 
   if (isTeacherOnly && role !== "teacher") {
-    await window.forceLogout();
-    return;
-  }
-
-  if (isStudentOnly && role !== "student") {
-    await window.forceLogout();
-    return;
-  }
-
-  if (isTeacherOrStudentOnly && role !== "teacher" && role !== "student") {
-    await window.forceLogout();
-    return;
-  }
-
-  if (
-    isExcludeLibrarian &&
-    role !== "teacher" &&
-    role !== "student" &&
-    role !== "admin" &&
-    role !== "accountant"
-  ) {
     await window.forceLogout();
     return;
   }
@@ -687,14 +537,22 @@ window.addEventListener("pageshow", async (event) => {
     const authCtx = await window.getAuthContext(true);
     const user = authCtx?.user;
     const profile = authCtx?.profile;
+    const role = String(profile?.role || "").trim().toLowerCase();
+    if (
+      user &&
+      SEPARATE_APP_ROLES.has(role)
+    ) {
+      await window.supabaseClient.auth.signOut();
+      window.clearAuthContext?.();
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.replace("/index.html?error=separate_app_role");
+      return;
+    }
 
     if (isLoginPage()) {
       if (user) {
-        const destination =
-          String(profile?.role || "").toLowerCase() === "parent"
-            ? "/html/parent-dashboard.html"
-            : "/html/dashboard.html";
-        window.location.replace(destination);
+        window.location.replace("/html/dashboard.html");
         return;
       }
       document.body.classList.remove("login-auth-checking");
@@ -722,7 +580,6 @@ window.addEventListener("pageshow", async (event) => {
   const path = window.location.pathname.toLowerCase();
   const isLogin =
     path.endsWith("index.html") || path === "/" || path.endsWith("/login.html");
-
   if (!window.supabaseClient) {
     console.error("Supabase client not initialized in window.supabaseClient");
     if (!isLogin)
@@ -732,6 +589,20 @@ window.addEventListener("pageshow", async (event) => {
 
   const authCtx = await window.getAuthContext();
   const user = authCtx?.user;
+  const role = String(authCtx?.profile?.role || "").trim().toLowerCase();
+
+  if (
+    !isLogin &&
+    user &&
+    SEPARATE_APP_ROLES.has(role)
+  ) {
+    await window.supabaseClient.auth.signOut();
+    window.clearAuthContext?.();
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace("/index.html?error=separate_app_role");
+    return;
+  }
 
   if (!isLogin && !user) {
     console.warn("Session expired or invalid user. Redirecting to login...");

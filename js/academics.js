@@ -26,12 +26,10 @@ async function initAcademicsPage() {
     const userRole = profile?.role;
     const isAdmin = userRole === "admin";
     const isTeacher = userRole === "teacher";
-    const isStudent = userRole === "student";
     const isAccountant = userRole === "accountant";
 
     const isAdminOrTeacher = isAdmin || isTeacher;
     const isAdminOrAccountant = isAdmin || isAccountant;
-    const isTeacherOrStudent = isTeacher || isStudent;
 
     if (containerEl) {
       const allCardsHTML = `
@@ -86,44 +84,6 @@ async function initAcademicsPage() {
     }
 
     ${
-      isStudent
-        ? `
-   <div id="nav-attendance" class="academic-card">
-      <h4>My Attendance</h4>
-      <p>View and manage your attendance.</p>
-      <button onclick="window.location.href = 'my-attendance.html'" class="manage-btn">
-        Manage attendance <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
-
-     <div id="nav-grades" class="academic-card">
-      <h4>My Grades</h4>
-      <p>View and manage your grades.</p>
-      <button onclick="window.location.href = 'my-grades.html'" class="manage-btn">
-        Manage grades <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
-
-     <div id="nav-fees" class="academic-card">
-      <h4>My Fees</h4>
-      <p>View and manage your fees.</p>
-      <button onclick="window.location.href = 'my-fees.html'" class="manage-btn">
-        Manage fees <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
-
-     <div id="nav-fees" class="academic-card">
-      <h4>My Transfer History</h4>
-      <p>View and manage your transfer history.</p>
-      <button onclick="window.location.href = 'my-history.html'" class="manage-btn">
-        Manage Transfer History <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </div>
-    `
-        : ""
-    }
-
-    ${
       isAdminOrTeacher
         ? `
     <div id="nav-attendance" class="academic-card">
@@ -146,7 +106,7 @@ async function initAcademicsPage() {
     }
 
     ${
-      isTeacherOrStudent
+      isTeacher
         ? `
     <div id="nav-timetable" class="academic-card">
       <h4>My Timetable</h4>

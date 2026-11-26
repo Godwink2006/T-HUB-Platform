@@ -6,6 +6,24 @@ function togglePassword(id) {
 const form = document.getElementById("loginForm");
 window.beginAuthWelcome?.();
 
+const LOGIN_SEPARATE_APP_ROLES = new Set(["student", "parent", "librarian"]);
+
+if (
+  new URLSearchParams(window.location.search).get("error") ===
+  "separate_app_role"
+) {
+  showToast(
+    "This is the staff T-HUB app. Student, Parent, and Librarian accounts must use their dedicated apps.",
+    "error",
+  );
+}
+
+function getSeparateAppRoleMessage(role) {
+  const roleName = String(role || "").trim().toLowerCase();
+  const appName = roleName.charAt(0).toUpperCase() + roleName.slice(1);
+  return `This is the staff T-HUB app. ${appName} accounts must use their dedicated app.`;
+}
+
 async function redirectIfAlreadySignedIn() {
   const client = window.supabaseClient;
   if (!client?.auth) {
@@ -39,11 +57,16 @@ async function redirectIfAlreadySignedIn() {
       return;
     }
 
-    const destination =
-      String(profile.role || "").toLowerCase() === "parent"
-        ? "/html/parent-dashboard.html"
-        : "/html/dashboard.html";
-    window.location.replace(destination);
+    const role = String(profile.role || "").trim().toLowerCase();
+    if (LOGIN_SEPARATE_APP_ROLES.has(role)) {
+      await client.auth.signOut();
+      window.clearAuthWelcome?.();
+      document.body.classList.remove("login-auth-checking");
+      showToast(getSeparateAppRoleMessage(role), "error");
+      return;
+    }
+
+    window.location.replace("/html/dashboard.html");
     return;
   } catch (error) {
     console.warn("Could not restore the signed-in user's role:", error);
@@ -99,9 +122,13 @@ form.addEventListener("submit", async (e) => {
 
     if (!profile) {
       await window.supabaseClient.auth.signOut();
-      throw new Error(
-        "We couldn't load your profile. Your school's subscription may not include access for this role; Premium access is required for student and librarian accounts. Contact your school administrator to check the plan.",
-      );
+      throw new Error("We couldn't load your profile. Contact your school administrator.");
+    }
+
+    const role = String(profile.role || "").trim().toLowerCase();
+    if (LOGIN_SEPARATE_APP_ROLES.has(role)) {
+      await window.supabaseClient.auth.signOut();
+      throw new Error(getSeparateAppRoleMessage(role));
     }
 
     if (profile.status !== "active") {
@@ -115,13 +142,8 @@ form.addEventListener("submit", async (e) => {
     document.body.classList.add("login-auth-checking");
     showToast("Login successful!", "success");
 
-    const destination =
-      profile.role === "parent"
-        ? "/html/parent-dashboard.html"
-        : "/html/dashboard.html";
-
     setTimeout(() => {
-      window.location.replace(destination);
+      window.location.replace("/html/dashboard.html");
     }, 800);
   } catch (err) {
     showToast(err.message, "error");

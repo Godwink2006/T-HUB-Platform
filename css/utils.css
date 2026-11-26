@@ -1,7 +1,5 @@
 .admin-only,
-.admin-accountant-only,
-.admin-librarian-only,
-.exclude-librarian {
+.admin-accountant-only {
   display: none !important;
 }
 
