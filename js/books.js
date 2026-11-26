@@ -84,26 +84,22 @@ async function initializeBooksPage() {
 
   try {
     if (!window.supabaseClient) throw new Error("The database client is unavailable.");
-    const { data: authData, error: authError } = await window.supabaseClient.auth.getUser();
-    if (authError) throw authError;
-    if (!authData?.user?.id) {
+    const authContext = await window.getAuthContext();
+    const user = authContext?.user;
+    const profile = authContext?.profile;
+    if (!user?.id) {
       const error = new Error("Your session has expired.");
       error.status = 401;
       throw error;
     }
 
-    const { data: profile, error: profileError } = await window.supabaseClient
-      .from("profiles")
-      .select("role, school_id")
-      .eq("id", authData.user.id)
-      .single();
-    if (profileError) throw profileError;
+    if (!profile) throw new Error("Your account profile could not be loaded.");
 
     if (String(profile?.role || "").trim().toLowerCase() === "student") {
       let enrollmentQuery = window.supabaseClient
         .from("student_enrollments")
         .select("enrollment_status")
-        .eq("student_id", authData.user.id);
+        .eq("student_id", user.id);
       if (profile.school_id) enrollmentQuery = enrollmentQuery.eq("school_id", profile.school_id);
 
       const { data: enrollments, error: enrollmentError } = await enrollmentQuery;

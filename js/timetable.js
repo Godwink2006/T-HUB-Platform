@@ -79,19 +79,9 @@ function clearDraftStorage() {
     try {
       if (!supabaseClient) throw new Error("Supabase client missing.");
 
-      const {
-        data: { user },
-        error: authErr,
-      } = await supabaseClient.auth.getUser();
-      if (authErr || !user) throw new Error("Authentication required");
-
-      const { data: profile, error: profileErr } = await supabaseClient
-        .from("profiles")
-        .select("school_id")
-        .eq("id", user.id)
-        .single();
-
-      if (profileErr) throw profileErr;
+      const authContext = await window.getAuthContext();
+      const profile = authContext?.profile;
+      if (!authContext?.user || !profile) throw new Error("Authentication required");
       state.schoolId = profile.school_id;
       return profile.school_id;
     } catch (err) {

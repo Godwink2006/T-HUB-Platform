@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const { data, error } = await window.supabaseClient
         .from("notifications")
-        .select("*")
+        .select("id, user_id, title, message, created_at, is_read")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 

@@ -569,29 +569,17 @@ async function loadDashboardAnnouncements() {
   let accessVerified = false;
   try {
 
-    const {
-      data: { user },
-      error: authError,
-    } = await window.supabaseClient.auth.getUser();
-    if (authError) {
-      authError.requiresSignIn = dashboardErrorRequiresSignIn(authError);
-      throw authError;
-    }
+    const authContext = await window.getAuthContext();
+    const user = authContext?.user;
+    const profile = authContext?.profile;
     if (!user) {
       const error = new Error("Sign in required");
       error.dashboardMessage = "Your sign-in session has ended. Sign in again to view the dashboard.";
       error.requiresSignIn = true;
       throw error;
     }
-
-    const { data: profile, error: profileError } = await window.supabaseClient
-      .from("profiles")
-      .select("school_id, full_name, role, status")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile) {
-      const error = profileError || new Error("Profile is missing");
+    if (!profile) {
+      const error = new Error("Profile is missing");
       error.dashboardMessage = getDashboardErrorMessage(
         error,
         "verify your school account",
@@ -857,25 +845,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!avatarImg) return;
   avatarImg.src = window.DEFAULT_PROFILE_AVATAR || avatarImg.src;
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabaseClient.auth.getUser();
-  if (authError || !user) return;
-
-  const { data: profile, error } = await supabaseClient
-    .from("profiles")
-    .select("photo_url")
-    .eq("id", user.id)
-    .single();
-
-  if (error) {
-    console.error("Error fetching dashboard avatar:", error);
-    return;
-  }
-
-  if (profile && profile.photo_url) {
-    avatarImg.src = profile.photo_url;
+  const authContext = await window.getAuthContext();
+  if (authContext?.profile?.photo_url) {
+    avatarImg.src = authContext.profile.photo_url;
   }
 });
 
@@ -884,13 +856,38 @@ async function loadDashboardStats(schoolId) {
     const dashboardMarker = document.getElementById("totalStudentsCount");
     if (!dashboardMarker) return;
 
-    const { data: studentsData, error: studentError } =
-      await window.supabaseClient
-        .from("profiles")
-        .select("status")
-        .eq("school_id", schoolId)
-        .eq("role", "student");
+    const [studentsResult, teachersResult, classesResult, attendanceResult] =
+      await Promise.all([
+        window.supabaseClient
+          .from("profiles")
+          .select("status")
+          .eq("school_id", schoolId)
+          .eq("role", "student"),
+        window.supabaseClient
+          .from("profiles")
+          .select("status")
+          .eq("school_id", schoolId)
+          .eq("role", "teacher"),
+        window.supabaseClient
+          .from("classes")
+          .select("status")
+          .eq("school_id", schoolId),
+        (() => {
+          const today = new Date().toISOString().split("T")[0];
+          return window.supabaseClient
+            .from("attendance_records")
+            .select("status, attendance:attendance_id ( status )")
+            .eq("school_id", schoolId)
+            .gte("created_at", `${today}T00:00:00`)
+            .lte("created_at", `${today}T23:59:59`);
+        })(),
+      ]);
     if (!dashboardMarker.isConnected) return;
+
+    const { data: studentsData, error: studentError } = studentsResult;
+    const { data: teachersData, error: teacherError } = teachersResult;
+    const { data: classesData, error: classError } = classesResult;
+    const { data: attendanceData, error: attError } = attendanceResult;
 
     if (studentError) {
       setDashboardMetricError(
@@ -911,14 +908,6 @@ async function loadDashboardStats(schoolId) {
         `${activeStudents} Active / ${totalStudents} Total`;
     }
 
-    const { data: teachersData, error: teacherError } =
-      await window.supabaseClient
-        .from("profiles")
-        .select("status")
-        .eq("school_id", schoolId)
-        .eq("role", "teacher");
-    if (!dashboardMarker.isConnected) return;
-
     if (teacherError) {
       setDashboardMetricError(
         "totalTeachersCount",
@@ -938,12 +927,6 @@ async function loadDashboardStats(schoolId) {
         `${activeTeachers} Active / ${totalTeachers} Total`;
     }
 
-    const { data: classesData, error: classError } = await window.supabaseClient
-      .from("classes")
-      .select("status")
-      .eq("school_id", schoolId);
-    if (!dashboardMarker.isConnected) return;
-
     if (classError) {
       setDashboardMetricError(
         "totalClassesCount",
@@ -962,22 +945,6 @@ async function loadDashboardStats(schoolId) {
       document.getElementById("classSubtext").textContent =
         `${activeClasses} Active / ${totalClasses} Total`;
     }
-
-    const today = new Date().toISOString().split("T")[0];
-
-    const { data: attendanceData, error: attError } =
-      await window.supabaseClient
-        .from("attendance_records")
-        .select(
-          `
-          status,
-          attendance:attendance_id ( status )
-        `,
-        )
-        .eq("school_id", schoolId)
-        .gte("created_at", `${today}T00:00:00`)
-        .lte("created_at", `${today}T23:59:59`);
-    if (!dashboardMarker.isConnected) return;
 
     if (attError) {
       setDashboardMetricError(
@@ -1061,33 +1028,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.beginAuthWelcome?.();
   try {
 
-    const {
-      data: { user },
-      error: authError,
-    } = await window.supabaseClient.auth.getUser();
-    if (authError || !user) {
-      const message = authError
-        ? getDashboardErrorMessage(authError, "verify your sign-in")
-        : "Your sign-in session has ended. Sign in again to view the dashboard.";
+    const authContext = await window.getAuthContext();
+    const user = authContext?.user;
+    const profile = authContext?.profile;
+    if (!user) {
       showDashboardAccessCheckError(
-        message,
-        !user || dashboardErrorRequiresSignIn(authError) ? "Sign in" : "Try again",
+        "Your sign-in session has ended. Sign in again to view the dashboard.",
+        "Sign in",
       );
       return;
     }
 
-    const { data: profile, error: profileError } = await window.supabaseClient
-      .from("profiles")
-      .select("school_id, role, status")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile || !profile.school_id) {
-      console.error("Could not determine user school ID:", profileError);
+    if (!profile?.school_id) {
+      console.error("Could not determine user school ID from the cached auth context.");
       showDashboardAccessCheckError(
-        profileError
-          ? getDashboardErrorMessage(profileError, "verify your school account")
-          : "Your account is not linked to a school. Ask a school administrator to check your profile.",
+        "Your account is not linked to a school. Ask a school administrator to check your profile.",
         "Try again",
       );
       return;
@@ -1102,17 +1057,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     const schoolId = profile.school_id;
     window.currentSchoolId = schoolId;
 
-    await loadDashboardRecentActivities(schoolId);
     subscribeToRecentActivities(schoolId, profile.role);
 
-    loadDashboardStats(schoolId);
     const enrollmentCard = document.getElementById("enrollment-dashboard-card");
     const canViewEnrollmentStats = ["admin", "teacher", "accountant"]
       .includes(profile.role);
     if (enrollmentCard) enrollmentCard.hidden = !canViewEnrollmentStats;
-    if (canViewEnrollmentStats) loadEnrollmentStats("year");
+    const dashboardLoads = [
+      loadDashboardRecentActivities(schoolId),
+      loadDashboardStats(schoolId),
+    ];
+    if (canViewEnrollmentStats) dashboardLoads.push(loadEnrollmentStats("year"));
     subscribeToNotificationBadge(user.id);
-    updateNotificationBadge(user.id);
+    await Promise.allSettled(dashboardLoads);
   } catch (err) {
     console.error("Error loading dashboard data:", err);
     showDashboardAccessCheckError(

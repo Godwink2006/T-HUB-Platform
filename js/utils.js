@@ -258,7 +258,7 @@ window.getAuthContext = function (forceRefresh = false) {
 
       const { data: profile, error: profileError } = await window.supabaseClient
         .from("profiles")
-        .select("id, full_name, role, status, school_id")
+        .select("id, full_name, role, status, school_id, photo_url")
         .eq("id", user.id)
         .maybeSingle();
 

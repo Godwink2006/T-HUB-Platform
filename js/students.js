@@ -440,36 +440,38 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("studentClassSelect") ||
         document.getElementById("studentClass");
 
-      const {
-        data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
-      if (authError) throw authError;
+      const authContext = await window.getAuthContext();
+      const user = authContext?.user;
       if (!user) {
         const error = new Error("Your session has expired.");
         error.status = 401;
         throw error;
       }
 
-      const { data: profile, error: profileError } = await supabaseClient
-        .from("profiles")
-        .select("school_id")
-        .eq("id", user.id)
-        .single();
-      if (profileError) throw profileError;
+      const profile = authContext.profile;
 
       if (!profile?.school_id) {
         throw new Error("Your account is not linked to a school. Contact your school administrator.");
       }
 
-      const { data: classes, error } = await supabaseClient
-        .from("classes")
-        .select("id, name")
-        .eq("school_id", profile.school_id)
-        .eq("status", "active")
-        .order("name", { ascending: true });
+      const [classesResult, yearsResult] = await Promise.all([
+        supabaseClient
+          .from("classes")
+          .select("id, name")
+          .eq("school_id", profile.school_id)
+          .eq("status", "active")
+          .order("name", { ascending: true }),
+        supabaseClient
+          .from("academic_years")
+          .select("id, year_label, status")
+          .eq("status", "Active")
+          .order("year_label", { ascending: false }),
+      ]);
 
+      const { data: classes, error } = classesResult;
       if (error) throw error;
+      const { data: yearData, error: yearError } = yearsResult;
+      if (yearError) throw yearError;
 
       cachedClasses = classes || [];
 
@@ -485,13 +487,6 @@ document.addEventListener("DOMContentLoaded", () => {
         updatePasswordVisibility();
       }
 
-      const { data: yearData, error: yearError } = await supabaseClient
-        .from("academic_years")
-        .select("id, year_label, status")
-        .eq("status", "Active")
-        .order("year_label", { ascending: false });
-
-      if (yearError) throw yearError;
       cachedAcademicYears = yearData || [];
 
       const yearSelectEl =
