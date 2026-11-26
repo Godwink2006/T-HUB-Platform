@@ -1,26 +1,10 @@
-/**
- * QueryCache — in-memory TTL cache for Supabase queries.
- *
- * Usage:
- *   const data = await QueryCache.wrap(
- *     'students:all',
- *     () => supabaseClient.from('students').select('*'),
- *     60000 // TTL in ms (default 30 s)
- *   );
- *
- * Or manual:
- *   QueryCache.set('key', data, 30000);
- *   const hit = QueryCache.get('key');  // null on miss / expired
- *   QueryCache.invalidate('students'); // delete all keys starting with 'students'
- */
+
 window.QueryCache = (function () {
   /** @type {Map<string, {data: *, expiresAt: number}>} */
   const _store = new Map();
 
-  /** Default TTL: 30 seconds */
   const DEFAULT_TTL = 30_000;
 
-  /** In-flight promise map — prevents duplicate concurrent fetches */
   const _inflight = new Map();
 
   function get(key) {
