@@ -8,6 +8,11 @@ let gradeSearchDebounceTimer = null;
 let gradebookRequestId = 0;
 const gradebookLoadedKeys = new Set();
 const gradebookPendingKeys = new Map();
+const GRADES_PAGE_SIZE = 30;
+let gradesListOffset = 0;
+let gradesListHasMore = false;
+let gradesPageLoading = false;
+let gradesReloadRequested = false;
 
 function invalidateGradebookCache() {
   gradebookLoadedKeys.clear();
@@ -962,9 +967,20 @@ function renderGradeCreator(profile) {
   return `<span class="grade-creator-cell"><img class="app-person-avatar" src="${escapeGradeHtml(photo)}" alt="" loading="lazy" /><span class="grade-creator-meta"><span class="grade-creator-name">${escapeGradeHtml(profile.full_name || "Unknown")}</span><small>${escapeGradeHtml(label)}</small></span></span>`;
 }
 
-async function loadGradesList() {
+async function loadGradesList(appendPage = false) {
+  const append = appendPage === true;
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
+  const nextButton = document.getElementById("nextGradesPage");
+  if (gradesPageLoading) {
+    if (!append) gradesReloadRequested = true;
+    return;
+  }
+  gradesPageLoading = true;
+  if (!append) {
+    gradesListOffset = 0;
+    gradesListHasMore = false;
+  }
 
   loadGradebook();
 
@@ -973,10 +989,13 @@ async function loadGradesList() {
   const setLoadingMessage = (message) => {
     if (!loadingIndicator) return;
     loadingIndicator.querySelector("span:last-child").textContent = message;
-    loadingIndicator.hidden = false;
   };
-  setLoadingMessage("Loading grade records…");
-  tbody.setAttribute("aria-busy", "true");
+  if (!append) {
+    setLoadingMessage("Loading 30 grade records…");
+    if (loadingIndicator) loadingIndicator.hidden = false;
+    tbody.setAttribute("aria-busy", "true");
+  }
+  if (nextButton) nextButton.disabled = true;
 
   const searchQuery = (document.getElementById("gradeSearchInput")?.value || "")
     .toLowerCase()
@@ -1001,6 +1020,9 @@ async function loadGradesList() {
 
   try {
     const client = window.supabaseClient || supabaseClient;
+    const authContext = await window.getAuthContext();
+    const schoolId = authContext?.profile?.school_id;
+    if (!schoolId) throw new Error("Your account is not linked to a school.");
 
     let query = client
       .from("grades")
@@ -1021,6 +1043,7 @@ async function loadGradesList() {
         subjects ( name )
       `,
       )
+      .eq("school_id", schoolId)
       .order("created_at", { ascending: false });
 
     if (selectedClass) {
@@ -1042,22 +1065,36 @@ async function loadGradesList() {
       query = query.eq("category_id", selectedCategory);
     }
 
-    const { data: grades, error } = await query;
+    const start = append ? gradesListOffset : 0;
+    const { data: receivedGrades, error } = await query.range(
+      start,
+      start + GRADES_PAGE_SIZE,
+    );
 
     if (error) throw error;
     if (requestId !== gradesListRequestId) return;
 
-    if (!grades || grades.length === 0) {
+    const grades = receivedGrades || [];
+    const pageGrades = grades.slice(0, GRADES_PAGE_SIZE);
+    gradesListHasMore = grades.length > GRADES_PAGE_SIZE;
+    gradesListOffset = start + pageGrades.length;
+
+    if (pageGrades.length === 0) {
+      if (append && tbody.querySelector("tr[data-grade-id]")) {
+        if (nextButton) nextButton.hidden = true;
+        return;
+      }
       tbody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
-            No grade records found.
+            ${gradesListHasMore ? "No records on this page. Select Next to check older records." : "No grade records found."}
           </td>
         </tr>`;
+      if (nextButton) nextButton.hidden = !gradesListHasMore;
       return;
     }
 
-    const filteredGrades = grades.filter((item) => {
+    const filteredGrades = pageGrades.filter((item) => {
       const normalizedStatus = (item.status || "drafted").toLowerCase();
       const itemStatus = normalizedStatus.includes("draft")
         ? "drafted"
@@ -1083,12 +1120,13 @@ async function loadGradesList() {
     });
 
     if (filteredGrades.length === 0) {
-      tbody.innerHTML = `
+      if (!append || !tbody.querySelector("tr[data-grade-id]")) tbody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
-            No grade records found matching filters.
+            ${gradesListHasMore ? "No matching records on this page. Select Next to check older records." : "No grade records found matching filters."}
           </td>
         </tr>`;
+      if (nextButton) nextButton.hidden = !gradesListHasMore;
       return;
     }
 
@@ -1096,7 +1134,7 @@ async function loadGradesList() {
       .map((item) => item.id || item.grade_id)
       .filter(Boolean);
     const countsMap = new Map();
-    tbody.innerHTML = filteredGrades
+    const gradeRowsHtml = filteredGrades
       .map((item) => {
         const gradeId = item.id || item.grade_id;
         const rawStatus = (item.status || "draft").toLowerCase();
@@ -1137,6 +1175,12 @@ async function loadGradesList() {
         `;
       })
       .join("");
+    if (append) {
+      tbody.querySelectorAll("tr:not([data-grade-id])").forEach((row) => row.remove());
+      tbody.insertAdjacentHTML("beforeend", gradeRowsHtml);
+    } else {
+      tbody.innerHTML = gradeRowsHtml;
+    }
 
     // The grade rows are useful before the separate student-count query finishes.
     // Let users work with the page while those counts fill in.
@@ -1156,10 +1200,13 @@ async function loadGradesList() {
     }
 
     if (requestId !== gradesListRequestId) return;
+    const pageGradeIdSet = new Set(gradeIds.map(String));
     tbody.querySelectorAll("tr[data-grade-id]").forEach((row) => {
+      if (!pageGradeIdSet.has(String(row.dataset.gradeId))) return;
       row.querySelector(".grade-student-count").textContent =
         countsMap.get(row.dataset.gradeId) || 0;
     });
+    if (nextButton) nextButton.hidden = !gradesListHasMore;
   } catch (err) {
     if (requestId !== gradesListRequestId) return;
     console.error("Error loading grades list:", err);
@@ -1176,8 +1223,14 @@ async function loadGradesList() {
     }
   } finally {
     if (requestId === gradesListRequestId) {
+      gradesPageLoading = false;
+      if (nextButton) nextButton.disabled = false;
       tbody.removeAttribute("aria-busy");
       if (loadingIndicator) loadingIndicator.hidden = true;
+      if (gradesReloadRequested) {
+        gradesReloadRequested = false;
+        void loadGradesList();
+      }
     }
   }
 }
@@ -1649,6 +1702,10 @@ async function handleEditGrades(gradeId) {
 document.addEventListener("DOMContentLoaded", () => {
   const tbody = document.getElementById("gradesTableBody");
   if (!tbody) return;
+
+  document
+    .getElementById("nextGradesPage")
+    ?.addEventListener("click", () => loadGradesList(true));
 
   tbody.addEventListener("click", async (e) => {
     const btn = e.target.closest(".grades-actions-btn");

@@ -247,14 +247,18 @@ window.getAuthContext = function (forceRefresh = false) {
     if (!window.supabaseClient) return null;
 
     try {
+      // This is a browser-only context helper. The signed JWT is still validated
+      // by Supabase for every database request, and profile/role data comes from
+      // the RLS-protected profiles table.
       const {
-        data: { user },
-        error: userError,
-      } = await window.supabaseClient.auth.getUser();
+        data: { session },
+        error: sessionError,
+      } = await window.supabaseClient.auth.getSession();
 
-      if (userError || !user) {
+      if (sessionError || !session?.user) {
         return null;
       }
+      const user = session.user;
 
       const { data: profile, error: profileError } = await window.supabaseClient
         .from("profiles")
@@ -265,8 +269,12 @@ window.getAuthContext = function (forceRefresh = false) {
       if (profileError) {
         console.warn("Could not load user profile:", profileError);
       }
+      if (profileError || !profile) {
+        // Let an explicit retry perform a fresh RLS-protected profile lookup.
+        window.clearAuthContext?.();
+      }
 
-      return { user, profile: profile || null };
+      return { user, profile: profile || null, profileError: profileError || null };
     } catch (err) {
       console.error("Error retrieving auth context:", err);
       return null;
@@ -320,12 +328,15 @@ window.forceLogout = async function () {
     }
   }
 
-  localStorage.clear();
-  sessionStorage.clear();
-
   if (!isLoginPage()) {
     window.location.replace("/index.html");
   }
+};
+
+window.isAccountExplicitlyInactive = function (status) {
+  return ["inactive", "disabled", "deactivated", "suspended"].includes(
+    String(status || "").trim().toLowerCase(),
+  );
 };
 async function checkPageAccess() {
   const currentPage = window.location.pathname.split("/").pop();
@@ -354,35 +365,40 @@ async function checkPageAccess() {
   const profile = authCtx?.profile;
 
   if (!user) {
+    window.location.replace("/index.html?error=session_required");
+    return;
+  }
+
+  if (profile && window.isAccountExplicitlyInactive(profile.status)) {
     await window.forceLogout();
     return;
   }
 
-  const accountStatus = String(profile?.status || "").trim().toLowerCase();
-  if (accountStatus !== "active") {
-    await window.forceLogout();
+  if (!profile) {
+    document.documentElement.style.visibility = "";
+    showToast("Could not verify your account right now. Please retry the page.", "error");
     return;
   }
 
   const role = profile?.role;
 
   if (isAdminOnly && role !== "admin") {
-    await window.forceLogout();
+    window.location.replace("/html/dashboard.html?error=access_denied");
     return;
   }
 
   if (isAdminOrAccountantOnly && role !== "admin" && role !== "accountant") {
-    await window.forceLogout();
+    window.location.replace("/html/dashboard.html?error=access_denied");
     return;
   }
 
   if (isAdminOrTeacherOnly && role !== "admin" && role !== "teacher") {
-    await window.forceLogout();
+    window.location.replace("/html/dashboard.html?error=access_denied");
     return;
   }
 
   if (isTeacherOnly && role !== "teacher") {
-    await window.forceLogout();
+    window.location.replace("/html/dashboard.html?error=access_denied");
     return;
   }
 
@@ -523,51 +539,9 @@ async function loadHeaderSchoolLogo() {
 }
 
 window.addEventListener("pageshow", async (event) => {
-  if (
-    event.persisted ||
-    (window.performance && window.performance.navigation.type === 2)
-  ) {
-    if (!window.supabaseClient) return;
-
-    if (isLoginPage()) {
-      document.body.classList.add("login-auth-checking");
-    }
-
-    window.clearAuthContext?.();
-    const authCtx = await window.getAuthContext(true);
-    const user = authCtx?.user;
-    const profile = authCtx?.profile;
-    const role = String(profile?.role || "").trim().toLowerCase();
-    if (
-      user &&
-      SEPARATE_APP_ROLES.has(role)
-    ) {
-      await window.supabaseClient.auth.signOut();
-      window.clearAuthContext?.();
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.replace("/index.html?error=separate_app_role");
-      return;
-    }
-
-    if (isLoginPage()) {
-      if (user) {
-        window.location.replace("/html/dashboard.html");
-        return;
-      }
-      document.body.classList.remove("login-auth-checking");
-    }
-
-    if (!isLoginPage() && !user) {
-      await window.forceLogout();
-      return;
-    }
-
-    const currentPage = window.location.pathname.split("/").pop();
-    if (ADMIN_ONLY_PAGES.includes(currentPage) && profile?.role !== "admin") {
-      await window.forceLogout();
-    }
-  }
+  if (!event.persisted || !isLoginPage() || !window.supabaseClient?.auth) return;
+  const { data: { session } = {} } = await window.supabaseClient.auth.getSession();
+  if (session?.user) window.location.replace("/html/dashboard.html");
 });
 
 (async function initPageGuard() {
@@ -596,62 +570,26 @@ window.addEventListener("pageshow", async (event) => {
     user &&
     SEPARATE_APP_ROLES.has(role)
   ) {
-    await window.supabaseClient.auth.signOut();
-    window.clearAuthContext?.();
-    localStorage.clear();
-    sessionStorage.clear();
     window.location.replace("/index.html?error=separate_app_role");
     return;
   }
 
   if (!isLogin && !user) {
     console.warn("Session expired or invalid user. Redirecting to login...");
-    await window.supabaseClient.auth.signOut();
-    window.clearAuthContext?.();
-    localStorage.clear();
-    sessionStorage.clear();
     window.location.replace("/index.html");
     return;
   }
 
   window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+      window.clearAuthContext?.();
+    }
     if ((event === "SIGNED_OUT" || !session) && !isLogin) {
       window.clearAuthContext?.();
-      localStorage.clear();
-      sessionStorage.clear();
       window.location.replace("/index.html");
     }
   });
 })();
-
-window.initAuthListener = async function (supabase) {
-  if (!supabase) return;
-
-  const path = window.location.pathname.toLowerCase();
-  const isLogin =
-    path.endsWith("index.html") || path === "/" || path.endsWith("/login.html");
-
-  const authCtx = await window.getAuthContext();
-  const user = authCtx?.user;
-
-  if (!isLogin && !user) {
-    await supabase.auth.signOut();
-    window.clearAuthContext?.();
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.replace("/index.html");
-    return;
-  }
-
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if ((event === "SIGNED_OUT" || !session) && !isLogin) {
-      window.clearAuthContext?.();
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.replace("/index.html");
-    }
-  });
-};
 
 window.escapeHTML = function (str) {
   if (str === null || str === undefined) return "";
@@ -672,32 +610,6 @@ function escapeAttribute(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.supabaseClient?.auth) {
-    window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      const isLoginPage =
-        window.location.pathname.endsWith("index.html") ||
-        window.location.pathname === "/";
-      if (isLoginPage) return;
-
-      if (session?.user) {
-        const { data: profile, error } = await window.supabaseClient
-          .from("profiles")
-          .select("status")
-          .eq("id", session.user.id)
-          .maybeSingle();
-
-        if (error || !profile || profile.status !== "active") {
-          await window.supabaseClient.auth.signOut();
-          localStorage.clear();
-          sessionStorage.clear();
-          window.location.replace("/index.html?error=account_disabled");
-        }
-      }
-    });
-  }
-});
-
 async function logActivity(
   schoolId,
   description,

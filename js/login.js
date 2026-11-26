@@ -32,34 +32,27 @@ async function redirectIfAlreadySignedIn() {
   }
 
   try {
-    const {
-      data: { user },
-      error: userError,
-    } = await client.auth.getUser();
-    if (userError) throw userError;
+    const authContext = await window.getAuthContext();
+    const user = authContext?.user;
     if (!user) {
       window.clearAuthWelcome?.();
       document.body.classList.remove("login-auth-checking");
       return;
     }
 
-    const { data: profile, error: profileError } = await client
-      .from("profiles")
-      .select("role, status")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (profileError) throw profileError;
+    const profile = authContext.profile;
+    if (authContext.profileError) throw authContext.profileError;
 
-    if (!profile || String(profile.status || "").toLowerCase() !== "active") {
+    if (profile && window.isAccountExplicitlyInactive?.(profile.status)) {
       await client.auth.signOut();
       window.clearAuthWelcome?.();
       document.body.classList.remove("login-auth-checking");
       return;
     }
+    if (!profile) throw new Error("We couldn't load your profile. Please retry.");
 
     const role = String(profile.role || "").trim().toLowerCase();
     if (LOGIN_SEPARATE_APP_ROLES.has(role)) {
-      await client.auth.signOut();
       window.clearAuthWelcome?.();
       document.body.classList.remove("login-auth-checking");
       showToast(getSeparateAppRoleMessage(role), "error");
@@ -121,17 +114,15 @@ form.addEventListener("submit", async (e) => {
     }
 
     if (!profile) {
-      await window.supabaseClient.auth.signOut();
-      throw new Error("We couldn't load your profile. Contact your school administrator.");
+      throw new Error("We couldn't load your profile. Please retry or contact your school administrator.");
     }
 
     const role = String(profile.role || "").trim().toLowerCase();
     if (LOGIN_SEPARATE_APP_ROLES.has(role)) {
-      await window.supabaseClient.auth.signOut();
       throw new Error(getSeparateAppRoleMessage(role));
     }
 
-    if (profile.status !== "active") {
+    if (window.isAccountExplicitlyInactive?.(profile.status)) {
       await window.supabaseClient.auth.signOut();
       throw new Error(
         "Your account has been deactivated. Contact the system administrator.",

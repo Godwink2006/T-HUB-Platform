@@ -428,13 +428,23 @@ function clearDraftStorage() {
     try {
       state.editingTimetableId = timetableId;
 
-      const { data: timetable, error: ttErr } = await supabaseClient
-        .from("timetables")
-        .select("id, status, class_id, academic_year_id, academic_years(id, year_label)")
-        .eq("id", timetableId)
-        .single();
+      const [
+        { data: timetable, error: ttErr },
+        { data: lessons, error: lessonsErr },
+      ] = await Promise.all([
+        supabaseClient
+          .from("timetables")
+          .select("id, status, class_id, academic_year_id, academic_years(id, year_label)")
+          .eq("id", timetableId)
+          .single(),
+        supabaseClient
+          .from("timetable_lessons")
+          .select("id, day_of_week, subject_id, period_id, teacher_id, is_break")
+          .eq("timetable_id", timetableId),
+      ]);
 
       if (ttErr) throw ttErr;
+      if (lessonsErr) throw lessonsErr;
 
       state.editingTimetableClassId = timetable.class_id;
 
@@ -452,13 +462,6 @@ function clearDraftStorage() {
       if (classEl) classEl.textContent = classObj ? classObj.name : "-";
       if (yearEl) yearEl.textContent = yearObj ? yearObj.year_label : "-";
       if (statusSelect) statusSelect.value = timetable.status || "Active";
-
-      const { data: lessons, error: lessonsErr } = await supabaseClient
-        .from("timetable_lessons")
-        .select("id, day_of_week, subject_id, period_id, teacher_id, is_break")
-        .eq("timetable_id", timetableId);
-
-      if (lessonsErr) throw lessonsErr;
 
       state.editLessons = (lessons || []).map((l) => {
         const subjectObj = state.lookups.subjects.find(
@@ -528,8 +531,6 @@ function clearDraftStorage() {
       cachedTimetables = timetables || [];
 
       populateAcademicYearFilterOptions(cachedTimetables);
-
-      renderTimetablesTable(cachedTimetables);
 
       if (!timetables || timetables.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No timetables found.</td></tr>`;
@@ -1175,8 +1176,7 @@ function clearDraftStorage() {
     bindEvents();
     await fetchUserProfileAndSchool();
     if (state.schoolId) {
-      await loadDropdownData();
-      await loadTimetables();
+      await Promise.all([loadDropdownData(), loadTimetables()]);
       bindCascadingEvents();
     }
   }
@@ -1296,23 +1296,7 @@ function clearDraftStorage() {
 
 async function getActiveSchoolId() {
   try {
-    const supabaseClient = window.supabaseClient || window.supabase;
-    if (!supabaseClient) throw new Error("Supabase client not initialized.");
-
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabaseClient.auth.getUser();
-    if (authErr || !user) throw new Error("User not authenticated.");
-
-    const { data: profile, error: profileErr } = await supabaseClient
-      .from("profiles")
-      .select("school_id")
-      .eq("id", user.id)
-      .single();
-
-    if (profileErr) throw profileErr;
-    return profile?.school_id || null;
+    return (await window.getAuthContext())?.profile?.school_id || null;
   } catch (err) {
     console.error("Error fetching school ID:", err.message);
     return null;

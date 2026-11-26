@@ -19,16 +19,17 @@ async function initializeAuditLogsPage() {
   const profile = authContext?.profile;
 
   if (!authContext?.user || !profile) {
+    window.location.replace("/index.html?error=profile_unavailable");
+    return;
+  }
+
+  if (window.isAccountExplicitlyInactive?.(profile.status)) {
     await window.forceLogout?.();
     return;
   }
 
-  if (
-    String(profile.role || "").toLowerCase() !== "admin" ||
-    String(profile.status || "").toLowerCase() !== "active" ||
-    !profile.school_id
-  ) {
-    await window.forceLogout?.();
+  if (String(profile.role || "").trim().toLowerCase() !== "admin" || !profile.school_id) {
+    window.location.replace("/html/dashboard.html?error=access_denied");
     return;
   }
 

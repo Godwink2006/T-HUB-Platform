@@ -260,16 +260,14 @@ async function populateClassOptions() {
   if (!classSelect) return;
   classSelect.innerHTML = `<option value="">Select Class</option>`;
 
-  const user = (await supabaseClient.auth.getUser()).data?.user;
+  const authContext = await window.getAuthContext();
+  const user = authContext?.user;
   if (!user) return;
 
   try {
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("id, role, school_id")
-      .eq("id", user.id)
-      .single();
-    if (profileError) throw profileError;
+    if (authContext.profileError) throw authContext.profileError;
+    const profile = authContext.profile;
+    if (!profile) throw new Error("Your profile could not be loaded. Please retry.");
     currentAttendanceProfile = profile;
 
     const role = String(profile.role || "").toLowerCase();
@@ -863,26 +861,47 @@ function resetAttendanceModal() {
 let allAttendanceList = [];
 let attendanceViewerRole = "";
 let attendanceViewerId = "";
+const ATTENDANCE_PAGE_SIZE = 30;
+let attendanceOffset = 0;
+let attendanceHasMore = false;
+let attendancePageLoading = false;
+let attendanceListRequestId = 0;
+let attendanceFiltersInitialized = false;
+let attendanceReloadRequested = false;
 
-async function loadAttendanceTable() {
+async function loadAttendanceTable(options = {}) {
   const tbody = document.getElementById("attendanceTableBody");
   if (!tbody) return;
+  const append = options.append === true;
+  const loadMoreButton = document.getElementById("loadMoreAttendance");
+  if (attendancePageLoading) {
+    if (!append) attendanceReloadRequested = true;
+    return;
+  }
+  if (append && !attendanceHasMore) return;
+  attendancePageLoading = true;
+  const requestId = ++attendanceListRequestId;
 
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">Loading attendance records...</td></tr>`;
+  if (append) {
+    if (loadMoreButton) {
+      loadMoreButton.disabled = true;
+      loadMoreButton.textContent = "Loading...";
+    }
+  } else {
+    attendanceOffset = 0;
+    attendanceHasMore = false;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px;">Loading 30 attendance records...</td></tr>`;
+  }
 
   try {
-    const user = (await supabaseClient.auth.getUser()).data?.user;
-    if (!user) return;
-
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching profile role:", profileError);
+    const authContext = await window.getAuthContext();
+    const user = authContext?.user;
+    const profile = authContext?.profile;
+    if (!user) {
+      window.location.replace("/index.html?error=session_required");
+      return;
     }
+    if (!profile?.school_id) throw new Error("Your account is not linked to a school.");
 
     let query = supabaseClient.from("attendance").select(
       `
@@ -903,15 +922,27 @@ async function loadAttendanceTable() {
     const role = String(profile?.role || "").toLowerCase();
     attendanceViewerRole = role;
     attendanceViewerId = user.id;
+    query = query.eq("school_id", profile.school_id);
     if (role === "teacher") {
       query = query.eq("teacher_id", user.id);
     } else if (shouldFilterAttendanceToSubmitted(role)) {
       query = query.eq("status", "submitted");
     }
 
-    const { data: attendanceList, error } = await query.order("date", {
-      ascending: false,
-    });
+    const filters = getCurrentAttendanceFilters();
+    if (filters.classId !== "all") query = query.eq("class_id", filters.classId);
+    if (filters.subjectId !== "all") query = query.eq("subject_id", filters.subjectId);
+    if (filters.academicYearId !== "all") query = query.eq("academic_year_id", filters.academicYearId);
+    if (filters.semesterId !== "all") query = query.eq("term_id", filters.semesterId);
+    if (filters.status !== "all") query = query.eq("status", filters.status);
+    if (filters.date) query = query.eq("date", filters.date);
+
+    const start = append ? attendanceOffset : 0;
+    const { data: attendanceList, error } = await query
+      .order("date", { ascending: false })
+      .order("id", { ascending: false })
+      .range(start, start + ATTENDANCE_PAGE_SIZE);
+    if (requestId !== attendanceListRequestId) return;
 
     if (error) {
       console.error("Error loading attendance table:", error);
@@ -919,14 +950,42 @@ async function loadAttendanceTable() {
       return;
     }
 
-    allAttendanceList = attendanceList || [];
+    const received = attendanceList || [];
+    const page = received.slice(0, ATTENDANCE_PAGE_SIZE);
+    attendanceHasMore = received.length > ATTENDANCE_PAGE_SIZE;
+    attendanceOffset = start + page.length;
 
-    populateAttendanceFilters(allAttendanceList);
+    if (append) {
+      allAttendanceList.push(...page);
+      page.forEach(addAttendanceFilterOptionsForRecord);
+    } else {
+      allAttendanceList = page;
+      if (!attendanceFiltersInitialized) {
+        populateAttendanceFilters(allAttendanceList);
+        attendanceFiltersInitialized = true;
+      }
+    }
+
     setupAttendanceFilterListeners();
-    await renderFilteredAttendanceTable(allAttendanceList);
+    applyAttendanceFilters();
+    if (loadMoreButton) loadMoreButton.hidden = !attendanceHasMore;
   } catch (err) {
+    if (requestId !== attendanceListRequestId) return;
     console.error("Attendance table exception:", err);
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#dc2626; padding: 16px;">Failed to load attendance logs.</td></tr>`;
+  } finally {
+    if (requestId === attendanceListRequestId) {
+      attendancePageLoading = false;
+      if (loadMoreButton) {
+        loadMoreButton.disabled = false;
+        loadMoreButton.textContent = "Next";
+        loadMoreButton.hidden = !attendanceHasMore;
+      }
+      if (attendanceReloadRequested) {
+        attendanceReloadRequested = false;
+        void loadAttendanceTable();
+      }
+    }
   }
 }
 
@@ -1004,8 +1063,12 @@ function setupAttendanceFilterListeners() {
   if (searchInput) searchInput.oninput = applyAttendanceFilters;
   filterIds.forEach((id) => {
     const select = document.getElementById(id);
-    if (select) select.onchange = applyAttendanceFilters;
+    if (select) select.onchange = () => loadAttendanceTable();
   });
+  const loadMoreButton = document.getElementById("loadMoreAttendance");
+  if (loadMoreButton) {
+    loadMoreButton.onclick = () => loadAttendanceTable({ append: true });
+  }
 }
 
 function matchesAttendanceFilters(item, filters) {
@@ -1229,14 +1292,20 @@ async function renderFilteredAttendanceTable(attendanceList) {
     return;
   }
 
-  await ensureAttendanceStudentCounts(attendanceList);
-
   tbody.replaceChildren(
     ...attendanceList.map((item) =>
-      createAttendanceTableRow(item, item._studentCount || 0),
+      createAttendanceTableRow(item, Number.isFinite(item._studentCount) ? item._studentCount : "…"),
     ),
   );
   attachTableActionListeners(tbody);
+
+  await ensureAttendanceStudentCounts(attendanceList);
+  attendanceList.forEach((item) => {
+    const row = [...tbody.querySelectorAll("tr[data-attendance-id]")].find(
+      (candidate) => candidate.dataset.attendanceId === String(item.id),
+    );
+    if (row) row.cells[5].textContent = item._studentCount || 0;
+  });
 }
 
 function attachTableActionListeners(root = document) {
