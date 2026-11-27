@@ -344,14 +344,6 @@ async function populatePeriodFilterDropdowns() {
     }
     if (!data) return;
 
-    const uniqueLevels = [
-      ...new Set(
-        data
-          .map((row) => row.school_level?.trim())
-          .filter(Boolean),
-      ),
-    ];
-
     const manualLevels = [
       "Primary",
       "Secondary",
@@ -361,21 +353,18 @@ async function populatePeriodFilterDropdowns() {
       "Primary, Secondary & High School",
     ];
 
-    const mergedLevels = [...new Set([...manualLevels, ...uniqueLevels])];
+    const uniqueLevels = [...new Set(data.map((item) => item.school_level))];
 
     const currentVal = levelSelect.value;
     levelSelect.innerHTML =
       `<option value="">All Levels</option>` +
-      mergedLevels
+      uniqueLevels
         .map(
           (lvl) =>
             `<option value="${escapeHTML(lvl)}">${escapeHTML(lvl)}</option>`,
         )
         .join("");
-
-    if (currentVal === "" || mergedLevels.includes(currentVal)) {
-      levelSelect.value = currentVal;
-    }
+    levelSelect.value = currentVal;
   } catch (error) {
     showPeriodError(error, "load");
   }
@@ -580,7 +569,16 @@ async function loadClassesIntoSchoolLevelDropdown() {
     senior_primary: "Senior Primary",
     junior_secondary: "Junior Secondary",
     senior_secondary: "Senior Secondary",
+    primary_and_secondary: "Primary & Secondary",
+    secondary_and_high_school: "Secondary & High School",
+    primary_secondary_and_high_school: "Primary, Secondary & High School",
   };
+
+  const manualLevels = [
+    "primary_and_secondary",
+    "secondary_and_high_school",
+    "primary_secondary_and_high_school",
+  ];
 
   try {
     const { data: classes, error } = await supabaseClient
@@ -596,16 +594,18 @@ async function loadClassesIntoSchoolLevelDropdown() {
 
     const activeClasses = classes || [];
 
-    const uniqueLevels = [
+    const dbLevels = [
       ...new Set(activeClasses.map((c) => c.school_level).filter(Boolean)),
     ];
+
+    const mergedLevels = [...new Set([...dbLevels, ...manualLevels])];
 
     select.innerHTML = `
       <option value="">Select Level or Class</option>
       <optgroup label="School Levels">
         ${
-          uniqueLevels.length > 0
-            ? uniqueLevels
+          mergedLevels.length > 0
+            ? mergedLevels
                 .map(
                   (lvl) =>
                     `<option value="${escapeHTML(lvl)}">${levelLabels[lvl] || escapeHTML(lvl)}</option>`,
