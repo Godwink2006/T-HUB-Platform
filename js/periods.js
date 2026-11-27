@@ -344,6 +344,14 @@ async function populatePeriodFilterDropdowns() {
     }
     if (!data) return;
 
+    const uniqueLevels = [
+      ...new Set(
+        data
+          .map((row) => row.school_level?.trim())
+          .filter(Boolean),
+      ),
+    ];
+
     const manualLevels = [
       "Primary",
       "Secondary",
