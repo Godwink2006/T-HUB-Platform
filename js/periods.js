@@ -1,9 +1,14 @@
 function getPeriodErrorMessage(error, action) {
   const code = String(error?.code || "").toUpperCase();
   const status = Number(error?.status || error?.statusCode || 0);
-  const diagnostic = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+  const diagnostic =
+    `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
 
-  if (/school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(diagnostic)) {
+  if (
+    /school.{0,30}inactive|inactive.{0,30}school|school is not active/.test(
+      diagnostic,
+    )
+  ) {
     return "This school is inactive. You can view existing periods, but you cannot make changes until the school is reactivated.";
   }
   if (code === "23P01") {
@@ -15,7 +20,9 @@ function getPeriodErrorMessage(error, action) {
   if (
     code === "42501" ||
     status === 403 ||
-    /row-level security|permission denied|insufficient privilege|not authorized|not allowed/.test(diagnostic)
+    /row-level security|permission denied|insufficient privilege|not authorized|not allowed/.test(
+      diagnostic,
+    )
   ) {
     if (action === "load") {
       return "You do not have permission to view periods for this school.";
@@ -91,43 +98,48 @@ async function fetchFilteredPeriods() {
 
   try {
     if (!window.supabaseClient) {
-      const message = showPeriodError(new Error("Supabase client is not initialized."), "load");
-      if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+      const message = showPeriodError(
+        new Error("Supabase client is not initialized."),
+        "load",
+      );
+      if (tbody)
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
       return;
     }
 
-  let query = supabaseClient
-    .from("periods")
-    .select(
+    let query = supabaseClient.from("periods").select(
       `
     id, school_level, name, start_time, end_time, status, created_at, updated_at
   `,
-    )
-
-  if (levelFilter) query = query.eq("school_level", levelFilter);
-  if (statusFilter === "active") query = query.eq("status", "Active");
-  else if (statusFilter === "inactive") query = query.eq("status", "Inactive");
-
-  if (searchQuery) {
-    query = query.or(
-      `name.ilike.%${searchQuery}%,school_level.ilike.%${searchQuery}%`,
     );
-  }
 
-  query = query.order("start_time", { ascending: true });
+    if (levelFilter) query = query.eq("school_level", levelFilter);
+    if (statusFilter === "active") query = query.eq("status", "Active");
+    else if (statusFilter === "inactive")
+      query = query.eq("status", "Inactive");
 
-  const { data: periods, error } = await query;
+    if (searchQuery) {
+      query = query.or(
+        `name.ilike.%${searchQuery}%,school_level.ilike.%${searchQuery}%`,
+      );
+    }
 
-  if (error) {
-    const message = showPeriodError(error, "load");
-    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
-    return;
-  }
+    query = query.order("start_time", { ascending: true });
 
-  renderPeriodsTable(periods || []);
+    const { data: periods, error } = await query;
+
+    if (error) {
+      const message = showPeriodError(error, "load");
+      if (tbody)
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+      return;
+    }
+
+    renderPeriodsTable(periods || []);
   } catch (error) {
     const message = showPeriodError(error, "load");
-    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
+    if (tbody)
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;">${escapeHTML(message)}</td></tr>`;
   }
 }
 
@@ -270,7 +282,6 @@ async function handleTableActions(event) {
     await openEditPeriodModal(id);
     return;
   }
-
 }
 
 function renderPeriodsTable(periods = [], isLoading = false) {
@@ -333,15 +344,30 @@ async function populatePeriodFilterDropdowns() {
     }
     if (!data) return;
 
-    const uniqueLevels = [...new Set(data.map((item) => item.school_level))];
+    const manualLevels = [
+      "Primary",
+      "Secondary",
+      "High School",
+      "Primary & Secondary",
+      "Secondary & High School",
+      "Primary, Secondary & High School",
+    ];
+
+    const mergedLevels = [...new Set([...manualLevels, ...uniqueLevels])];
 
     const currentVal = levelSelect.value;
     levelSelect.innerHTML =
       `<option value="">All Levels</option>` +
-      uniqueLevels
-        .map((lvl) => `<option value="${escapeHTML(lvl)}">${escapeHTML(lvl)}</option>`)
+      mergedLevels
+        .map(
+          (lvl) =>
+            `<option value="${escapeHTML(lvl)}">${escapeHTML(lvl)}</option>`,
+        )
         .join("");
-    levelSelect.value = currentVal;
+
+    if (currentVal === "" || mergedLevels.includes(currentVal)) {
+      levelSelect.value = currentVal;
+    }
   } catch (error) {
     showPeriodError(error, "load");
   }
@@ -397,7 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (editPeriodForm) {
     editPeriodForm.addEventListener("submit", handleUpdatePeriod);
   }
-
 });
 
 async function handleUpdatePeriod(event) {
@@ -573,7 +598,10 @@ async function loadClassesIntoSchoolLevelDropdown() {
         ${
           uniqueLevels.length > 0
             ? uniqueLevels
-                .map((lvl) => `<option value="${escapeHTML(lvl)}">${levelLabels[lvl] || escapeHTML(lvl)}</option>`)
+                .map(
+                  (lvl) =>
+                    `<option value="${escapeHTML(lvl)}">${levelLabels[lvl] || escapeHTML(lvl)}</option>`,
+                )
                 .join("")
             : `<option disabled>No active school levels</option>`
         }
@@ -582,18 +610,23 @@ async function loadClassesIntoSchoolLevelDropdown() {
         ${
           activeClasses.length > 0
             ? activeClasses
-                .map((cls) => `<option value="${escapeHTML(cls.name)}" data-level="${escapeHTML(cls.school_level)}">${escapeHTML(cls.name)}</option>`)
+                .map(
+                  (cls) =>
+                    `<option value="${escapeHTML(cls.name)}" data-level="${escapeHTML(cls.school_level)}">${escapeHTML(cls.name)}</option>`,
+                )
                 .join("")
             : `<option disabled>No active classes found</option>`
         }
       </optgroup>
     `;
 
-    if (currentVal && [...select.options].some((option) => option.value === currentVal)) {
+    if (
+      currentVal &&
+      [...select.options].some((option) => option.value === currentVal)
+    ) {
       select.value = currentVal;
     }
   } catch (error) {
     showPeriodError(error, "load");
   }
 }
-
